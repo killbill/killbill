@@ -342,10 +342,11 @@ public class InvoicePluginDispatcher {
             final AdditionalItemsResult res = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, inputPluginProperties, invoiceContext);
 
             if (res != null) {
-                if (res.getAdditionalItems() != null &&
-                    !res.getAdditionalItems().isEmpty()) {
+            	final List<InvoiceItem> itemsFromPlugin = res.getAdditionalItems();
+                if (itemsFromPlugin != null &&
+                    !itemsFromPlugin.isEmpty()) {
                     final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
-                    for (final InvoiceItem additionalInvoiceItem : res.getAdditionalItems()) {
+                    for (final InvoiceItem additionalInvoiceItem : itemsFromPlugin) {
                         final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice.getId(),
                                                                                                           invoiceItemsByItemId,
                                                                                                           additionalInvoiceItem,
