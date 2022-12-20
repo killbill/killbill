@@ -54,7 +54,7 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
         // Reuse catalog from testWithInArrearSubscriptions as we are doind in-arrear (just a different behavior)
-        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testWithInArrearSubscriptions");
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testWithInArrearGreedySubscriptions");
         return super.getConfigSource(null, allExtraProperties);
     }
 
@@ -67,6 +67,7 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         invoiceConfig.setInArrearMode(InArrearMode.GREEDY);
 
     }
+
     @Test(groups = "slow")
     public void testWithBillRun_A() throws Exception {
         final DateTime initialCreationDate = new DateTime(2022, 1, 13, 0, 0, 0, 0, testTimeZone);
@@ -90,7 +91,6 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2022, 1, 13), new LocalDate(2022, 2, 13), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
-
         // 2022-02-13
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addDays(12);
@@ -111,6 +111,7 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         assertListenerStatus();
 
         // Cancel 2022-03-13
+        // Cancel EOT (no invoice expected)
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.of(), callContext);
         assertListenerStatus();
@@ -127,4 +128,72 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
 
         checkNoMoreInvoiceToGenerate(account);
     }
+
+    @Test(groups = "slow")
+    public void testWithBillRun_B() throws Exception {
+        final DateTime initialCreationDate = new DateTime(2022, 1, 13, 0, 0, 0, 0, testTimeZone);
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-support-monthly-notrial", null);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 13, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+
+        // 2022-02-01
+        clock.addDays(19);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 1, 13), new LocalDate(2022, 2, 13), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // 2022-02-13
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addDays(12);
+        assertListenerStatus();
+
+        // 2022-03-01
+        clock.addDays(16);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 2, 13), new LocalDate(2022, 3, 13), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // Cancel 2022-03-11
+        clock.addDays(10);
+        // Cancel prior EOT
+        // (REPAIR invoice expected, as if we were billing in-advance)
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.of(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 3, 11), new LocalDate(2022, 3, 13), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-7.14")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 3, 11), new LocalDate(2022, 3, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("7.14")));
+
+        // 2022-03-13
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addDays(2);
+        assertListenerStatus();
+
+        // 2022-04-13
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        for (int i = 0; i < 3; i++) {
+            clock.addMonths(1);
+            assertListenerStatus();
+        }
+
+        checkNoMoreInvoiceToGenerate(account);
+    }
+
 }

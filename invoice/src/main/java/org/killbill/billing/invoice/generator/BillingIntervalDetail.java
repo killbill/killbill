@@ -94,6 +94,11 @@ public class BillingIntervalDetail {
                (endDate == null || endDate.isAfter(startDate)); /* When there is an endDate, it should be > startDate since we don't bill for less than a day */
     }
 
+    public boolean isInArrearGreedy() {
+        return inArrearGreedy;
+    }
+
+
     private void computeAll() {
         calculateFirstBillingCycleDate();
         calculateEffectiveEndDate();
