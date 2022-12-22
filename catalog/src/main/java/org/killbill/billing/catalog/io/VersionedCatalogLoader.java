@@ -28,11 +28,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 
 import org.killbill.billing.ErrorCode;
@@ -44,6 +46,7 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.CatalogConfig;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.commons.concurrent.Executors;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.ValidationError;
@@ -51,10 +54,6 @@ import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
 
 public class VersionedCatalogLoader implements CatalogLoader, Closeable {
 
@@ -71,7 +70,7 @@ public class VersionedCatalogLoader implements CatalogLoader, Closeable {
     public VersionedCatalogLoader(final CatalogConfig config,
                                   final PriceOverride priceOverride,
                                   final InternalCallContextFactory internalCallContextFactory) {
-        this.executorService = Executors.newFixedThreadPool(MoreObjects.firstNonNull(config.getCatalogThreadNb(), 1), VersionedCatalogLoader.class.getName());
+        this.executorService = Executors.newFixedThreadPool(Objects.requireNonNullElse(config.getCatalogThreadNb(), 1), VersionedCatalogLoader.class.getName());
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
     }

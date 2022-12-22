@@ -16,6 +16,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
@@ -23,9 +24,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class TestTagDefinitionJson extends JaxrsTestSuiteNoDB {
 
@@ -35,7 +33,7 @@ public class TestTagDefinitionJson extends JaxrsTestSuiteNoDB {
         final Boolean isControlTag = true;
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
-        final ImmutableList<ObjectType> applicableObjectTypes = ImmutableList.of(ObjectType.TRANSACTION);
+        final List<ObjectType> applicableObjectTypes = List.of(ObjectType.TRANSACTION);
         final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description, applicableObjectTypes, null);
         Assert.assertEquals(tagDefinitionJson.getId(), id);
         Assert.assertEquals(tagDefinitionJson.isControlTag(), isControlTag);

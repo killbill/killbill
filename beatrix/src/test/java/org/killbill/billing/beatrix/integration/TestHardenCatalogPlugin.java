@@ -17,10 +17,11 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -34,10 +35,7 @@ import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.CatalogUserApi;
-import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PriceList;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.TestModelStandalonePluginCatalog;
@@ -51,6 +49,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.XMLLoader;
@@ -58,11 +57,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -137,7 +131,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("assault-rifle-annual-rescue"); // this plan does not have a TRIAL
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
 
@@ -164,7 +158,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
         // we should except to receive this event twice
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("assault-rifle-annual-rescue"); // this plan does not have a TRIAL
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null,UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
     }
@@ -186,7 +180,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
         // We see 4 times the EffectiveSubscriptionEvent (3 retries) along with the BlockingTransitionInternalEvent and nothing else
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("assault-rifle-annual-rescue"); // this plan does not have a TRIAL
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
     }
@@ -231,7 +225,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
                         throwOnZeroCounter++;
                     }
                     if (retryPeriod != null) {
-                        throw new CatalogPluginApiRetryException(ImmutableList.of(retryPeriod));
+                        throw new CatalogPluginApiRetryException(List.of(retryPeriod));
                     } else {
                         throw new RuntimeException("****  CATALOG PLUGIN RUNTIME EXCEPTION ****");
                     }
@@ -265,25 +259,19 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
         }
 
         private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StaticCatalog> input) {
-            return Iterables.transform(input, new Function<StaticCatalog, StandalonePluginCatalog>() {
-                @Override
-                public StandalonePluginCatalog apply(final StaticCatalog input) {
-
-                    final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) input;
-                    return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                ImmutableList.copyOf(standaloneCatalog.getSupportedCurrencies()),
-                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getProducts()),
-                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getPlans()),
-                                                                standaloneCatalog.getPriceLists().getDefaultPricelist(),
-                                                                ImmutableList.<PriceList>copyOf(standaloneCatalog.getPriceLists().getChildPriceLists()),
-                                                                standaloneCatalog.getPlanRules(),
-                                                                null /* ImmutableList.<Unit>copyOf(input.getCurrentUnits()) */);
-                }
-
-                private <I, C extends I> List<I> listOf(@Nullable C[] input) {
-                    return (input != null) ? ImmutableList.<I>copyOf(input) : ImmutableList.<I>of();
-                }
-            });
+            return input.stream()
+                    .map(staticCatalog -> {
+                        final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) staticCatalog;
+                        return new TestModelStandalonePluginCatalog(new DateTime(staticCatalog.getEffectiveDate()),
+                                                                    List.of(standaloneCatalog.getSupportedCurrencies()),
+                                                                    List.copyOf(standaloneCatalog.getProducts()),
+                                                                    List.copyOf(standaloneCatalog.getPlans()),
+                                                                    standaloneCatalog.getPriceLists().getDefaultPricelist(),
+                                                                    List.of(standaloneCatalog.getPriceLists().getChildPriceLists()),
+                                                                    standaloneCatalog.getPlanRules(),
+                                                                    null /* ImmutableList.<Unit>copyOf(input.getCurrentUnits()) */);
+                    })
+                    .collect(Collectors.toUnmodifiableList());
         }
     }
 

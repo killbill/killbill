@@ -18,16 +18,13 @@
 package org.killbill.billing.util.nodes.json;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.osgi.api.PluginInfo;
-import org.killbill.billing.osgi.api.PluginServiceInfo;
 import org.killbill.billing.osgi.api.PluginState;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class PluginInfoModelJson {
 
@@ -69,12 +66,11 @@ public class PluginInfoModelJson {
              input.getVersion(),
              input.getPluginState(),
              input.isSelectedForStart(),
-             ImmutableSet.copyOf(Iterables.transform(input.getServices(), new Function<PluginServiceInfo, PluginServiceInfoModelJson>() {
-                 @Override
-                 public PluginServiceInfoModelJson apply(final PluginServiceInfo input) {
-                     return new PluginServiceInfoModelJson(input.getServiceTypeName(), input.getRegistrationName());
-                 }
-             })));
+             input.getServices()
+                  .stream()
+                  .map(serviceInfo -> new PluginServiceInfoModelJson(serviceInfo.getServiceTypeName(), serviceInfo.getRegistrationName()))
+                  .collect(Collectors.toUnmodifiableSet())
+            );
     }
 
     public String getBundleSymbolicName() {

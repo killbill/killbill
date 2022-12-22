@@ -20,11 +20,15 @@ package org.killbill.billing.jaxrs.resources;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -66,6 +70,7 @@ import org.killbill.billing.server.healthchecks.KillbillHealthcheck;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
@@ -75,9 +80,9 @@ import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.killbill.billing.util.entity.Pagination;
-import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.dao.SystemTags;
 import org.killbill.bus.api.BusEvent;
@@ -90,13 +95,7 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.inject.Singleton;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -248,16 +247,14 @@ public class AdminResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
-        final PaymentTransaction paymentTransaction = Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getId().equals(paymentTransactionId);
-            }
-        }).orNull();
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), callContext);
+        final PaymentTransaction paymentTransaction = payment.getTransactions()
+                .stream()
+                .filter(input -> paymentTransactionId.equals(input.getId()))
+                .findFirst().orElse(null);
 
         adminPaymentApi.fixPaymentTransactionState(payment, paymentTransaction, TransactionStatus.valueOf(json.getTransactionStatus()),
-                                                   json.getLastSuccessPaymentState(), json.getCurrentPaymentStateName(), ImmutableList.<PluginProperty>of(), callContext);
+                                                   json.getLastSuccessPaymentState(), json.getCurrentPaymentStateName(), Collections.emptyList(), callContext);
         return Response.status(Status.NO_CONTENT).build();
     }
 
@@ -269,11 +266,13 @@ public class AdminResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation")})
     public Response triggerInvoiceGenerationForParkedAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                               @HeaderParam(HDR_REASON) final String reason,
                                                               @HeaderParam(HDR_COMMENT) final String comment,
                                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
         // TODO Consider adding a real invoice API post 0.18.x
         final Pagination<Tag> tags = tagUserApi.searchTags(SystemTags.PARK_TAG_DEFINITION_NAME, offset, limit, callContext);
@@ -291,7 +290,7 @@ public class AdminResource extends JaxRsResourceBase {
                         final Tag tag = iterator.next();
                         final UUID accountId = tag.getObjectId();
                         try {
-                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
+                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), pluginProperties, callContext);
                             generator.writeStringField(accountId.toString(), OK);
                         } catch (final InvoiceApiException e) {
                             if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
@@ -313,8 +312,8 @@ public class AdminResource extends JaxRsResourceBase {
                                                     "triggerInvoiceGenerationForParkedAccounts",
                                                     tags.getNextOffset(),
                                                     limit,
-                                                    ImmutableMap.<String, String>of(),
-                                                    ImmutableMap.<String, String>of());
+                                                    Collections.emptyMap(),
+                                                    Collections.emptyMap());
         return Response.status(Status.OK)
                        .entity(json)
                        .header(HDR_PAGINATION_CURRENT_OFFSET, tags.getCurrentOffset())
@@ -391,12 +390,7 @@ public class AdminResource extends JaxRsResourceBase {
         // getting Tenant Record Id
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
 
-        final Function<String, Boolean> tenantKeysMatcher = new Function<String, Boolean>() {
-            @Override
-            public Boolean apply(@Nullable final String key) {
-                return key != null && key.endsWith("::" + tenantRecordId);
-            }
-        };
+        final Function<String, Boolean> tenantKeysMatcher = key -> key != null && key.endsWith("::" + tenantRecordId);
 
         // clear tenant-record-id cache by tenantId
         final CacheController<String, Long> tenantRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
@@ -457,7 +451,7 @@ public class AdminResource extends JaxRsResourceBase {
                                                                                         @Nullable final DateTime maxEffectiveDate,
                                                                                         @Nullable final Long accountRecordId,
                                                                                         final Long tenantRecordId) {
-        Iterable<NotificationEventWithMetadata<NotificationEvent>> notifications = ImmutableList.<NotificationEventWithMetadata<NotificationEvent>>of();
+        Iterable<NotificationEventWithMetadata<NotificationEvent>> notifications = Collections.emptyList();
         for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
             if (queueName != null && !queueName.equals(notificationQueue.getQueueName())) {
                 continue;
@@ -467,29 +461,23 @@ public class AdminResource extends JaxRsResourceBase {
 
             if (includeInProcessing) {
                 if (accountRecordId != null) {
-                    notifications = Iterables.<NotificationEventWithMetadata<NotificationEvent>>concat(notifications,
-                                                                                                       notificationQueue.getFutureOrInProcessingNotificationForSearchKeys(accountRecordId, tenantRecordId));
+                    notifications = Iterables.concat(notifications, notificationQueue.getFutureOrInProcessingNotificationForSearchKeys(accountRecordId, tenantRecordId));
                 } else {
-                    notifications = Iterables.<NotificationEventWithMetadata<NotificationEvent>>concat(notifications,
-                                                                                                       notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(maxEffectiveDate, tenantRecordId));
+                    notifications = Iterables.concat(notifications, notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(maxEffectiveDate, tenantRecordId));
                 }
             } else {
                 if (accountRecordId != null) {
-                    notifications = Iterables.<NotificationEventWithMetadata<NotificationEvent>>concat(notifications,
-                                                                                                       notificationQueue.getFutureNotificationForSearchKeys(accountRecordId, tenantRecordId));
+                    notifications = Iterables.concat(notifications, notificationQueue.getFutureNotificationForSearchKeys(accountRecordId, tenantRecordId));
                 } else {
-                    notifications = Iterables.<NotificationEventWithMetadata<NotificationEvent>>concat(notifications,
-                                                                                                       notificationQueue.getFutureNotificationForSearchKey2(maxEffectiveDate, tenantRecordId));
+                    notifications = Iterables.concat(notifications, notificationQueue.getFutureNotificationForSearchKey2(maxEffectiveDate, tenantRecordId));
                 }
             }
 
             if (includeHistory) {
                 if (accountRecordId != null) {
-                    notifications = Iterables.<NotificationEventWithMetadata<NotificationEvent>>concat(notificationQueue.getHistoricalNotificationForSearchKeys(accountRecordId, tenantRecordId),
-                                                                                                       notifications);
+                    notifications = Iterables.concat(notificationQueue.getHistoricalNotificationForSearchKeys(accountRecordId, tenantRecordId), notifications);
                 } else {
-                    notifications = Iterables.<NotificationEventWithMetadata<NotificationEvent>>concat(notificationQueue.getHistoricalNotificationForSearchKey2(minEffectiveDate, tenantRecordId),
-                                                                                                       notifications);
+                    notifications = Iterables.concat(notificationQueue.getHistoricalNotificationForSearchKey2(minEffectiveDate, tenantRecordId), notifications);
                 }
             }
         }
@@ -504,32 +492,26 @@ public class AdminResource extends JaxRsResourceBase {
                                                                   @Nullable final DateTime maxCreatedDate,
                                                                   @Nullable final Long accountRecordId,
                                                                   final Long tenantRecordId) {
-        Iterable<BusEventWithMetadata<BusEvent>> busEvents = ImmutableList.<BusEventWithMetadata<BusEvent>>of();
+        Iterable<BusEventWithMetadata<BusEvent>> busEvents = Collections.emptyList();
         if (includeInProcessing) {
             if (accountRecordId != null) {
-                busEvents = Iterables.<BusEventWithMetadata<BusEvent>>concat(busEvents,
-                                                                             persistentBus.getAvailableOrInProcessingBusEventsForSearchKeys(accountRecordId, tenantRecordId));
+                busEvents = Iterables.concat(busEvents, persistentBus.getAvailableOrInProcessingBusEventsForSearchKeys(accountRecordId, tenantRecordId));
             } else {
-                busEvents = Iterables.<BusEventWithMetadata<BusEvent>>concat(busEvents,
-                                                                             persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(maxCreatedDate, tenantRecordId));
+                busEvents = Iterables.concat(busEvents, persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(maxCreatedDate, tenantRecordId));
             }
         } else {
             if (accountRecordId != null) {
-                busEvents = Iterables.<BusEventWithMetadata<BusEvent>>concat(busEvents,
-                                                                             persistentBus.getAvailableBusEventsForSearchKeys(accountRecordId, tenantRecordId));
+                busEvents = Iterables.concat(busEvents, persistentBus.getAvailableBusEventsForSearchKeys(accountRecordId, tenantRecordId));
             } else {
-                busEvents = Iterables.<BusEventWithMetadata<BusEvent>>concat(busEvents,
-                                                                             persistentBus.getAvailableBusEventsForSearchKey2(maxCreatedDate, tenantRecordId));
+                busEvents = Iterables.concat(busEvents, persistentBus.getAvailableBusEventsForSearchKey2(maxCreatedDate, tenantRecordId));
             }
         }
 
         if (includeHistory) {
             if (accountRecordId != null) {
-                busEvents = Iterables.<BusEventWithMetadata<BusEvent>>concat(persistentBus.getHistoricalBusEventsForSearchKeys(accountRecordId, tenantRecordId),
-                                                                             busEvents);
+                busEvents = Iterables.concat(persistentBus.getHistoricalBusEventsForSearchKeys(accountRecordId, tenantRecordId), busEvents);
             } else {
-                busEvents = Iterables.<BusEventWithMetadata<BusEvent>>concat(persistentBus.getHistoricalBusEventsForSearchKey2(minCreatedDate, tenantRecordId),
-                                                                             busEvents);
+                busEvents = Iterables.concat(persistentBus.getHistoricalBusEventsForSearchKey2(minCreatedDate, tenantRecordId), busEvents);
             }
         }
 

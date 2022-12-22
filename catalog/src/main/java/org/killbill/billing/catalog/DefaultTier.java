@@ -41,9 +41,6 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements Tier, Externalizable {
 
@@ -79,15 +76,13 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
         for (int i = 0; i < in.getTieredBlocks().length; i++) {
             if (override != null && override.getTieredBlockPriceOverrides() != null) {
                 final TieredBlock curTieredBlock = in.getTieredBlocks()[i];
-                final TieredBlockPriceOverride overriddenTierBlock = Iterables.tryFind(override.getTieredBlockPriceOverrides(), new Predicate<TieredBlockPriceOverride>() {
-                    @Override
-                    public boolean apply(final TieredBlockPriceOverride input) {
-                        return (input != null && input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
-                                Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
-                                Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
-                    }
-
-                }).orNull();
+                final TieredBlockPriceOverride overriddenTierBlock = override
+                        .getTieredBlockPriceOverrides()
+                        .stream()
+                        .filter(input -> (input != null && input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
+                                          (input.getSize().compareTo(curTieredBlock.getSize()) == 0) &&
+                                          (input.getMax().compareTo(curTieredBlock.getMax()) == 0)))
+                        .findFirst().orElse(null);
                 blocks[i] = (overriddenTierBlock != null) ? new DefaultTieredBlock(in.getTieredBlocks()[i], overriddenTierBlock, currency) :
                             (DefaultTieredBlock) in.getTieredBlocks()[i];
             } else {

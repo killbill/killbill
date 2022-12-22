@@ -58,7 +58,17 @@ public interface DatabaseSchemaSqlDao {
             }
 
             final Long maximumLength = r.getLong("character_maximum_length");
-            final String dataType = r.getString("data_type");
+
+            String dataType = r.getString("data_type");
+            if (ctx != null &&
+                ctx.getConnection() != null &&
+                ctx.getConnection().getMetaData() != null &&
+                "MYSQL".equalsIgnoreCase(ctx.getConnection().getMetaData().getDatabaseProductName())) {
+                final String columnType = r.getString("column_type");
+                if ("tinyint(1)".equals(columnType)) {
+                    dataType = "boolean";
+                }
+            }
 
             return new DefaultColumnInfo(tableName, columnName, scale, precision, isNullable, maximumLength, dataType);
         }

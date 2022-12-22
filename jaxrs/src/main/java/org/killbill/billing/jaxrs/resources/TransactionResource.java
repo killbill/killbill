@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,9 +70,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.collect.ImmutableList;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -164,7 +164,7 @@ public class TransactionResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final UUID paymentId = json.getPaymentId();
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final boolean success = TransactionStatus.SUCCESS.name().equals(json.getStatus());
@@ -255,7 +255,7 @@ public class TransactionResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Payment payment = paymentApi.getPaymentByTransactionId(id, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        final Payment payment = paymentApi.getPaymentByTransactionId(id, false, false, Collections.emptyList(), tenantContext);
         return super.getTags(payment.getAccountId(), id, auditMode, includedDeleted, tenantContext);
     }
 

@@ -17,6 +17,7 @@
 
 package org.killbill.billing.catalog.caching;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -38,7 +39,8 @@ import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -48,10 +50,6 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 public class DefaultCatalogCache implements CatalogCache {
 
@@ -157,7 +155,7 @@ public class DefaultCatalogCache implements CatalogCache {
             // As a guideline, if plugin keeps seeing new Plans/Products, this can all fit into the same version; however if there is a true versioning
             // (e.g deleted Plans...), then multiple versions must be returned.
             //
-            final DateTime latestCatalogUpdatedDate = plugin.getLatestCatalogVersion(ImmutableList.<PluginProperty>of(), tenantContext);
+            final DateTime latestCatalogUpdatedDate = plugin.getLatestCatalogVersion(Collections.emptyList(), tenantContext);
             // A null latestCatalogUpdatedDate bypasses caching, by fetching full catalog from plugin below (compatibility mode with 0.18.x or non optimized plugin api mode)
             final boolean cacheable = latestCatalogUpdatedDate != null;
             if (cacheable) {
@@ -170,7 +168,7 @@ public class DefaultCatalogCache implements CatalogCache {
                 }
             }
 
-            final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(ImmutableList.<PluginProperty>of(), tenantContext);
+            final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(Collections.emptyList(), tenantContext);
             // First plugin that gets something (for that tenant) returns it
             if (pluginCatalog != null) {
                 // The log entry is only interesting if there are multiple plugins

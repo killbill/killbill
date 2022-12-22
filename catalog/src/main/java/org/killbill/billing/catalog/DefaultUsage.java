@@ -21,6 +21,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,9 +51,6 @@ import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage, Externalizable {
@@ -122,28 +120,23 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
             if (override != null && override.getTierPriceOverrides() != null) {
                 final TieredBlock[] curTieredBlocks = in.getTiers()[i].getTieredBlocks();
 
-                final TierPriceOverride overriddenTier = Iterables.tryFind(override.getTierPriceOverrides(), new Predicate<TierPriceOverride>() {
-                    @Override
-                    public boolean apply(final TierPriceOverride input) {
-
-                        if (input != null) {
-                            final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
-                            for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
-                                String unitName = blockDef.getUnitName();
-                                Double max = blockDef.getMax();
-                                Double size = blockDef.getSize();
-                                for (TieredBlock curTieredBlock : curTieredBlocks) {
-                                    if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                        Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                        Double.compare(max, curTieredBlock.getMax()) == 0) {
-                                        return true;
+                final TierPriceOverride overriddenTier = override.getTierPriceOverrides().stream()
+                        .filter(input -> {
+                            if (input != null) {
+                                final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
+                                for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
+                                    String unitName = blockDef.getUnitName();
+                                    for (TieredBlock curTieredBlock : curTieredBlocks) {
+                                        if (unitName.equals(curTieredBlock.getUnit().getName()) &&
+                                            blockDef.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                            blockDef.getMax().compareTo(curTieredBlock.getMax()) == 0) {
+                                            return true;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        return false;
-                    }
-                }).orNull();
+                            return false;
+                        }).findFirst().orElse(null);
                 tiers[i] = (overriddenTier != null) ? new DefaultTier(in.getTiers()[i], overriddenTier, currency) : (DefaultTier) in.getTiers()[i];
             } else {
                 tiers[i] = (DefaultTier) in.getTiers()[i];
@@ -182,7 +175,7 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public boolean compliesWithLimits(final String unit, final double value) {
+    public boolean compliesWithLimits(final String unit, final BigDecimal value) {
         final Limit limit = findLimit(unit);
         if (limit != null && !limit.compliesWith(value)) {
             return false;

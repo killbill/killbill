@@ -48,8 +48,7 @@ import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.dao.NonEntityDao;
-
-import com.google.common.base.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 public class DefaultAccountInternalApi extends DefaultAccountApiBase implements AccountInternalApi {
 

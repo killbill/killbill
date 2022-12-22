@@ -45,7 +45,7 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
     @Test(groups = "slow")
     public void testBasic() throws Exception {
 
-        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1", "USD", BigDecimal.ONE, 17.3 , 1, clock.getUTCNow());
+        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1", "USD", BigDecimal.ONE, BigDecimal.valueOf(17.3) , BigDecimal.valueOf(1), clock.getUTCNow());
         performTestInTransaction(new WithCatalogOverrideBlockDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverrideBlockDefinitionSqlDao sqlDao) {
@@ -55,9 +55,10 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
                 assertEquals(rehydrated.getParentUnitName(), obj1.getParentUnitName());
                 assertEquals(rehydrated.getCurrency(), obj1.getCurrency());
                 assertEquals(rehydrated.getPrice().compareTo(obj1.getPrice()), 0);
-                assertEquals(rehydrated.getSize(), obj1.getSize());
-                assertEquals(rehydrated.getSize(), 17.3);
-                assertEquals(rehydrated.getMax(), obj1.getMax());
+                assertEquals(rehydrated.getSize().compareTo(obj1.getSize()), 0);
+                assertEquals(rehydrated.getSize().compareTo(BigDecimal.valueOf(17.3)), 0);
+                assertEquals(rehydrated.getMax().compareTo(obj1.getMax()), 0);
+                assertEquals(rehydrated.getMax().compareTo(BigDecimal.ONE), 0);
                 return null;
             }
         });
@@ -66,7 +67,7 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
     @Test(groups = "slow")
     public void testGetByAttributes() throws Exception {
 
-        final CatalogOverrideBlockDefinitionModelDao objWithNoNullPrice = new CatalogOverrideBlockDefinitionModelDao("p2", "USD", BigDecimal.ONE, new Double("1"), new Double("5"), clock.getUTCNow());
+        final CatalogOverrideBlockDefinitionModelDao objWithNoNullPrice = new CatalogOverrideBlockDefinitionModelDao("p2", "USD", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.valueOf(5), clock.getUTCNow());
 
         performTestInTransaction(new WithCatalogOverrideBlockDefinitionSqlDaoTransaction<Void>() {
             @Override
@@ -82,8 +83,8 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
                 assertEquals(rehydrated.getParentUnitName(), obj.getParentUnitName());
                 assertEquals(rehydrated.getCurrency(), obj.getCurrency());
                 assertEquals(rehydrated.getPrice().compareTo(obj.getPrice()), 0);
-                assertEquals(rehydrated.getSize(), obj.getSize());
-                assertEquals(rehydrated.getMax(), obj.getMax());
+                assertEquals(rehydrated.getSize().compareTo(obj.getSize()), 0);
+                assertEquals(rehydrated.getMax().compareTo(obj.getMax()), 0);
             }
         });
     }

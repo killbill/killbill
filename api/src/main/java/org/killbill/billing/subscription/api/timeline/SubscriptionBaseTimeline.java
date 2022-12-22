@@ -86,5 +86,11 @@ public interface SubscriptionBaseTimeline extends Entity {
          * @return the new billCycleDayLocal
          */
         public Integer getBillCycleDayLocal();
+
+        /**
+         *
+         * @return the new quantity
+         */
+        public Integer getQuantity();
     }
 }

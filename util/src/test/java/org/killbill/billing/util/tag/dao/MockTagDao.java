@@ -17,11 +17,13 @@
 package org.killbill.billing.util.tag.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -33,13 +35,9 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.billing.util.tag.Tag;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-
 public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiException> implements TagDao {
 
-    private final Map<UUID, List<TagModelDao>> tagStore = new HashMap<UUID, List<TagModelDao>>();
+    private final Map<UUID, List<TagModelDao>> tagStore = new HashMap<>();
 
     @Override
     public void create(final TagModelDao tag, final InternalCallContext context) throws TagApiException {
@@ -83,15 +81,12 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
     @Override
     public List<TagModelDao> getTagsForObject(final UUID objectId, final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         if (tagStore.get(objectId) == null) {
-            return ImmutableList.<TagModelDao>of();
+            return Collections.emptyList();
         }
 
-        return ImmutableList.<TagModelDao>copyOf(Collections2.filter(tagStore.get(objectId), new Predicate<TagModelDao>() {
-            @Override
-            public boolean apply(final TagModelDao input) {
-                return objectType.equals(input.getObjectType());
-            }
-        }));
+        return tagStore.get(objectId).stream()
+                .filter(input -> objectType.equals(input.getObjectType()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -102,7 +97,7 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
     @Override
     public List<TagModelDao> getTagsForAccount(final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         if (tagStore.get(getAccountId(internalTenantContext.getAccountRecordId())) == null) {
-            return ImmutableList.<TagModelDao>of();
+            return Collections.emptyList();
         }
 
         return tagStore.get(getAccountId(internalTenantContext.getAccountRecordId()));

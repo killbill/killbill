@@ -21,7 +21,7 @@ import java.io.OutputStream;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -35,11 +35,9 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 
 @Singleton
 public class RequestDataFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -48,7 +46,8 @@ public class RequestDataFilter implements ContainerRequestFilter, ContainerRespo
 
     private static final String LEGACY_REQUEST_ID_HEADER = "X-Killbill-Request-Id-Req";
 
-    private static final String KILL_BILL_ENCODING_HEADER = "X-Killbill-Encoding";
+    @VisibleForTesting
+    static final String KILL_BILL_ENCODING_HEADER = "X-Killbill-Encoding";
 
     @Override
     public void filter(final ContainerRequestContext requestContext) {
@@ -58,33 +57,23 @@ public class RequestDataFilter implements ContainerRequestFilter, ContainerRespo
 
         final List<String> kbEncodingHeaders = requestContext.getHeaders().get(KILL_BILL_ENCODING_HEADER);
         final String kbEncodingHeader = (kbEncodingHeaders == null || kbEncodingHeaders.isEmpty()) ? null : kbEncodingHeaders.get(0);
-        if (kbEncodingHeader != null) {
+        if ("base64".equalsIgnoreCase(kbEncodingHeader)) {
             requestContext.getHeaders()
-                          .replaceAll(new BiFunction<String, List<String>, List<String>>() {
-                              @Override
-                              public List<String> apply(final String k, final List<String> v) {
-                                  if (k.equalsIgnoreCase(JaxrsResource.HDR_COMMENT) ||
-                                      k.equalsIgnoreCase(JaxrsResource.HDR_REASON) ||
-                                      k.equalsIgnoreCase(JaxrsResource.HDR_CREATED_BY)) {
-                                      return Lists.transform(v,
-                                                             new Function<String, String>() {
-                                                                 @Override
-                                                                 public String apply(final String input) {
-                                                                     if ("base64".equalsIgnoreCase(kbEncodingHeader)) {
-                                                                         try {
-                                                                             return new String(Base64.getDecoder().decode(input));
-                                                                         } catch (final IllegalArgumentException e) {
-                                                                             // Not Base64 after all? Be lenient...
-                                                                             return input;
-                                                                         }
-                                                                     } else {
-                                                                         return input;
-                                                                     }
-                                                                 }
-                                                             });
-                                  } else {
-                                      return v;
-                                  }
+                          .replaceAll((String k, List<String> v) -> {
+                              if (k.equalsIgnoreCase(JaxrsResource.HDR_COMMENT) ||
+                                  k.equalsIgnoreCase(JaxrsResource.HDR_REASON) ||
+                                  k.equalsIgnoreCase(JaxrsResource.HDR_CREATED_BY)) {
+                                  return v.stream()
+                                          .map(input -> {
+                                              try {
+                                                  return new String(Base64.getDecoder().decode(input));
+                                              } catch (final IllegalArgumentException e) {
+                                                  // Not Base64 after all? Be lenient...
+                                                  return input;
+                                              }
+                                          }).collect(Collectors.toUnmodifiableList());
+                              } else {
+                                  return v;
                               }
                           });
         }

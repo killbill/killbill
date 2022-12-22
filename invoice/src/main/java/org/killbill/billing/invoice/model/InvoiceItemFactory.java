@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,11 +37,9 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
-import org.killbill.billing.util.catalog.CatalogDateHelper;
+import org.killbill.commons.utils.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 public class InvoiceItemFactory {
 
@@ -77,7 +74,7 @@ public class InvoiceItemFactory {
         final BigDecimal rate = invoiceItemModelDao.getRate();
         final Currency currency = invoiceItemModelDao.getCurrency();
         final UUID linkedItemId = invoiceItemModelDao.getLinkedItemId();
-        final Integer quantity = invoiceItemModelDao.getQuantity();
+        final BigDecimal quantity = invoiceItemModelDao.getQuantity();
         final String itemDetails = invoiceItemModelDao.getItemDetails();
 
         final InvoiceItemType type = invoiceItemModelDao.getType();
@@ -171,7 +168,7 @@ public class InvoiceItemFactory {
                         prettyPlanName = plan.getPrettyName();
 
                         if (productName != null) {
-                            Preconditions.checkState(plan.getProduct().getName().equals(productName));
+                            Preconditions.checkState(plan.getProduct().getName().equals(productName), "#computePrettyName(): plan.product.name: %s is not equal to productName: %s", plan.getProduct().getName(), productName);
                             prettyProductName = plan.getProduct().getPrettyName();
                         }
 

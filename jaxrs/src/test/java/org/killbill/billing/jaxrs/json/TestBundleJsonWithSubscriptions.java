@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -33,8 +34,6 @@ import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.killbill.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
@@ -50,7 +49,8 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
                                                                       BillingPeriod.NO_BILLING_PERIOD,
-                                                                      new LocalDate(),
+                                                                      new DateTime(),
+                                                                      new DateTime(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
@@ -64,11 +64,12 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
         final PhasePriceJson priceOverride = new PhasePriceJson(null, null, "somePhaseType", BigDecimal.ONE, null, null);
 
+       
         final SubscriptionJson subscription = new SubscriptionJson(UUID.randomUUID(),
                                                                    UUID.randomUUID(),
                                                                    bundleExternalKey, UUID.randomUUID(),
                                                                    externalKey,
-                                                                   new LocalDate(),
+                                                                   new DateTime(),
                                                                    UUID.randomUUID().toString(),
                                                                    ProductCategory.BASE,
                                                                    BillingPeriod.MONTHLY,
@@ -77,17 +78,18 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    UUID.randomUUID().toString(),
                                                                    EntitlementState.ACTIVE,
                                                                    EntitlementSourceType.NATIVE,
+                                                                   new DateTime(),
                                                                    new LocalDate(),
-                                                                   new LocalDate(),
-                                                                   new LocalDate(),
-                                                                   new LocalDate(),
+                                                                   new DateTime(),
+                                                                   new DateTime(),
                                                                    null,
-                                                                   ImmutableList.<EventSubscriptionJson>of(event),
-                                                                   ImmutableList.of(priceOverride),
+                                                                   1,
+                                                                   List.of(event),
+                                                                   List.of(priceOverride),
                                                                    null,
                                                                    auditLogs);
 
-        final BundleJson bundleJson = new BundleJson(someUUID, bundleId, bundleExternalKey, ImmutableList.<SubscriptionJson>of(subscription), null, auditLogs);
+        final BundleJson bundleJson = new BundleJson(someUUID, bundleId, bundleExternalKey, List.of(subscription), null, auditLogs);
         Assert.assertEquals(bundleJson.getBundleId(), bundleId);
         Assert.assertEquals(bundleJson.getExternalKey(), bundleExternalKey);
         Assert.assertEquals(bundleJson.getSubscriptions().size(), 1);

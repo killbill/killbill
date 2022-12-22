@@ -17,10 +17,9 @@
 package org.killbill.billing.util.cache;
 
 import java.util.List;
+import java.util.function.Function;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
-
-import com.google.common.base.Function;
 
 public interface CacheController<K, V> {
 

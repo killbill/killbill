@@ -19,6 +19,7 @@
 
 package org.killbill.billing.account.dao;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -33,8 +34,6 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 import org.killbill.billing.util.entity.dao.TimeZoneAwareEntity;
-
-import com.google.common.base.MoreObjects;
 
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 
@@ -73,7 +72,7 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
                             final String city, final String stateOrProvince, final String country, final String postalCode,
                             final String phone, final String notes, final Boolean migrated, final boolean withDefaults) {
         super(id, createdDate, updatedDate);
-        this.externalKey = !withDefaults ? externalKey : MoreObjects.firstNonNull(externalKey, id.toString());
+        this.externalKey = !withDefaults ? externalKey : Objects.requireNonNullElse(externalKey, id.toString());
         this.email = email;
         this.name = name;
         this.firstNameLength = firstNameLength;
@@ -83,7 +82,7 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         this.billingCycleDayLocal = billingCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.referenceTime = referenceTime;
-        this.timeZone = !withDefaults ? timeZone : MoreObjects.firstNonNull(timeZone, DateTimeZone.UTC);
+        this.timeZone = !withDefaults ? timeZone : Objects.requireNonNullElse(timeZone, DateTimeZone.UTC);
         this.locale = locale;
         this.address1 = address1;
         this.address2 = address2;
@@ -108,7 +107,7 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
              account.getCurrency(),
              account.getParentAccountId(),
              account.isPaymentDelegatedToParent(),
-             MoreObjects.firstNonNull(account.getBillCycleDayLocal(), DEFAULT_BILLING_CYCLE_DAY_LOCAL),
+             Objects.requireNonNullElse(account.getBillCycleDayLocal(), DEFAULT_BILLING_CYCLE_DAY_LOCAL),
              account.getPaymentMethodId(),
              account.getReferenceTime() != null ? account.getReferenceTime() : createdDate,
              account.getTimeZone(),
@@ -286,7 +285,7 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
     }
 
     public void setBillingCycleDayLocal(final Integer billingCycleDayLocal) {
-        this.billingCycleDayLocal = MoreObjects.firstNonNull(billingCycleDayLocal, DEFAULT_BILLING_CYCLE_DAY_LOCAL);
+        this.billingCycleDayLocal = Objects.requireNonNullElse(billingCycleDayLocal, DEFAULT_BILLING_CYCLE_DAY_LOCAL);
     }
 
     public UUID getPaymentMethodId() {

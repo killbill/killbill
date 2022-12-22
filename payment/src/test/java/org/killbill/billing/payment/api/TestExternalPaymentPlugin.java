@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
@@ -27,11 +28,8 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -57,10 +55,10 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "transactionKey";
 
         final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, null, paymentExternalKey, transactionExternalKey,
-                                                          ImmutableList.<PluginProperty>of(), callContext);
+                                                          Collections.emptyList(), callContext);
 
-        final Payment paymentPluginInfoFalse = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
-        final Payment paymentPluginInfoTrue = paymentApi.getPayment(payment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment paymentPluginInfoFalse = paymentApi.getPayment(payment.getId(), false, false, Collections.emptyList(), callContext);
+        final Payment paymentPluginInfoTrue = paymentApi.getPayment(payment.getId(), true, false, Collections.emptyList(), callContext);
 
         Assert.assertEquals(paymentPluginInfoFalse.getAccountId(), paymentPluginInfoTrue.getAccountId());
 
@@ -97,7 +95,7 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
 
         final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount,
                                                           Currency.AED, null, paymentExternalKey, transactionExternalKey,
-                                                          ImmutableList.<PluginProperty>of(), callContext);
+                                                          Collections.emptyList(), callContext);
 
         final Pagination<PaymentMethod> paymentMethods = paymentApi.getPaymentMethods(0L, 10L, false, null, callContext);
         final Pagination<PaymentMethod> paymentMethodsPlugin = paymentApi.getPaymentMethods(0L, 10L, true, null, callContext);
@@ -123,7 +121,7 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
             throws Exception {
         final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(),
                                                                  ExternalPaymentProviderPlugin.PLUGIN_NAME, true,
-                                                                 paymentMethodInfo, ImmutableList.<PluginProperty>of(), callContext);
+                                                                 paymentMethodInfo, Collections.emptyList(), callContext);
         return accountApi.getAccountById(account.getId(), internalCallContext);
     }
 

@@ -21,6 +21,8 @@ package org.killbill.billing.junction.plumbing.billing;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -59,17 +61,13 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.MockTagDao;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -98,7 +96,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         super.beforeMethod();
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bunId);
-        final List<SubscriptionBaseBundle> bundles = ImmutableList.<SubscriptionBaseBundle>of(bundle);
+        final List<SubscriptionBaseBundle> bundles = List.of(bundle);
 
 
         billingTransitions = new LinkedList<SubscriptionBillingEvent>();
@@ -106,15 +104,13 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final DateTime subscriptionStartDate = clock.getUTCNow().minusDays(3);
         subscription = new MockSubscription(subId, bunId, null, null, subscriptionStartDate, subscriptionStartDate);
-        final List<SubscriptionBase> subscriptions = ImmutableList.<SubscriptionBase>of(subscription);
+        final List<SubscriptionBase> subscriptions = List.of(subscription);
         //Mockito.when(subscription.getBillingAlignment(Mockito.<PlanPhaseSpecifier>any(), Mockito.<DateTime>any(), Mockito.<Catalog>any())).thenReturn(BillingAlignment.ACCOUNT);
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
         Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
-        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<VersionedCatalog>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
-                                                                                                                                                                                                 .put(bunId, subscriptions)
-                                                                                                                                                                                                 .build());
-        Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<VersionedCatalog>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(Map.of(bunId, subscriptions));
+        Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.eq(false), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getSubscriptionBillingEvents(Mockito.<VersionedCatalog>any(), Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(billingTransitions);
@@ -207,7 +203,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final BlockingState blockingState1 = new DefaultBlockingState(bunId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1));
         final BlockingState blockingState2 = new DefaultBlockingState(bunId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2));
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState1, Optional.<UUID>absent(), blockingState2, Optional.<UUID>absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState1, Optional.empty(), blockingState2, Optional.empty()), internalCallContext);
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
 
@@ -305,7 +301,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
-        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan, nextPhase, now, 1L, null,
+        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan, nextPhase, now, 1L, null, 1,
                                                                    CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate())));
 
         return now;

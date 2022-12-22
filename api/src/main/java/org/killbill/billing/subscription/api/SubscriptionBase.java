@@ -85,6 +85,8 @@ public interface SubscriptionBase extends Entity, Blockable {
     public DateTime getEndDate();
 
     public DateTime getFutureEndDate();
+    
+    public DateTime getFutureExpiryDate();
 
     public Plan getCurrentPlan();
 
@@ -114,15 +116,19 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public Integer getBillCycleDayLocal();
 
+    public Integer getQuantity();
+
     public SubscriptionBaseTransition getPendingTransition();
 
     public SubscriptionBaseTransition getPreviousTransition();
 
-    public List<SubscriptionBaseTransition> getAllTransitions();
+    public List<SubscriptionBaseTransition> getAllTransitions(boolean includeDeleted);
 
     public DateTime getDateOfFirstRecurringNonZeroCharge();
 
     public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public BillingAlignment getBillingAlignment(PlanPhaseSpecifier spec, DateTime transitionTime, VersionedCatalog catalog) throws SubscriptionBaseApiException;
+    
+    public boolean getIncludeDeletedEvents();
 }

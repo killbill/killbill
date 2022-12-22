@@ -27,6 +27,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -40,8 +42,6 @@ import org.killbill.billing.payment.api.PaymentResponse;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
-
-import com.google.inject.Inject;
 
 public class BillingStateCalculator {
 

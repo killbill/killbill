@@ -20,12 +20,14 @@ package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -41,22 +43,19 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, PaymentApiException> implements PaymentDao {
 
-    private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
-    private final Map<UUID, PaymentTransactionModelDao> transactions = new HashMap<UUID, PaymentTransactionModelDao>();
-    private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
+    private final Map<UUID, PaymentModelDao> payments = new HashMap<>();
+    private final Map<UUID, PaymentTransactionModelDao> transactions = new HashMap<>();
+    private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<>();
 
     private final MockNonEntityDao mockNonEntityDao;
-    private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
+    private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<>();
 
     @Inject
     public MockPaymentDao(final MockNonEntityDao mockNonEntityDao) {
@@ -74,17 +73,10 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
 
     @Override
     public Pagination<PaymentTransactionModelDao> getByTransactionStatusAcrossTenants(final Iterable<TransactionStatus> transactionStatuses, DateTime createdBeforeDate, DateTime createdAfterDate, Long offset, Long limit) {
-        final List<PaymentTransactionModelDao> result = ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao input) {
-                return Iterables.any(transactionStatuses, new Predicate<TransactionStatus>() {
-                    @Override
-                    public boolean apply(final TransactionStatus transactionStatus) {
-                        return input.getTransactionStatus() == transactionStatus;
-                    }
-                });
-            }
-        }));
+        final List<PaymentTransactionModelDao> result = transactions.values().stream()
+                .filter(input -> Iterables.toStream(transactionStatuses)
+                                          .anyMatch(transactionStatus -> input.getTransactionStatus() == transactionStatus))
+                .collect(Collectors.toUnmodifiableList());
         return new DefaultPagination<PaymentTransactionModelDao>(new Long(result.size()), result.iterator());
     }
 
@@ -135,7 +127,7 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     @Override
     public List<PaymentAttemptModelDao> getPaymentAttempts(final String paymentExternalKey, final InternalTenantContext context) {
         synchronized (this) {
-            final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
+            final List<PaymentAttemptModelDao> result = new ArrayList<>();
             for (PaymentAttemptModelDao cur : attempts.values()) {
                 if (cur.getPaymentExternalKey().equals(paymentExternalKey)) {
                     result.add(cur);
@@ -148,7 +140,7 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     @Override
     public List<PaymentAttemptModelDao> getPaymentAttemptByTransactionExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
         synchronized (this) {
-            final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
+            final List<PaymentAttemptModelDao> result = new ArrayList<>();
             for (PaymentAttemptModelDao cur : attempts.values()) {
                 if (cur.getTransactionExternalKey().equals(transactionExternalKey)) {
                     result.add(cur);
@@ -160,9 +152,9 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
 
     @Override
     public List<PaymentTransactionModelDao> getPaymentTransactionsByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {
-        final List<PaymentTransactionModelDao> result = new ArrayList<PaymentTransactionModelDao>();
+        final List<PaymentTransactionModelDao> result = new ArrayList<>();
         synchronized (this) {
-            for (PaymentTransactionModelDao cur : transactions.values()) {
+            for (final PaymentTransactionModelDao cur : transactions.values()) {
                 if (cur.getTransactionExternalKey().equals(transactionExternalKey)) {
                     result.add(cur);
                 }
@@ -288,12 +280,9 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     @Override
     public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId, final InternalTenantContext context) {
         synchronized (this) {
-            return ImmutableList.copyOf(Iterables.filter(payments.values(), new Predicate<PaymentModelDao>() {
-                @Override
-                public boolean apply(final PaymentModelDao input) {
-                    return input.getAccountId().equals(accountId);
-                }
-            }));
+            return payments.values().stream()
+                    .filter(input -> accountId.equals(input.getAccountId()))
+                    .collect(Collectors.toUnmodifiableList());
         }
     }
 
@@ -305,41 +294,34 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     @Override
     public List<PaymentTransactionModelDao> getTransactionsForAccount(final UUID accountId, final InternalTenantContext context) {
         synchronized (this) {
-            return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
-                @Override
-                public boolean apply(final PaymentTransactionModelDao input) {
-                    final PaymentModelDao payment = payments.get(input.getPaymentId());
-                    if (payment != null) {
-                        return payment.getAccountId().equals(accountId);
-                    } else {
-                        return false;
-                    }
-                }
-            }));
+            return transactions.values().stream()
+                    .filter(input -> {
+                        final PaymentModelDao payment = payments.get(input.getPaymentId());
+                        if (payment != null) {
+                            return payment.getAccountId().equals(accountId);
+                        } else {
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.toUnmodifiableList());
         }
     }
 
     @Override
     public List<PaymentTransactionModelDao> getTransactionsForPayment(final UUID paymentId, final InternalTenantContext context) {
         synchronized (this) {
-            return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
-                @Override
-                public boolean apply(final PaymentTransactionModelDao input) {
-                    return input.getPaymentId().equals(paymentId);
-                }
-            }));
+            return transactions.values().stream()
+                    .filter(input -> paymentId.equals(input.getPaymentId()))
+                    .collect(Collectors.toUnmodifiableList());
         }
     }
 
     @Override
     public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId, final InternalTenantContext context) {
         synchronized (this) {
-            return Iterables.tryFind(attempts.values(), new Predicate<PaymentAttemptModelDao>() {
-                @Override
-                public boolean apply(final PaymentAttemptModelDao input) {
-                    return input.getId().equals(attemptId);
-                }
-            }).orNull();
+            return attempts.values().stream()
+                    .filter(input -> attemptId.equals(input.getId()))
+                    .findFirst().orElse(null);
         }
     }
 
@@ -421,7 +403,7 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
 
     @Override
     public List<PaymentMethodModelDao> refreshPaymentMethods(final String pluginName, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
-        return ImmutableList.<PaymentMethodModelDao>of();
+        return Collections.emptyList();
     }
 
     @Override

@@ -21,6 +21,8 @@ package org.killbill.billing.invoice.notification;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
@@ -35,8 +37,6 @@ import org.killbill.queue.retry.RetryableHandler;
 import org.killbill.queue.retry.RetryableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class DefaultNextBillingDateNotifier extends RetryableService implements NextBillingDateNotifier {
 

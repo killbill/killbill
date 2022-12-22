@@ -26,6 +26,8 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.EventModule;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestCatalogModule extends CatalogModule {
 
@@ -42,5 +44,7 @@ public class TestCatalogModule extends CatalogModule {
         install(new EventModule(configSource));
         install(new MockTenantModule(configSource));
         install(new MockAccountModule(configSource));
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

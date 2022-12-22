@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,14 +47,11 @@ import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
+import org.killbill.commons.utils.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -104,7 +102,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
             @Override
             public List<String> getPaymentControlPluginNames() {
-                return ImmutableList.of(TEST_PAYMENT_WITH_CONTROL);
+                return List.of(TEST_PAYMENT_WITH_CONTROL);
             }
         };
 
@@ -138,7 +136,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentWithAttempts.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getPaymentMethodId(), paymentMethodId);
@@ -163,7 +161,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentWithAttempts.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getPaymentMethodId(), paymentMethodId);
@@ -184,7 +182,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
         Assert.assertEquals(paymentWithAttempts.getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(0).getPaymentExternalKey());
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(0).getTransactionExternalKey());
@@ -196,7 +194,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         paymentApi.createCaptureWithPaymentControl(account, payment.getId(), BigDecimal.ONE, account.getCurrency(), null, null, properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 2);
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(1).getTransactionExternalKey());
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getId().toString(), paymentWithAttempts.getPaymentAttempts().get(1).getTransactionExternalKey());
@@ -219,7 +217,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
         Assert.assertEquals(paymentWithAttempts.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
@@ -235,7 +233,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         paymentApi.createVoidWithPaymentControl(account, payment.getId(), null, paymentTransactionExternalKey2, properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 2);
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey2);
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(1).getTransactionExternalKey());
@@ -266,7 +264,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentWithAttempts.getPaymentMethodId(), overridenPaymentMethodId1);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 2);
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getPaymentMethodId(), overridenPaymentMethodId1);
@@ -289,7 +287,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
             @Override
             public Boolean call() throws Exception {
 
-                final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+                final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, Collections.emptyList(), callContext);
                 return paymentWithAttempts.getPaymentAttempts().size() == 2 &&
                        "ABORTED".equals(paymentWithAttempts.getPaymentAttempts().get(1).getStateName());
             }
@@ -359,12 +357,9 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         @Override
         public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-            final PluginProperty nameProperty = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
-                @Override
-                public boolean apply(final PluginProperty input) {
-                    return input.getKey().equals("name");
-                }
-            }).orNull();
+            final PluginProperty nameProperty = Iterables.toStream(properties)
+                    .filter(input -> "name".equals(input.getKey()))
+                    .findFirst().orElse(null);
             if (nameProperty != null && nameProperty.getValue().equals(TEST_PAYMENT_WITH_CONTROL)) {
                 final Integer result = calls.get(paymentControlContext.getTransactionType());
                 calls.put(paymentControlContext.getTransactionType().toString(), result == null ? new Integer(1) : new Integer(result.intValue() + 1));

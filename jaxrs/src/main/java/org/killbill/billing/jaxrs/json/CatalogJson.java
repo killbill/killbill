@@ -26,9 +26,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -47,13 +49,10 @@ import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="Catalog")
@@ -114,7 +113,7 @@ public class CatalogJson {
             productJson.getPlans().add(planJson);
         }
 
-        products = ImmutableList.<ProductJson>copyOf(productMap.values());
+        products = List.copyOf(productMap.values());
 
         final PriceListSet priceLists = catalog.getPriceLists();
         for (PriceList childPriceList : priceLists.getAllPriceLists()) {
@@ -377,13 +376,7 @@ public class CatalogJson {
         }
 
         private List<String> toProductNames(final Collection<Product> in) {
-            return Lists.transform(ImmutableList.<Product>copyOf(in),
-                                   new Function<Product, String>() {
-                                       @Override
-                                       public String apply(final Product input) {
-                                           return input.getName();
-                                       }
-                                   });
+            return in.stream().map(Product::getName).collect(Collectors.toUnmodifiableList());
         }
     }
 
@@ -392,6 +385,7 @@ public class CatalogJson {
 
         private final String name;
         private final String prettyName;
+        private final BillingMode recurringBillingMode;
         private final BillingPeriod billingPeriod;
         private final List<PhaseJson> phases;
 
@@ -404,6 +398,7 @@ public class CatalogJson {
 
             this.name = plan.getName();
             this.prettyName = plan.getPrettyName();
+            this.recurringBillingMode = plan.getRecurringBillingMode();
             this.billingPeriod = plan.getRecurringBillingPeriod();
             this.phases = phases;
         }
@@ -411,10 +406,12 @@ public class CatalogJson {
         @JsonCreator
         public PlanJson(@JsonProperty("name") final String name,
                         @JsonProperty("prettyName") final String prettyName,
+                        @JsonProperty("recurringBillingMode") final BillingMode recurringBillingMode,
                         @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
                         @JsonProperty("phases") final List<PhaseJson> phases) {
             this.name = name;
             this.prettyName = prettyName;
+            this.recurringBillingMode = recurringBillingMode;
             this.billingPeriod = billingPeriod;
             this.phases = phases;
         }
@@ -431,6 +428,10 @@ public class CatalogJson {
             return billingPeriod;
         }
 
+        public BillingMode getRecurringBillingMode() {
+            return recurringBillingMode;
+        }
+
         public List<PhaseJson> getPhases() {
             return phases;
         }
@@ -440,6 +441,7 @@ public class CatalogJson {
             final StringBuilder sb = new StringBuilder("PlanJson{");
             sb.append("name='").append(name).append('\'');
             sb.append("prettyName='").append(prettyName).append('\'');
+            sb.append("recurringBillingMode='").append(recurringBillingMode).append('\'');
             sb.append("billingPeriod='").append(billingPeriod).append('\'');
             sb.append(", phases=").append(phases);
             sb.append('}');
@@ -458,6 +460,9 @@ public class CatalogJson {
             final PlanJson planJson = (PlanJson) o;
 
             if (name != null ? !name.equals(planJson.name) : planJson.name != null) {
+                return false;
+            }
+            if (recurringBillingMode != null ? !recurringBillingMode.equals(planJson.recurringBillingMode) : planJson.recurringBillingMode != null) {
                 return false;
             }
             if (billingPeriod != null ? !billingPeriod.equals(planJson.billingPeriod) : planJson.billingPeriod != null) {

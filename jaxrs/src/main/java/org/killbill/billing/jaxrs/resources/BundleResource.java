@@ -19,12 +19,16 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.net.URI;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -51,6 +55,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.entitlement.api.BcdTransfer;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -61,6 +66,7 @@ import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -81,11 +87,8 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -156,9 +159,9 @@ public class BundleResource extends JaxRsResourceBase {
             bundles = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, tenantContext);
         } else {
             final SubscriptionBundle activeBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, tenantContext);
-            bundles = ImmutableList.of(activeBundle);
+            bundles = List.of(activeBundle);
         }
-        final List<BundleJson> result = new ArrayList<BundleJson>(bundles.size());
+        final List<BundleJson> result = new ArrayList<>(bundles.size());
         for (final SubscriptionBundle bundle : bundles) {
             final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
             final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext);
@@ -193,23 +196,33 @@ public class BundleResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundles(offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(BundleResource.class, "getBundles", bundles.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()), ImmutableMap.<String, String>of());
-        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
-        return buildStreamingPaginationResponse(bundles,
-                                                new Function<SubscriptionBundle, BundleJson>() {
-                                                    @Override
-                                                    public BundleJson apply(final SubscriptionBundle bundle) {
-                                                        // Cache audit logs per account
-                                                        if (accountsAuditLogs.get().get(bundle.getAccountId()) == null) {
-                                                            accountsAuditLogs.get().put(bundle.getAccountId(), auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext));
-                                                        }
+        final URI nextPageUri = uriBuilder.nextPage(BundleResource.class,
+                                                    "getBundles",
+                                                    bundles.getNextOffset(),
+                                                    limit,
+                                                    Map.of(QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Collections.emptyMap());
+        return buildBundleStreamPaginationResponse(bundles, auditMode, nextPageUri, tenantContext);
+    }
 
-                                                        try {
-                                                            return new BundleJson(bundle, null, accountsAuditLogs.get().get(bundle.getAccountId()));
-                                                        } catch (final CatalogApiException unused) {
-                                                            // Does not happen because we pass a null Currency
-                                                            throw new RuntimeException(unused);
-                                                        }
+
+    private Response buildBundleStreamPaginationResponse(final Pagination<SubscriptionBundle> bundles,
+                                                         final AuditMode auditMode,
+                                                         final URI nextPageUri,
+                                                         final TenantContext tenantContext) {
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<>(new HashMap<UUID, AccountAuditLogs>());
+        return buildStreamingPaginationResponse(bundles,
+                                                bundle -> {
+                                                    // Cache audit logs per account
+                                                    if (accountsAuditLogs.get().get(bundle.getAccountId()) == null) {
+                                                        accountsAuditLogs.get().put(bundle.getAccountId(), auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext));
+                                                    }
+
+                                                    try {
+                                                        return new BundleJson(bundle, null, accountsAuditLogs.get().get(bundle.getAccountId()));
+                                                    } catch (final CatalogApiException unused) {
+                                                        // Does not happen because we pass a null Currency
+                                                        throw new RuntimeException(unused);
                                                     }
                                                 },
                                                 nextPageUri);
@@ -228,25 +241,13 @@ public class BundleResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<SubscriptionBundle> bundles = subscriptionApi.searchSubscriptionBundles(searchKey, offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(BundleResource.class,"searchBundles", bundles.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()), ImmutableMap.<String, String>of("searchKey", searchKey));
-        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
-        return buildStreamingPaginationResponse(bundles,
-                                                new Function<SubscriptionBundle, BundleJson>() {
-                                                    @Override
-                                                    public BundleJson apply(final SubscriptionBundle bundle) {
-                                                        // Cache audit logs per account
-                                                        if (accountsAuditLogs.get().get(bundle.getAccountId()) == null) {
-                                                            accountsAuditLogs.get().put(bundle.getAccountId(), auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext));
-                                                        }
-                                                        try {
-                                                            return new BundleJson(bundle, null, accountsAuditLogs.get().get(bundle.getAccountId()));
-                                                        } catch (final CatalogApiException unused) {
-                                                            // Does not happen because we pass a null Currency
-                                                            throw new RuntimeException(unused);
-                                                        }
-                                                    }
-                                                },
-                                                nextPageUri);
+        final URI nextPageUri = uriBuilder.nextPage(BundleResource.class,
+                                                    "searchBundles",
+                                                    bundles.getNextOffset(),
+                                                    limit,
+                                                    Map.of(QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Map.of("searchKey", searchKey));
+        return buildBundleStreamPaginationResponse(bundles, auditMode, nextPageUri, tenantContext);
     }
 
     @TimedResource
@@ -418,6 +419,7 @@ public class BundleResource extends JaxRsResourceBase {
                                    final BundleJson json,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final BillingActionPolicy billingPolicy,
+                                   @QueryParam(QUERY_BCD_TRANSFER) @DefaultValue("USE_EXISTING") final BcdTransfer bcdTransfer,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -427,13 +429,26 @@ public class BundleResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "BundleJson body should be specified");
         verifyNonNullOrEmpty(json.getAccountId(), "BundleJson accountId needs to be set");
 
+        // Extract possible key mapping for new subscriptions (the subscription#id points to the existing subscription and the subscription#externalKey is the new key to use for the transferred subscription)
+        final Map<UUID, String> subExtKeys = json.getSubscriptions() == null ?
+                                             Collections.emptyMap() :
+                                             json.getSubscriptions()
+                                                 .stream()
+                                                 .filter(s -> s.getSubscriptionId() != null && s.getExternalKey() != null)
+                                                 .map(new Function<SubscriptionJson, SimpleEntry<UUID, String>>() {
+                                                     @Override
+                                                     public SimpleEntry<UUID, String> apply(final SubscriptionJson sub) {
+                                                         return new SimpleEntry<>(sub.getSubscriptionId(), sub.getExternalKey());
+                                                     }
+                                                 }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
 
-        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, billingPolicy, pluginProperties, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, subExtKeys, billingPolicy, bcdTransfer, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", newBundleId, request);
     }
 

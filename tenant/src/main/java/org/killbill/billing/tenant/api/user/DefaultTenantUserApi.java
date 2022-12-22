@@ -19,10 +19,14 @@
 package org.killbill.billing.tenant.api.user;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -44,11 +48,7 @@ import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class DefaultTenantUserApi implements TenantUserApi {
 
@@ -60,14 +60,13 @@ public class DefaultTenantUserApi implements TenantUserApi {
     //
     // CACHED_TENANT_KEY is not exposed in the API and is hardcoded here since this is really a implementation choice.
     //
-    public static final Iterable<TenantKey> CACHED_TENANT_KEY = ImmutableList.<TenantKey>builder()
-                                                                             .add(TenantKey.CATALOG_TRANSLATION_)
-                                                                             .add(TenantKey.INVOICE_MP_TEMPLATE)
-                                                                             .add(TenantKey.INVOICE_TEMPLATE)
-                                                                             .add(TenantKey.INVOICE_TRANSLATION_)
-                                                                             .add(TenantKey.PLUGIN_CONFIG_)
-                                                                             .add(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_)
-                                                                             .add(TenantKey.PUSH_NOTIFICATION_CB).build();
+    public static final Iterable<TenantKey> CACHED_TENANT_KEY = List.of(TenantKey.CATALOG_TRANSLATION_,
+                                                                        TenantKey.INVOICE_MP_TEMPLATE,
+                                                                        TenantKey.INVOICE_TEMPLATE,
+                                                                        TenantKey.INVOICE_TRANSLATION_,
+                                                                        TenantKey.PLUGIN_CONFIG_,
+                                                                        TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_,
+                                                                        TenantKey.PUSH_NOTIFICATION_CB);
 
     private final TenantDao tenantDao;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -123,7 +122,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
     @Override
     public Tenant getTenantById(final UUID id) throws TenantApiException {
-        // TODO - API cleanup?
         final TenantModelDao tenant = tenantDao.getById(id, new InternalTenantContext(null));
         if (tenant == null) {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, id);
@@ -187,10 +185,10 @@ public class DefaultTenantUserApi implements TenantUserApi {
         final String tenantKey = getCacheKeyName(key, internalContext);
         final Object cachedTenantValues = tenantKVCache.get(tenantKey, new CacheLoaderArgument(ObjectType.TENANT_KVS));
         if (cachedTenantValues == null) {
-            return ImmutableList.<String>of();
+            return Collections.emptyList();
         } else {
             // Current, we only cache single-value keys
-            return ImmutableList.<String>of((String) cachedTenantValues);
+            return List.of((String) cachedTenantValues);
         }
     }
 
@@ -202,20 +200,10 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     private boolean isSingleValueKey(final String key) {
-        return Iterables.tryFind(ImmutableList.copyOf(TenantKey.values()), new Predicate<TenantKey>() {
-            @Override
-            public boolean apply(final TenantKey input) {
-                return input.isSingleValue() && key.startsWith(input.toString());
-            }
-        }).orNull() != null;
+        return Arrays.stream(TenantKey.values()).anyMatch(input -> input.isSingleValue() && key.startsWith(input.toString()));
     }
 
     private boolean isCachedInTenantKVCache(final String key) {
-        return Iterables.tryFind(CACHED_TENANT_KEY, new Predicate<TenantKey>() {
-            @Override
-            public boolean apply(final TenantKey input) {
-                return key.startsWith(input.toString());
-            }
-        }).orNull() != null;
+        return Iterables.toUnmodifiableList(CACHED_TENANT_KEY).stream().anyMatch(input -> key.startsWith(input.toString()));
     }
 }

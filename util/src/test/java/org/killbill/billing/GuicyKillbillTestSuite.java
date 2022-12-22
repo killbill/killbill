@@ -39,6 +39,7 @@ import org.killbill.billing.util.glue.RedissonCacheClientProvider;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.killbill.clock.DistributedClockMock;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -57,8 +58,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Listeners;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import redis.embedded.RedisServer;
 
 import static org.testng.ITestResult.CREATED;

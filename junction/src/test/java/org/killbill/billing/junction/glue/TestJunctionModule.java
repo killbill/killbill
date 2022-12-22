@@ -34,6 +34,8 @@ import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.SecurityModule;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestJunctionModule extends DefaultJunctionModule {
 
@@ -53,6 +55,8 @@ public class TestJunctionModule extends DefaultJunctionModule {
         // Needed because Entitlement depends on Security
         install(new KillBillShiroModuleOnlyIniRealm(configSource));
         install(new SecurityModule(configSource));
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 
     public class MockEntitlementModuleForJunction extends MockEntitlementModule {

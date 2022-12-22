@@ -18,7 +18,6 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -39,6 +38,11 @@ public class TaxInvoiceItem extends InvoiceItemCatalogBase {
     public TaxInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                           @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
         this(id, null, invoiceId, accountId, bundleId, null, null, null, null, null, null, null, null, null, null, date, null, description, amount, currency, null, null);
+    }
+
+    public TaxInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                          @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency, final UUID linkedItemId) {
+        this(id, null, invoiceId, accountId, bundleId, null, null, null, null, null, null, null, null, null, null, date, null, description, amount, currency, linkedItemId, null);
     }
 
     public TaxInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,

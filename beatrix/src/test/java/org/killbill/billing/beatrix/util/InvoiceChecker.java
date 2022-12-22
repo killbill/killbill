@@ -22,6 +22,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -41,13 +44,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -72,11 +68,11 @@ public class InvoiceChecker {
     }
 
     public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
-        return checkInvoice(accountId, invoiceOrderingNumber, context, ImmutableList.<ExpectedInvoiceItemCheck>copyOf(expected));
+        return checkInvoice(accountId, invoiceOrderingNumber, context, List.of(expected));
     }
 
     public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, context);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, context);
         //Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
         checkInvoice(invoice.getId(), context, expected);
@@ -97,25 +93,23 @@ public class InvoiceChecker {
 
             // First try to find exact match; this is necessary because the for loop below might encounter a similar item -- for instance
             // same type, same dates, but different amount and choke.
-            final InvoiceItem foundItem = Iterables.tryFind(actual, new Predicate<InvoiceItem>() {
-                @Override
-                public boolean apply(final InvoiceItem input) {
-                    if (input.getInvoiceItemType() != cur.getType() || (cur.shouldCheckDates() && input.getStartDate().compareTo(cur.getStartDate()) != 0)) {
-                        return false;
-                    }
-                    if (input.getAmount().compareTo(cur.getAmount()) != 0) {
-                        return false;
-                    }
+            final boolean foundItemExist = actual.stream()
+                    .anyMatch(input -> {
+                        if (input.getInvoiceItemType() != cur.getType() || (cur.shouldCheckDates() && input.getStartDate().compareTo(cur.getStartDate()) != 0)) {
+                            return false;
+                        }
+                        if (input.getAmount().compareTo(cur.getAmount()) != 0) {
+                            return false;
+                        }
 
-                    if (!cur.shouldCheckDates() ||
-                        (cur.getEndDate() == null && input.getEndDate() == null) ||
-                        (cur.getEndDate() != null && input.getEndDate() != null && cur.getEndDate().compareTo(input.getEndDate()) == 0)) {
-                        return true;
-                    }
-                    return false;
-                }
-            }).orNull();
-            if (foundItem != null) {
+                        if (!cur.shouldCheckDates() ||
+                            (cur.getEndDate() == null && input.getEndDate() == null) ||
+                            (cur.getEndDate() != null && input.getEndDate() != null && cur.getEndDate().compareTo(input.getEndDate()) == 0)) {
+                            return true;
+                        }
+                        return false;
+                    });
+            if (foundItemExist) {
                 continue;
             }
 
@@ -166,7 +160,7 @@ public class InvoiceChecker {
 
     public void checkChargedThroughDate(final UUID entitlementId, final LocalDate expectedLocalCTD, final CallContext context) {
         try {
-            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(entitlementId, context);
+            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(entitlementId, false, context);
             final SubscriptionBase subscription = entitlement.getSubscriptionBase();
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
@@ -183,14 +177,11 @@ public class InvoiceChecker {
 
     public void checkTrackingIds(final Invoice invoice, final Set<String> expectedTrackingIds, final InternalCallContext internalCallContext) {
         final InvoiceTrackingSqlDao dao = dbi.onDemand(InvoiceTrackingSqlDao.class);
-        final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoices(ImmutableList.of(invoice.getId().toString()), internalCallContext);
+        final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoices(List.of(invoice.getId().toString()), internalCallContext);
 
-        final Set<String> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(result, new Function<InvoiceTrackingModelDao, String>() {
-            @Override
-            public String apply(final InvoiceTrackingModelDao input) {
-                return input.getTrackingId();
-            }
-        }));
+        final Set<String> existingTrackingIds = result.stream()
+                .map(InvoiceTrackingModelDao::getTrackingId)
+                .collect(Collectors.toUnmodifiableSet());
 
         assertEquals(existingTrackingIds.size(), expectedTrackingIds.size());
         for (final String cur : existingTrackingIds) {

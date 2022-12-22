@@ -20,14 +20,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.TagDefinition;
-
-import com.google.common.base.Joiner;
 
 public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityModelDao<TagDefinition> {
 
@@ -39,7 +38,7 @@ public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityM
 
     public TagDefinitionModelDao() { /* For the DAO mapper */ }
 
-    public TagDefinitionModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String name, final String description, String applicableObjectTypes) {
+    public TagDefinitionModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String name, final String description, final String applicableObjectTypes) {
         super(id, createdDate, updatedDate);
         this.name = name;
         this.description = description;
@@ -51,7 +50,7 @@ public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityM
         this(tag.getId(), null, null, tag.name(), tag.getDescription(), JOINER.join(tag.getApplicableObjectTypes()));
     }
 
-    public TagDefinitionModelDao(final DateTime createdDate, final String name, final String description, String applicableObjectTypes) {
+    public TagDefinitionModelDao(final DateTime createdDate, final String name, final String description, final String applicableObjectTypes) {
         this(UUIDs.randomUUID(), createdDate, createdDate, name, description, applicableObjectTypes);
     }
 

@@ -21,9 +21,12 @@ package org.killbill.billing.subscription.engine.core;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
@@ -39,6 +42,8 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
+import org.killbill.billing.subscription.events.expired.ExpiredEvent;
+import org.killbill.billing.subscription.events.expired.ExpiredEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
@@ -49,7 +54,6 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus.EventBusException;
-import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -59,15 +63,12 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-
 public class DefaultSubscriptionBaseService implements EventListener, SubscriptionBaseService {
 
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionBaseService.class);
 
-    private final Clock clock;
     private final SubscriptionDao dao;
     private final PlanAligner planAligner;
     private final BusOptimizer eventBus;
@@ -79,15 +80,13 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     private NotificationQueue subscriptionEventQueue;
 
     @Inject
-    public DefaultSubscriptionBaseService(final Clock clock,
-                                          final SubscriptionDao dao,
+    public DefaultSubscriptionBaseService(final SubscriptionDao dao,
                                           final PlanAligner planAligner,
                                           final BusOptimizer eventBus,
                                           final NotificationQueueService notificationQueueService,
                                           final InternalCallContextFactory internalCallContextFactory,
                                           final SubscriptionBaseApiService apiService,
                                           final SubscriptionCatalogApi subscriptionCatalogApi) {
-        this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
         this.eventBus = eventBus;
@@ -121,7 +120,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                     final SubscriptionNotificationKey key = (SubscriptionNotificationKey) inputKey;
                     final SubscriptionBaseEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                     if (event == null) {
-                        // This can be expected if the event is soft deleted (is_active = '0')
+                        // This can be expected if the event is soft deleted (is_active = FALSE)
                         log.debug("Failed to extract event for notification key {}", inputKey);
                         return;
                     }
@@ -162,7 +161,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), catalog, context);
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), catalog, false, context);
             if (subscription == null) {
                 log.warn("Error retrieving subscriptionId='{}'", event.getSubscriptionId());
                 return;
@@ -182,6 +181,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 eventSent = onBasePlanEvent(subscription, event, catalog, callContext);
             } else if (event.getType() == EventType.BCD_UPDATE) {
                 eventSent = false;
+            } else if (event.getType() == EventType.EXPIRED) {
+                final CallContext callContext = internalCallContextFactory.createCallContext(context);
+                eventSent = onExpiryEvent(subscription, event, catalog, callContext);
             }
 
             if (!eventSent) {
@@ -208,18 +210,28 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                                                                                   nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {
-                dao.createNextPhaseEvent(subscription, readyPhaseEvent, nextPhaseEvent, context);
+                dao.createNextPhaseOrExpiredEvent(subscription, readyPhaseEvent, nextPhaseEvent, context);
+                return true;
+            } else if (subscription.getCurrentPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+                final DateTime fixedTermExpiryDate = subscription.getCurrentPhase().getDuration().addToDateTime(readyPhaseEvent.getEffectiveDate()); 
+                final ExpiredEvent expiredEvent = ExpiredEventData.createExpiredEvent(subscription.getId(), fixedTermExpiryDate);
+                dao.createNextPhaseOrExpiredEvent(subscription, readyPhaseEvent, expiredEvent, context);
                 return true;
             }
-        } catch (final SubscriptionBaseError e) {
+
+        } catch (final SubscriptionBaseError | CatalogApiException e) {
             log.warn("Error inserting next phase for subscriptionId='{}'", subscription.getId(), e);
         }
-
         return false;
     }
 
     private boolean onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final SubscriptionCatalog fullCatalog, final CallContext context) throws CatalogApiException {
         apiService.handleBasePlanEvent(baseSubscription, event, fullCatalog, context);
+        return true;
+    }
+
+    private boolean onExpiryEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final SubscriptionCatalog fullCatalog, final CallContext context) throws CatalogApiException {
+        apiService.handleExpiredEvent(baseSubscription, event, fullCatalog, context);
         return true;
     }
 }

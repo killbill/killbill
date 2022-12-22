@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription.engine.dao;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
@@ -30,16 +31,21 @@ import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.Inject;
-
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class MockSubscriptionDaoSql extends DefaultSubscriptionDao {
 
     @Inject
-    public MockSubscriptionDaoSql(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                  final BusOptimizer eventBus, final CacheControllerDispatcher cacheControllerDispatcher,
-                                  final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(dbi, roDbi, clock, addonUtils, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, auditDao, internalCallContextFactory);
+    public MockSubscriptionDaoSql(final IDBI dbi,
+                                  @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi,
+                                  final Clock clock, final AddonUtils addonUtils,
+                                  final NotificationQueueService notificationQueueService, final BusOptimizer eventBus,
+                                  final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao,
+                                  final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(dbi, roDbi,
+              clock, addonUtils,
+              notificationQueueService, eventBus,
+              cacheControllerDispatcher, nonEntityDao,
+              auditDao, internalCallContextFactory);
     }
 }

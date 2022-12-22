@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,14 +26,12 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 
 public class PaymentAttemptModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
@@ -166,10 +165,10 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
 
     public final List<String> toPaymentControlPluginNames() {
         if (pluginName == null) {
-            return ImmutableList.<String>of();
+            return Collections.emptyList();
         }
         final String[] parts = pluginName.split(",");
-        return ImmutableList.<String>copyOf(parts);
+        return List.of(parts);
     }
 
     @Override

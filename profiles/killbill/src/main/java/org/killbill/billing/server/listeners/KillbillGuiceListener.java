@@ -20,6 +20,7 @@ package org.killbill.billing.server.listeners;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 
@@ -46,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
 import io.swagger.jaxrs.config.BeanConfig;
@@ -117,8 +117,8 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
     @Override
     protected KillbillConfigSource getConfigSource() throws IOException, URISyntaxException {
-        final ImmutableMap<String, String> defaultProperties = ImmutableMap.<String, String>of("org.killbill.server.updateCheck.url",
-                                                                                               "https://raw.github.com/killbill/killbill/master/profiles/killbill/src/main/resources/update-checker/killbill-server-update-list.properties");
+        final Map<String, String> defaultProperties = Map.of("org.killbill.server.updateCheck.url",
+                                                             "https://raw.github.com/killbill/killbill/master/profiles/killbill/src/main/resources/update-checker/killbill-server-update-list.properties");
         return new DefaultKillbillConfigSource(defaultProperties);
     }
 

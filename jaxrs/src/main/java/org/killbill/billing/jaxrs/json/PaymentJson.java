@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -28,14 +29,12 @@ import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.commons.utils.collect.Iterables;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value="Payment", parent = JsonBase.class)
 public class PaymentJson extends JsonBase {
@@ -103,27 +102,20 @@ public class PaymentJson extends JsonBase {
     }
 
     private static List<PaymentTransactionJson> getTransactions(final Iterable<PaymentTransaction> transactions, final String paymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
-        return ImmutableList.copyOf(Iterables.transform(transactions,
-                                                        new Function<PaymentTransaction, PaymentTransactionJson>() {
-                                                            @Override
-                                                            public PaymentTransactionJson apply(final PaymentTransaction paymentTransaction) {
-                                                                final List<AuditLog> auditLogsForPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentTransaction(paymentTransaction.getId());
-                                                                return new PaymentTransactionJson(paymentTransaction, paymentExternalKey, auditLogsForPaymentTransaction);
-                                                            }
-                                                        }
-                                                       ));
+        return Iterables.toStream(transactions)
+                        .map(paymentTransaction -> {
+                            final List<AuditLog> auditLogsForPaymentTransaction = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentTransaction(paymentTransaction.getId());
+                            return new PaymentTransactionJson(paymentTransaction, paymentExternalKey, auditLogsForPaymentTransaction);
+                        }).collect(Collectors.toUnmodifiableList());
     }
 
     private static List<PaymentAttemptJson> getAttempts(final Iterable<PaymentAttempt> attempts, final String paymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
-        return (attempts != null) ? ImmutableList.copyOf(Iterables.transform(attempts,
-                                                        new Function<PaymentAttempt, PaymentAttemptJson>() {
-                                                            @Override
-                                                            public PaymentAttemptJson apply(final PaymentAttempt paymentAttempt) {
-                                                                final List<AuditLog> auditLogsForPaymentAttempt = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentAttempt(paymentAttempt.getId());
-                                                                return new PaymentAttemptJson(paymentAttempt, paymentExternalKey, auditLogsForPaymentAttempt);
-                                                            }
-                                                        }
-                                                       )) : null;
+        return (attempts != null) ? Iterables.toStream(attempts)
+                                             .map(paymentAttempt -> {
+                                                 final List<AuditLog> auditLogsForPaymentAttempt = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentAttempt(paymentAttempt.getId());
+                                                 return new PaymentAttemptJson(paymentAttempt, paymentExternalKey, auditLogsForPaymentAttempt);
+                                             }).collect(Collectors.toUnmodifiableList())
+                                  : null;
     }
 
     public UUID getAccountId() {

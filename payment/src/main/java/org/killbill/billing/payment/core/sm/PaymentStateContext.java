@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,10 +34,8 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 
 public class PaymentStateContext {
 
@@ -113,7 +112,7 @@ public class PaymentStateContext {
         this.properties = properties;
         this.internalCallContext = internalCallContext;
         this.callContext = callContext;
-        this.onLeavingStateExistingTransactions = ImmutableList.of();
+        this.onLeavingStateExistingTransactions = Collections.emptyList();
     }
 
     public boolean isApiPayment() {

@@ -17,9 +17,12 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UnitUsageRecord;
@@ -27,10 +30,7 @@ import org.killbill.billing.usage.api.UsageRecord;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -87,12 +87,9 @@ public class SubscriptionUsageRecordJson {
         }
 
         public UnitUsageRecord toUnitUsageRecord() {
-            final List<UsageRecord> tmp = ImmutableList.copyOf(Iterables.transform(usageRecords, new Function<UsageRecordJson, UsageRecord>() {
-                @Override
-                public UsageRecord apply(final UsageRecordJson input) {
-                    return input.toUsageRecord();
-                }
-            }));
+            final List<UsageRecord> tmp = usageRecords.stream()
+                    .map(UsageRecordJson::toUsageRecord)
+                    .collect(Collectors.toUnmodifiableList());
             return new UnitUsageRecord(unitType, tmp);
         }
     }
@@ -100,21 +97,21 @@ public class SubscriptionUsageRecordJson {
     @ApiModel(value="UsageRecord")
     public static class UsageRecordJson {
 
-        private final LocalDate recordDate;
-        private final Long amount;
+        private final DateTime recordDate;
+        private final BigDecimal amount;
 
         @JsonCreator
-        public UsageRecordJson(@JsonProperty("recordDate") final LocalDate recordDate,
-                               @JsonProperty("amount") final Long amount) {
+        public UsageRecordJson(@JsonProperty("recordDate") final DateTime recordDate,
+                               @JsonProperty("amount") final BigDecimal amount) {
             this.recordDate = recordDate;
             this.amount = amount;
         }
 
-        public LocalDate getRecordDate() {
+        public DateTime getRecordDate() {
             return recordDate;
         }
 
-        public Long getAmount() {
+        public BigDecimal getAmount() {
             return amount;
         }
 
@@ -124,13 +121,9 @@ public class SubscriptionUsageRecordJson {
     }
 
     public SubscriptionUsageRecord toSubscriptionUsageRecord() {
-        final List<UnitUsageRecord> tmp = ImmutableList.copyOf(Iterables.transform(unitUsageRecords, new Function<UnitUsageRecordJson, UnitUsageRecord>() {
-            @Override
-            public UnitUsageRecord apply(final UnitUsageRecordJson input) {
-                return input.toUnitUsageRecord();
-            }
-        }));
-        final SubscriptionUsageRecord result = new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
-        return result;
+        final List<UnitUsageRecord> tmp = unitUsageRecords.stream()
+                .map(UnitUsageRecordJson::toUnitUsageRecord)
+                .collect(Collectors.toUnmodifiableList());
+        return new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
     }
 }

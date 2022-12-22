@@ -33,8 +33,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.killbill.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
 public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
@@ -52,7 +50,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final UUID accountId = UUID.randomUUID();
         final String bundleKeys = UUID.randomUUID().toString();
         final InvoiceItemJson creditJson = createCreditJson();
-        final List<InvoiceItemJson> credits = ImmutableList.<InvoiceItemJson>of(creditJson);
+        final List<InvoiceItemJson> credits = List.of(creditJson);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD, InvoiceStatus.COMMITTED,
                                                               creditAdj, refundAdj, invoiceId, invoiceDate,
@@ -96,7 +94,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
 
 
         final String bundleKeys = UUID.randomUUID().toString();
-        final List<InvoiceItemJson> credits = ImmutableList.<InvoiceItemJson>of(createCreditJson());
+        final List<InvoiceItemJson> credits = List.of(createCreditJson());
 
         final InvoiceJson invoiceJson = new InvoiceJson(invoice, bundleKeys, credits, null);
         Assert.assertEquals(invoiceJson.getAmount(), invoice.getChargedAmount());

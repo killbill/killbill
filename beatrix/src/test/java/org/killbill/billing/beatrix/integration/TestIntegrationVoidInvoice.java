@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,12 +46,9 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -81,7 +79,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
 
         // Void the invoice
@@ -97,7 +95,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // get all invoices including the VOIDED; includeVoidedInvoices = true;
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, true, callContext);
         assertEquals(invoices.size(), 3);
         // verify integrity of the voided
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
@@ -111,7 +109,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(BigDecimal.ZERO) == 0);
 
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, Collections.emptyList(), callContext);
         assertEquals(payments.size(), 1);
 
         final Payment payment = payments.get(0);
@@ -133,7 +131,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(invoices.get(2).getId(), callContext);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, true, callContext);
         assertEquals(invoices.size(), 3);
         assertEquals(invoices.get(1).getStatus(), InvoiceStatus.VOID);
         assertEquals(invoices.get(2).getStatus(), InvoiceStatus.VOID);
@@ -155,15 +153,15 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), startDate, "credit invoice", new BigDecimal("20.00"), account.getCurrency(), null);
-        invoiceUserApi.insertCredits(account.getId(), startDate, ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), startDate, List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         final BigDecimal accountCBA1 = invoiceUserApi.getAccountCBA(account.getId(), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         assertListenerStatus();
 
         final Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -174,7 +172,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         // 2013-07-01
         clock.addDays(16);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
-        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -184,8 +182,8 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         try {
             invoiceUserApi.voidInvoice(invoice2.getId(), callContext);
             Assert.fail("Should fail to void a repaired invoice");
-        } catch (final RuntimeException e) {
-            assertTrue(e.getMessage().contains("because it contains items being repaired"));
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_REPAIRED.getCode());
         }
 
         // Void the invoice where the REPAIR_ADJ occurred first
@@ -201,7 +199,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
 
         // We were left with an unstable state by VOIDing the previous periods....
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,

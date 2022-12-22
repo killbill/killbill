@@ -16,14 +16,14 @@
 
 package org.killbill.billing.mock;
 
+import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
-
-import com.google.common.collect.ImmutableList;
 
 public class MockProduct implements Product {
 
@@ -45,8 +45,8 @@ public class MockProduct implements Product {
         this.name = name;
         this.category = category;
         this.catalogName = catalogName;
-        this.included = ImmutableList.copyOf(included);
-        this.available = ImmutableList.copyOf(available);
+        this.included = List.of(included);
+        this.available = List.of(available);
     }
 
 
@@ -130,7 +130,7 @@ public class MockProduct implements Product {
     }
 
     @Override
-    public boolean compliesWithLimits(String unit, double value) {
+    public boolean compliesWithLimits(String unit, BigDecimal value) {
         return false;
     }
 }

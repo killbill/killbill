@@ -24,8 +24,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -48,11 +50,13 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
@@ -70,13 +74,6 @@ import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -191,7 +188,9 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     @Override
     public Pagination<PaymentTransactionModelDao> getByTransactionStatusAcrossTenants(final Iterable<TransactionStatus> transactionStatuses, final DateTime createdBeforeDate, final DateTime createdAfterDate, final Long offset, final Long limit) {
 
-        final Collection<String> allTransactionStatus = ImmutableList.copyOf(Iterables.transform(transactionStatuses, Functions.toStringFunction()));
+        final Collection<String> allTransactionStatus = Iterables.toStream(transactionStatuses)
+                .map(Enum::toString)
+                .collect(Collectors.toUnmodifiableList());
         final Date createdBefore = createdBeforeDate.toDate();
         final Date createdAfter = createdAfterDate.toDate();
 
@@ -469,7 +468,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
 
     @Override
     public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId, final InternalTenantContext context) {
-        Preconditions.checkArgument(context.getAccountRecordId() != null);
+        Preconditions.checkArgument(context.getAccountRecordId() != null, "context.getAccountRecordId() is null");
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<PaymentModelDao>>() {
             @Override
             public List<PaymentModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -483,14 +482,14 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<PaymentModelDao>>() {
             @Override
             public List<PaymentModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).getPaymentsByStatesAcrossTenants(ImmutableList.copyOf(states), createdBeforeDate.toDate(), createdAfterDate.toDate(), limit);
+                return entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).getPaymentsByStatesAcrossTenants(List.of(states), createdBeforeDate.toDate(), createdAfterDate.toDate(), limit);
             }
         });
     }
 
     @Override
     public List<PaymentTransactionModelDao> getTransactionsForAccount(final UUID accountId, final InternalTenantContext context) {
-        Preconditions.checkArgument(context.getAccountRecordId() != null);
+        Preconditions.checkArgument(context.getAccountRecordId() != null, "context.getAccountRecordId() is null");
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<PaymentTransactionModelDao>>() {
             @Override
             public List<PaymentTransactionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -659,14 +658,9 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                 final List<PaymentMethodModelDao> allPaymentMethodsForAccount = transactional.getForAccountIncludedDelete(contextWithUpdatedDate);
 
                 // Consider only the payment methods for the plugin we are refreshing
-                final Collection<PaymentMethodModelDao> existingPaymentMethods = Collections2.filter(allPaymentMethodsForAccount,
-                                                                                                     new Predicate<PaymentMethodModelDao>() {
-                                                                                                         @Override
-                                                                                                         public boolean apply(final PaymentMethodModelDao paymentMethod) {
-                                                                                                             return pluginName.equals(paymentMethod.getPluginName());
-                                                                                                         }
-                                                                                                     }
-                                                                                                    );
+                final Collection<PaymentMethodModelDao> existingPaymentMethods = allPaymentMethodsForAccount.stream()
+                        .filter(paymentMethod -> pluginName.equals(paymentMethod.getPluginName()))
+                        .collect(Collectors.toList());
 
                 for (final PaymentMethodModelDao finalPaymentMethod : newPaymentMethods) {
                     PaymentMethodModelDao foundExistingPaymentMethod = null;

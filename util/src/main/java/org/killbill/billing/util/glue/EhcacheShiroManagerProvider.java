@@ -32,10 +32,9 @@ import org.apache.shiro.mgt.SubjectDAO;
 import org.ehcache.integrations.shiro.EhcacheShiro;
 import org.ehcache.integrations.shiro.EhcacheShiroManager;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
+import org.killbill.commons.metrics.api.MetricRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.MetricRegistry;
 
 public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements Provider<EhcacheShiroManager> {
 

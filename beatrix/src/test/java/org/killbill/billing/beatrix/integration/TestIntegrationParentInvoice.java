@@ -18,11 +18,10 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
-import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -40,7 +39,6 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
-import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -50,16 +48,12 @@ import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
-import org.killbill.notificationq.api.NotificationQueueService;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -87,7 +81,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         createBaseEntitlementAndCheckForCompletion(child2Account.getId(), "bundleKey2", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // First Parent invoice over TRIAL period
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 1);
 
         Invoice parentInvoice = parentInvoices.get(0);
@@ -121,7 +115,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // Second Parent invoice over Recurring period
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -137,7 +131,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
 
         // Check Child Balance. It should be > 0 here because Parent invoice is unpaid yet.
-        List<Invoice> child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, false, callContext);
+        List<Invoice> child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, false, true, callContext);
         assertEquals(child1Invoices.size(), 2);
         // child balance is 0 because parent invoice status is DRAFT at this point
         assertEquals(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -151,7 +145,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
 
         // Check Child Balance. It should be = 0 because parent invoice had already paid.
-        child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, false, callContext);
+        child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, false, true, callContext);
         assertEquals(child1Invoices.size(), 2);
         assertTrue(parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) == 0);
@@ -194,7 +188,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // check parent Invoice with child plan amount
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         Invoice parentInvoice = parentInvoices.get(1);
@@ -208,12 +202,12 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // upgrade plan
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName());
-        baseEntitlementChild.changePlanWithDate(new DefaultEntitlementSpecifier(spec), null, null, callContext);
+        baseEntitlementChild.changePlanWithDate(new DefaultEntitlementSpecifier(spec), (LocalDate) null, null, callContext);
         assertListenerStatus();
 
         // check parent invoice. Expected to have the same invoice item with the amount updated
-        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -263,10 +257,10 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // add credit to child account when invoice is still unpaid
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), clock.getUTCToday(), "some description", BigDecimal.TEN, Currency.USD, null);
-        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
-        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 3);
 
         // invoice monthly with credit
@@ -280,7 +274,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
 
         // check parent Invoice with child plan amount
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         Invoice parentInvoice = parentInvoices.get(1);
@@ -296,7 +290,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(1);
         assertListenerStatus();
 
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -345,11 +339,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // add credit to child account after invoice has been paid
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), clock.getUTCToday(), "some description", BigDecimal.TEN, Currency.USD, null);
-        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), List.of(inputCredit), true, null, callContext);
 
         assertListenerStatus();
 
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 3);
 
         // invoice monthly with credit
@@ -359,7 +353,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
 
         // check parent Invoice with child plan amount
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         Invoice parentInvoice = parentInvoices.get(1);
@@ -402,8 +396,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(29);
         assertListenerStatus();
 
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -487,8 +481,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(1);
         assertListenerStatus();
 
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -619,8 +613,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(1);
         assertListenerStatus();
 
-        final List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
-        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        final List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
+        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
 
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
@@ -696,8 +690,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -728,7 +722,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // RECURRING : $ 249.95
         // CBA_ADJ $ -233.29
 
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // invoice 1
         childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 2);
@@ -749,7 +743,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(233.29)), 0);
 
         // check if parent invoice was updated
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -795,8 +789,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(1);
         assertListenerStatus();
 
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -823,7 +817,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // Invoice 1: # unchanged
         // RECURRING : $ 249.95
 
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // invoice 1
         childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -839,7 +833,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(241.62)), 0);
 
         // check equal parent invoice
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -882,8 +876,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(1);
         assertListenerStatus();
 
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -910,7 +904,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // Invoice 1: # unchanged
         // RECURRING : $ 249.95
 
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         // invoice 1
         childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -926,7 +920,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(241.62)), 0);
 
         // check equal parent invoice
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -949,7 +943,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 5);
 
         childInvoice = childInvoices.get(4);
@@ -960,7 +954,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-241.62)), 0);
 
         // check equal parent invoice
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 4);
 
         parentInvoice = parentInvoices.get(3);
@@ -987,7 +981,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), "some description", new BigDecimal("250"), Currency.USD, null);
-        invoiceUserApi.insertCredits(childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         BigDecimal childAccountCBA = invoiceUserApi.getAccountCBA(childAccount.getId(), callContext);
@@ -1006,7 +1000,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         parentAccountCBA = invoiceUserApi.getAccountCBA(parentAccount.getId(), callContext);
         assertEquals(parentAccountCBA.compareTo(BigDecimal.valueOf(250)), 0);
 
-        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
 
         final Invoice childInvoice = childInvoices.get(1);
@@ -1017,7 +1011,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-250)), 0);
 
         // check equal parent invoice
-        final List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        final List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 1);
 
         final Invoice parentInvoice = parentInvoices.get(0);
@@ -1097,7 +1091,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // First Parent invoice over TRIAL period
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 1);
         Invoice parentInvoice = parentInvoices.get(0);
         assertEquals(parentInvoice.getNumberOfItems(), 1);
@@ -1106,7 +1100,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
 
         // First child invoice over TRIAL period
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 1);
         assertEquals(childInvoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
 
@@ -1121,7 +1115,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // Second Parent invoice over Recurring period
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
         parentInvoice = parentInvoices.get(1);
         assertEquals(parentInvoice.getNumberOfItems(), 1);
@@ -1130,11 +1124,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getBalance().compareTo(new BigDecimal("249.95")), 0);
         // The parent has attempted to pay the child invoice
         assertEquals(parentInvoice.getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      parentAccount.getPaymentMethodId());
 
         // Second child invoice over Recurring period
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
         assertEquals(childInvoices.get(1).getBalance().compareTo(new BigDecimal("249.95")), 0);
 
@@ -1174,7 +1168,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
                                                               null,
                                                               UUID.randomUUID().toString(),
                                                               UUID.randomUUID().toString(),
-                                                              ImmutableList.<PluginProperty>of(),
+                                                              Collections.emptyList(),
                                                               PAYMENT_OPTIONS,
                                                               callContext);
             Assert.fail("Payment should fail, invoice belongs to parent");
@@ -1190,7 +1184,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // Second Parent invoice over Recurring period
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         // Note that the parent still owns both invoices
         assertEquals(parentInvoices.size(), 2);
         parentInvoice = parentInvoices.get(1);
@@ -1201,11 +1195,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // Even if the child-parent mapping has been removed, the parent has retried and successfully paid the summary invoice
         // TODO Should we automatically disable payment retries when un-parenting?
         assertEquals(parentInvoice.getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      parentAccount.getPaymentMethodId());
 
         // Second child invoice over Recurring period
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
         assertEquals(childInvoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
 
@@ -1218,16 +1212,16 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // No new invoice for the parent
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         // Third child invoice over second Recurring period
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 3);
         assertEquals(childInvoices.get(2).getBalance().compareTo(BigDecimal.ZERO), 0);
         // Verify the child paid the invoice this time
         assertEquals(childInvoices.get(2).getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(childInvoices.get(2).getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(childInvoices.get(2).getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      childAccount.getPaymentMethodId());
 
         // Verify balances
@@ -1256,7 +1250,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // First child invoice over TRIAL period
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 1);
         assertEquals(childInvoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
 
@@ -1279,15 +1273,15 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // The parent still has no invoice
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 0);
 
         // Second child invoice over Recurring period
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
         assertEquals(childInvoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(childInvoices.get(1).getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(childInvoices.get(1).getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(childInvoices.get(1).getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      childAccount.getPaymentMethodId());
 
         // The child now delegates its payments
@@ -1313,7 +1307,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // The parent now owns the invoice
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 1);
         final Invoice parentInvoice = parentInvoices.get(0);
         assertEquals(parentInvoice.getNumberOfItems(), 1);
@@ -1321,11 +1315,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(parentInvoice.getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      parentAccount.getPaymentMethodId());
 
         // Third child invoice over Recurring period
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 3);
         assertEquals(childInvoices.get(2).getBalance().compareTo(BigDecimal.ZERO), 0);
     }
@@ -1344,7 +1338,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // First Parent invoice over TRIAL period
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 1);
 
         Invoice parentInvoice = parentInvoices.get(0);
@@ -1369,11 +1363,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // Check we don't see yet any new invoice for the parent.
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 1);
 
         // Check we see the new invoice for the child but as DRAFT
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
         assertEquals(childInvoices.get(1).getStatus(), InvoiceStatus.DRAFT);
 
@@ -1383,7 +1377,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         invoiceUserApi.commitInvoice(childInvoices.get(1).getId(), callContext);
         assertListenerStatus();
 
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
         parentInvoice = parentInvoices.get(1);
         assertEquals(parentInvoice.getNumberOfItems(), 1);
@@ -1396,7 +1390,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
 
         // Check Child Balance. It should be > 0 here because Parent invoice is unpaid yet.
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
         // child balance is 0 because parent invoice status is DRAFT at this point
         assertEquals(childInvoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -1410,7 +1404,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
 
         // Check Child Balance. It should be = 0 because parent invoice had already paid.
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
         assertTrue(parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(childInvoices.get(1).getBalance().compareTo(BigDecimal.ZERO) == 0);
@@ -1452,11 +1446,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(29);
         assertListenerStatus();
 
-        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 2);
 
         // check parent Invoice with child plan amount
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         Invoice parentInvoice = parentInvoices.get(1);
@@ -1482,10 +1476,10 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
                                                                                       NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
 
-        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, true, callContext);
         assertEquals(childInvoices.size(), 3);
 
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 3);
 
 
@@ -1503,7 +1497,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(1);
         assertListenerStatus();
 
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, false, true, callContext);
         assertEquals(parentInvoices.size(), 3);
 
         parentInvoice = parentInvoices.get(2);

@@ -63,6 +63,8 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBaseBundle> getBundlesForKey(String bundleKey, InternalTenantContext context);
 
     public Pagination<SubscriptionBaseBundle> getBundles(Long offset, Long limit, InternalTenantContext context);
+    
+    public Pagination<SubscriptionBaseBundle> getBundlesForAccount(Long offset, Long limit, InternalTenantContext context);
 
     public Pagination<SubscriptionBaseBundle> searchBundles(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
@@ -77,7 +79,7 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBase getSubscriptionFromId(UUID id, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public SubscriptionBase getSubscriptionFromId(UUID id, boolean includeDeletedEvents, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getSubscriptionFromExternalKey(String externalKey, InternalTenantContext context) throws SubscriptionBaseApiException;
 
@@ -97,6 +99,8 @@ public interface SubscriptionBaseInternalApi {
     public void updateExternalKey(UUID bundleId, String newExternalKey, InternalCallContext context);
 
     public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
+
+    public void updateQuantity(final UUID subscriptionId, final int quantity, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 
     public UUID getAccountIdFromBundleId(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 

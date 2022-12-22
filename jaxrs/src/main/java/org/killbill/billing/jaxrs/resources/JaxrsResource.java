@@ -33,6 +33,7 @@ public interface JaxrsResource {
     String UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG = "uploadPluginPaymentStateMachineConfig";
     String USER_KEY_VALUE = "userKeyValue";
     String SEARCH = "search";
+    String GROUP = "group";
 
     /*
      * Multi-Tenancy headers
@@ -78,12 +79,16 @@ public interface JaxrsResource {
     String QUERY_CALL_TIMEOUT = "callTimeoutSec";
     String QUERY_TARGET_DATE = "targetDate";
     String QUERY_BILLING_POLICY = "billingPolicy";
+
+    String QUERY_BCD_TRANSFER = "bcdTransfer";
     String QUERY_MIGRATED = "migrated";
     String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
     String QUERY_SEARCH_OFFSET = "offset";
     String QUERY_SEARCH_LIMIT = "limit";
     String QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT = "effectiveFromDate";
     String QUERY_FORCE_NEW_BCD_WITH_PAST_EFFECTIVE_DATE = "forceNewBcdWithPastEffectiveDate";
+
+    String QUERY_FORCE_NEW_QUANTITY_WITH_PAST_EFFECTIVE_DATE = "forceNewQuantityWithPastEffectiveDate";
     String QUERY_SKIP_RESPONSE = "skipResponse";
 
     String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
@@ -104,6 +109,7 @@ public interface JaxrsResource {
     String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
     String QUERY_INCLUDE_VOIDED_INVOICES = "includeVoidedInvoices";
     String QUERY_INVOICE_WITH_CHILDREN_ITEMS = "withChildrenItems";
+    String QUERY_INCLUDE_INVOICE_COMPONENTS = "includeInvoiceComponents";
 
     String QUERY_PAYMENT_EXTERNAL = "externalPayment";
     String QUERY_PAYMENT_AMOUNT = "paymentAmount";
@@ -291,6 +297,8 @@ public interface JaxrsResource {
 
     String CHILDREN = "children";
     String BCD = "bcd";
+
+    String QUANTITY = "quantity";
     String TRANSFER_CREDIT = "transferCredit";
 
     String CACHE = "cache";

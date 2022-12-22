@@ -27,11 +27,10 @@ import javax.cache.Cache.Entry;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
+import org.killbill.commons.metrics.api.MetricRegistry;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.MetricRegistry;
 
 public class RedisShiroManager extends RedisCacheProviderBase implements CacheManager {
 

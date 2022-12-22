@@ -27,6 +27,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -67,13 +68,12 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.commons.utils.collect.MultiValueHashMap;
+import org.killbill.commons.utils.collect.MultiValueMap;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.io.ByteStreams;
 import io.swagger.annotations.Api;
 
 @Singleton
@@ -221,7 +221,7 @@ public class PluginResource extends JaxRsResourceBase {
         }
 
         return Response.status(response.getStatus())
-                       .entity(new String(byteArrayOutputStream.toByteArray(), "UTF-8"))
+                       .entity(byteArrayOutputStream.toByteArray())
                        .build();
     }
 
@@ -244,7 +244,7 @@ public class PluginResource extends JaxRsResourceBase {
         }
         appendFormParametersToBody(out, data);
 
-        ByteStreams.copy(request.getInputStream(), out);
+        request.getInputStream().transferTo(out);
         return new ByteArrayInputStream(out.toByteArray());
     }
 
@@ -277,19 +277,19 @@ public class PluginResource extends JaxRsResourceBase {
             this.parameterMap = new HashMap<String, String[]>();
 
             // Query string parameters and posted form data must appear in the parameters
-            final LinkedHashMultimap<String, String> tmpParameterMap = LinkedHashMultimap.<String, String>create();
+            final MultiValueMap<String, String> tmpParameterMap = new MultiValueHashMap<>();
             if (formData != null) {
                 for (final String formDataKey : formData.keySet()) {
-                    tmpParameterMap.putAll(formDataKey, formData.get(formDataKey));
+                    tmpParameterMap.put(formDataKey, formData.get(formDataKey));
                 }
             }
             for (final String queryParameterKey : queryParameters.keySet()) {
-                tmpParameterMap.putAll(queryParameterKey, queryParameters.get(queryParameterKey));
+                tmpParameterMap.put(queryParameterKey, queryParameters.get(queryParameterKey));
             }
             for (final String parameterKey : request.getParameterMap().keySet()) {
-                tmpParameterMap.putAll(parameterKey, ImmutableList.<String>copyOf(request.getParameterMap().get(parameterKey)));
+                tmpParameterMap.put(parameterKey, List.of(request.getParameterMap().get(parameterKey)));
             }
-            for (final String value : tmpParameterMap.keys()) {
+            for (final String value : tmpParameterMap.keySet()) {
                 parameterMap.put(value, tmpParameterMap.get(value).toArray(new String[0]));
             }
         }

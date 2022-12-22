@@ -27,6 +27,8 @@ import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.clock.ClockMock;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
@@ -50,5 +52,6 @@ public class BeatrixIntegrationModuleNoDB extends KillBillModule {
         final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
         bind(EventConfig.class).toInstance(eventConfig);
 
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

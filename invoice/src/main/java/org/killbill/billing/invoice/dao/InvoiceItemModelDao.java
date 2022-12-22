@@ -25,7 +25,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
@@ -49,7 +48,7 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
     private BigDecimal rate;
     private Currency currency;
     private UUID linkedItemId;
-    private Integer quantity;
+    private BigDecimal quantity;
     private String itemDetails;
     private DateTime catalogEffectiveDate;
 
@@ -58,7 +57,7 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
     public InvoiceItemModelDao(final UUID id, final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId, final UUID accountId,
                                final UUID childAccountId, final UUID bundleId, final UUID subscriptionId, final String description, final String productName,
                                final String planName, final String phaseName, final String usageName, final DateTime catalogEffectiveDate, final LocalDate startDate, final LocalDate endDate,
-                               final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID linkedItemId, final Integer quantity,
+                               final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID linkedItemId, final BigDecimal quantity,
                                final String itemDetails) {
 
         super(id, createdDate, createdDate);
@@ -244,11 +243,11 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
         this.linkedItemId = linkedItemId;
     }
 
-    public Integer getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(final Integer quantity) {
+    public void setQuantity(final BigDecimal quantity) {
         this.quantity = quantity;
     }
 

@@ -18,11 +18,11 @@
 package org.killbill.billing.server.log.obfuscators;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 public class LoggingFilterObfuscator extends Obfuscator {
 
@@ -31,10 +31,10 @@ public class LoggingFilterObfuscator extends Obfuscator {
             "X-Killbill-ApiSecret",
     };
 
-    private final Collection<Pattern> patterns = new LinkedList<Pattern>();
+    private final Collection<Pattern> patterns = new LinkedList<>();
 
     public LoggingFilterObfuscator() {
-        this(ImmutableList.<Pattern>of());
+        this(Collections.emptyList());
     }
 
     public LoggingFilterObfuscator(final Collection<Pattern> extraPatterns) {

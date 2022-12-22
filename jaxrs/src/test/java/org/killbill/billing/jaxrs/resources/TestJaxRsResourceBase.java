@@ -17,30 +17,61 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.joda.time.LocalDate;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
-import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UnitUsageRecordJson;
-import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UsageRecordJson;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.CustomFieldApiException;
+import org.killbill.billing.util.api.CustomFieldUserApi;
+import org.killbill.commons.utils.collect.Iterables;
+import org.killbill.billing.util.customfield.CustomField;
+import org.mockito.Mockito;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
 
-    private final JaxRsResourceBaseTest base = new JaxRsResourceBaseTest();
+    private CustomFieldUserApi customFieldUserApi;
+
+    @BeforeMethod(groups = "fast")
+    public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
+        customFieldUserApi = Mockito.mock(CustomFieldUserApi.class);
+    }
+
+    private JaxRsResourceBase createJaxRsResourceBase() {
+        final JaxRsResourceBase testJaxRsResourceBase = new JaxRsResourceBase(
+                null,
+                null,
+                customFieldUserApi,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        ) {};
+        return Mockito.spy(testJaxRsResourceBase);
+    }
 
     @Test(groups = "fast")
-    public void testExtractPluginProperties() throws Exception {
-        final List<String> pluginPropertiesString = ImmutableList.<String>of("payment_cryptogram=EHuWW9PiBkWvqE5juRwDzAUFBAk=",
-                                                                             "cc_number=4111111111111111",
-                                                                             "cc_type=visa",
-                                                                             "cc_expiration_month=09",
-                                                                             "cc_expiration_year=2020");
-        final List<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>copyOf(base.extractPluginProperties(pluginPropertiesString));
+    public void testExtractPluginProperties() {
+        final List<String> pluginPropertiesString = List.of("payment_cryptogram=EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+                                                            "cc_number=4111111111111111",
+                                                            "cc_type=visa",
+                                                            "cc_expiration_month=09",
+                                                            "cc_expiration_year=2020");
+        final JaxRsResourceBase base = createJaxRsResourceBase();
+        final List<PluginProperty> pluginProperties = Iterables.toUnmodifiableList(base.extractPluginProperties(pluginPropertiesString));
         Assert.assertEquals(pluginProperties.size(), 5);
         Assert.assertEquals(pluginProperties.get(0).getKey(), "payment_cryptogram");
         Assert.assertEquals(pluginProperties.get(0).getValue(), "EHuWW9PiBkWvqE5juRwDzAUFBAk=");
@@ -55,65 +86,85 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testExtractPluginPropertiesWithNullProperty() throws Exception {
-        final List<String> pluginPropertiesString = ImmutableList.<String>of("foo=",
-                                                                             "bar=ttt");
-        final List<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>copyOf(base.extractPluginProperties(pluginPropertiesString));
+    public void testExtractPluginPropertiesWithNullProperty() {
+        final JaxRsResourceBase base = createJaxRsResourceBase();
+        final List<String> pluginPropertiesString = List.of("foo=", "bar=ttt");
+        final List<PluginProperty> pluginProperties = Iterables.toUnmodifiableList(base.extractPluginProperties(pluginPropertiesString));
         Assert.assertEquals(pluginProperties.size(), 1);
         Assert.assertEquals(pluginProperties.get(0).getKey(), "bar");
         Assert.assertEquals(pluginProperties.get(0).getValue(), "ttt");
     }
 
-        private static final class JaxRsResourceBaseTest extends JaxRsResourceBase {
+    private List<CustomField> createCustomFields() {
+        final List<CustomField> result = new ArrayList<>();
 
-        public JaxRsResourceBaseTest() {
-            super(null, null, null, null, null, null, null, null, null, null);
+        int i = 1;
+        while (i <= 5) {
+            final CustomField customField = Mockito.mock(CustomField.class);
+            Mockito.when(customField.getId()).thenReturn(UUIDs.randomUUID());
+            Mockito.when(customField.getFieldName()).thenReturn(String.valueOf(i));
+            result.add(customField);
+            i++;
         }
-    }
 
+        return result;
+    }
 
     @Test(groups = "fast")
-    public void testGetHighestRecordDate() throws Exception {
-        final UsageResourceTest usageResource = new UsageResourceTest();
+    public void testDeleteCustomFieldsWithSomeIds() throws CustomFieldApiException {
+        final UUID id = UUIDs.randomUUID();
+        final List<CustomField> fromDatabase = createCustomFields();
+        final List<UUID> idsToCheck = fromDatabase.stream()
+                .filter(customField -> customField.getFieldName().contains("1") || customField.getFieldName().contains("2"))
+                .map(CustomField::getId)
+                .collect(Collectors.toUnmodifiableList());
 
-        final List<UsageRecordJson> fooRecords = ImmutableList.<UsageRecordJson>builder()
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 04), 28L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 05), 2L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 01), 1L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 06), 24L))
-                .build();
-        final UnitUsageRecordJson unitRecordFoo = new UnitUsageRecordJson("foo", fooRecords);
+        final JaxRsResourceBase base = createJaxRsResourceBase();
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
 
-        final List<UsageRecordJson> barRecords = ImmutableList.<UsageRecordJson>builder()
-                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), 28L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), 2L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 18), 1L)) // Highest date point
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 13), 24L))
-                .build();
-        final UnitUsageRecordJson unitRecordBar = new UnitUsageRecordJson("bar", barRecords);
+        base.deleteCustomFields(id, idsToCheck, callContext);
 
-        final List<UsageRecordJson> zooRecords = ImmutableList.<UsageRecordJson>builder()
-                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), 28L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), 2L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 17), 1L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 12), 24L))
-                .build();
-        final UnitUsageRecordJson unitRecordZoo = new UnitUsageRecordJson("zoo", zooRecords);
-
-        final List<UnitUsageRecordJson> input = ImmutableList.<UnitUsageRecordJson>builder()
-                .add(unitRecordFoo)
-                .add(unitRecordBar)
-                .add(unitRecordZoo)
-                .build();
-        final LocalDate result = usageResource.getHighestRecordDate(input);
-
-        Assert.assertTrue(result.compareTo(new LocalDate(2018, 04, 18)) == 0);
+        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any());
     }
 
+    @Test(groups = "fast")
+    public void testDeleteCustomFieldsWithoutMatchingIds() throws CustomFieldApiException {
+        final UUID id = UUIDs.randomUUID();
+        final List<CustomField> fromDatabase = createCustomFields();
+        final List<UUID> idsToCheck = List.of(UUIDs.randomUUID(), UUIDs.randomUUID(), UUIDs.randomUUID());
 
-    private static class UsageResourceTest extends UsageResource {
-        public UsageResourceTest() {
-            super(null, null, null, null, null, null, null, null, null, null, null);
-        }
+        final JaxRsResourceBase base = createJaxRsResourceBase();
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
+
+        base.deleteCustomFields(id, idsToCheck, callContext);
+
+        Mockito.verify(customFieldUserApi, Mockito.never()).removeCustomFields(Mockito.anyList(), Mockito.any());
+    }
+
+    @Test(groups = "fast")
+    public void testDeleteCustomFieldsWithEmptyIds() throws CustomFieldApiException {
+        final UUID id = UUIDs.randomUUID();
+        final List<CustomField> fromDatabase = createCustomFields();
+        final List<UUID> idsToCheck = Collections.emptyList();
+
+        final JaxRsResourceBase base = createJaxRsResourceBase();
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
+
+        base.deleteCustomFields(id, idsToCheck, callContext);
+
+        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any());
+    }
+
+    @Test(groups = "fast")
+    public void testDeleteCustomFieldsWithNullIds() throws CustomFieldApiException {
+        final UUID id = UUIDs.randomUUID();
+        final List<CustomField> fromDatabase = createCustomFields();
+
+        final JaxRsResourceBase base = createJaxRsResourceBase();
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
+
+        base.deleteCustomFields(id, null, callContext);
+
+        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any());
     }
 }

@@ -20,6 +20,8 @@ package org.killbill.billing.overdue.notification;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.listener.OverdueDispatcher;
@@ -28,8 +30,6 @@ import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class OverdueCheckNotifier extends DefaultOverdueNotifierBase implements OverdueNotifier {
 

@@ -19,6 +19,7 @@ package org.killbill.billing.payment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,11 +35,9 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 
-import com.google.common.collect.ImmutableList;
-
 public class MockInvoice extends EntityBase implements Invoice {
-    private final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-    private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
+    private final List<InvoiceItem> invoiceItems = new ArrayList<>();
+    private final List<InvoicePayment> payments = new ArrayList<>();
     private final UUID accountId;
     private final Integer invoiceNumber;
     private final LocalDate invoiceDate;
@@ -84,7 +83,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public List<String> getTrackingIds() {
-        return ImmutableList.of();
+        return Collections.emptyList();
     }
 
     @Override
@@ -243,6 +242,11 @@ public class MockInvoice extends EntityBase implements Invoice {
     @Override
     public UUID getParentInvoiceId() {
         return null;
+    }
+
+    @Override
+    public UUID getGroupId() {
+        return id;
     }
 }
 

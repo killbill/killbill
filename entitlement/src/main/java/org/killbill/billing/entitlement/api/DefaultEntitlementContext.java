@@ -17,8 +17,10 @@
 
 package org.killbill.billing.entitlement.api;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -31,10 +33,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class DefaultEntitlementContext implements EntitlementContext {
 
@@ -54,8 +53,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final DateTime updatedDate;
     private final UUID tenantId;
 
-    public DefaultEntitlementContext(final EntitlementContext prev,
-                                     @Nullable final PriorEntitlementResult pluginResult) {
+    public DefaultEntitlementContext(final EntitlementContext prev, @Nullable final PriorEntitlementResult pluginResult) {
         this(prev.getOperationType(),
              prev.getAccountId(),
              prev.getDestinationAccountId(),
@@ -96,15 +94,11 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this.accountId = accountId;
         this.destinationAccountId = destinationAccountId;
         if (baseEntitlementWithAddOnsSpecifiers == null) {
-            this.baseEntitlementWithAddOnsSpecifiers = ImmutableList.<DefaultBaseEntitlementWithAddOnsSpecifier>of();
+            this.baseEntitlementWithAddOnsSpecifiers = Collections.emptyList();
         } else {
-            this.baseEntitlementWithAddOnsSpecifiers = ImmutableList.<DefaultBaseEntitlementWithAddOnsSpecifier>copyOf(Iterables.<BaseEntitlementWithAddOnsSpecifier, DefaultBaseEntitlementWithAddOnsSpecifier>transform(baseEntitlementWithAddOnsSpecifiers,
-                                                                                                                                                                                                                          new Function<BaseEntitlementWithAddOnsSpecifier, DefaultBaseEntitlementWithAddOnsSpecifier>() {
-                                                                                                                                                                                                                              @Override
-                                                                                                                                                                                                                              public DefaultBaseEntitlementWithAddOnsSpecifier apply(final BaseEntitlementWithAddOnsSpecifier input) {
-                                                                                                                                                                                                                                  return new DefaultBaseEntitlementWithAddOnsSpecifier(input);
-                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                          }));
+            this.baseEntitlementWithAddOnsSpecifiers = Iterables.toStream(baseEntitlementWithAddOnsSpecifiers)
+                    .map(DefaultBaseEntitlementWithAddOnsSpecifier::new)
+                    .collect(Collectors.toUnmodifiableList());
         }
         this.billingActionPolicy = actionPolicy;
         this.pluginProperties = pluginProperties;

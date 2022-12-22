@@ -36,7 +36,7 @@ public interface EntitlementInternalApi {
 
     List<Entitlement> getAllEntitlementsForBundle(UUID bundleId, InternalTenantContext context) throws EntitlementApiException;
 
-    Entitlement getEntitlementForId(final UUID uuid, final InternalTenantContext tenantContext) throws EntitlementApiException;
+    Entitlement getEntitlementForId(final UUID uuid, final boolean includeDeletedEvents, final InternalTenantContext tenantContext) throws EntitlementApiException;
 
     void pause(UUID bundleId, LocalDate effectiveDate, Iterable<PluginProperty> properties, InternalCallContext context) throws EntitlementApiException;
 

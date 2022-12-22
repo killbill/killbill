@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,11 +19,12 @@
 
 package org.killbill.billing.jaxrs;
 
-import java.io.File;
-import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -33,13 +35,9 @@ import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.gen.RoleDefinition;
 import org.killbill.billing.client.model.gen.UserRoles;
 import org.killbill.billing.security.Permission;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
 
 public class TestSecurity extends TestJaxrsBase {
 
@@ -51,38 +49,38 @@ public class TestSecurity extends TestJaxrsBase {
             securityApi.getCurrentUserPermissions(requestOptions);
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getResponse().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().statusCode(), Status.UNAUTHORIZED.getStatusCode());
         }
 
         // See src/test/resources/org/killbill/billing/server/shiro.ini
 
         final List<String> pierresPermissions = getPermissions("pierre", "password");
         Assert.assertEquals(pierresPermissions.size(), 2);
-        Assert.assertEquals(new HashSet<String>(pierresPermissions), ImmutableSet.<String>of(Permission.INVOICE_CAN_CREDIT.toString(), Permission.INVOICE_CAN_ITEM_ADJUST.toString()));
+        Assert.assertEquals(new HashSet<String>(pierresPermissions), Set.of(Permission.INVOICE_CAN_CREDIT.toString(), Permission.INVOICE_CAN_ITEM_ADJUST.toString()));
 
         final List<String> stephanesPermissions = getPermissions("stephane", "password");
         Assert.assertEquals(stephanesPermissions.size(), 1);
-        Assert.assertEquals(new HashSet<String>(stephanesPermissions), ImmutableSet.<String>of(Permission.PAYMENT_CAN_REFUND.toString()));
+        Assert.assertEquals(new HashSet<String>(stephanesPermissions), Set.of(Permission.PAYMENT_CAN_REFUND.toString()));
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesAllPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeqwe", "jdsh763s", "all", ImmutableList.of("*"), true);
+        testDynamicUserRolesInternal("wqeqwe", "jdsh763s", "all", List.of("*"), true);
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesAllCatalogPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeqsdswe", "jsddsh763s", "allcatalog", ImmutableList.of("catalog:*", "tenant_kvs:add"), true);
+        testDynamicUserRolesInternal("wqeqsdswe", "jsddsh763s", "allcatalog", List.of("catalog:*", "tenant_kvs:add"), true);
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesCorrectCatalogPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeq23f6we", "jds5gh763s", "correctcatalog", ImmutableList.of("catalog:config_upload", "tenant_kvs:add"), true);
+        testDynamicUserRolesInternal("wqeq23f6we", "jds5gh763s", "correctcatalog", List.of("catalog:config_upload", "tenant_kvs:add"), true);
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesIncorrectPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqsdeqwe", "jd23fsh63s", "incorrect", ImmutableList.of("account:*"), false);
+        testDynamicUserRolesInternal("wqsdeqwe", "jd23fsh63s", "incorrect", List.of("account:*"), false);
     }
 
     @Test(groups = "slow")
@@ -90,7 +88,7 @@ public class TestSecurity extends TestJaxrsBase {
         final String username = UUID.randomUUID().toString();
         final String password = UUID.randomUUID().toString();
         final String role = UUID.randomUUID().toString();
-        testDynamicUserRolesInternal(username, password, role, ImmutableList.of(""), false);
+        testDynamicUserRolesInternal(username, password, role, List.of(""), false);
 
         final List<String> permissions = securityApi.getCurrentUserPermissions(RequestOptions.builder().withUser(username).withPassword(password).build());
         Assert.assertEquals(permissions.size(), 0);
@@ -102,7 +100,7 @@ public class TestSecurity extends TestJaxrsBase {
         final String roleDefinition = "notEnoughToAddUserAndRoles";
 
         final List<String> permissions = new ArrayList<String>();
-        for (Permission cur : Permission.values()) {
+        for (final Permission cur : Permission.values()) {
             if (!cur.getGroup().equals("user")) {
                 permissions.add(cur.toString());
             }
@@ -111,7 +109,7 @@ public class TestSecurity extends TestJaxrsBase {
 
         final String username = "candy";
         final String password = "lolipop";
-        securityApi.addUserRoles(new UserRoles(username, password, ImmutableList.of(roleDefinition)), requestOptions);
+        securityApi.addUserRoles(new UserRoles(username, password, List.of(roleDefinition)), requestOptions);
 
         // Now 'login' as new user (along with roles to make an API call requiring permissions), and check behavior
         logout();
@@ -119,7 +117,7 @@ public class TestSecurity extends TestJaxrsBase {
 
         boolean success = false;
         try {
-            securityApi.addRoleDefinition(new RoleDefinition("dsfdsfds", ImmutableList.of("*")), requestOptions);
+            securityApi.addRoleDefinition(new RoleDefinition("dsfdsfds", List.of("*")), requestOptions);
             success = true;
         } catch (final Exception e) {
         } finally {
@@ -128,7 +126,7 @@ public class TestSecurity extends TestJaxrsBase {
 
         success = false;
         try {
-            securityApi.addUserRoles(new UserRoles("sdsd", "sdsdsd", ImmutableList.of(roleDefinition)), requestOptions);
+            securityApi.addUserRoles(new UserRoles("sdsd", "sdsdsd", List.of(roleDefinition)), requestOptions);
             success = true;
         } catch (final Exception e) {
         } finally {
@@ -145,14 +143,14 @@ public class TestSecurity extends TestJaxrsBase {
         final String username = "GuanYu";
         final String password = "IamAGreatWarrior";
 
-        securityApi.addRoleDefinition(new RoleDefinition(roleDefinition, ImmutableList.of(allPermissions)), requestOptions);
+        securityApi.addRoleDefinition(new RoleDefinition(roleDefinition, List.of(allPermissions)), requestOptions);
 
-        securityApi.addUserRoles(new UserRoles(username, password, ImmutableList.of(roleDefinition)), requestOptions);
+        securityApi.addUserRoles(new UserRoles(username, password, List.of(roleDefinition)), requestOptions);
 
         logout();
         login(username, password);
         List<String> permissions = securityApi.getCurrentUserPermissions(requestOptions);
-        Assert.assertEquals(permissions, ImmutableList.<String>of("*"));
+        Assert.assertEquals(permissions, List.of("*"));
 
         final String newPassword = "IamTheBestWarrior";
         securityApi.updateUserPassword(username, new UserRoles(username, newPassword, null), requestOptions);
@@ -160,25 +158,25 @@ public class TestSecurity extends TestJaxrsBase {
         logout();
         login(username, newPassword);
         permissions = securityApi.getCurrentUserPermissions(requestOptions);
-        Assert.assertEquals(permissions, ImmutableList.<String>of("*"));
+        Assert.assertEquals(permissions, List.of("*"));
 
         final String newRoleDefinition = "somethingLessNice";
         // Only enough permissions to invalidate itself in the last step...
         final String littlePermissions = "user";
 
-        securityApi.addRoleDefinition(new RoleDefinition(newRoleDefinition, ImmutableList.of(littlePermissions)), requestOptions);
+        securityApi.addRoleDefinition(new RoleDefinition(newRoleDefinition, List.of(littlePermissions)), requestOptions);
 
-        securityApi.updateUserRoles(username, new UserRoles(username, null, ImmutableList.of(newRoleDefinition)), requestOptions);
+        securityApi.updateUserRoles(username, new UserRoles(username, null, List.of(newRoleDefinition)), requestOptions);
         permissions = securityApi.getCurrentUserPermissions(requestOptions);
         // This will only work if correct shiro cache invalidation was performed... requires lots of sweat to get it to work ;-)
-        Assert.assertEquals(permissions, ImmutableList.<String>of("user:*"));
+        Assert.assertEquals(permissions, List.of("user:*"));
 
         securityApi.invalidateUser(username, requestOptions);
         try {
             securityApi.getCurrentUserPermissions(requestOptions);
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getResponse().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().statusCode(), Status.UNAUTHORIZED.getStatusCode());
         }
 
     }
@@ -187,7 +185,7 @@ public class TestSecurity extends TestJaxrsBase {
 
         securityApi.addRoleDefinition(new RoleDefinition(roleDefinition, permissions), requestOptions);
 
-        securityApi.addUserRoles(new UserRoles(username, password, ImmutableList.of(roleDefinition)), requestOptions);
+        securityApi.addUserRoles(new UserRoles(username, password, List.of(roleDefinition)), requestOptions);
 
         // Now 'login' as new user (along with roles to make an API call requiring permissions), and check behavior
         logout();
@@ -196,8 +194,7 @@ public class TestSecurity extends TestJaxrsBase {
         boolean success = false;
         try {
             final String catalogPath = Resources.getResource("org/killbill/billing/server/SpyCarBasic.xml").getPath();
-            final File catalogFile = new File(catalogPath);
-            final String body = Files.toString(catalogFile, Charset.forName("UTF-8"));
+            final String body = Files.readString(Path.of(catalogPath));
             catalogApi.uploadCatalogXml(body, requestOptions);
             success = true;
         } catch (final Exception e) {

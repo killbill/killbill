@@ -23,9 +23,8 @@ import java.util.List;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.util.userrequest.CompletionUserRequest;
 import org.killbill.billing.util.userrequest.CompletionUserRequestNotifier;
-
-import com.google.common.eventbus.AllowConcurrentEvents;
-import com.google.common.eventbus.Subscribe;
+import org.killbill.commons.eventbus.AllowConcurrentEvents;
+import org.killbill.commons.eventbus.Subscribe;
 
 public class KillbillEventHandler {
 

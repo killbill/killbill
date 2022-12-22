@@ -397,9 +397,9 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         events.add(event);
         defaultSubscriptionBase.rebuildTransitions(events, catalog);
 
-        Assert.assertEquals(defaultSubscriptionBase.getAllTransitions().size(), 1);
-        Assert.assertNull(defaultSubscriptionBase.getAllTransitions().get(0).getPreviousPhase());
-        Assert.assertNotNull(defaultSubscriptionBase.getAllTransitions().get(0).getNextPhase());
+        Assert.assertEquals(defaultSubscriptionBase.getAllTransitions(false).size(), 1);
+        Assert.assertNull(defaultSubscriptionBase.getAllTransitions(false).get(0).getPreviousPhase());
+        Assert.assertNotNull(defaultSubscriptionBase.getAllTransitions(false).get(0).getNextPhase());
 
         return defaultSubscriptionBase;
     }
@@ -428,7 +428,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         defaultSubscriptionBase.rebuildTransitions(events, catalog);
 
-        final List<SubscriptionBaseTransition> newTransitions = defaultSubscriptionBase.getAllTransitions();
+        final List<SubscriptionBaseTransition> newTransitions = defaultSubscriptionBase.getAllTransitions(false);
         Assert.assertEquals(newTransitions.size(), 2);
         Assert.assertNull(newTransitions.get(0).getPreviousPhase());
         Assert.assertEquals(newTransitions.get(0).getNextPhase(), newTransitions.get(1).getPreviousPhase());

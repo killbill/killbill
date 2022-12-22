@@ -19,22 +19,18 @@
 package org.killbill.billing.payment.provider;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
-import org.killbill.clock.Clock;
-import org.killbill.clock.ClockMock;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 
@@ -52,7 +48,7 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testProcessPayment() throws Exception {
-        final List<PluginProperty> properties = ImmutableList.<PluginProperty>of();
+        final List<PluginProperty> properties = Collections.emptyList();
         final UUID accountId = UUID.randomUUID();
         final UUID paymentId = UUID.randomUUID();
         final UUID kbTransactionId = UUID.randomUUID();

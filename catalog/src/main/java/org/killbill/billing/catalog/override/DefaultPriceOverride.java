@@ -20,10 +20,9 @@ package org.killbill.billing.catalog.override;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -52,10 +51,6 @@ import org.killbill.billing.catalog.caching.PriceOverridePattern;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-
 public class DefaultPriceOverride implements PriceOverride {
 
     private static final AtomicLong DRY_RUN_PLAN_IDX = new AtomicLong(0);
@@ -82,26 +77,25 @@ public class DefaultPriceOverride implements PriceOverride {
         final PlanPhasePriceOverride[] resolvedOverride = new PlanPhasePriceOverride[parentPlan.getAllPhases().length];
         int index = 0;
         for (final PlanPhase curPhase : parentPlan.getAllPhases()) {
-            final PlanPhasePriceOverride curOverride = Iterables.tryFind(overrides, new Predicate<PlanPhasePriceOverride>() {
-                @Override
-                public boolean apply(final PlanPhasePriceOverride input) {
-                    if (input.getPhaseName() != null) {
-                        return input.getPhaseName().equals(curPhase.getName());
-                    }
-                    // If the phaseName was not passed, we infer by matching the phaseType. This obviously would not work in a case where
-                    // a plan is defined with multiple phases of the same type.
-                    final PlanPhaseSpecifier curPlanPhaseSpecifier = input.getPlanPhaseSpecifier();
-                    if (curPlanPhaseSpecifier.getPhaseType().equals(curPhase.getPhaseType())) {
-                        return true;
-                    }
-                    return false;
-                }
-            }).orNull();
+            final PlanPhasePriceOverride curOverride = overrides.stream()
+                    .filter(input -> {
+                        if (input.getPhaseName() != null) {
+                            return input.getPhaseName().equals(curPhase.getName());
+                        }
+                        // If the phaseName was not passed, we infer by matching the phaseType. This obviously would not work in a case where
+                        // a plan is defined with multiple phases of the same type.
+                        final PlanPhaseSpecifier curPlanPhaseSpecifier = input.getPlanPhaseSpecifier();
+                        return curPlanPhaseSpecifier.getPhaseType().equals(curPhase.getPhaseType());
+                    })
+                    .findFirst().orElse(null);
 
             if (curOverride != null) {
-                List<UsagePriceOverride> resolvedUsageOverrides = getResolvedUsageOverrides(curPhase.getUsages(), curOverride.getUsagePriceOverrides());
-                resolvedOverride[index++] = new DefaultPlanPhasePriceOverride(curPhase.getName(), curOverride.getCurrency(), curOverride.getFixedPrice(),
-                                                                              curOverride.getRecurringPrice(), resolvedUsageOverrides);
+                final List<UsagePriceOverride> resolvedUsageOverrides = getResolvedUsageOverrides(curPhase.getUsages(), curOverride.getUsagePriceOverrides());
+                resolvedOverride[index++] = new DefaultPlanPhasePriceOverride(curPhase.getName(),
+                                                                              curOverride.getCurrency(),
+                                                                              curOverride.getFixedPrice(),
+                                                                              curOverride.getRecurringPrice(),
+                                                                              resolvedUsageOverrides);
             } else {
                 resolvedOverride[index++] = null;
             }
@@ -140,16 +134,13 @@ public class DefaultPriceOverride implements PriceOverride {
         return result;
     }
 
-    public List<UsagePriceOverride> getResolvedUsageOverrides(Usage[] usages, List<UsagePriceOverride> usagePriceOverrides) throws CatalogApiException {
-        List<UsagePriceOverride> resolvedUsageOverrides = new ArrayList<UsagePriceOverride>();
+    public List<UsagePriceOverride> getResolvedUsageOverrides(final Usage[] usages, final List<UsagePriceOverride> usagePriceOverrides) throws CatalogApiException {
+        List<UsagePriceOverride> resolvedUsageOverrides = new ArrayList<>();
 
         for (final Usage curUsage : usages) {
-            final UsagePriceOverride curOverride = Iterables.tryFind(usagePriceOverrides, new Predicate<UsagePriceOverride>() {
-                @Override
-                public boolean apply(final UsagePriceOverride input) {
-                    return input.getName() != null && input.getName().equals(curUsage.getName());
-                }
-            }).orNull();
+            final UsagePriceOverride curOverride = usagePriceOverrides.stream()
+                    .filter(input -> input.getName() != null && input.getName().equals(curUsage.getName()))
+                    .findFirst().orElse(null);
             if (curOverride != null) {
                 List<TierPriceOverride> tierPriceOverrides = getResolvedTierOverrides(curUsage.getTiers(), curOverride.getTierPriceOverrides());
                 resolvedUsageOverrides.add(new DefaultUsagePriceOverride(curUsage.getName(), curUsage.getUsageType(), tierPriceOverrides));
@@ -162,36 +153,30 @@ public class DefaultPriceOverride implements PriceOverride {
     }
 
     public List<TierPriceOverride> getResolvedTierOverrides(Tier[] tiers, List<TierPriceOverride> tierPriceOverrides) throws CatalogApiException {
-        List<TierPriceOverride> resolvedTierOverrides = new ArrayList<TierPriceOverride>();
+        List<TierPriceOverride> resolvedTierOverrides = new ArrayList<>();
 
         for (final Tier curTier : tiers) {
-            final TierPriceOverride curOverride = Iterables.tryFind(tierPriceOverrides, new Predicate<TierPriceOverride>() {
-                @Override
-                public boolean apply(final TierPriceOverride input) {
+            final TierPriceOverride curOverride = tierPriceOverrides.stream()
+                    .filter(input -> {
+                        if (input.getTieredBlockPriceOverrides() != null) {
+                            for (TieredBlockPriceOverride blockPriceOverride : input.getTieredBlockPriceOverrides()) {
+                                String unitName = blockPriceOverride.getUnitName();
 
-                    if (input.getTieredBlockPriceOverrides() != null) {
-                        for (TieredBlockPriceOverride blockPriceOverride : input.getTieredBlockPriceOverrides()) {
-                            String unitName = blockPriceOverride.getUnitName();
-                            Double max = blockPriceOverride.getMax();
-                            Double size = blockPriceOverride.getSize();
-
-                            for (int i = 0; i < curTier.getTieredBlocks().length; i++) {
-                                TieredBlock curTieredBlock = curTier.getTieredBlocks()[i];
-                                if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                    Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                    Double.compare(max, curTieredBlock.getMax()) == 0) {
-                                    return true;
+                                for (int i = 0; i < curTier.getTieredBlocks().length; i++) {
+                                    final TieredBlock curTieredBlock = curTier.getTieredBlocks()[i];
+                                    if (unitName.equals(curTieredBlock.getUnit().getName()) &&
+                                        blockPriceOverride.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                        blockPriceOverride.getMax().compareTo(curTieredBlock.getMax()) == 0) {
+                                        return true;
+                                    }
                                 }
                             }
                         }
-                    }
-                    return false;
-                }
-            }).orNull();
+                        return false;
+                    }).findFirst().orElse(null);
 
             if (curOverride != null) {
-                List<TieredBlockPriceOverride> tieredBlockPriceOverrides = getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),
-                                                                                                                curOverride.getTieredBlockPriceOverrides());
+                final List<TieredBlockPriceOverride> tieredBlockPriceOverrides = getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(), curOverride.getTieredBlockPriceOverrides());
                 resolvedTierOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
             } else {
                 resolvedTierOverrides.add(null);
@@ -202,19 +187,15 @@ public class DefaultPriceOverride implements PriceOverride {
     }
 
     public List<TieredBlockPriceOverride> getResolvedTieredBlockPriceOverrides(TieredBlock[] tieredBlocks, List<TieredBlockPriceOverride> tieredBlockPriceOverrides) throws CatalogApiException {
-        List<TieredBlockPriceOverride> resolvedTieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
+        List<TieredBlockPriceOverride> resolvedTieredBlockPriceOverrides = new ArrayList<>();
 
         for (final TieredBlock curTieredBlock : tieredBlocks) {
-
-            final TieredBlockPriceOverride curOverride = Iterables.tryFind(tieredBlockPriceOverrides, new Predicate<TieredBlockPriceOverride>() {
-                @Override
-                public boolean apply(final TieredBlockPriceOverride input) {
-                    return input.getUnitName() != null && input.getSize() != null && input.getMax() != null &&
-                           (input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
-                            Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
-                            Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
-                }
-            }).orNull();
+            final TieredBlockPriceOverride curOverride = tieredBlockPriceOverrides.stream()
+                    .filter(input -> input.getUnitName() != null && input.getSize() != null && input.getMax() != null &&
+                                     (input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
+                                      input.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                      input.getMax().compareTo(curTieredBlock.getMax()) == 0))
+                    .findFirst().orElse(null);
 
             if (curOverride != null) {
                 resolvedTieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride(curTieredBlock.getUnit().getName(), curOverride.getSize(), curOverride.getPrice(), curOverride.getCurrency(), curOverride.getMax()));

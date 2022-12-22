@@ -77,6 +77,8 @@ public interface SubscriptionBaseApiService {
             throws SubscriptionBaseApiException;
 
     public int handleBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, SubscriptionCatalog catalog, final CallContext context) throws CatalogApiException;
+    
+    public int handleExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, SubscriptionCatalog catalog, final CallContext context) throws CatalogApiException;
 
     public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, PlanSpecifier spec, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;
 
@@ -88,6 +90,7 @@ public interface SubscriptionBaseApiService {
                                                            Plan plan, PhaseType initialPhase,
                                                            String realPriceList, DateTime effectiveDate,
                                                            Integer bcd,
+                                                           Integer quantity,
                                                            SubscriptionCatalog catalog,
                                                            InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;

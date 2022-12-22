@@ -18,17 +18,14 @@
 package org.killbill.billing.invoice.notification;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class TestNextBillingDateNotificationKey {
 
@@ -79,7 +76,7 @@ public class TestNextBillingDateNotificationKey {
         final DateTime targetDate = new DateTime();
         final Boolean isDryRunForInvoiceNotification = Boolean.FALSE;
 
-        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(null, ImmutableList.of(uuidKey1, uuidKey2), targetDate, isDryRunForInvoiceNotification, true);
+        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(null, List.of(uuidKey1, uuidKey2), targetDate, isDryRunForInvoiceNotification, true);
         final String json = mapper.writeValueAsString(key);
 
         final NextBillingDateNotificationKey result = mapper.readValue(json, NextBillingDateNotificationKey.class);

@@ -17,6 +17,7 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,14 +29,12 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 
-import com.google.common.collect.ImmutableMap;
-
-public class TestDefaultInvoiceDaoUnit extends InvoiceTestSuiteNoDB {
+public class TestInvoiceDaoHelperUnit extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputePositiveRefundAmount() throws Exception {
         // Verify the cases with no adjustment first
-        final Map<UUID, BigDecimal> noItemAdjustment = ImmutableMap.<UUID, BigDecimal>of();
+        final Map<UUID, BigDecimal> noItemAdjustment = Collections.emptyMap();
         verifyComputedRefundAmount(null, null, noItemAdjustment, BigDecimal.ZERO);
         verifyComputedRefundAmount(null, BigDecimal.ZERO, noItemAdjustment, BigDecimal.ZERO);
         verifyComputedRefundAmount(BigDecimal.TEN, null, noItemAdjustment, BigDecimal.TEN);
@@ -43,25 +42,27 @@ public class TestDefaultInvoiceDaoUnit extends InvoiceTestSuiteNoDB {
         try {
             verifyComputedRefundAmount(BigDecimal.ONE, BigDecimal.TEN, noItemAdjustment, BigDecimal.TEN);
             Assert.fail("Shouldn't have been able to compute a refund amount");
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.REFUND_AMOUNT_TOO_HIGH.getCode());
         }
 
         // Try with adjustments now
-        final Map<UUID, BigDecimal> itemAdjustments = ImmutableMap.<UUID, BigDecimal>of(UUID.randomUUID(), BigDecimal.ONE,
-                                                                                        UUID.randomUUID(), BigDecimal.TEN,
-                                                                                        UUID.randomUUID(), BigDecimal.ZERO);
+        final Map<UUID, BigDecimal> itemAdjustments = Map.of(UUID.randomUUID(), BigDecimal.ONE,
+                                                             UUID.randomUUID(), BigDecimal.TEN,
+                                                             UUID.randomUUID(), BigDecimal.ZERO);
         verifyComputedRefundAmount(new BigDecimal("100"), new BigDecimal("11"), itemAdjustments, new BigDecimal("11"));
         try {
             verifyComputedRefundAmount(new BigDecimal("100"), BigDecimal.TEN, itemAdjustments, BigDecimal.TEN);
             Assert.fail("Shouldn't have been able to compute a refund amount");
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.REFUND_AMOUNT_DONT_MATCH_ITEMS_TO_ADJUST.getCode());
         }
     }
 
-    private void verifyComputedRefundAmount(final BigDecimal paymentAmount, final BigDecimal requestedAmount,
-                                            final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final BigDecimal expectedRefundAmount) throws InvoiceApiException {
+    private void verifyComputedRefundAmount(final BigDecimal paymentAmount,
+                                            final BigDecimal requestedAmount,
+                                            final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+                                            final BigDecimal expectedRefundAmount) throws InvoiceApiException {
         final InvoicePaymentModelDao invoicePayment = Mockito.mock(InvoicePaymentModelDao.class);
         Mockito.when(invoicePayment.getAmount()).thenReturn(paymentAmount);
 

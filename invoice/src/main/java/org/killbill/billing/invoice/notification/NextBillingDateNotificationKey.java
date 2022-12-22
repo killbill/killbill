@@ -18,16 +18,15 @@
 
 package org.killbill.billing.invoice.notification;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.notificationq.DefaultUUIDNotificationKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
 
@@ -52,7 +51,7 @@ public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
     public NextBillingDateNotificationKey(final NextBillingDateNotificationKey existing,
                                           final Iterable<UUID> newUUIDKeys) {
         super(null);
-        this.uuidKeys = ImmutableSet.copyOf(Iterables.concat(existing.getUuidKeys(), newUUIDKeys));
+        this.uuidKeys = Iterables.toUnmodifiableSet(Iterables.concat(existing.getUuidKeys(), newUUIDKeys));
         this.targetDate = existing.getTargetDate();
         this.isDryRunForInvoiceNotification = existing.isDryRunForInvoiceNotification();
         this.isRescheduled = existing.isRescheduled();
@@ -75,7 +74,7 @@ public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
     public final Iterable<UUID> getUuidKeys() {
         // Deprecated mode
         if (getUuidKey() != null) {
-            return ImmutableList.of(getUuidKey());
+            return List.of(getUuidKey());
         }
         return uuidKeys;
     }

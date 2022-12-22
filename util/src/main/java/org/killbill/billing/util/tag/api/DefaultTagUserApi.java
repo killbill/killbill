@@ -20,10 +20,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.commons.utils.Joiner;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
@@ -47,26 +54,16 @@ import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDaoHelper;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultTagUserApi implements TagUserApi {
 
     private static final Joiner JOINER = Joiner.on(",");
 
-    private static final Function<TagModelDao, Tag> TAG_MODEL_DAO_TAG_FUNCTION = new Function<TagModelDao, Tag>() {
-        @Override
-        public Tag apply(final TagModelDao input) {
-            return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
-                   new DefaultControlTag(input.getId(), ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
-                   new DescriptiveTag(input.getId(), input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
-        }
-    };
+    private static final Function<TagModelDao, Tag> TAG_MODEL_DAO_TAG_FUNCTION = input ->
+            TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
+               new DefaultControlTag(input.getId(), ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
+               new DescriptiveTag(input.getId(), input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
 
     private final InternalCallContextFactory internalCallContextFactory;
     private final TagDefinitionDao tagDefinitionDao;
@@ -81,18 +78,16 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<TagDefinition> getTagDefinitions(final TenantContext context) {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(true, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
-                                                                          new Function<TagDefinitionModelDao, TagDefinition>() {
-                                                                              @Override
-                                                                              public TagDefinition apply(final TagDefinitionModelDao input) {
-                                                                                  return new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName()));
-                                                                              }
-                                                                          }));
+        final InternalTenantContext internalCtx = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
+        final List<TagDefinitionModelDao> tagDefinitions = tagDefinitionDao.getTagDefinitions(true, internalCtx);
+        return tagDefinitions.stream()
+                .map(input -> new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName())))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public TagDefinition createTagDefinition(final String definitionName, final String description, final Set<ObjectType> applicableObjectTypes, final CallContext context) throws TagDefinitionApiException {
-        if (definitionName.matches(".*[A-Z].*")) {
+        if (Strings.containsUpperCase(definitionName)) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_HAS_UPPERCASE, definitionName);
         }
         final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, JOINER.join(applicableObjectTypes), internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
@@ -112,15 +107,12 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds, final TenantContext context)
-            throws TagDefinitionApiException {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getByIds(tagDefinitionIds, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
-                                                                          new Function<TagDefinitionModelDao, TagDefinition>() {
-                                                                              @Override
-                                                                              public TagDefinition apply(final TagDefinitionModelDao input) {
-                                                                                  return new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName()));
-                                                                              }
-                                                                          }));
+    public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds, final TenantContext context) throws TagDefinitionApiException {
+        final InternalTenantContext internalCtx = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
+        final List<TagDefinitionModelDao> tagDefinitions = tagDefinitionDao.getByIds(tagDefinitionIds, internalCtx);
+        return tagDefinitions.stream()
+                .map(input -> new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName())))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -134,15 +126,14 @@ public class DefaultTagUserApi implements TagUserApi {
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
 
         if (SystemTags.isSystemTag(tagDefinitionId)) {
-            // TODO Create a proper ErrorCode instaed
-            throw new IllegalStateException(String.format("Failed to add tag for tagDefinitionId='%s': System tags are reserved for the system.", tagDefinitionId));
+            throw new TagApiException(ErrorCode.TAG_IS_SYSTEM, tagDefinitionId);
         }
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(objectId, objectType, context);
         final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
         try {
             tagDao.create(tag, internalContext);
-        } catch (TagApiException e) {
+        } catch (final TagApiException e) {
             // Be lenient here and make the addTag method idempotent
             if (ErrorCode.TAG_ALREADY_EXISTS.getCode() != e.getCode()) {
                 throw e;
@@ -220,6 +211,6 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     private List<Tag> withModelTransform(final Collection<TagModelDao> input) {
-        return ImmutableList.<Tag>copyOf(Collections2.transform(input, TAG_MODEL_DAO_TAG_FUNCTION));
+        return input.stream().map(TAG_MODEL_DAO_TAG_FUNCTION).collect(Collectors.toUnmodifiableList());
     }
 }

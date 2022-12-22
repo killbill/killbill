@@ -17,12 +17,11 @@
 
 package org.killbill.billing.util.cache;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 
 // No support to turn off a cache in Ehcache 3 / JCache (JSR 107) unfortunately
 public class NoOpCacheController<K, V> implements CacheController<K, V> {
@@ -35,7 +34,7 @@ public class NoOpCacheController<K, V> implements CacheController<K, V> {
 
     @Override
     public List<K> getKeys() {
-        return ImmutableList.<K>of();
+        return Collections.emptyList();
     }
 
     @Override

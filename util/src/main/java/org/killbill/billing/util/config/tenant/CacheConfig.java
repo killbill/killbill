@@ -20,6 +20,7 @@ package org.killbill.billing.util.config.tenant;
 import java.io.IOException;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -29,8 +30,6 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.cache.TenantConfigCacheLoader.LoaderCallback;
 import org.killbill.billing.util.jackson.ObjectMapper;
-
-import com.google.inject.Inject;
 
 public class CacheConfig {
 

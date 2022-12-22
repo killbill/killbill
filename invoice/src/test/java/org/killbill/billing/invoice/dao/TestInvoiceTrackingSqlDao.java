@@ -38,10 +38,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     private EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
@@ -70,7 +66,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceTrackingModelDao input2 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId2", invoiceId1, subscriptionId, "unit", new LocalDate(2018, 8, 5));
         final InvoiceTrackingModelDao input3 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId3", invoiceId2, subscriptionId, "unit", new LocalDate(2018, 9, 1));
 
-        // After desired range
+        // Inclusive
         final InvoiceTrackingModelDao input4 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId4", invoiceId1, subscriptionId, "unit", endRange);
 
         final List<InvoiceTrackingModelDao> inputs = new ArrayList<>();
@@ -89,7 +85,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             dao.create(inputs, internalCallContext);
 
                                             final List<InvoiceTrackingModelDao> result = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
-                                            Assert.assertEquals(result.size(), 3);
+                                            Assert.assertEquals(result.size(), 4);
 
                                             Assert.assertEquals(result.get(0).getTrackingId(), "trackingId1");
                                             Assert.assertEquals(result.get(0).getInvoiceId(), invoiceId1);
@@ -106,6 +102,11 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             Assert.assertEquals(result.get(2).getRecordDate(), new LocalDate(2018, 9, 1));
                                             Assert.assertEquals(result.get(2).getSubscriptionId(), subscriptionId);
 
+                                            Assert.assertEquals(result.get(3).getTrackingId(), "trackingId4");
+                                            Assert.assertEquals(result.get(3).getInvoiceId(), invoiceId1);
+                                            Assert.assertEquals(result.get(3).getRecordDate(), endRange);
+                                            Assert.assertEquals(result.get(3).getSubscriptionId(), subscriptionId);
+
                                             return null;
                                         }
                                     });
@@ -116,7 +117,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                         public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                                             final InvoiceTrackingSqlDao dao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
 
-                                            final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoices(ImmutableList.of(invoiceId1.toString(), invoiceId2.toString()), internalCallContext);
+                                            final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoices(List.of(invoiceId1.toString(), invoiceId2.toString()), internalCallContext);
                                             Assert.assertEquals(result.size(), 5);
                                             return null;
                                         }
@@ -188,12 +189,9 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
                                                                                                                 // From the audit log entry, lookup the matching history entry
                                                                                                                 final int curIdx = i;
-                                                                                                                final EntityHistoryModelDao history = Iterables.find(entityHistoryModelDaos, new Predicate<EntityHistoryModelDao>() {
-                                                                                                                    @Override
-                                                                                                                    public boolean apply(final EntityHistoryModelDao input) {
-                                                                                                                        return Objects.equals(input.getHistoryRecordId(), auditLogsPostCreate.get(curIdx).getTargetRecordId());
-                                                                                                                    }
-                                                                                                                });
+                                                                                                                final EntityHistoryModelDao history = entityHistoryModelDaos.stream()
+                                                                                                                        .filter(input -> Objects.equals(input.getHistoryRecordId(), auditLogsPostCreate.get(curIdx).getTargetRecordId()))
+                                                                                                                        .findFirst().get();
                                                                                                                 Assert.assertEquals(auditLogsPostCreate.get(i).getTargetRecordId(), history.getHistoryRecordId());
                                                                                                             }
                                                                                                             return result;
@@ -221,7 +219,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                                                internalCallContext.getCreatedDate(),
                                                                                                                clock.getUTCNow());
 
-                                            dao.deactivateByIds(ImmutableList.<String>of(input1.getId().toString(), input2.getId().toString(), input3.getId().toString()), updatedContext);
+                                            dao.deactivateByIds(List.of(input1.getId().toString(), input2.getId().toString(), input3.getId().toString()), updatedContext);
 
                                             return null;
                                         }

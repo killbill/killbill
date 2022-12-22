@@ -29,11 +29,11 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="Account", parent = JsonBase.class)

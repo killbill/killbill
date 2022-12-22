@@ -20,7 +20,9 @@ package org.killbill.billing.entitlement.engine.core;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -33,7 +35,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.AccountEventsStreams;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -44,16 +45,10 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -77,16 +72,16 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Create base entitlement
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(baseSpec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(baseSpec), account.getExternalKey(), null, null, false, true, List.of(), callContext);
         assertListenerStatus();
-        baseEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        baseEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext);
 
         // Add ADD_ON
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), null, null, false, List.of(), callContext);
         assertListenerStatus();
-        addOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
+        addOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlementId, false, callContext);
 
         // Verify the initial state
         checkFutureBlockingStatesToCancel(baseEntitlement, null, null);
@@ -99,7 +94,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Note! Make sure to align CTD and cancellation/change effective time with the phase event effective time to avoid timing issues in comparisons
-        baseEffectiveEOTCancellationOrChangeDateTime = baseEntitlement.getSubscriptionBase().getAllTransitions().get(1).getEffectiveTransitionTime().plusMonths(1);
+        baseEffectiveEOTCancellationOrChangeDateTime = baseEntitlement.getSubscriptionBase().getAllTransitions(false).get(1).getEffectiveTransitionTime().plusMonths(1);
         Assert.assertEquals(baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate(), new LocalDate(2013, 10, 7));
         baseEffectiveCancellationOrChangeDate = baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate();
         // Set manually since no invoice
@@ -109,7 +104,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", description = "Verify add-ons blocking states are added for EOT cancellations")
     public void testCancellationEOT() throws Exception {
         // Cancel the base plan
-        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM, List.of(), callContext);
         // No blocking event (EOT)
         assertListenerStatus();
 
@@ -127,7 +122,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Refresh the state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext);
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
@@ -142,13 +137,13 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", description = "Verify add-ons blocking states are not impacted for add-on IMM cancellations")
     public void testCancellationBaseEOTAddOnIMM() throws Exception {
         // Cancel the base plan
-        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM, List.of(), callContext);
         // No blocking event (EOT)
         assertListenerStatus();
 
         // Cancel the add-on
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) addOnEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) addOnEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, List.of(), callContext);
         assertListenerStatus();
 
         // Verify the blocking states API doesn't mix the dates (all blocking states are on disk)
@@ -159,7 +154,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     public void testCancellationBillingIMMEntitlementEOT() throws Exception {
         // Cancel the base plan
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL);
-        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.IMMEDIATE, List.of(), callContext);
         assertListenerStatus();
 
         // Verify the blocking states API sees the EOT cancellation (add-on blocking state not on disk)
@@ -174,11 +169,11 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Cancel the base plan
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
-        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, List.of(), callContext);
         assertListenerStatus();
 
         // Refresh the add-on state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext);
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
@@ -209,11 +204,11 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Cancel the base plan
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK);
-        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement cancelledBaseEntitlement = (DefaultEntitlement) baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, List.of(), callContext);
         assertListenerStatus();
 
         // Refresh the add-on state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext);
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
@@ -239,7 +234,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     public void testChangePlanEOT() throws Exception {
         // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
-        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec), new LocalDate(2013, 10, 7), ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec), new LocalDate(2013, 10, 7), List.of(), callContext);
         // No blocking event (EOT)
         assertListenerStatus();
 
@@ -257,7 +252,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Refresh the state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext);
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, null, null);
@@ -274,12 +269,12 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Add a second ADD_ON (Laser-Scope is available, not included)
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier secondAddOnSpec = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID secondAddOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(secondAddOnSpec), clock.getUTCToday(), clock.getUTCToday(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID secondAddOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(secondAddOnSpec), clock.getUTCToday(), clock.getUTCToday(), false, List.of(), callContext);
         assertListenerStatus();
 
         // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
-        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec), new LocalDate(2013, 10, 7), ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec), new LocalDate(2013, 10, 7), List.of(), callContext);
         // No blocking event (EOT)
         assertListenerStatus();
 
@@ -299,7 +294,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Change plan IMM (upgrade) to Assault-Rifle (Telescopic-Scope is included)
         testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
-        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlan(new DefaultEntitlementSpecifier(spec), ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlan(new DefaultEntitlementSpecifier(spec), List.of(), callContext);
         assertListenerStatus();
 
         // We need to add a 1s delay before invoking the eventsStreamBuilder in the checks below, because
@@ -308,7 +303,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(1000);
 
         // Refresh the add-on state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext);
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, null, null);
@@ -335,33 +330,33 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Add a second ADD_ON
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.PHASE);
         final PlanPhaseSpecifier addOn2Spec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID addOn2EntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOn2Spec), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addOn2EntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOn2Spec), initialDate, initialDate, false, List.of(), callContext);
         assertListenerStatus();
-        final Entitlement addOn2Entitlement = entitlementApi.getEntitlementForId(addOn2EntitlementId, callContext);
+        final Entitlement addOn2Entitlement = entitlementApi.getEntitlementForId(addOn2EntitlementId, false, callContext);
 
         // Date prior to the base cancellation date to verify it is not impacted by the base cancellation (in contrary to the second add-on)
         final LocalDate addOn1CancellationDate = new LocalDate(2013, 9, 9);
-        addOnEntitlement.cancelEntitlementWithDate(addOn1CancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
+        addOnEntitlement.cancelEntitlementWithDate(addOn1CancellationDate, true, List.of(), callContext);
 
         final LocalDate addOn2CancellationDate = new LocalDate(2013, 11, 11);
-        addOn2Entitlement.cancelEntitlementWithDate(addOn2CancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
+        addOn2Entitlement.cancelEntitlementWithDate(addOn2CancellationDate, true, List.of(), callContext);
 
         // Before the base entitlement is cancelled, respect the specified cancellation date
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), addOn2CancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), addOn2CancellationDate);
 
         final LocalDate baseCancellationDate = new LocalDate(2013, 10, 10);
-        baseEntitlement.cancelEntitlementWithDate(baseCancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.cancelEntitlementWithDate(baseCancellationDate, true, List.of(), callContext);
 
         // After the base entitlement is cancelled, verify the date is overridden
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate);
 
         // No further event yet
         assertListenerStatus();
 
         // Verify the cancellation dates
-        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate(), addOn1CancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext).getEffectiveEndDate()), addOn1CancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate);
 
         // Move to addOn1CancellationDate
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
@@ -374,9 +369,9 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Verify the cancellation dates
-        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate(), addOn1CancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext).getEffectiveEndDate()), addOn1CancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate);
     }
 
     // Test the "read" path
@@ -404,10 +399,14 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the "write" path
     private void checkActualBlockingStatesToCancel(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, @Nullable final DateTime effectiveCancellationDateTime, final boolean approximateDateCheck) throws EntitlementApiException {
-        final Collection<BlockingState> blockingStatesForCancellationViaEntitlement = computeBlockingStatesForAssociatedAddonsViaEntitlement(baseEntitlement, MoreObjects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
+        final Collection<BlockingState> blockingStatesForCancellationViaEntitlement = computeBlockingStatesForAssociatedAddonsViaEntitlement(
+                baseEntitlement,
+                Objects.requireNonNullElse(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
         doCheckActualBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, approximateDateCheck, blockingStatesForCancellationViaEntitlement);
 
-        final Collection<BlockingState> blockingStatesForCancellationViaAccount = computeBlockingStatesForAssociatedAddonsViaAccount(baseEntitlement, MoreObjects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
+        final Collection<BlockingState> blockingStatesForCancellationViaAccount = computeBlockingStatesForAssociatedAddonsViaAccount(
+                baseEntitlement,
+                Objects.requireNonNullElse(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
         doCheckActualBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, approximateDateCheck, blockingStatesForCancellationViaAccount);
     }
 
@@ -463,14 +462,11 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
         final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
-
-        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()),
-                                                                       new Predicate<EventsStream>() {
-                                                                           @Override
-                                                                           public boolean apply(final EventsStream input) {
-                                                                               return input.getSubscriptionBase().getId().equals(baseEntitlement.getId());
-                                                                           }
-                                                                       });
+        final EventsStream eventsStream = accountEventsStreams.getEventsStreams().values()
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(input -> input.getSubscriptionBase().getId().equals(baseEntitlement.getId()))
+                .findFirst().orElseThrow(() -> new RuntimeException("AccountEventsStreams contains no eventsStream value"));
         return eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
     }
 
@@ -481,24 +477,18 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     private Collection<BlockingState> computeBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
         final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
-
-        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()),
-                                                                       new Predicate<EventsStream>() {
-                                                                           @Override
-                                                                           public boolean apply(final EventsStream input) {
-                                                                               return input.getSubscriptionBase().getId().equals(baseEntitlement.getId());
-                                                                           }
-                                                                       });
+        final EventsStream eventsStream = accountEventsStreams.getEventsStreams().values()
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(input -> input.getSubscriptionBase().getId().equals(baseEntitlement.getId()))
+                .findFirst().orElseThrow(() -> new RuntimeException("AccountEventsStreams contains no eventsStream value"));
         return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
     }
 
     private List<BlockingState> blockingStatesForBlockedId(final UUID blockedId) {
-        return ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext),
-                                                                                   new Predicate<BlockingState>() {
-                                                                                       @Override
-                                                                                       public boolean apply(final BlockingState input) {
-                                                                                           return input.getBlockedId().equals(blockedId);
-                                                                                       }
-                                                                                   }));
+        final List<BlockingState> result = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
+        return result.stream()
+                .filter(input -> input.getBlockedId().equals(blockedId))
+                .collect(Collectors.toUnmodifiableList());
     }
 }

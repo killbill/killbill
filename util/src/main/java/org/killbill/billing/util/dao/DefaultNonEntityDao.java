@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
@@ -36,8 +37,6 @@ import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.sqlobject.SqlObjectBuilder;
-
-import com.google.common.base.Preconditions;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 

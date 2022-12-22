@@ -17,6 +17,9 @@
 
 package org.killbill.billing.util.callcontext;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -29,8 +32,6 @@ import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.account.AccountDateTimeUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -145,7 +146,7 @@ public class TestTimeAwareContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testIdempotencyOfDatesManipulation() throws Exception {
-        final ImmutableList.Builder<DateTimeZone> dateTimeZoneBuilder = ImmutableList.<DateTimeZone>builder();
+        final List<DateTimeZone> dateTimeZoneBuilder = new ArrayList<>();
         dateTimeZoneBuilder.add(DateTimeZone.forID("HST"));
         dateTimeZoneBuilder.add(DateTimeZone.forID("PST8PDT"));
         dateTimeZoneBuilder.add(DateTimeZone.forID("MST"));
@@ -159,13 +160,13 @@ public class TestTimeAwareContext extends UtilTestSuiteNoDB {
         dateTimeZoneBuilder.add(DateTimeZone.forID("Japan"));
         dateTimeZoneBuilder.add(DateTimeZone.forID("Australia/Sydney"));
         dateTimeZoneBuilder.add(DateTimeZone.forID("Pacific/Tongatapu"));
-        final Iterable<DateTimeZone> dateTimeZones = dateTimeZoneBuilder.build();
+        final Iterable<DateTimeZone> dateTimeZones = List.copyOf(dateTimeZoneBuilder);
 
-        final ImmutableList.Builder<DateTime> referenceDateTimeBuilder = ImmutableList.<DateTime>builder();
+        final List<DateTime> referenceDateTimeBuilder = new ArrayList<>();
         referenceDateTimeBuilder.add(new DateTime(2012, 1, 1, 1, 1, 1, DateTimeZone.UTC));
         referenceDateTimeBuilder.add(new DateTime(2012, 3, 15, 12, 42, 0, DateTimeZone.forID("PST8PDT")));
         referenceDateTimeBuilder.add(new DateTime(2012, 11, 15, 12, 42, 0, DateTimeZone.forID("PST8PDT")));
-        final Iterable<DateTime> referenceDateTimes = referenceDateTimeBuilder.build();
+        final Iterable<DateTime> referenceDateTimes = List.copyOf(referenceDateTimeBuilder);
 
         DateTime currentDateTime = new DateTime(2015, 1, 1, 1, 1, DateTimeZone.UTC);
         final DateTime endDateTime = new DateTime(2020, 1, 1, 1, 1, DateTimeZone.UTC);

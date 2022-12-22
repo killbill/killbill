@@ -23,10 +23,14 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
+import org.killbill.commons.utils.collect.Iterables;
+import org.killbill.commons.utils.collect.Sets;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
@@ -35,11 +39,6 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.invoice.InvoiceDispatcher.MAX_NB_ITEMS_TO_PRINT;
 
@@ -140,7 +139,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                                                                          newNotificationEvent, internalCallContext.getUserToken(),
                                                                          internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
             } else {
-                final SetView<UUID> difference = Sets.difference(subscriptionIds, ImmutableSet.copyOf(existingNotificationForEffectiveDate.getEvent().getUuidKeys()));
+                final Set<UUID> difference = Sets.difference(subscriptionIds, Iterables.toUnmodifiableSet(existingNotificationForEffectiveDate.getEvent().getUuidKeys()));
                 if (difference.isEmpty()) {
                     log.debug("Ignoring duplicate next billing date notification event at {} for subscriptionId {}", futureNotificationTime, subscriptionIdsAsStringBuilder);
                 } else {

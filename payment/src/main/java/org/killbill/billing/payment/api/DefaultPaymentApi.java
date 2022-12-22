@@ -18,9 +18,12 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -42,14 +45,11 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logEnterAPICall;
 import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logExitAPICall;
@@ -665,6 +665,12 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         paymentProcessor.cancelScheduledPaymentTransaction(paymentTransactionId, null, callContext);
     }
 
+    private PaymentTransaction filterPaymentTransactionsAndGet(List<PaymentTransaction> transactions, Predicate<? super PaymentTransaction> filter) {
+        return transactions.stream()
+                .filter(filter)
+                .findFirst().orElse(null);
+    }
+
     @Override
     public Payment notifyPendingTransactionOfStateChanged(final Account account, final UUID paymentTransactionId, final boolean isSuccess, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
@@ -680,15 +686,10 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             payment = paymentProcessor.notifyPendingPaymentOfStateChanged(account, paymentTransactionId, isSuccess, callContext, internalCallContext);
 
-            paymentTransaction = Iterables.<PaymentTransaction>tryFind(payment.getTransactions(),
-                                                                                                new Predicate<PaymentTransaction>() {
-                                                                                                    @Override
-                                                                                                    public boolean apply(final PaymentTransaction transaction) {
-                                                                                                        return transaction.getId().equals(paymentTransactionId);
-                                                                                                    }
-                                                                                                }).orNull();
+            paymentTransaction = filterPaymentTransactionsAndGet(payment.getTransactions(),
+                                                                 transaction -> transaction.getId().equals(paymentTransactionId));
             return payment;
-        } catch (PaymentApiException e) {
+        } catch (final PaymentApiException e) {
             exception = e;
             throw e;
         } finally {
@@ -728,13 +729,8 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             payment = pluginControlPaymentProcessor.notifyPendingPaymentOfStateChanged(IS_API_PAYMENT, account, paymentTransactionId, isSuccess, paymentControlPluginNames, callContext, internalCallContext);
 
-            paymentTransaction = Iterables.<PaymentTransaction>tryFind(payment.getTransactions(),
-                                                                       new Predicate<PaymentTransaction>() {
-                                                                           @Override
-                                                                           public boolean apply(final PaymentTransaction transaction) {
-                                                                               return transaction.getId().equals(paymentTransactionId);
-                                                                           }
-                                                                       }).orNull();
+            paymentTransaction = filterPaymentTransactionsAndGet(payment.getTransactions(),
+                                                                 transaction -> transaction.getId().equals(paymentTransactionId));
             return payment;
         } catch (final PaymentApiException e) {
             exception = e;
@@ -903,13 +899,10 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             payment = pluginControlPaymentProcessor.createChargebackReversal(IS_API_PAYMENT, account, paymentId, effectiveDate, paymentTransactionExternalKey, paymentControlPluginNames, callContext, internalCallContext);
 
             // See https://github.com/killbill/killbill/issues/552
-            paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
-                                                                    new Predicate<PaymentTransaction>() {
-                                                                        @Override
-                                                                        public boolean apply(final PaymentTransaction input) {
-                                                                            return paymentTransactionExternalKey.equals(input.getExternalKey());
-                                                                        }
-                                                                    });
+            final List<PaymentTransaction> reversedPaymentTrx = new ArrayList<>(payment.getTransactions());
+            Collections.reverse(reversedPaymentTrx);
+            paymentTransaction = filterPaymentTransactionsAndGet(reversedPaymentTrx,
+                                                                 input -> paymentTransactionExternalKey.equals(input.getExternalKey()));
 
             return payment;
         } catch (PaymentApiException e) {
@@ -1107,13 +1100,11 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         if (paymentTransactionExternalKey == null) {
             return Iterables.getLast(payment.getTransactions());
         } else {
-            return Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
-                                                      new Predicate<PaymentTransaction>() {
-                                                          @Override
-                                                          public boolean apply(final PaymentTransaction input) {
-                                                              return paymentTransactionExternalKey.equals(input.getExternalKey());
-                                                          }
-                                                      });
+            final List<PaymentTransaction> reversedPaymentTrx = new ArrayList<>(payment.getTransactions());
+            Collections.reverse(reversedPaymentTrx);
+            return reversedPaymentTrx.stream()
+                    .filter(input -> paymentTransactionExternalKey.equals(input.getExternalKey()))
+                    .findFirst().get();
         }
     }
 }

@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -74,17 +76,13 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.MetricTag;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.MetricTag;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -182,22 +180,19 @@ public class PaymentResource extends ComboPaymentResource {
                                                     "getPayments",
                                                     payments.getNextOffset(),
                                                     limit,
-                                                    ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
-                                                    ImmutableMap.<String, String>of());
-        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+                                                    Map.of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                           QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Collections.emptyMap());
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,
-                                                new Function<Payment, PaymentJson>() {
-                                                    @Override
-                                                    public PaymentJson apply(final Payment payment) {
-                                                        // Cache audit logs per account
-                                                        if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
-                                                            accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
-                                                        }
-                                                        final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
-                                                        return new PaymentJson(payment, accountAuditLogs);
+                                                payment -> {
+                                                    // Cache audit logs per account
+                                                    if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
+                                                        accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
                                                     }
+                                                    final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
+                                                    return new PaymentJson(payment, accountAuditLogs);
                                                 },
                                                 nextPageUri
                                                );
@@ -233,22 +228,19 @@ public class PaymentResource extends ComboPaymentResource {
                                                     "searchPayments",
                                                     payments.getNextOffset(),
                                                     limit,
-                                                    ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
-                                                    ImmutableMap.<String, String>of("searchKey", searchKey));
-        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
+                                                    Map.of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                           QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Map.of("searchKey", searchKey));
+        final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,
-                                                new Function<Payment, PaymentJson>() {
-                                                    @Override
-                                                    public PaymentJson apply(final Payment payment) {
-                                                        // Cache audit logs per account
-                                                        if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
-                                                            accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
-                                                        }
-                                                        final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
-                                                        return new PaymentJson(payment, accountAuditLogs);
+                                                payment -> {
+                                                    // Cache audit logs per account
+                                                    if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
+                                                        accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
                                                     }
+                                                    final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
+                                                    return new PaymentJson(payment, accountAuditLogs);
                                                 },
                                                 nextPageUri
                                                );
@@ -881,7 +873,7 @@ public class PaymentResource extends ComboPaymentResource {
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 

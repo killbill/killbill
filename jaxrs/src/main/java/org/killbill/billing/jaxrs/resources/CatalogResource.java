@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2014-2020 The Billing Project, LLC
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -59,6 +60,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.CatalogValidation;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Listing;
@@ -80,6 +82,7 @@ import org.killbill.billing.jaxrs.json.CatalogJson.PhaseJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.PlanJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.PriceListJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.ProductJson;
+import org.killbill.billing.jaxrs.json.CatalogValidationJson;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
 import org.killbill.billing.jaxrs.json.SimplePlanJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -93,7 +96,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -229,6 +232,24 @@ public class CatalogResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final HttpServletRequest request,
                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         return uploadCatalogXmlOriginal(catalogXML, createdBy, reason, comment, request, uriInfo);
+    }
+
+    @TimedResource
+    @POST
+    @Path("/xml/validate")
+    @Consumes(TEXT_XML)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Validate a XML catalog", response = CatalogValidationJson.class)
+    public Response validateCatalogXml(final String catalogXML,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CatalogValidation catalogValidation = catalogUserApi.validateCatalog(catalogXML, callContext);
+        final CatalogValidationJson catalogValidationJson = new CatalogValidationJson(catalogValidation);
+        return Response.status(Status.OK).entity(catalogValidationJson).build();
     }
 
     @TimedResource
@@ -453,17 +474,17 @@ public class CatalogResource extends JaxRsResourceBase {
                                            clock.getUTCNow();
         final LocalDate requestedDate = requestedDateTime.toLocalDate();
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, tenantContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, tenantContext);
         SubscriptionEvent lastEventBeforeRequestedDate = null;
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             if (lastEventBeforeRequestedDate == null) {
-                if (subscriptionEvent.getEffectiveDate().compareTo(requestedDate) > 0) {
+                if (subscriptionEvent.getEffectiveDate().compareTo(requestedDateTime) > 0) {
                     // requestedDate too far in the past, before subscription start date
                     return null;
                 }
                 lastEventBeforeRequestedDate = subscriptionEvent;
             }
-            if (subscriptionEvent.getEffectiveDate().compareTo(requestedDate) > 0) {
+            if (subscriptionEvent.getEffectiveDate().compareTo(requestedDateTime) > 0) {
                 break;
             } else {
                 lastEventBeforeRequestedDate = subscriptionEvent;

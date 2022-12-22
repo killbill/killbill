@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +25,6 @@ import org.joda.time.DateTime;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
@@ -36,16 +36,12 @@ import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
 
-    private static final ImmutableList<TransactionStatus> TRANSIENT_TRANSACTION_STATUSES = ImmutableList.<TransactionStatus>builder().add(TransactionStatus.PENDING)
-                                                                                                                                     .add(TransactionStatus.UNKNOWN)
-                                                                                                                                     .build();
+    private static final List<TransactionStatus> TRANSIENT_TRANSACTION_STATUSES = List.of(TransactionStatus.PENDING, TransactionStatus.UNKNOWN);
 
     private final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner;
     private final PaymentStateControlContext stateContext;
@@ -126,7 +122,7 @@ public class DefaultControlInitiated implements LeavingStateCallback {
                     // the properties will be serialized in the enteringState callback (any plugin that sets a
                     // retried date is responsible to correctly remove sensitive information such as CVV, ...)
                     //
-                    final byte[] serializedProperties = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());
+                    final byte[] serializedProperties = PluginPropertySerializer.serialize(Collections.emptyList());
 
                     attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
                                                          utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),

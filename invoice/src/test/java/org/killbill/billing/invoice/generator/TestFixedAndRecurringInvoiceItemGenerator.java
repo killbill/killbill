@@ -62,13 +62,13 @@ import org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.commons.utils.collect.MultiValueHashMap;
+import org.killbill.commons.utils.collect.MultiValueMap;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -1309,118 +1309,128 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
     //
     //
 
+    private FixedPriceInvoiceItem createFixedPriceInvoiceItem(final LocalDate startDate, final BigDecimal amount) {
+        return new FixedPriceInvoiceItem(UUIDs.randomUUID(),
+                                         clock.getUTCNow(),
+                                         null,
+                                         account.getId(),
+                                         subscription.getBundleId(),
+                                         subscription.getId(),
+                                         null,
+                                         "planName",
+                                         "phaseName",
+                                         null,
+                                         "description",
+                                         startDate,
+                                         amount,
+                                         account.getCurrency());
+    }
+
     // Simulate a bug in the generator where two fixed items for the same day and subscription end up in the resulting items
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testTooManyFixedInvoiceItemsForGivenSubscriptionAndStartDatePostMerge() throws InvoiceApiException {
-        final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
+        final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription = new MultiValueHashMap<>();
         final LocalDate startDate = new LocalDate("2016-01-01");
 
-        final Collection<InvoiceItem> resultingItems = new LinkedList<InvoiceItem>();
-        final InvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(UUID.randomUUID(),
-                                                                            clock.getUTCNow(),
-                                                                            null,
-                                                                            account.getId(),
-                                                                            subscription.getBundleId(),
-                                                                            subscription.getId(),
-                                                                            null,
-                                                                            "planName",
-                                                                            "phaseName",
-                                                                            null,
-                                                                            "description",
-                                                                            startDate,
-                                                                            BigDecimal.ONE,
-                                                                            account.getCurrency());
+        final Collection<InvoiceItem> resultingItems = new LinkedList<>();
+
+        // This part should never throw exception because startDate is different
+        resultingItems.add(createFixedPriceInvoiceItem(startDate, BigDecimal.ONE));
+        resultingItems.add(createFixedPriceInvoiceItem(startDate.plusDays(1), BigDecimal.ONE));
+        resultingItems.add(createFixedPriceInvoiceItem(startDate.plusMonths(1), BigDecimal.ONE));
+
+        final FixedAndRecurringInvoiceItemGenerator spied = Mockito.spy(fixedAndRecurringInvoiceItemGenerator);
+        spied.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+
+        Mockito.verify(spied, Mockito.times(3)).validateSafetyBoundsWithFixedInvoiceItem(Mockito.any(), Mockito.any());
+        Mockito.verify(spied, Mockito.never()).validateSafetyBoundsWithRecurringInvoiceItem(Mockito.any(), Mockito.any());
+
+        resultingItems.clear();
+
+        final InvoiceItem fixedPriceInvoiceItem = createFixedPriceInvoiceItem(startDate, BigDecimal.ONE);
         resultingItems.add(fixedPriceInvoiceItem);
         resultingItems.add(fixedPriceInvoiceItem);
 
         try {
-            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+            spied.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
         }
 
         resultingItems.clear();
+
         for (int i = 0; i < 2; i++) {
-            resultingItems.add(new FixedPriceInvoiceItem(UUID.randomUUID(),
-                                                         clock.getUTCNow(),
-                                                         null,
-                                                         account.getId(),
-                                                         subscription.getBundleId(),
-                                                         subscription.getId(),
-                                                         null,
-                                                         "planName",
-                                                         "phaseName",
-                                                         null,
-                                                         "description",
-                                                         startDate,
-                                                         // Amount shouldn't have any effect
-                                                         BigDecimal.ONE.add(new BigDecimal(i)),
-                                                         account.getCurrency()));
+            resultingItems.add(createFixedPriceInvoiceItem(startDate, BigDecimal.ONE.add(new BigDecimal(i))));
         }
 
         try {
-            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+            spied.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
         }
     }
 
+    private RecurringInvoiceItem createRecurringInvoiceItem(final LocalDate startDate, final LocalDate endDate, final BigDecimal amount) {
+        return new RecurringInvoiceItem(UUIDs.randomUUID(),
+                                        clock.getUTCNow(),
+                                        null,
+                                        account.getId(),
+                                        subscription.getBundleId(),
+                                        subscription.getId(),
+                                        null,
+                                        "planName",
+                                        "phaseName",
+                                        null,
+                                        startDate,
+                                        endDate,
+                                        amount,
+                                        BigDecimal.ONE,
+                                        account.getCurrency());
+    }
+
     // Simulate a bug in the generator where two recurring items for the same service period and subscription end up in the resulting items
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testTooManyRecurringInvoiceItemsForGivenSubscriptionAndServicePeriodPostMerge() throws InvoiceApiException {
-        final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
+        final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription = new MultiValueHashMap<>();
         final LocalDate startDate = new LocalDate("2016-01-01");
 
-        final Collection<InvoiceItem> resultingItems = new LinkedList<InvoiceItem>();
-        final InvoiceItem recurringInvoiceItem = new RecurringInvoiceItem(UUID.randomUUID(),
-                                                                          clock.getUTCNow(),
-                                                                          null,
-                                                                          account.getId(),
-                                                                          subscription.getBundleId(),
-                                                                          subscription.getId(),
-                                                                          null,
-                                                                          "planName",
-                                                                          "phaseName",
-                                                                          null,
-                                                                          startDate,
-                                                                          startDate.plusMonths(1),
-                                                                          BigDecimal.ONE,
-                                                                          BigDecimal.ONE,
-                                                                          account.getCurrency());
+        final Collection<InvoiceItem> resultingItems = new LinkedList<>();
+
+        // This part should never throw exception because date interval is different
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusDays(10), BigDecimal.ONE));
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusDays(14), BigDecimal.ONE));
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusWeeks(3), BigDecimal.ONE));
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusMonths(1), BigDecimal.ONE));
+
+        final FixedAndRecurringInvoiceItemGenerator spied = Mockito.spy(fixedAndRecurringInvoiceItemGenerator);
+        spied.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+
+        Mockito.verify(spied, Mockito.never()).validateSafetyBoundsWithFixedInvoiceItem(Mockito.any(), Mockito.any());
+        Mockito.verify(spied, Mockito.times(4)).validateSafetyBoundsWithRecurringInvoiceItem(Mockito.any(), Mockito.any());
+
+        resultingItems.clear();
+
+        final InvoiceItem recurringInvoiceItem = createRecurringInvoiceItem(startDate, startDate.plusMonths(1), BigDecimal.ONE);
         resultingItems.add(recurringInvoiceItem);
         resultingItems.add(recurringInvoiceItem);
 
         try {
-            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+            spied.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
         }
 
         resultingItems.clear();
+
         for (int i = 0; i < 2; i++) {
-            resultingItems.add(new RecurringInvoiceItem(UUID.randomUUID(),
-                                                        clock.getUTCNow(),
-                                                        null,
-                                                        account.getId(),
-                                                        subscription.getBundleId(),
-                                                        subscription.getId(),
-                                                        null,
-                                                        "planName",
-                                                        "phaseName",
-                                                        null,
-                                                        startDate,
-                                                        startDate.plusMonths(1),
-                                                        // Amount shouldn't have any effect
-                                                        BigDecimal.TEN,
-                                                        BigDecimal.ONE,
-                                                        account.getCurrency()));
+            resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusMonths(1), BigDecimal.ONE.add(new BigDecimal(i))));
         }
 
         try {
-            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+            spied.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
