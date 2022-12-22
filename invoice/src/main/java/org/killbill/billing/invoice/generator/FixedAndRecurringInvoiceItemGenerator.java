@@ -239,7 +239,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
                 final RecurringInvoiceItemDataWithNextBillingCycleDate itemDataWithNextBillingCycleDate;
                 try {
-                    itemDataWithNextBillingCycleDate = generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, recurringBillingMode);
+                    itemDataWithNextBillingCycleDate = generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, recurringBillingMode, internalCallContext);
                 } catch (final InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }
@@ -316,11 +316,13 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
     }
 
-    public RecurringInvoiceItemDataWithNextBillingCycleDate generateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
+    public RecurringInvoiceItemDataWithNextBillingCycleDate generateInvoiceItemData(final LocalDate startDate,
+                                                                                    @Nullable final LocalDate endDate,
                                                                                     final LocalDate targetDate,
                                                                                     final int billingCycleDayLocal,
                                                                                     final BillingPeriod billingPeriod,
-                                                                                    final BillingMode billingMode) throws InvalidDateSequenceException {
+                                                                                    final BillingMode billingMode,
+                                                                                    final InternalCallContext internalCallContext) throws InvalidDateSequenceException {
         if (endDate != null && endDate.isBefore(startDate)) {
             throw new InvalidDateSequenceException();
         }
@@ -330,7 +332,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, billingMode);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, billingMode, config.getInArrearMode(internalCallContext));
 
         // We are not billing for less than a day
         if (!billingIntervalDetail.hasSomethingToBill()) {
