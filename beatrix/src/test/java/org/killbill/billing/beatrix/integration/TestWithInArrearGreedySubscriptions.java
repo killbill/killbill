@@ -24,30 +24,20 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.InvoiceConfig.InArrearMode;
-import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 
 public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
 
@@ -79,7 +69,7 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-support-monthly-notrial", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 13, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 13, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
@@ -114,7 +104,7 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         // Cancel 2022-03-13
         // Cancel EOT (no invoice expected)
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.of(), callContext);
+        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2022-04-13
@@ -140,7 +130,7 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-support-monthly-notrial", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 13, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 13, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
@@ -172,7 +162,7 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         // Cancel prior EOT
         // (REPAIR invoice expected, as if we were billing in-advance)
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
-        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.of(), callContext);
+        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
