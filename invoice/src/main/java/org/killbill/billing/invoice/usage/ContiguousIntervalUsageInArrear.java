@@ -62,6 +62,7 @@ import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig.InArrearMode;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.jackson.ObjectMapper;
@@ -245,8 +246,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         final LocalDate startDateLocal = internalTenantContext.toLocalDate(startDate);
         final LocalDate endDateLocal = internalTenantContext.toLocalDate(endDate);
 
-        final BillingIntervalDetail bid = new BillingIntervalDetail(startDateLocal, endDateLocal, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode());
-
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDateLocal, endDateLocal, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode(), InArrearMode.DEFAULT);
 
         int numberOfPeriod = 0;
         final LocalDate futureBillingDateFor = bid.getFutureBillingDateFor(numberOfPeriod);
@@ -380,13 +380,13 @@ public abstract class ContiguousIntervalUsageInArrear {
             final LocalDate startDate = internalTenantContext.toLocalDate(thisEvent.getEffectiveDate());
             final LocalDate endDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
 
-            final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
+            final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR, InArrearMode.DEFAULT);
             final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
             result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         }
 
         final LocalDate startDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
-        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR, InArrearMode.DEFAULT);
         final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
         result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         return result;

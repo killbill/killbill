@@ -66,7 +66,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final RecurringInvoiceItemDataWithNextBillingCycleDate items = fixedAndRecurringInvoiceItemGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod(), getBillingMode());
+        final RecurringInvoiceItemDataWithNextBillingCycleDate items = fixedAndRecurringInvoiceItemGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod(), getBillingMode(), null);
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items.getItemData()) {
@@ -77,7 +77,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final RecurringInvoiceItemDataWithNextBillingCycleDate items = fixedAndRecurringInvoiceItemGenerator.generateInvoiceItemData(startDate, null, targetDate, billingCycleDay, getBillingPeriod(), getBillingMode());
+        final RecurringInvoiceItemDataWithNextBillingCycleDate items = fixedAndRecurringInvoiceItemGenerator.generateInvoiceItemData(startDate, null, targetDate, billingCycleDay, getBillingPeriod(), getBillingMode(), null);
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items.getItemData()) {

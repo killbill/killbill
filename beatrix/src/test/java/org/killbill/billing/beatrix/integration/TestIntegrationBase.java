@@ -1091,7 +1091,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         });
     }
 
-
     protected boolean areAllNotificationsProcessed(final Long tenantRecordId) {
         int nbNotifications = 0;
         for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
@@ -1125,8 +1124,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         });
     }
-
-
 
     protected static class TestDryRunArguments implements DryRunArguments {
 
@@ -1237,6 +1234,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private boolean shouldParkAccountsWithUnknownUsage;
         private boolean isZeroAmountUsageDisabled;
         private UsageDetailMode detailMode;
+        private InArrearMode inArrearMode;
         private Period maxInvoiceLimit;
         private int maxRawUsagePreviousPeriod;
 
@@ -1383,6 +1381,20 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             return getItemResultBehaviorMode();
         }
 
+        @Override
+        public InArrearMode getInArrearMode() {
+            return inArrearMode;
+        }
+
+        @Override
+        public InArrearMode getInArrearMode(final InternalTenantContext tenantContext) {
+            return getInArrearMode();
+        }
+
+        public void setInArrearMode(final InArrearMode inArrearMode) {
+            this.inArrearMode = inArrearMode;
+        }
+
         public void setItemResultBehaviorMode(final UsageDetailMode detailMode) {
             this.detailMode = detailMode;
         }
@@ -1424,6 +1436,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
             isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
             detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
+            inArrearMode = defaultInvoiceConfig.getInArrearMode();
             maxInvoiceLimit = defaultInvoiceConfig.getMaxInvoiceLimit();
             maxRawUsagePreviousPeriod = defaultInvoiceConfig.getMaxRawUsagePreviousPeriod();
         }

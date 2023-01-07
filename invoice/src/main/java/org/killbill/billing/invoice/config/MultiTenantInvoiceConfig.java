@@ -212,7 +212,6 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
         if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {
             return mode;
         }
-
         return UsageDetailMode.AGGREGATE;
     }
 
@@ -229,6 +228,24 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
         }
 
         return UsageDetailMode.AGGREGATE;
+    }
+
+    @Override
+    public InArrearMode getInArrearMode() {
+        final InArrearMode mode = staticConfig.getInArrearMode();
+        if (mode == InArrearMode.DEFAULT || mode == InArrearMode.GREEDY) {
+            return mode;
+        }
+        return InArrearMode.DEFAULT;
+    }
+
+    @Override
+    public InArrearMode getInArrearMode(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getInArrearMode", tenantContext);
+        if (result != null){
+            return InArrearMode.valueOf(result);
+        }
+        return getInArrearMode();
     }
 
     @Override
