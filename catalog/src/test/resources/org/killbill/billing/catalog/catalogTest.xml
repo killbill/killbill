@@ -778,6 +778,35 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="shotgun-free" prettyName="Shotgun NoBillingPeriod">
+            <product>Shotgun</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases/>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <fixed type="ONE_TIME">
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>0</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>0</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>0</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <usages/>
+            </finalPhase>
+            <plansAllowedInBundle>-1</plansAllowedInBundle>
+        </plan>
         <plan name="assault-rifle-monthly">
             <product>Assault-Rifle</product>
             <initialPhases>
@@ -1777,6 +1806,7 @@
                 <plan>blowdart-monthly</plan>
                 <plan>pistol-monthly</plan>
                 <plan>shotgun-monthly</plan>
+                <plan>shotgun-free</plan>
                 <plan>assault-rifle-monthly</plan>
                 <plan>pistol-annual</plan>
                 <plan>pistol-quarterly</plan>
