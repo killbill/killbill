@@ -285,6 +285,44 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="blowdart-in-arrear-monthly-trial">
+            <product>Blowdart</product>
+            <recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>100.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="blowdart-quarterly-notrial">
             <product>Blowdart</product>
             <finalPhase type="EVERGREEN">
@@ -1619,6 +1657,7 @@
         <childPriceList name="trial">
             <plans>
                 <plan>blowdart-monthly-trial</plan>
+                <plan>blowdart-in-arrear-monthly-trial</plan>
             </plans>
         </childPriceList>
     </priceLists>

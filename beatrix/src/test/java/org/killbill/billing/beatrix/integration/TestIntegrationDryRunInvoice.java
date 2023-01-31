@@ -752,4 +752,45 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         assertEquals(dryRunInvoice.getId(), draftInvoiceAgain.getId());
 
     }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1833")
+    public void testUpcomingInvoiceDryRunForInArrearWithTrial() throws Exception {
+
+        final LocalDate initialDate = new LocalDate(2023, 1, 1);
+
+        // set clock to 2023-01-01
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-trial");
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        // Invoice generated corresponding to TRIAL phase
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), null, InvoiceItemType.FIXED, new BigDecimal("0.00")));
+
+        //Trigger dry run for UPCOMING INVOICE - No invoice is generated since invoice is already generated corresponding to the TRIAL phase
+        try {
+            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+        }
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1); //set date to 2023-02-01
+        assertListenerStatus();
+
+        //no invoice generated since IN_ARREAR billing is used
+        checkNoMoreInvoiceToGenerate(account.getId(), callContext);
+
+        //Trigger dry run for UPCOMING INVOICE - Invoice is generated for the duration 2023-02-01 to 2023-03-01
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2023, 2, 1), new LocalDate(2023, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+    }
+
 }
