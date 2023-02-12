@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
@@ -813,8 +814,12 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                     final BillingPeriod billingPeriod = getLastActivePlan().getRecurringBillingPeriod();
                     DateTime proposedDate = chargedThroughDate;
-                    while (proposedDate.isAfter(clock.getUTCNow())) {
-                        proposedDate = proposedDate.minus(billingPeriod.getPeriod());
+                    if (billingPeriod.getPeriod().equals(Period.ZERO)) {
+                        proposedDate = clock.getUTCNow();
+                    } else {
+                        while (proposedDate.isAfter(clock.getUTCNow())) {
+                            proposedDate = proposedDate.minus(billingPeriod.getPeriod());
+                        }
                     }
 
                     final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);

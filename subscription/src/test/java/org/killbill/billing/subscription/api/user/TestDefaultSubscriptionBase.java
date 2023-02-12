@@ -23,6 +23,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase.NextBillingCycleDayLocal;
@@ -243,6 +247,40 @@ public class TestDefaultSubscriptionBase extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(startDate.plusDays(1)), bcd1);
         Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(changeDate), bcd2);
         Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(changeDate.plusDays(1)), bcd2);
+    }
+
+    @Test(groups = "fast", timeOut = 5000)
+    public void testEffectiveDateForPolicyCTDAfterNowForNoBillingPeriodAndStartOfTermBillingPolicy() throws SubscriptionBaseApiException, CatalogApiException {
+        final DateTime startDate = clock.getUTCNow().minusDays(1);
+        final UUID subscriptionId = UUID.randomUUID();
+        final SubscriptionBuilder builder = new SubscriptionBuilder()
+                .setChargedThroughDate(clock.getUTCNow().plusDays(5))
+                .setAlignStartDate(startDate)
+                .setId(subscriptionId);
+
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(builder, subscriptionBaseApiService, clock);
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEventPlan("shotgun-free")
+                                                                .setEventPlanPhase("shotgun-free-evergreen")
+                                                                .setEventPriceList("DEFAULT")
+                                                                .setFromDisk(true)
+                                                                .setUuid(UUID.randomUUID())
+                                                                .setSubscriptionId(subscriptionId)
+                                                                .setCreatedDate(startDate)
+                                                                .setUpdatedDate(startDate)
+                                                                .setEffectiveDate(startDate)
+                                                                .setTotalOrdering(3)
+                                                                .setActive(true)));
+        subscriptionBase.rebuildTransitions(inputEvents, catalog);
+
+        final BillingActionPolicy billingPolicy = BillingActionPolicy.START_OF_TERM;
+        final BillingAlignment alignment = BillingAlignment.ACCOUNT;
+        final InternalTenantContext context = new InternalTenantContext(null, null,
+                                                                        DateTimeZone.UTC, clock.getUTCNow());
+
+        DateTime result = subscriptionBase.getEffectiveDateForPolicy(billingPolicy, alignment, context);
+        Assert.assertEquals(result, clock.getUTCNow());
     }
 
 }
