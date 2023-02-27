@@ -474,9 +474,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified");
             }
-            if (SubscriptionEventType.STOP_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction())) {
-            	verifyNonNullOrEmpty(dryRunSubscriptionSpec.getEffectiveDate(), "DryRun effectiveDate should be specified");
-            }
         }
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
