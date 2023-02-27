@@ -456,7 +456,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
         // On the other hand if body is not null, we are attempting a dryRun subscription operation
         if (dryRunSubscriptionSpec != null && dryRunSubscriptionSpec.getDryRunAction() != null) {
-            if (SubscriptionEventType.START_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction())) {
+            if (SubscriptionEventType.START_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction()) || SubscriptionEventType.CHANGE.equals(dryRunSubscriptionSpec.getDryRunAction())) {
                 if (dryRunSubscriptionSpec.getPlanName() == null) {
                     verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified when no planName is specified");
                     verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified when no planName is specified");
@@ -469,14 +469,13 @@ public class InvoiceResource extends JaxRsResourceBase {
                     Preconditions.checkArgument(dryRunSubscriptionSpec.getBillingPeriod() == null, "DryRun subscription billing period should not be set when planName is specified");
                     Preconditions.checkArgument(dryRunSubscriptionSpec.getProductCategory() == null, "DryRun subscription product category should not be set when planName is specified");
                 }
-            } else if (SubscriptionEventType.CHANGE.equals(dryRunSubscriptionSpec.getDryRunAction())) {
-                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified");
-                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified");
+            }
+            if (SubscriptionEventType.CHANGE.equals(dryRunSubscriptionSpec.getDryRunAction()) || SubscriptionEventType.STOP_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction())) {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified");
-            } else if (SubscriptionEventType.STOP_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction())) {
-                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
-                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified");
+            }
+            if (SubscriptionEventType.STOP_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction())) {
+            	verifyNonNullOrEmpty(dryRunSubscriptionSpec.getEffectiveDate(), "DryRun effectiveDate should be specified");
             }
         }
 
