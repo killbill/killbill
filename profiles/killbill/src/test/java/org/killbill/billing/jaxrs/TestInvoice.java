@@ -1223,11 +1223,10 @@ public class TestInvoice extends TestJaxrsBase {
         clock.addMonths(1);
         callbackServlet.assertListenerStatus();
 
-        dryRunArg.setEffectiveDate(initialDate); //required for STOP_BILLING
         invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertNotNull(invoice);
         assertEquals(invoice.getItems().size(), 2);
         final InvoiceItem item = invoice.getItems().get(0);
     }
-
+    
 }
