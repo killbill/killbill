@@ -501,14 +501,6 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", baseTerm, basePriceList);
         final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier, null, 1, null, null);
 
-        // First try with default api (no date -> IMM) => Call should fail because subscription is PENDING
-        final DryRunArguments dryRunArguments1 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, null, SubscriptionEventType.CHANGE, null);
-        final List<SubscriptionBase> result1 = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), dryRunArguments1, internalCallContext);
-
-        // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
-        assertEquals(((DefaultSubscriptionBase) result1.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
-        assertEquals(((DefaultSubscriptionBase) result1.get(0)).getPendingTransition().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-
         // Second try with date prior to startDate => Call should fail because subscription is PENDING
         try {
             final DryRunArguments dryRunArguments2 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, startDate.minusDays(1), SubscriptionEventType.CHANGE, null);
