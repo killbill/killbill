@@ -112,7 +112,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // Verify we can trigger a dry-run invoice while the cancellation is pending
         final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
-                                                               bpSubscription.getBundleId(), null, null);
+                                                               bpSubscription.getBundleId(), null, BillingActionPolicy.END_OF_TERM);
         try {
             invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, Collections.emptyList(), callContext);
             fail();
@@ -172,7 +172,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // Verify we can trigger a dry-run invoice while the cancellation is pending
         final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
-                                                               bpSubscription.getBundleId(), null, null);
+                                                               bpSubscription.getBundleId(), null, BillingActionPolicy.END_OF_TERM);
         try {
             invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, Collections.emptyList(), callContext);
             fail();
@@ -409,7 +409,7 @@ public class TestIntegration extends TestIntegrationBase {
 
 
         final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
-                                                                   subscription.getId(), subscription.getBundleId(), null, null);
+                                                                   subscription.getId(), subscription.getBundleId(), null, BillingActionPolicy.END_OF_TERM);
         try {
            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, Collections.emptyList(), callContext);
             Assert.fail("Call should return no invoices");
