@@ -179,13 +179,8 @@ public class SubscriptionApiBase {
 
                 DateTime changeEffectiveDate = getDryRunEffectiveDate(dryRunEffDt, subscriptionForChange, context);
                 if (changeEffectiveDate == null) {
-                    BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
-                    if (policy == null) {
-                        final PlanChangeResult planChangeResult = apiService.getPlanChangeResult(subscriptionForChange, inputSpec, utcNow, tenantContext);
-                        policy = planChangeResult.getPolicy();
-                    }
-                    // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                    changeEffectiveDate = subscriptionForChange.getEffectiveDateForPolicy(policy, null, context);
+                	BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
+                	changeEffectiveDate = policy == null ? utcNow : subscriptionForChange.getEffectiveDateForPolicy(policy, null, context);
                 }
                 dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceList().getName(), changeEffectiveDate, true, entitlementSpecifier.getBillCycleDay(), phaseType, catalog, context);
                 break;
@@ -194,16 +189,9 @@ public class SubscriptionApiBase {
                 final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), catalog, false, context);
 
                 DateTime cancelEffectiveDate = getDryRunEffectiveDate(dryRunEffDt, subscriptionForCancellation, context);
-                if (dryRunEffDt == null) {
+                if (cancelEffectiveDate == null) {
                     BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
-                    if (policy == null) {
-                        final Plan currentPlan = subscriptionForCancellation.getCurrentPlan();
-                        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(currentPlan.getName(),
-                                                                               subscriptionForCancellation.getCurrentPhase().getPhaseType());
-                        policy = catalog.planCancelPolicy(spec, clock.getUTCNow(), subscriptionForCancellation.getStartDate());
-                    }
-                    // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                    cancelEffectiveDate = subscriptionForCancellation.getEffectiveDateForPolicy(policy, null, context);
+                    cancelEffectiveDate = policy == null ? utcNow : subscriptionForCancellation.getEffectiveDateForPolicy(policy, null, context);
                 }
                 dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, cancelEffectiveDate, true, catalog, context);
                 break;

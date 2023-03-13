@@ -1070,4 +1070,163 @@ public class TestInvoice extends TestJaxrsBase {
         Assert.assertNull(page);
     }
 
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1340")
+    public void testInvoiceDryRunStartBilling() throws Exception {
+
+        final Account account = createAccount();
+
+        //START_BILLING with planName - works as expected
+        final LocalDate targetDate = null;
+        InvoiceDryRun dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.START_BILLING);
+        dryRunArg.setPlanName("pistol-monthly");
+
+        Invoice invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertNotNull(invoice);
+
+        assertEquals(invoice.getItems().size(), 1);
+        InvoiceItem invoiceItem = invoice.getItems().get(0);
+        assertEquals(invoiceItem.getProductName(), "Pistol");
+
+        //START_BILLING with productName, billingPeriod, category - works as expected
+        dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.START_BILLING);
+        dryRunArg.setProductName("Pistol");
+        dryRunArg.setBillingPeriod(BillingPeriod.MONTHLY);
+        dryRunArg.setProductCategory(ProductCategory.BASE);
+
+        invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        Assert.assertNotNull(invoice);
+        assertEquals(invoice.getItems().size(), 1);
+        invoiceItem = invoice.getItems().get(0);
+        assertEquals(invoiceItem.getProductName(), "Pistol");
+
+        //START_BILLING with planName and productName - causes exception
+        dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.START_BILLING);
+        dryRunArg.setPlanName("pistol-monthly");
+        dryRunArg.setProductName("pistol");
+
+        try {
+            invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "DryRun subscription productName should not be set when planName is specified");
+        }
+    }    
+    
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1340")
+    public void testInvoiceDryRunChangePlan() throws Exception {
+
+        final Account account = createAccountNoPMBundleAndSubscription(); // create account with subscription to shotgun-monthly plan
+        final Subscription subscription = accountApi.getAccountBundles(account.getAccountId(), null, null, requestOptions).get(0).getSubscriptions().get(0);
+
+        //CHANGE with planName, no subscriptionId/BundleId specified, causes exception
+        final LocalDate targetDate = null;
+        InvoiceDryRun dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.CHANGE);
+        dryRunArg.setPlanName("pistol-monthly");
+        Invoice invoice;
+        try {
+            invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "DryRun subscriptionID should be specified");
+        }
+
+        //CHANGE with planName, subscriptionId, bundleId - works as expected
+        dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.CHANGE);
+        dryRunArg.setSubscriptionId(subscription.getSubscriptionId());
+        dryRunArg.setBundleId(subscription.getBundleId());
+        dryRunArg.setPlanName("pistol-monthly");
+
+        invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        Assert.assertNotNull(invoice);
+        assertEquals(invoice.getItems().size(), 1);
+        InvoiceItem invoiceItem = invoice.getItems().get(0);
+        assertEquals(invoiceItem.getProductName(), "Pistol");
+
+        //CHANGE with productName, billingPeriod, category, subscriptionId, bundleId - works as expected
+        dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.CHANGE);
+        dryRunArg.setSubscriptionId(subscription.getSubscriptionId());
+        dryRunArg.setBundleId(subscription.getBundleId());
+        dryRunArg.setProductName("Pistol");
+        dryRunArg.setBillingPeriod(BillingPeriod.MONTHLY);
+        dryRunArg.setProductCategory(ProductCategory.BASE);
+
+        invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        Assert.assertNotNull(invoice);
+        assertEquals(invoice.getItems().size(), 1);
+        invoiceItem = invoice.getItems().get(0);
+        assertEquals(invoiceItem.getProductName(), "Pistol");
+
+        //CHANGE with planName and productName - causes exception
+        dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.CHANGE);
+        dryRunArg.setSubscriptionId(subscription.getSubscriptionId());
+        dryRunArg.setBundleId(subscription.getBundleId());
+        dryRunArg.setProductName("Pistol");
+        dryRunArg.setBillingPeriod(BillingPeriod.MONTHLY);
+        dryRunArg.setProductCategory(ProductCategory.BASE);
+        dryRunArg.setPlanName("pistol-monthly");
+
+        try {
+            invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "DryRun subscription productName should not be set when planName is specified");
+        }
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1340")
+    public void testInvoiceDryRunStopBilling() throws Exception {
+
+        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountNoPMBundleAndSubscription(); // create account with subscription to shotgun-monthly plan
+        final Subscription subscription = accountApi.getAccountBundles(account.getAccountId(), null, null, requestOptions).get(0).getSubscriptions().get(0);
+
+        //STOP_BILLING, no subscriptionId/BundleId specified - causes exception
+        final LocalDate targetDate = null;
+        InvoiceDryRun dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.STOP_BILLING);
+        Invoice invoice;
+        try {
+            invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "DryRun subscriptionID should be specified");
+        }
+
+        //STOP_BILLING with subscriptionId, bundleId specified, works as expected
+        dryRunArg = new InvoiceDryRun();
+        dryRunArg.setDryRunType(DryRunType.SUBSCRIPTION_ACTION);
+        dryRunArg.setDryRunAction(SubscriptionEventType.STOP_BILLING);
+        dryRunArg.setSubscriptionId(subscription.getSubscriptionId());
+        dryRunArg.setBundleId(subscription.getBundleId());
+        dryRunArg.setPlanName("pistol-monthly"); // not required but does not matter if this is specified
+        invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        Assert.assertNull(invoice); // no invoice since subscription is in TRIAL phase
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE, ExtBusEventType.INVOICE_CREATION);
+        clock.addMonths(1);
+        callbackServlet.assertListenerStatus();
+
+        invoice = invoiceApi.generateDryRunInvoice(dryRunArg, account.getAccountId(), targetDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertNotNull(invoice);
+        assertEquals(invoice.getItems().size(), 2);
+        final InvoiceItem item = invoice.getItems().get(0);
+    }
+    
 }
