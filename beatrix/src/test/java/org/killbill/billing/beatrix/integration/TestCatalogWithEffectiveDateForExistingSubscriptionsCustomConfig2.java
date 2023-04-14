@@ -59,101 +59,61 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig2 e
 
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
 
+        final boolean isAccount1 = true;
+        final boolean isAccount2 = true;
+
         final Account account1 = createAccountWithNonOsgiPaymentMethod(getAccountData(28)); //TODO remove bcd?
+        Invoice curInvoice1;
+        if (isAccount1) {
+            final DefaultEntitlement bpEntitlement1 =
+                    createBaseEntitlementAndCheckForCompletion(account1.getId(), "externalKey1", "Liability",
+                                                               ProductCategory.BASE, BillingPeriod.MONTHLY,
+                                                               NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
-        final DefaultEntitlement bpEntitlement1 =
-                createBaseEntitlementAndCheckForCompletion(account1.getId(), "externalKey1", "Liability",
-                                                           ProductCategory.BASE, BillingPeriod.MONTHLY,
-                                                           NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+            assertNotNull(bpEntitlement1);
+            curInvoice1 = invoiceChecker.checkInvoice(account1.getId(), 1, callContext,
+                                                              new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 28), new LocalDate(2023, 4, 28), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+            Assert.assertEquals(curInvoice1.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+        }
 
-        assertNotNull(bpEntitlement1);
-        Invoice curInvoice1 = invoiceChecker.checkInvoice(account1.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 28), new LocalDate(2023, 4, 28), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
-        Assert.assertEquals(curInvoice1.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
-        
+
         clock.setDay(new LocalDate(2023, 4, 6));
         
         final Account account2 = createAccountWithNonOsgiPaymentMethod(getAccountData(6)); //TODO remove bcd?
+        Invoice curInvoice2;
+        if (isAccount2) {
+            final DefaultEntitlement bpEntitlement2 =
+                    createBaseEntitlementAndCheckForCompletion(account2.getId(), "externalKey2", "Liability",
+                                                               ProductCategory.BASE, BillingPeriod.MONTHLY,
+                                                               NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
-        final DefaultEntitlement bpEntitlement2 =
-                createBaseEntitlementAndCheckForCompletion(account2.getId(), "externalKey2", "Liability",
-                                                           ProductCategory.BASE, BillingPeriod.MONTHLY,
-                                                           NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+            assertNotNull(bpEntitlement2);
+            curInvoice2 = invoiceChecker.checkInvoice(account2.getId(), 1, callContext,
+                                                              new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 6), new LocalDate(2023, 5, 6), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+            Assert.assertEquals(curInvoice2.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+        }
 
-        assertNotNull(bpEntitlement2);
-        Invoice curInvoice2 = invoiceChecker.checkInvoice(account2.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 6), new LocalDate(2023, 5, 6), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
-        Assert.assertEquals(curInvoice2.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
-        
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        if (isAccount1) {
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        }
+        if (isAccount2) {
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        }
         clock.setDay(new LocalDate(2023, 5, 6));
         assertListenerStatus();
-        
-        curInvoice1 = invoiceChecker.checkInvoice(account1.getId(), 2, callContext,
-                new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 28), new LocalDate(2023, 5, 28), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
-        
-//        curInvoice2 = invoiceChecker.checkInvoice(account2.getId(), 2, callContext,
-//                new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 6), new LocalDate(2023, 6, 6), InvoiceItemType.RECURRING, new BigDecimal("59.95"))); //FAILS here, invoice created for 49.95 as per v1
-        
+
+        if (isAccount1) {
+            curInvoice1 = invoiceChecker.checkInvoice(account1.getId(), 2, callContext,
+                                                      new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 28), new LocalDate(2023, 5, 28), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+        }
+
+        if (isAccount2) {
+            curInvoice2 = invoiceChecker.checkInvoice(account2.getId(), 2, callContext,
+                                                      new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 6), new LocalDate(2023, 6, 6), InvoiceItemType.RECURRING, new BigDecimal("59.95"))); //FAILS here, invoice created for 49.95 as per v1
+        }
+
+        assertListenerStatus();
     }
-    
-    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1842")
-    public void testSubscriptionWithAccountNotWorking() throws Exception { //test for the account a2 described in #1842
 
-        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
-        clock.setDay(new LocalDate(2023, 4, 6));
-        
-        final Account account2 = createAccountWithNonOsgiPaymentMethod(getAccountData(6)); //TODO remove bcd?
-
-        final DefaultEntitlement bpEntitlement2 =
-                createBaseEntitlementAndCheckForCompletion(account2.getId(), "externalKey2", "Liability",
-                                                           ProductCategory.BASE, BillingPeriod.MONTHLY,
-                                                           NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-
-        assertNotNull(bpEntitlement2);
-        Invoice curInvoice2 = invoiceChecker.checkInvoice(account2.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 6), new LocalDate(2023, 5, 6), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
-        Assert.assertEquals(curInvoice2.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
-        
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.setDay(new LocalDate(2023, 5, 6));
-        assertListenerStatus();
-        
-//        curInvoice2 = invoiceChecker.checkInvoice(account2.getId(), 2, callContext,
-//                new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 6), new LocalDate(2023, 6, 6), InvoiceItemType.RECURRING, new BigDecimal("59.95"))); //FAILS here, invoice created for 49.95 as per v1
-        
-    }  
-    
-    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1842")
-    public void testSubscriptionWithAccountWorking() throws Exception { //test for the account a1 described in #1842
-
-        final LocalDate today = new LocalDate(2023, 3, 28);
-        clock.setDay(today);
-
-        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
-
-        final Account account1 = createAccountWithNonOsgiPaymentMethod(getAccountData(28)); //TODO remove bcd?
-
-        final DefaultEntitlement bpEntitlement1 =
-                createBaseEntitlementAndCheckForCompletion(account1.getId(), "externalKey1", "Liability",
-                                                           ProductCategory.BASE, BillingPeriod.MONTHLY,
-                                                           NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-
-        assertNotNull(bpEntitlement1);
-        Invoice curInvoice1 = invoiceChecker.checkInvoice(account1.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 28), new LocalDate(2023, 4, 28), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
-        Assert.assertEquals(curInvoice1.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
-        
-        clock.setDay(new LocalDate(2023, 4, 6));
-        
-        
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.setDay(new LocalDate(2023, 5, 6));
-        assertListenerStatus();
-        
-        curInvoice1 = invoiceChecker.checkInvoice(account1.getId(), 2, callContext,
-                new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 28), new LocalDate(2023, 5, 28), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
-        
-    }    
 
 }
