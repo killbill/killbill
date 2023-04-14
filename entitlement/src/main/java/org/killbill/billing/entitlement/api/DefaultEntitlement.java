@@ -345,7 +345,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                null,
+                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
                 entitlementEffectiveDate,
                 billingEffectiveDate,
                 false);
@@ -488,7 +488,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                null,
+                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
                 effectiveCancelDate,
                 effectiveCancelDate,
                 false);
@@ -566,7 +566,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                null,
+                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
                 null,
                 null,
                 false);
@@ -691,7 +691,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                null,
+                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
                 effectiveDate,
                 effectiveDate,
                 false);
@@ -765,7 +765,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                null,
+                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
                 null,
                 null,
                 false);
