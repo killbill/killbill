@@ -46,6 +46,7 @@ public class SubscriptionBuilder {
         this.alignStartDate = original.getAlignStartDate();
         this.bundleStartDate = original.getBundleStartDate();
         this.category = original.getCategory();
+        this.createdDate = original.getCreatedDate();
         this.chargedThroughDate = original.getChargedThroughDate();
         this.migrated = original.isMigrated();
         this.includeDeletedEvents= original.getIncludeDeletedEvents();
