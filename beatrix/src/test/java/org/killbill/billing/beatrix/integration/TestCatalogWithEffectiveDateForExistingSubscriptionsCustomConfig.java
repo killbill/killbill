@@ -202,7 +202,15 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 5, 5), new LocalDate(2022, 6, 5), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 5, 5), new LocalDate(2022, 6, 5), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); // 2022-06-05
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 6, 5), new LocalDate(2022, 7, 5), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
     }
