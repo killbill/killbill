@@ -76,6 +76,26 @@ public abstract class BillCycleDayCalculator {
         return resultingLocalDate;
     }
 
+
+    public static LocalDate alignProposedNextBillCycleDate(final LocalDate proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
+        // billingCycleDay alignment only makes sense for month based BillingPeriod (MONTHLY, QUARTERLY, BIANNUAL, ANNUAL)
+        final boolean isMonthBased = (billingPeriod.getPeriod().getMonths() | billingPeriod.getPeriod().getYears()) > 0;
+        if (!isMonthBased) {
+            return proposedDate;
+        }
+       if (proposedDate.getDayOfMonth() > billingCycleDay) {
+           return alignProposedBillCycleDate(proposedDate.plusMonths(1), billingCycleDay, billingPeriod);
+       } else {
+           return alignProposedBillCycleDate(proposedDate, billingCycleDay, billingPeriod);
+       }
+    }
+
+    public static LocalDate alignProposedNextBillCycleDate(final DateTime proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
+        final LocalDate proposedLocalDate = internalTenantContext.toLocalDate(proposedDate);
+        final LocalDate resultingLocalDate = alignProposedNextBillCycleDate(proposedLocalDate, billingCycleDay, billingPeriod);
+        return resultingLocalDate;
+    }
+
     private static int calculateOrRetrieveBcdFromSubscription(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) {
         Integer result = bcdCache != null ? bcdCache.get(subscription.getId()) : null;
         if (result == null) {
