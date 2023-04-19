@@ -21,6 +21,7 @@ package org.killbill.billing.entitlement.dao;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -79,6 +80,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
@@ -223,6 +225,11 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public List<BlockingState> getByBlockingIds(Iterable<UUID> blockableIds, final InternalTenantContext context) {
+    	
+    	if (Iterables.isEmpty(blockableIds)) {
+    		return Collections.emptyList();
+    	}
+    	
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {

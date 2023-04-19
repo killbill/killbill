@@ -255,4 +255,11 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertFalse(secondBlockingState.getBlockBilling());
         Assert.assertFalse(secondBlockingState.isActive());
     }
+    
+    @Test(groups = "slow")
+    public void testWithEmptyBlockingIdsList() throws Exception {
+
+    	final List<BlockingState> blockingStates = blockingStateDao.getByBlockingIds(ImmutableList.of(), internalCallContext);
+    	Assert.assertNotNull(blockingStates);
+    }    
 }
