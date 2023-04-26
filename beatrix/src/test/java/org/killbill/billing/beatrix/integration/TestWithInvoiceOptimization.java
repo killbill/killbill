@@ -1111,6 +1111,54 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
     }
+    
+    @Test(groups = "slow")
+    public void testBillRunMultipleTimesInArrearWithUsageAndRecurring() throws Exception {
+    	
+        invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+        invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2023-01-01T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
+        assertNotNull(account);
+
+        // Set AUTO_INVOICING_OFF, AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT tags.
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        
+        // Create an in-arrear RECURRING subscription
+        final LocalDate effDt1 = new LocalDate(2018, 8, 1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
+        assertListenerStatus();
+
+        // Create an in-arrear USAGE subscription
+        final LocalDate effDt2 = new LocalDate(2018, 8, 1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("training-usage-in-arrear");
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
+        final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, false, callContext);
+        assertListenerStatus();
+        
+        //record usage for current month
+        recordUsageData(sub2.getId(), "tracking-1", "hours", new LocalDate(2023, 1, 19), BigDecimal.valueOf(10L), callContext);
+        
+        // Generate invoice with targetDate 2023-2-1
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+        
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 3, 10); //invoice with 3 invoice items
+        
+        // Generate invoice again with targetDate 2023-2-1
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+        
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 3, 10); //invoice with 3 invoice items   
+        
+    }
 
 
     private void checkNothingToInvoice(final UUID accountId, final LocalDate targetDate, final boolean isDryRun) {
