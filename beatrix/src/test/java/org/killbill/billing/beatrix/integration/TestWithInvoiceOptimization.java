@@ -51,6 +51,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -1118,6 +1119,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceConfig.setMaxRawUsagePreviousPeriod(0);
         invoiceConfig.setZeroAmountUsageDisabled(true);
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+        invoiceConfig.setMaxDailyNumberOfItemsSafetyBound(10000);
+        invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
+        invoiceConfig.setMaxGlobalLockRetries(2000);
 
         clock.setTime(new DateTime("2023-01-01T3:56:02"));
 

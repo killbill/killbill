@@ -1237,6 +1237,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private InArrearMode inArrearMode;
         private Period maxInvoiceLimit;
         private int maxRawUsagePreviousPeriod;
+        private int maxDailyNumberOfItemsSafetyBound;
+        private int maxGlobalLockRetries;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
@@ -1285,13 +1287,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public int getMaxDailyNumberOfItemsSafetyBound() {
-            return defaultInvoiceConfig.getMaxDailyNumberOfItemsSafetyBound();
+            return maxDailyNumberOfItemsSafetyBound;
         }
-
+        
         @Override
         public int getMaxDailyNumberOfItemsSafetyBound(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.getMaxDailyNumberOfItemsSafetyBound();
         }
+        
+        public void setMaxDailyNumberOfItemsSafetyBound(final int value) {
+        	this.maxDailyNumberOfItemsSafetyBound = value;
+        }        
 
         @Override
         public TimeSpan getDryRunNotificationSchedule() {
@@ -1333,8 +1339,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public int getMaxGlobalLockRetries() {
+            return maxGlobalLockRetries;
+        }
+        
+        public int getMaxGlobalLockRetries(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.getMaxGlobalLockRetries();
         }
+        
+        public void setMaxGlobalLockRetries(int value) {
+            this.maxGlobalLockRetries = value;
+        }        
 
         @Override
         public List<String> getInvoicePluginNames() {
