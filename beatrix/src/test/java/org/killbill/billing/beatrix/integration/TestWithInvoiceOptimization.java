@@ -1125,7 +1125,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         clock.setTime(new DateTime("2023-01-01T3:56:02"));
 
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
         assertNotNull(account);
 
         // Set AUTO_INVOICING_OFF, AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT tags.
@@ -1176,7 +1176,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         clock.setTime(new DateTime("2023-01-01T3:56:02"));
 
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
         assertNotNull(account);
 
         // Set AUTO_INVOICING_OFF, AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT tags.
