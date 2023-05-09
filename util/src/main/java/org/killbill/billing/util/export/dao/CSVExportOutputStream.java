@@ -20,9 +20,11 @@ package org.killbill.billing.util.export.dao;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.killbill.billing.util.api.ColumnInfo;
 import org.killbill.billing.util.api.DatabaseExportOutputStream;
@@ -88,13 +90,13 @@ public class CSVExportOutputStream extends OutputStream implements DatabaseExpor
         if (shouldWriteHeader) {
             // Write the header once (mapper.writer will clone the writer). Add a small marker in front of the header
             // to easily split it
-            write(String.format("-- %s ", currentTableName).getBytes());
+            write(String.format("-- %s ", currentTableName).getBytes(StandardCharsets.UTF_8));
             bytes = mapper.writer(currentCSVSchema.withHeader()).writeValueAsBytes(row);
             shouldWriteHeader = false;
         } else {
-            final Map<String, Object> rowSanitized = new HashMap<String, Object>(row);
-            for (final String key : row.keySet()) {
-                rowSanitized.put(key, sanitize(row.get(key)));
+            final Map<String, Object> rowSanitized = new HashMap<>(row);
+            for (final Entry<String, Object> entry : row.entrySet()) {
+                rowSanitized.put(entry.getKey(), sanitize(entry.getValue()));
             }
             bytes = writer.writeValueAsBytes(rowSanitized);
         }

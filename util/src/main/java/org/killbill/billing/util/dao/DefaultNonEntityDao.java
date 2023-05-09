@@ -176,7 +176,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
     }
 
     // 'cache' will be null for the CacheLoader classes -- or if cache is not configured.
-    private class WithCaching<TypeIn, TypeOut> {
+    private static class WithCaching<TypeIn, TypeOut> {
 
         private TypeOut withCaching(final OperationRetrieval<TypeOut> op, @Nullable final TypeIn objectOrRecordId, final ObjectType objectType, final TableName tableName, @Nullable final CacheController<TypeIn, TypeOut> cache) {
 

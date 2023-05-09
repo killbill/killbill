@@ -284,10 +284,9 @@ public class DefaultSecurityApi implements SecurityApi {
         }
 
         final List<String> expandedPermissions = new ArrayList<>();
-        for (final String group : groupToValues.keySet()) {
-            final Set<String> groupPermissions = groupToValues.get(group);
-            for (final String value : groupPermissions) {
-                expandedPermissions.add(String.format("%s:%s", group, value));
+        for (final Entry<String, Set<String>> entry : groupToValues.entrySet()) {
+            for (final String value : entry.getValue()) {
+                expandedPermissions.add(String.format("%s:%s", entry.getKey(), value));
             }
         }
         return expandedPermissions;

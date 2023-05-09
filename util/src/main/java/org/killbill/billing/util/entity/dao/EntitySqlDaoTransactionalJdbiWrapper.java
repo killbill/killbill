@@ -138,9 +138,6 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         t.fillInStackTrace();
 
         final StackTraceElement[] stackTrace = t.getStackTrace();
-        if (stackTrace == null) {
-            return null;
-        }
 
         final StringBuilder dump = new StringBuilder();
         int firstEntitySqlDaoCall = 0;

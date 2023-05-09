@@ -119,7 +119,7 @@ public class PluginInfoModelJson {
         if (state != null ? !state.equals(that.state) : that.state != null) {
             return false;
         }
-        if (isSelectedForStart != that.isSelectedForStart) {
+        if (!isSelectedForStart.equals(that.isSelectedForStart)) {
             return false;
         }
         if (pluginKey != null ? !pluginKey.equals(that.pluginKey) : that.pluginKey != null) {
