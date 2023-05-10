@@ -1115,7 +1115,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
     }
     
     @Test(groups = "slow")
-    public void testBillRunMultipleTimesInArrearWithUsageAndRecurring() throws Exception {
+    public void testBillRunWithUsageAndRecurringAccount_EST() throws Exception {
     	
         invoiceConfig.setMaxRawUsagePreviousPeriod(0);
         invoiceConfig.setZeroAmountUsageDisabled(true);
@@ -1125,6 +1125,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         DateTime referenceTime = new DateTime("2023-01-01T6:00:00");
         clock.setTime(referenceTime);
 
+        // Create Account with EST TZ
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1, DateTimeZone.forID("EST"), referenceTime));
         assertNotNull(account);
 
@@ -1149,34 +1150,44 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, false, callContext);
         assertListenerStatus();
         
-        //record usage for current month
+        // Record usage for current month
         recordUsageData(sub2.getId(), "tracking-1", "hours", new LocalDate(2023, 1, 19), BigDecimal.valueOf(10L), callContext);
         
         // Generate invoice with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-        
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 4 invoice items
-        
-//        // Generate invoice again with targetDate 2023-2-1
-//        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-//        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //fails here due to duplicate usage item   
-        
-        invoiceConfig.reset();
-        
+
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("1000.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        //  Generate invoice again with same targetDate 2023-2-1 and verify there is no duplicate
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("1000.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
     }
     
     @Test(groups = "slow")
-    public void testBillRunMultipleTimesInArrearWithUsageWithMultipleTiersAndRecurring() throws Exception {
+    public void testBillRunWithUsageMultipleTiersAndRecurringAccount_EST() throws Exception {
     	
         invoiceConfig.setMaxRawUsagePreviousPeriod(0);
         invoiceConfig.setZeroAmountUsageDisabled(true);
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
         invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
 
-        clock.setTime(new DateTime("2023-01-01T3:56:02"));
+        DateTime referenceTime = new DateTime("2023-01-01T6:00:00");
+        clock.setTime(referenceTime);
 
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        // Create Account with EST TZ
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1, DateTimeZone.forID("EST"), referenceTime));
         assertNotNull(account);
+
 
         // Set AUTO_INVOICING_OFF, AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT tags.
         add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
@@ -1206,15 +1217,25 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         
         // Generate invoice with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //invoice with 5 invoice items
-        
-//        // Generate invoice again with targetDate 2023-2-1
-//        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-//        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //fails here due to duplicate usage item  
-        
-        invoiceConfig.reset();
-        
-    }    
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("29.50")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("5.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // Generate invoice again with same targetDate 2023-2-1 and verify there is no duplicate
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("29.50")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("5.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+    }
 
 
     private void checkNothingToInvoice(final UUID accountId, final LocalDate targetDate, final boolean isDryRun) {
