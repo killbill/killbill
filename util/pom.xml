@@ -28,6 +28,7 @@
     <packaging>jar</packaging>
     <name>killbill-util</name>
     <properties>
+        <check.fail-spotbugs>true</check.fail-spotbugs>
         <killbill.features.account.allowBCDUpdate>false</killbill.features.account.allowBCDUpdate>
         <killbill.features.bus.optimization>false</killbill.features.bus.optimization>
         <killbill.features.invoice.optimization>false</killbill.features.invoice.optimization>
