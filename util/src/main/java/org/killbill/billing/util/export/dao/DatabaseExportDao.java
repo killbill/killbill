@@ -22,6 +22,7 @@ import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.inject.Inject;
@@ -182,8 +183,9 @@ public class DatabaseExportDao {
                     while (iterator.hasNext()) {
                         final Map<String, Object> row = iterator.next();
 
-                        for (final String k : row.keySet()) {
-                            final Object value = row.get(k);
+                        for (final Entry<String, Object> entry : row.entrySet()) {
+                            final String k = entry.getKey();
+                            final Object value = entry.getValue();
                             // For h2, transform a JdbcBlob and a JdbcClob into a byte[]
                             // See also LowerToCamelBeanMapper
                             if (value instanceof Blob) {

@@ -81,7 +81,11 @@ public class DefaultCustomFieldDeletionEvent extends BusEventBase implements Cus
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultCustomFieldDeletionEvent)) {
+
+        // Change from "!(o instanceof DefaultCustomFieldDeletionEvent)" to "getClass() != o.getClass()" to avoid
+        // FindBugs warning.
+        // See also: https://stackoverflow.com/a/25891656
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 

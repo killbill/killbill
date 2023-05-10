@@ -43,9 +43,9 @@ public class PerTenantConfig extends HashMap<String, String> implements External
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
         oo.writeInt(size());
-        for (final String key : keySet()) {
-            oo.writeObject(key);
-            oo.writeObject(get(key));
+        for (final Entry<String, String> entry : entrySet()) {
+            oo.writeObject(entry.getKey());
+            oo.writeObject(entry.getValue());
         }
     }
 }

@@ -1,6 +1,6 @@
 <!--
-  ~ Copyright 2020-2020 Equinix, Inc
-  ~ Copyright 2020-2020 The Billing Project, LLC
+  ~ Copyright 2020-2023 Equinix, Inc
+  ~ Copyright 2014-2023 The Billing Project, LLC
   ~
   ~ The Billing Project licenses this file to you under the Apache License, version 2.0
   ~ (the "License"); you may not use this file except in compliance with the
@@ -15,12 +15,49 @@
   ~ under the License.
   -->
 
-<FindBugsFilter>
+<FindBugsFilter
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0
+                            https://raw.githubusercontent.com/spotbugs/spotbugs/4.7.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- FIXME-SPOTBUGS: think proper solution for this -->
+    <!-- Disable EI_EXPOSE_REP,EI_EXPOSE_REP2 for all killbill classes, focus on other warnings/bugs -->
     <Match>
-        <!-- See http://stackoverflow.com/questions/12422473/nullable-input-in-google-guava-function-interface-triggers-findbugs-warning -->
-        <Method name="apply"/>
-        <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
+        <Class name="~.*\.killbill\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     </Match>
-    <Bug pattern="EI_EXPOSE_REP"/>
-    <Bug pattern="EI_EXPOSE_REP2"/>
+
+    <!-- Exclude all joda-time getter methods: joda-time classes are mostly immutable. -->
+    <Match>
+        <Or>
+            <Method returns="org.joda.time.LocalDate" />
+            <Method returns="org.joda.time.DateTime" />
+            <Method returns="org.joda.time.DateTimeZone" />
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+
+    <!-- Exclude all joda-time method/constructors parameters: joda-time classes are mostly immutable. -->
+    <Match>
+        <Or>
+            <Field type="org.joda.time.LocalDate" />
+            <Field type="org.joda.time.DateTime" />
+            <Field type="org.joda.time.DateTimeZone" />
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- MODULE: UTIL -->
+    <!-- Either this, or we have to changes class name with better name and this changes will affect ~97 location in this project -->
+    <Match>
+        <Class name="org.killbill.billing.util.jackson.ObjectMapper" />
+        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" />
+    </Match>
+    <!-- There's comment saying that, "Note: this assumes custom realms return something sensible here" -->
+    <Match>
+        <Class name="org.killbill.billing.util.security.api.DefaultSecurityApi" />
+        <Method name="getCurrentUserPermissions" />
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" />
+    </Match>
 </FindBugsFilter>

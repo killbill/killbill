@@ -107,7 +107,7 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
     public void remove(final Function<K, Boolean> keyMatcher) {
         final Set<K> toRemove = new HashSet<K>();
         for (final K key : getKeys()) {
-            if (keyMatcher.apply(key) == Boolean.TRUE) {
+            if (Boolean.TRUE.equals(keyMatcher.apply(key))) {
                 toRemove.add(key);
             }
         }

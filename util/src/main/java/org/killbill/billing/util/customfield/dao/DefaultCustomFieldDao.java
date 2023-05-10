@@ -141,7 +141,7 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
         if (existing == null) {
             throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_DOES_NOT_EXISTS_FOR_ID, input.getId());
         }
-        if (input.getObjectId() != null & !input.getObjectId().equals(existing.getObjectId())) {
+        if (input.getObjectId() != null && !input.getObjectId().equals(existing.getObjectId())) {
             throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getObjectId(), "ObjectId");
         }
         if (input.getObjectType() != null && input.getObjectType() != existing.getObjectType()) {

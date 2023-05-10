@@ -123,7 +123,7 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     @VisibleForTesting
     boolean shouldUpdateSession(final Session session) {
-        return noUpdateSessionsCache.get(session.getId()) == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
+        return Boolean.TRUE.equals(noUpdateSessionsCache.get(session.getId())) ? Boolean.FALSE : Boolean.TRUE;
     }
 
     private Session toSession(final SessionModelDao sessionModelDao) {

@@ -81,7 +81,12 @@ public class DefaultCustomFieldCreationEvent extends BusEventBase implements Cus
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultCustomFieldCreationEvent)) {
+
+        // Change from "!(o instanceof DefaultCustomFieldCreationEvent)" to "getClass() != o.getClass()" to avoid
+        // FindBugs warning.
+        // See also: https://stackoverflow.com/a/25891656
+        // See also: TestDefaultCustomFieldCreationEvent#testEquality() for before/after test case.
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
