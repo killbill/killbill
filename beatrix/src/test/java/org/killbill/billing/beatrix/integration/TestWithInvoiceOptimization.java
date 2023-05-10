@@ -1119,9 +1119,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceConfig.setMaxRawUsagePreviousPeriod(0);
         invoiceConfig.setZeroAmountUsageDisabled(true);
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
-        invoiceConfig.setMaxDailyNumberOfItemsSafetyBound(10000);
         invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
-        invoiceConfig.setMaxGlobalLockRetries(2000);
 
         clock.setTime(new DateTime("2023-01-01T3:56:02"));
 
@@ -1172,9 +1170,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceConfig.setMaxRawUsagePreviousPeriod(0);
         invoiceConfig.setZeroAmountUsageDisabled(true);
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
-        invoiceConfig.setMaxDailyNumberOfItemsSafetyBound(10000);
         invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
-        invoiceConfig.setMaxGlobalLockRetries(2000);
 
         clock.setTime(new DateTime("2023-01-01T3:56:02"));
 
