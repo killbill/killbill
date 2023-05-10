@@ -31,6 +31,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.ObjectType;
@@ -1121,9 +1122,10 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
         invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
 
-        clock.setTime(new DateTime("2023-01-01T3:56:02"));
+        DateTime referenceTime = new DateTime("2023-01-01T6:00:00");
+        clock.setTime(referenceTime);
 
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1, DateTimeZone.forID("EST"), referenceTime));
         assertNotNull(account);
 
         // Set AUTO_INVOICING_OFF, AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT tags.
@@ -1153,12 +1155,12 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Generate invoice with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
         
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 3 invoice items
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 4 invoice items
         
         // Generate invoice again with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
         
-        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 3 invoice items   
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //fails here due to duplicate usage item   
         
         invoiceConfig.reset();
         
@@ -1205,11 +1207,11 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         
         // Generate invoice with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //invoice with 4 invoice items
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //invoice with 5 invoice items
         
         // Generate invoice again with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //invoice with 4 invoice items   
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //fails here due to duplicate usage item  
         
         invoiceConfig.reset();
         

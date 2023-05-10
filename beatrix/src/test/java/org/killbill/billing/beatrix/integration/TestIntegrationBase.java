@@ -548,6 +548,23 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
         return builder.build();
     }
+    
+    protected AccountData getAccountData(@Nullable final Integer billingDay, final DateTimeZone tz, final DateTime referenceTime) {
+        final MockAccountBuilder builder = new MockAccountBuilder()
+                .name(UUID.randomUUID().toString().substring(1, 8))
+                .firstNameLength(6)
+                .email(UUID.randomUUID().toString().substring(1, 8))
+                .phone(UUID.randomUUID().toString().substring(1, 8))
+                .migrated(false)
+                .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                .currency(Currency.USD)
+                .referenceTime(referenceTime)
+                .timeZone(tz);
+        if (billingDay != null) {
+            builder.billingCycleDayLocal(billingDay);
+        }
+        return builder.build();
+    }    
 
     protected AccountData getChildAccountData(final int billingDay, final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
