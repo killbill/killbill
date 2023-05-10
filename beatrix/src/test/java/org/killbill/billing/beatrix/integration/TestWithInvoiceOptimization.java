@@ -1137,7 +1137,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final LocalDate effDt1 = new LocalDate(2018, 8, 1);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 1, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
         subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
         assertListenerStatus();
 
@@ -1155,12 +1155,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Generate invoice with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
         
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 3, 10); //invoice with 3 invoice items
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 3 invoice items
         
         // Generate invoice again with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
         
-        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 3, 10); //invoice with 3 invoice items   
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 3 invoice items   
+        
+        invoiceConfig.reset();
         
     }
     
@@ -1188,7 +1190,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final LocalDate effDt1 = new LocalDate(2018, 8, 1);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("pistol-in-arrear-monthly-notrial");
-        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 1, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
         final Subscription baseSubscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
         assertListenerStatus();
 
@@ -1207,11 +1209,13 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         
         // Generate invoice with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 4 invoice items
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //invoice with 4 invoice items
         
         // Generate invoice again with targetDate 2023-2-1
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
-        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10); //invoice with 4 invoice items   
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10); //invoice with 4 invoice items   
+        
+        invoiceConfig.reset();
         
     }    
 
