@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
@@ -401,9 +402,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         for (final SubscriptionBaseEvent evt : eventsForAccount) {
             eventsForSubscriptions.putElement(evt.getSubscriptionId(), evt);
         }
-        for (final UUID bundleId : subscriptionsFromAccountId.keySet()) {
-            final List<DefaultSubscriptionBase> subscriptionsForBundle = subscriptionsFromAccountId.get(bundleId);
-            result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions, null, catalog, context));
+        for (final Entry<UUID, List<DefaultSubscriptionBase>> entry : subscriptionsFromAccountId.entrySet()) {
+            result.put(entry.getKey(), buildBundleSubscriptions(entry.getValue(), eventsForSubscriptions, null, catalog, context));
         }
         return result;
     }
