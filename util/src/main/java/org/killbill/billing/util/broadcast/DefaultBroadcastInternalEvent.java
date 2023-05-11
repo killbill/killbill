@@ -38,7 +38,7 @@ public class DefaultBroadcastInternalEvent extends BusEventBase implements Broad
     public DefaultBroadcastInternalEvent(@JsonProperty("serviceName") final String serviceName,
                                          @JsonProperty("type") final String type,
                                          @JsonProperty("jsonEvent") final String jsonEvent) {
-        super(null, 0L, null);
+        this();
         this.serviceName = serviceName;
         this.type = type;
         this.jsonEvent = jsonEvent;
@@ -67,11 +67,19 @@ public class DefaultBroadcastInternalEvent extends BusEventBase implements Broad
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("DefaultBroadcastInternalEvent{");
-        sb.append("serviceName='").append(serviceName).append('\'');
-        sb.append(", type='").append(type).append('\'');
-        sb.append(", jsonEvent='").append(jsonEvent).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return "DefaultBroadcastInternalEvent{" + "serviceName='" + serviceName + '\'' +
+               ", type='" + type + '\'' +
+               ", jsonEvent='" + jsonEvent + '\'' +
+               '}';
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

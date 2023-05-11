@@ -17,9 +17,14 @@
 
 package org.killbill.billing.util.broadcast;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.killbill.billing.events.BroadcastInternalEvent;
+import org.killbill.billing.events.BusEventBase;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.jackson.ObjectMapper;
+import org.killbill.bus.api.BusEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -46,5 +51,32 @@ public class TestDefaultBroadcastInternalEvent extends UtilTestSuiteNoDB {
         Assert.assertEquals(res.getServiceName(), "service");
         Assert.assertEquals(res.getType(), "PLUGIN_INSTALL");
         Assert.assertEquals(res.getJsonEvent(), eventJson);
+    }
+
+    // This test created especially to make sure that it still behave the same after adding equals() and hashCode()
+    // to DefaultBroadcastInternalEvent.
+    @Test(groups = "fast")
+    public void testEquality() {
+        // see DefaultBroadcastInternalEvent() default constructor
+        final BusEventBase eventBaseAttrsInBroadcastInternal = new BusEventBase(null, 0L, null);
+
+        final BroadcastInternalEvent broadcast1 = new DefaultBroadcastInternalEvent("service", "PLUGIN_INSTALL", "eventJson");
+        final BroadcastInternalEvent broadcast2 = new DefaultBroadcastInternalEvent();
+
+        Assert.assertEquals(eventBaseAttrsInBroadcastInternal, broadcast1);
+        Assert.assertEquals(broadcast1, eventBaseAttrsInBroadcastInternal); // For symmetricity of equals.
+
+        Assert.assertEquals(broadcast1, broadcast2);
+
+        final Collection<BroadcastInternalEvent> broadcastInternal = new HashSet<>();
+        broadcastInternal.add(broadcast1);
+        broadcastInternal.add(broadcast2);
+        Assert.assertEquals(broadcastInternal.size(), 1);
+
+        final Collection<BusEvent> events = new HashSet<>();
+        events.add(eventBaseAttrsInBroadcastInternal);
+        events.add(broadcast1);
+        events.add(broadcast2);
+        Assert.assertEquals(events.size(), 1);
     }
 }

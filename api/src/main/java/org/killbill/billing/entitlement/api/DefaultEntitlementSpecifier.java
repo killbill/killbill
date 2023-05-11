@@ -39,7 +39,7 @@ public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
         this.externalKey = externalKey;
         this.billCycleDay = billCycleDay;
         this.quantity = quantity;
-        this.overrides = overrides;
+        this.overrides = overrides == null ? null : List.copyOf(overrides);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
 
     @Override
     public List<PlanPhasePriceOverride> getOverrides() {
-        return overrides;
+        return overrides == null ? null : List.copyOf(overrides);
     }
 
     @Override

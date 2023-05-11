@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -37,7 +38,7 @@ public abstract class PluginProperties {
     public static Map<String, Object> toMap(final Iterable<PluginProperty>... propertiesLists) {
         final Map<String, Object> mergedProperties = new HashMap<>();
         for (final Iterable<PluginProperty> propertiesList : propertiesLists) {
-            if(propertiesList != null) {
+            if (propertiesList != null) {
                 for (final PluginProperty pluginProperty : propertiesList) {
                     if (pluginProperty != null && pluginProperty.getKey() != null) {
                         mergedProperties.put(pluginProperty.getKey(), pluginProperty.getValue());
@@ -51,8 +52,8 @@ public abstract class PluginProperties {
     public static List<PluginProperty> buildPluginProperties(@Nullable final Map<String, Object> data) {
         final List<PluginProperty> list = new ArrayList<>();
         if (data != null) {
-            for (final String key : data.keySet()) {
-                final PluginProperty property = new PluginProperty(key, data.get(key), false);
+            for (final Entry<String, Object> entry : data.entrySet()) {
+                final PluginProperty property = new PluginProperty(entry.getKey(), entry.getValue(), false);
                 list.add(property);
             }
         }

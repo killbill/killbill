@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Inject;
 
@@ -77,16 +78,16 @@ public class ValidationManager {
         }
 
         final Class<?> clazz = o.getClass();
-        for (final String propertyName : configuration.keySet()) {
+        for (final Entry<String, DefaultColumnInfo> entry : configuration.entrySet()) {
             try {
-                final Field field = clazz.getDeclaredField(propertyName);
+                final Field field = clazz.getDeclaredField(entry.getKey());
                 if (!field.isAccessible()) {
                     field.setAccessible(true);
                 }
 
                 final Object value = field.get(o);
 
-                final DefaultColumnInfo columnInfo = configuration.get(propertyName);
+                final DefaultColumnInfo columnInfo = entry.getValue();
                 if (columnInfo == null) {
                     // no column info means the property hasn't been properly mapped; suppress validation
                     return true;
