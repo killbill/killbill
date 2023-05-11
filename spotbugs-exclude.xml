@@ -60,4 +60,18 @@
         <Method name="getCurrentUserPermissions" />
         <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" />
     </Match>
+
+    <!-- MODULE: CATALOG -->
+
+    <!--
+    Applied to line ~211 and ~245. The warning arise because DefaultCaseChangePlanAlignment and
+    DefaultCaseChangePlanPolicy don't have their own validate method and still use parent's DefaultCaseChange#validate().
+    This will change when they start to have their own validate method.
+
+    Thus, some suggestions about removing the method call is not right.
+    -->
+    <Match>
+        <Class name="org.killbill.billing.catalog.rules.DefaultPlanRules" />
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
+    </Match>
 </FindBugsFilter>
