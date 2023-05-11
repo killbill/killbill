@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 import javax.xml.bind.JAXBException;
@@ -54,17 +55,17 @@ import org.killbill.xmlloader.XMLWriter;
 
 public class CatalogUpdater {
 
-    public static String DEFAULT_CATALOG_NAME = "DEFAULT";
+    public static final String DEFAULT_CATALOG_NAME = "DEFAULT";
     
-    public static String INVALID_PLAN = "Plan is invalid. Please check.";
+    public static final String INVALID_PLAN = "Plan is invalid. Please check.";
     
-    public static String INVALID_PRODUCT_NAME = "Please provide valid product name.";
+    public static final String INVALID_PRODUCT_NAME = "Please provide valid product name.";
     
-    public static String INVALID_PRICE = "Please check amount and currency. Amount should be greater than 0 and currency should be valid.";
+    public static final String INVALID_PRICE = "Please check amount and currency. Amount should be greater than 0 and currency should be valid.";
     
-    public static String BASE_PLAN_PRODUCTS_NOT_EMPTY = "List of available base products should not be empty for add-ons.";
+    public static final String BASE_PLAN_PRODUCTS_NOT_EMPTY = "List of available base products should not be empty for add-ons.";
     
-    public static String EXISTING_PRODUCTS_NOT_EMPTY = "Available base products contain invalid product.Please check.";
+    public static final String EXISTING_PRODUCTS_NOT_EMPTY = "Available base products contain invalid product.Please check.";
             
 
     private final DefaultMutableStaticCatalog catalog;
@@ -104,13 +105,13 @@ public class CatalogUpdater {
         try {
             final String newCatalog = XMLWriter.writeXML(catalog, StandaloneCatalog.class);
             // Verify we can deserialize this catalog prior we commit to disk
-            XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalog.getBytes()), StandaloneCatalog.class);
+            XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalog.getBytes(StandardCharsets.UTF_8)), StandaloneCatalog.class);
             return newCatalog;
-        } catch (ValidationException e) {
+        } catch (final ValidationException e) {
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (JAXBException e) {
+        } catch (final JAXBException e) {
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
     }

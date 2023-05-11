@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -222,7 +223,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
                 versionedCatalog = new DefaultVersionedCatalog();
             }
             // Validation purpose:  Will throw if bad XML or catalog validation fails
-            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
+            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes(StandardCharsets.UTF_8));
             final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
 
             if (versionedCatalog.getCatalogName() != null && !versionedCatalog.getCatalogName().isEmpty() && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {

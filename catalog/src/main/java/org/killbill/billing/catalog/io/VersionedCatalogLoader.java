@@ -25,11 +25,11 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -46,8 +46,8 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.CatalogConfig;
-import org.killbill.commons.utils.io.Resources;
 import org.killbill.commons.concurrent.Executors;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationException;
@@ -102,10 +102,10 @@ public class VersionedCatalogLoader implements CatalogLoader, Closeable {
         } catch (final JAXBException e) {
             logger.warn("Failed to load default catalog", e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             logger.warn("Failed to load default catalog", e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             logger.warn("Failed to load default catalog", e);
             throw new IllegalStateException(e);
         }
@@ -123,19 +123,15 @@ public class VersionedCatalogLoader implements CatalogLoader, Closeable {
 
     public VersionedCatalog load(final Collection<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
         try {
-            final Collection<Future<StandaloneCatalog>> catalogs = new ArrayList<Future<StandaloneCatalog>>(catalogXMLs.size());
+            final Collection<Future<StandaloneCatalog>> catalogs = new ArrayList<>(catalogXMLs.size());
             for (final String cur : catalogXMLs) {
-                catalogs.add(executorService.submit(new Callable<StandaloneCatalog>() {
-
-                    @Override
-                    public StandaloneCatalog call() throws Exception {
-                        final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
-                        final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(curCatalogStream, StandaloneCatalog.class);
-                        if (!filterTemplateCatalog || !catalog.isTemplateCatalog()) {
-                            return new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory);
-                        }
-                        return null;
+                catalogs.add(executorService.submit(() -> {
+                    final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes(StandardCharsets.UTF_8));
+                    final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(curCatalogStream, StandaloneCatalog.class);
+                    if (!filterTemplateCatalog || !catalog.isTemplateCatalog()) {
+                        return new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory);
                     }
+                    return null;
                 }));
             }
 
