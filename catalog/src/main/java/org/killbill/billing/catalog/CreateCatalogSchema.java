@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 import org.killbill.xmlloader.XMLSchemaGenerator;
 
@@ -34,7 +35,7 @@ public class CreateCatalogSchema {
         }
 
         final File f = new File(args[0]);
-        final Writer w = new FileWriter(f);
+        final Writer w = new FileWriter(f, StandardCharsets.UTF_8);
         w.write(XMLSchemaGenerator.xmlSchemaAsString(StandaloneCatalog.class));
         w.close();
     }
