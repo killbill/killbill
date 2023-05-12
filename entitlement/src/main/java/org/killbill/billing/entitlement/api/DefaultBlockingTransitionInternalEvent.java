@@ -123,7 +123,10 @@ public class DefaultBlockingTransitionInternalEvent extends BusEventBase impleme
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultBlockingTransitionInternalEvent)) {
+
+        // Change from "!(o instanceof DefaultBlockingTransitionInternalEvent)" to avoid spotbugs warning.
+        // See also: https://stackoverflow.com/a/25891656
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
