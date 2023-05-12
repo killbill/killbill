@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -530,19 +531,19 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         final Map<UUID, List<Subscription>> subscriptionsPerBundle = buildSubscriptionsFromEntitlements(accountEntitlements);
 
         // Build subscription bundles
-        final List<SubscriptionBundle> bundles = new LinkedList<SubscriptionBundle>();
-        for (final UUID bundleId : subscriptionsPerBundle.keySet()) {
-            final List<Subscription> subscriptionsForBundle = subscriptionsPerBundle.get(bundleId);
+        final List<SubscriptionBundle> bundles = new LinkedList<>();
+        for (final Entry<UUID, List<Subscription>> entry : subscriptionsPerBundle.entrySet()) {
+            final List<Subscription> subscriptionsForBundle = entry.getValue();
             final String bundleExternalKey = subscriptionsForBundle.get(0).getBundleExternalKey();
 
             final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId,
-                                                                                              bundleId,
+                                                                                              entry.getKey(),
                                                                                               bundleExternalKey,
-                                                                                              accountEntitlements.getEntitlements().get(bundleId),
+                                                                                              accountEntitlements.getEntitlements().get(entry.getKey()),
                                                                                               internalTenantContextWithValidAccountRecordId);
 
-            final SubscriptionBaseBundle baseBundle = accountEntitlements.getBundles().get(bundleId);
-            final SubscriptionBundle subscriptionBundle = new DefaultSubscriptionBundle(bundleId,
+            final SubscriptionBaseBundle baseBundle = accountEntitlements.getBundles().get(entry.getKey());
+            final SubscriptionBundle subscriptionBundle = new DefaultSubscriptionBundle(entry.getKey(),
                                                                                         accountId,
                                                                                         bundleExternalKey,
                                                                                         subscriptionsForBundle,

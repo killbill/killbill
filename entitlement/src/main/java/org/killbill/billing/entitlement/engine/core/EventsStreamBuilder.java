@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -200,9 +201,10 @@ public class EventsStreamBuilder {
         final Map<UUID, Integer> bcdCache = new HashMap<>();
         final Map<UUID, Collection<EventsStream>> eventsStreamPerBundle = new HashMap<>();
         final Map<UUID, Collection<SubscriptionBase>> subscriptionsPerBundle = new HashMap<>();
-        for (final UUID bundleId : subscriptions.keySet()) {
+        for (final Entry<UUID, List<SubscriptionBase>> entry : subscriptions.entrySet()) {
+            final UUID bundleId = entry.getKey();
             final SubscriptionBaseBundle bundle = bundlesPerId.get(bundleId);
-            final List<SubscriptionBase> allSubscriptionsForBundle = subscriptions.get(bundleId);
+            final List<SubscriptionBase> allSubscriptionsForBundle = entry.getValue();
             final SubscriptionBase baseSubscription = findBaseSubscription(allSubscriptionsForBundle);
             final List<BlockingState> bundleBlockingStates = Objects.requireNonNullElse(blockingStatesPerBundle.get(bundleId), Collections.emptyList());
 

@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.engine.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -66,8 +67,8 @@ public class EntitlementUtils {
 
     public void setBlockingStateAndPostBlockingTransitionEvent(final Map<BlockingState, UUID> blockingStates, final InternalCallContext internalCallContext) {
         final Map<BlockingState, Optional<UUID>> states = new HashMap<>();
-        for (final BlockingState blockingState : blockingStates.keySet()) {
-            states.put(blockingState, Optional.ofNullable(blockingStates.get(blockingState)));
+        for (final Entry<BlockingState, UUID> entry : blockingStates.entrySet()) {
+            states.put(entry.getKey(), Optional.ofNullable(entry.getValue()));
         }
         dao.setBlockingStatesAndPostBlockingTransitionEvent(states, internalCallContext);
     }
