@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -208,9 +209,10 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
             final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
 
             int seqId = 0;
-            for (final BlockingState state : states.keySet()) {
+            for (final Entry<BlockingState, Optional<UUID>> entry : states.entrySet()) {
+                final BlockingState state = entry.getKey();
                 final DateTime upToDate = state.getEffectiveDate();
-                final UUID bundleId = states.get(state).orElse(null);
+                final UUID bundleId = entry.getValue().orElse(null);
 
                 final boolean isBusEvent = state.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
                 final boolean shouldRecordNotification = (!isBusEvent || !groupBusEvents || seqId == 0);
