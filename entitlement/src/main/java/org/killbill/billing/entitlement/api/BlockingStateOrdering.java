@@ -152,6 +152,8 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                 case STOP_BILLING:
                     curTargetState.setBillingStopped();
                     break;
+                default:
+                    break;
             }
             curInsertion = cur;
         }
