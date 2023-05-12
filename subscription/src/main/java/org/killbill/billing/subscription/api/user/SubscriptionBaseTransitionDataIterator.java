@@ -20,10 +20,16 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.clock.Clock;
 
-public class SubscriptionBaseTransitionDataIterator implements Iterator<SubscriptionBaseTransition> {
+/**
+ * Special purpose iterator for SubscriptionBaseTransition:
+ * <ul>
+ *     <li>{@link #next()} method never throw {@link java.util.NoSuchElementException}</li>
+ *     <li>Calling {@link #next()} without {@link #hasNext()} will return the same element</li>
+ * </ul>
+ */
+class SubscriptionBaseTransitionDataIterator implements Iterator<SubscriptionBaseTransition> {
 
     private final Clock clock;
     private final Iterator<SubscriptionBaseTransition> it;
