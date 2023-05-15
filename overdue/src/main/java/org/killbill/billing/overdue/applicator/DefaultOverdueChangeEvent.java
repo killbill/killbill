@@ -101,7 +101,9 @@ public class DefaultOverdueChangeEvent extends BusEventBase implements OverdueCh
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultOverdueChangeEvent)) {
+        // Change from "!(o instanceof DefaultOverdueChangeEvent)" to avoid spotbugs warning.
+        // See also: https://stackoverflow.com/a/25891656
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
