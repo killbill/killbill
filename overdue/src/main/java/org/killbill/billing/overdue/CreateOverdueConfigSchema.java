@@ -19,6 +19,7 @@ package org.killbill.billing.overdue;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.xmlloader.XMLSchemaGenerator;
@@ -35,7 +36,7 @@ public class CreateOverdueConfigSchema {
         }
 
         final File f = new File(args[0]);
-        final Writer w = new FileWriter(f);
+        final Writer w = new FileWriter(f, StandardCharsets.UTF_8);
         w.write(XMLSchemaGenerator.xmlSchemaAsString(DefaultOverdueConfig.class));
         w.close();
     }
