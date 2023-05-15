@@ -86,4 +86,12 @@
         <Method name="next" />
         <Bug pattern="IT_NO_SUCH_ELEMENT" />
     </Match>
+
+    <!-- MODULE: Overdue -->
+
+    <!-- This class is deprecated and not used anywhere. Keep it as per comment: ".... just kept for config compatibility" -->
+    <Match>
+        <Class name="org.killbill.billing.overdue.config.DefaultEmailNotification" />
+        <Bug pattern="URF_UNREAD_FIELD" />
+    </Match>
 </FindBugsFilter>
