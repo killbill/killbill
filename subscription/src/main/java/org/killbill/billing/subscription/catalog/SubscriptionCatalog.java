@@ -259,7 +259,7 @@ public class SubscriptionCatalog {
         }
     }
 
-    private class PlanRequestWrapper {
+    private static class PlanRequestWrapper {
 
         private final PlanSpecifier spec;
         private final PlanPhasePriceOverridesWithCallContext overrides;

@@ -554,7 +554,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final Plan initialPlan = !transitions.isEmpty() ? transitions.get(0).getNextPlan() : null;
         final PlanPhase initialPhase = !transitions.isEmpty() ? transitions.get(0).getNextPhase() : null;
         final PhaseType initialPhaseType = initialPhase != null ? initialPhase.getPhaseType() : null;
-        return initialPlan.dateOfFirstRecurringNonZeroCharge(getStartDate(), initialPhaseType);
+
+        // Fix spotbugs "NP_NULL_ON_SOME_PATH".
+        // "initialPlan == null ? getStartDate()": using "getStartDate()" because this is what we have in
+        // org.killbill.billing.catalog.DefaultPlan#dateOfFirstRecurringNonZeroCharge()
+        return initialPlan == null ? getStartDate() : initialPlan.dateOfFirstRecurringNonZeroCharge(getStartDate(), initialPhaseType);
     }
 
     @Override

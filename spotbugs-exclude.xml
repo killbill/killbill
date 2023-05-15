@@ -74,4 +74,16 @@
         <Class name="org.killbill.billing.catalog.rules.DefaultPlanRules" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
     </Match>
+
+    <!-- MODULE: Subscription -->
+
+    <!--
+    All code base that use this class use "hasNext()" before "next()", and there are null guard all over the place.
+    Thus, solution for this class only adding explanation in javadoc.
+    -->
+    <Match>
+        <Class name="org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator" />
+        <Method name="next" />
+        <Bug pattern="IT_NO_SUCH_ELEMENT" />
+    </Match>
 </FindBugsFilter>

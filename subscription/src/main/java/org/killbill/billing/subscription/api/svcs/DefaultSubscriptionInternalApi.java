@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -288,10 +289,10 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
             final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, cutoffDt, context);
-            final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
-            for (final UUID bundleId : internalSubscriptions.keySet()) {
-                final List<DefaultSubscriptionBase> subscriptionsForApiUse = createSubscriptionsForApiUse(internalSubscriptions.get(bundleId));
-                result.put(bundleId, new ArrayList<SubscriptionBase>(subscriptionsForApiUse));
+            final Map<UUID, List<SubscriptionBase>> result = new HashMap<>();
+            for (final Entry<UUID, List<DefaultSubscriptionBase>> entry : internalSubscriptions.entrySet()) {
+                final List<DefaultSubscriptionBase> subscriptionsForApiUse = createSubscriptionsForApiUse(entry.getValue());
+                result.put(entry.getKey(), new ArrayList<SubscriptionBase>(subscriptionsForApiUse));
             }
             return result;
         } catch (final CatalogApiException e) {

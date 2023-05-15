@@ -112,6 +112,9 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     productName = (plan != null) ? plan.getProduct().getName() : prevProductName;
                     priceListName = (userEV.getPriceList() != null) ? userEV.getPriceList() : prevPriceListName;
                     break;
+
+                default:
+                    break;
             }
 
             final SubscriptionBaseTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);

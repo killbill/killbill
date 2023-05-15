@@ -18,6 +18,7 @@
 package org.killbill.billing.subscription.api.user;
 
 import java.util.Date;
+import java.util.Objects;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Plan;
@@ -115,5 +116,30 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
             final Date oEeffectiveDate = o.getPlan().getCatalog().getEffectiveDate();
             return effectiveDate.compareTo(oEeffectiveDate);
         }
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final SubscriptionBillingEvent that = (DefaultSubscriptionBillingEvent) o;
+        return getType() == that.getType() &&
+               Objects.equals(getPlan(), that.getPlan()) &&
+               Objects.equals(getPlanPhase(), that.getPlanPhase()) &&
+               Objects.equals(getEffectiveDate(), that.getEffectiveDate()) &&
+               Objects.equals(getTotalOrdering(), that.getTotalOrdering()) &&
+               Objects.equals(getBcdLocal(), that.getBcdLocal()) &&
+               Objects.equals(getQuantity(), that.getQuantity()) &&
+               Objects.equals(getCatalogEffectiveDate(), that.getCatalogEffectiveDate());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getType(), getPlan(), getPlanPhase(), getEffectiveDate(),
+                            getTotalOrdering(), getBcdLocal(), getQuantity(), getCatalogEffectiveDate());
     }
 }

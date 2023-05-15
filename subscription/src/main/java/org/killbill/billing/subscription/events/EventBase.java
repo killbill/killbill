@@ -133,6 +133,15 @@ public abstract class EventBase implements SubscriptionBaseEvent {
         return (this.compareTo((SubscriptionBaseEvent) other) == 0);
     }
 
+    // Fix spotbugs' "HE_INHERITS_EQUALS_USE_HASHCODE". Before and after changes tested in
+    // TestBCDEventData#testEqualsAndHashcode().
+    // This changes applied to spotbugs warning to following classes: ExpiredEventData, PhaseEventData, QuantityEventData,
+    // ApiEventBase, ApiEventCancel, ApiEventChange, ApiEventCreate, ApiEventTransfer, ApiEventUncancel, ApiEventUndoChange
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     @Override
     public abstract EventType getType();
 }

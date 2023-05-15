@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -261,17 +262,17 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     private boolean doCancelPlan(final Map<DefaultSubscriptionBase, DateTime> subscriptions, final SubscriptionCatalog catalog, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
-        final List<DefaultSubscriptionBase> subscriptionsToBeCancelled = new LinkedList<DefaultSubscriptionBase>();
-        final List<SubscriptionBaseEvent> cancelEvents = new LinkedList<SubscriptionBaseEvent>();
+        final List<DefaultSubscriptionBase> subscriptionsToBeCancelled = new LinkedList<>();
+        final List<SubscriptionBaseEvent> cancelEvents = new LinkedList<>();
 
         try {
-            for (final DefaultSubscriptionBase subscription : subscriptions.keySet()) {
-
+            for (final Entry<DefaultSubscriptionBase, DateTime> entry : subscriptions.entrySet()) {
+                final DefaultSubscriptionBase subscription = entry.getKey();
                 final EntitlementState currentState = subscription.getState();
                 if (currentState == EntitlementState.CANCELLED || currentState == EntitlementState.EXPIRED) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
                 }
-                final DateTime effectiveDate = subscriptions.get(subscription);
+                final DateTime effectiveDate = entry.getValue();
 
                 // If subscription was future cancelled at an earlier date we disallow the operation -- i.e,
                 // user should first uncancel prior trying to cancel again.
