@@ -22,13 +22,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.plugin.api.UsageContext;
@@ -128,12 +128,12 @@ public class BaseUserApi {
                 return;
             }
 
-            for (UUID k : perSubscriptionRecords.keySet()) {
-                final List<RawUsageRecord> val = perSubscriptionRecords.get(k);
-                for (RawUsageRecord r : val) {
-                    StringBuffer tmp = new StringBuffer();
+            for (final Entry<UUID, List<RawUsageRecord>> entry  : perSubscriptionRecords.entrySet()) {
+                final List<RawUsageRecord> val = entry.getValue();
+                for (final RawUsageRecord r : val) {
+                    final StringBuffer tmp = new StringBuffer();
                     tmp.append("UserApi (plugin) subId=");
-                    tmp.append(k);
+                    tmp.append(entry.getKey());
                     tmp.append(", startDate=");
                     tmp.append(startDate);
                     tmp.append(", endDate=");
