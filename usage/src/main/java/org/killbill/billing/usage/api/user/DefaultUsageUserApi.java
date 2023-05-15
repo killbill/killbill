@@ -22,12 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -150,11 +150,9 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
             final BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(cur.getAmount()) : cur.getAmount();
             tmp.put(cur.getUnitType(), updatedAmount);
         }
-        final List<RolledUpUnit> result = new ArrayList<>(tmp.size());
-        for (final String curType : tmp.keySet()) {
-            result.add(new DefaultRolledUpUnit(curType, tmp.get(curType)));
-        }
-        return result;
+        return tmp.entrySet()
+                  .stream().map(e -> new DefaultRolledUpUnit(e.getKey(), e.getValue()))
+                  .collect(Collectors.toUnmodifiableList());
     }
 
     private List<RolledUpUnit> getRolledUpUnits(final List<RolledUpUsageModelDao> usageForSubscription) {
@@ -164,11 +162,9 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
             final BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(cur.getAmount()) : cur.getAmount();
             tmp.put(cur.getUnitType(), updatedAmount);
         }
-        final List<RolledUpUnit> result = new ArrayList<>(tmp.size());
-        for (final String unitType : tmp.keySet()) {
-            result.add(new DefaultRolledUpUnit(unitType, tmp.get(unitType)));
-        }
-        return result;
+        return tmp.entrySet()
+                  .stream().map(e -> new DefaultRolledUpUnit(e.getKey(), e.getValue()))
+                  .collect(Collectors.toUnmodifiableList());
     }
 
     private boolean recordsWithTrackingIdExist(final SubscriptionUsageRecord record, final InternalCallContext context) {
