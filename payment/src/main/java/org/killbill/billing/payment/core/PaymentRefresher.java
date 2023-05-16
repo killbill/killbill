@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -417,8 +418,8 @@ public class PaymentRefresher extends ProcessorBase {
         }
 
         final Collection<Payment> results = new LinkedList<>();
-        for (final UUID paymentId : payments.keySet()) {
-            final Payment result = toPayment(paymentId, withPluginInfo ? payments.get(paymentId) : Collections.emptyList(), withAttempts, isApiPayment, internalTenantContext);
+        for (final Entry<UUID, List<PaymentTransactionInfoPlugin>> entry : payments.entrySet()) {
+            final Payment result = toPayment(entry.getKey(), withPluginInfo ? entry.getValue() : Collections.emptyList(), withAttempts, isApiPayment, internalTenantContext);
             if (result != null) {
                 results.add(result);
             }
