@@ -31,7 +31,7 @@ import org.killbill.billing.util.UUIDs;
 
 public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDao<Payment> {
 
-    public static final Integer INVALID_PAYMENT_NUMBER = new Integer(-17);
+    public static final Integer INVALID_PAYMENT_NUMBER = -17;
 
     private UUID accountId;
     private Integer paymentNumber;
