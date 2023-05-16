@@ -27,7 +27,6 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -36,8 +35,8 @@ import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
-import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.commons.utils.Preconditions;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
 
@@ -50,13 +49,15 @@ public class DefaultControlInitiated implements LeavingStateCallback {
     private final TransactionType transactionType;
     private final PaymentDao paymentDao;
 
-    public DefaultControlInitiated(final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
+    // If someone needs PaymentStateContext instead of PaymentStateControlContext in one of parameters, you can refactor
+    // back and change PaymentStateControlContext to PaymentStateContext, cast them, and make sure edge cases covered.
+    public DefaultControlInitiated(final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner, final PaymentStateControlContext stateContext, final PaymentDao paymentDao,
                                    final State initialState, final State retriedState, final TransactionType transactionType) {
         this.pluginControlPaymentAutomatonRunner = pluginControlPaymentAutomatonRunner;
         this.paymentDao = paymentDao;
         this.initialState = initialState;
         this.retriedState = retriedState;
-        this.stateContext = (PaymentStateControlContext) stateContext;
+        this.stateContext = stateContext;
         this.transactionType = transactionType;
     }
 
