@@ -62,7 +62,6 @@ import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -83,7 +82,7 @@ import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
 
-    private Logger log = LoggerFactory.getLogger(DefaultEntitlement.class);
+    private final Logger log = LoggerFactory.getLogger(DefaultEntitlement.class);
 
     private final SecurityApi securityApi;
     protected final EventsStreamBuilder eventsStreamBuilder;
@@ -335,7 +334,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
         // Get the latest state from disk
         refresh(callContext);
-        if (entitlementEffectiveDate == null || (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(getEffectiveStartDate()) < 0)) {
+        if (entitlementEffectiveDate == null || entitlementEffectiveDate.compareTo(getEffectiveStartDate()) < 0) {
             throw new EntitlementApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, entitlementEffectiveDate, getEffectiveStartDate());
         }
         if (billingEffectiveDate != null && billingEffectiveDate.compareTo(getSubscriptionBase().getStartDate()) < 0) {

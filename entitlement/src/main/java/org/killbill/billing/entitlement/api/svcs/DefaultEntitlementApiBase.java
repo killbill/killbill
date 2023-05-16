@@ -166,17 +166,6 @@ public class DefaultEntitlementApiBase {
     }
 
     public void pause(final UUID bundleId, @Nullable final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
-
-        final DateTime effectiveDateTime = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, internalCallContext.getCreatedDate(), internalCallContext);
-        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
-                bundleId,
-                null,
-                null,
-                effectiveDateTime,
-                effectiveDateTime,
-                false);
-        final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
-        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.PAUSE_BUNDLE,
                                                                                null,
                                                                                null,
@@ -184,14 +173,13 @@ public class DefaultEntitlementApiBase {
                                                                                null,
                                                                                properties,
                                                                                internalCallContextFactory.createCallContext(internalCallContext));
-
         final WithEntitlementPlugin<Void> pauseWithPlugin = new WithEntitlementPlugin<Void>() {
             @Override
             public Void doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 try {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
                 return null;
@@ -225,7 +213,7 @@ public class DefaultEntitlementApiBase {
                 try {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
                 return null;

@@ -155,8 +155,9 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
         }
         // Record the new states first, then insert the notifications to avoid race conditions
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(states, internalCallContext);
-        for (final DateTime effectiveDateForNotification : notificationEvents.keySet()) {
-            for (final NotificationEvent notificationEvent : notificationEvents.get(effectiveDateForNotification)) {
+        for (final Entry<DateTime, Collection<NotificationEvent>> entry : notificationEvents.entrySet()) {
+            final DateTime effectiveDateForNotification = entry.getKey();
+            for (final NotificationEvent notificationEvent : entry.getValue()) {
                 recordFutureNotification(effectiveDateForNotification, notificationEvent, internalCallContext);
             }
         }
@@ -203,7 +204,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
     }
 
     // Note that the implementation is similar to DefaultEntitlement#cancelEntitlementWithDateOverrideBillingPolicy but state isn't persisted on disk
-    private class WithDateOverrideBillingPolicyEntitlementCanceler implements WithEntitlementPlugin<Entitlement> {
+    private static class WithDateOverrideBillingPolicyEntitlementCanceler implements WithEntitlementPlugin<Entitlement> {
 
         private final DefaultEntitlement entitlement;
         private final Map<BlockingState, Optional<UUID>> blockingStates;
