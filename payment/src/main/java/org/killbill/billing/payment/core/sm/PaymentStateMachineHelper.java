@@ -17,6 +17,8 @@
 
 package org.killbill.billing.payment.core.sm;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.killbill.automaton.MissingEntryException;
@@ -78,7 +80,7 @@ public class PaymentStateMachineHelper {
 
     private final StateMachineConfigCache stateMachineConfigCache;
 
-    public static final String[] STATE_NAMES = {AUTHORIZE_ERRORED,
+    public static final List<String> STATE_NAMES = List.of(AUTHORIZE_ERRORED,
                                                 AUTHORIZE_FAILED,
                                                 AUTHORIZE_PENDING,
                                                 AUTHORIZE_SUCCESS,
@@ -105,7 +107,7 @@ public class PaymentStateMachineHelper {
                                                 VOID_ERRORED,
                                                 VOID_FAILED,
                                                 VOID_PENDING,
-                                                VOID_SUCCESS};
+                                                VOID_SUCCESS);
 
     @Inject
     public PaymentStateMachineHelper(final StateMachineConfigCache stateMachineConfigCache) {
