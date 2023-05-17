@@ -86,4 +86,53 @@
         <Method name="next" />
         <Bug pattern="IT_NO_SUCH_ELEMENT" />
     </Match>
+
+    <!-- MODULE: Overdue -->
+
+    <!-- This class is deprecated and not used anywhere. Keep it as per comment: ".... just kept for config compatibility" -->
+    <Match>
+        <Class name="org.killbill.billing.overdue.config.DefaultEmailNotification" />
+        <Bug pattern="URF_UNREAD_FIELD" />
+    </Match>
+
+    <!-- MODULE: Payment -->
+
+    <!-- These lines supposed to be workaround for: https://github.com/killbill/killbill/issues/1453. Keep it as is. -->
+    <Match>
+        <Class name="org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi" />
+        <Method name="extractIdsWithAmountFromProperties" params="java.lang.Iterable" />
+        <Bug pattern="WMI_WRONG_MAP_ITERATOR" />
+    </Match>
+
+    <!--
+    Method call are necessary, but return value could be ignored. Currently, it is annotated by
+    "@SuppressWarnings("unused")", so it is enough.
+    -->
+    <Match>
+        <Class name="org.killbill.billing.payment.core.PaymentMethodProcessor" />
+        <Method name="retrieveActualPaymentMethodExternalKey" />
+        <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.payment.core.PaymentMethodProcessor$9" />
+        <Method name="doOperation" />
+        <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    </Match>
+
+    <!-- FIXME-1853: DefaultNoOpPaymentControlProviderPlugin actually not used anywhere. Should we delete this? -->
+    <!-- Fix spotbug issue: URF_UNREAD_FIELD -->
+    <Match>
+        <Class name="org.killbill.billing.payment.provider.DefaultNoOpPaymentControlProviderPlugin" />
+        <Field name="paymentControlPluginApiException" />
+        <Bug pattern="URF_UNREAD_FIELD" />
+    </Match>
+
+    <!--
+    The only reason why DefaultPaymentControlContext need to have no-args constructor is because it extends
+    DefaultCallContext. At the time of writing, there's no part of code that serialize/deserialize DefaultPaymentControlContext.
+    -->
+    <Match>
+        <Class name="org.killbill.billing.payment.core.sm.control.ControlPluginRunner$DefaultPaymentControlContext" />
+        <Bug pattern="SE_NO_SUITABLE_CONSTRUCTOR_FOR_EXTERNALIZATION" />
+    </Match>
 </FindBugsFilter>

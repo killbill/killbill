@@ -19,6 +19,7 @@ package org.killbill.billing.payment.caching;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -64,7 +65,7 @@ public class DefaultStateMachineConfigCache implements StateMachineConfigCache {
                 tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, cacheInvalidationCallback);
 
                 try {
-                    final InputStream stream = new ByteArrayInputStream(stateMachineConfigXML.getBytes());
+                    final InputStream stream = new ByteArrayInputStream(stateMachineConfigXML.getBytes(StandardCharsets.UTF_8));
                     return XMLLoader.getObjectFromStream(stream, DefaultStateMachineConfig.class);
                 } catch (final Exception e) {
                     throw new PaymentApiException(e, ErrorCode.PAYMENT_STATE_MACHINE_FAILURE);

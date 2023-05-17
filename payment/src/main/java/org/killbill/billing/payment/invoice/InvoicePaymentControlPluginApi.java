@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -525,9 +526,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         try {
             final List<InvoiceItem> items = invoiceApi.getInvoiceForPaymentId(paymentId, context).getInvoiceItems();
             BigDecimal amountFromItems = BigDecimal.ZERO;
-            for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
-                final BigDecimal specifiedItemAmount = invoiceItemIdsWithAmounts.get(itemId);
-                final BigDecimal itemAmount = getAmountFromItem(items, itemId);
+            for (final Entry<UUID, BigDecimal> entry : invoiceItemIdsWithAmounts.entrySet()) {
+                final BigDecimal specifiedItemAmount = entry.getValue();
+                final BigDecimal itemAmount = getAmountFromItem(items, entry.getKey());
                 if (specifiedItemAmount != null &&
                     (specifiedItemAmount.compareTo(BigDecimal.ZERO) <= 0 || specifiedItemAmount.compareTo(itemAmount) > 0)) {
                     throw new PaymentControlApiException("Failed to compute refund: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify a valid invoice item amount"));
