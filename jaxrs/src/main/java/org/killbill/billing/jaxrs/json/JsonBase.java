@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -59,8 +60,8 @@ public abstract class JsonBase {
 
     protected List<PluginProperty> propertiesToList(final Map<String, String> propertiesMap) {
         final List<PluginProperty> properties = new LinkedList<>();
-        for (final String key : propertiesMap.keySet()) {
-            final PluginProperty property = new PluginProperty(key, propertiesMap.get(key), false);
+        for (final Entry<String, String> entry : propertiesMap.entrySet()) {
+            final PluginProperty property = new PluginProperty(entry.getKey(), entry.getValue(), false);
             properties.add(property);
         }
         return properties;

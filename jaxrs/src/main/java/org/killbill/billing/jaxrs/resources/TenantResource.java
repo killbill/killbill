@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs.resources;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -249,9 +250,9 @@ public class TenantResource extends JaxRsResourceBase {
 
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Map<String, List<String>> apiResult = tenantApi.searchTenantKeyValues(keyPrefix, tenantContext);
-        final List<TenantKeyValueJson> result = new ArrayList<TenantKeyValueJson>();
-        for (final String cur : apiResult.keySet()) {
-            result.add(new TenantKeyValueJson(cur, apiResult.get(cur)));
+        final List<TenantKeyValueJson> result = new ArrayList<>();
+        for (final Entry<String, List<String>> entry : apiResult.entrySet()) {
+            result.add(new TenantKeyValueJson(entry.getKey(), entry.getValue()));
         }
         return Response.status(Status.OK).entity(result).build();
     }
