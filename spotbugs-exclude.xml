@@ -48,6 +48,18 @@
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
 
+    <!-- MODULE: INTERNAL-API -->
+    <!-- Affected class (LightSecureRandom) are private class. Invocation controlled in single class. -->
+    <Match>
+        <Class name="org.killbill.billing.util.UUIDs$LightSecureRandom" />
+        <Bug pattern="UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR" />
+    </Match>
+    <!-- serialization/deserialization not needed -->
+    <Match>
+        <Class name="org.killbill.billing.util.UUIDs$LightSecureRandom" />
+        <Bug pattern="SE_BAD_FIELD" />
+    </Match>
+
     <!-- MODULE: UTIL -->
     <!-- Either this, or we have to changes class name with better name and this changes will affect ~97 location in this project -->
     <Match>
