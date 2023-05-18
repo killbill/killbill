@@ -19,7 +19,7 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -141,7 +141,7 @@ public class OverdueResource extends JaxRsResourceBase {
                                                    @javax.ws.rs.core.Context final HttpServletRequest request,
                                                    @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         // Validation purpose:  Will throw if bad XML or catalog validation fails
-        final InputStream stream = new ByteArrayInputStream(overdueXML.getBytes());
+        final InputStream stream = new ByteArrayInputStream(overdueXML.getBytes(StandardCharsets.UTF_8));
         XMLLoader.getObjectFromStream(stream, DefaultOverdueConfig.class);
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
