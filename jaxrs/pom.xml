@@ -28,6 +28,7 @@
     <packaging>jar</packaging>
     <name>killbill-jaxrs</name>
     <properties>
+        <check.fail-spotbugs>true</check.fail-spotbugs>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
     <dependencies>
