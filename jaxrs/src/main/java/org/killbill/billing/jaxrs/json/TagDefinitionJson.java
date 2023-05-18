@@ -57,7 +57,7 @@ public class TagDefinitionJson extends JsonBase {
         this.isControlTag = isControlTag;
         this.name = name;
         this.description = description;
-        this.applicableObjectTypes = new HashSet<ObjectType>(applicableObjectTypes);
+        this.applicableObjectTypes = applicableObjectTypes == null ? new HashSet<>() : new HashSet<ObjectType>(applicableObjectTypes);
     }
 
     public TagDefinitionJson(final TagDefinition tagDefinition, @Nullable final List<AuditLog> auditLogs) {
