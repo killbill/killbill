@@ -59,19 +59,15 @@ public class Context {
 
     public CallContext createCallContextWithAccountId(final UUID accountId, final String createdBy, final String reason, final String comment, final ServletRequest request)
             throws IllegalArgumentException {
-        try {
-            Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
-            final Tenant tenant = getTenantFromRequest(request);
-            final UUID tenantId = tenant == null ? null : tenant.getId();
-            final CallContext callContext = contextFactory.createCallContext(accountId, tenantId, createdBy, origin, userType, reason,
-                                                                             comment, getOrCreateUserToken());
+        Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
+        final Tenant tenant = getTenantFromRequest(request);
+        final UUID tenantId = tenant == null ? null : tenant.getId();
+        final CallContext callContext = contextFactory.createCallContext(accountId, tenantId, createdBy, origin, userType, reason,
+                                                                         comment, getOrCreateUserToken());
 
-            populateMDCContext(callContext);
+        populateMDCContext(callContext);
 
-            return callContext;
-        } catch (final NullPointerException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
+        return callContext;
     }
 
     public TenantContext createTenantContextNoAccountId(final ServletRequest request) {
