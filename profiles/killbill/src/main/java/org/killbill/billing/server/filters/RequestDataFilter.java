@@ -18,6 +18,7 @@
 package org.killbill.billing.server.filters;
 
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +67,7 @@ public class RequestDataFilter implements ContainerRequestFilter, ContainerRespo
                                   return v.stream()
                                           .map(input -> {
                                               try {
-                                                  return new String(Base64.getDecoder().decode(input));
+                                                  return new String(Base64.getDecoder().decode(input), StandardCharsets.UTF_8);
                                               } catch (final IllegalArgumentException e) {
                                                   // Not Base64 after all? Be lenient...
                                                   return input;
