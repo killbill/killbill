@@ -26,9 +26,6 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-@SuppressFBWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class InvoiceBillingEventModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private UUID invoiceId;
