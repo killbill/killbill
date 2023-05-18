@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -123,13 +124,13 @@ public class BlockingStateJson extends JsonBase {
 
         final BlockingStateJson that = (BlockingStateJson) o;
 
-        if (isBlockChange != that.isBlockChange) {
+        if (!Objects.equals(isBlockChange, that.isBlockChange)) {
             return false;
         }
-        if (isBlockEntitlement != that.isBlockEntitlement) {
+        if (!Objects.equals(isBlockEntitlement, that.isBlockEntitlement)) {
             return false;
         }
-        if (isBlockBilling != that.isBlockBilling) {
+        if (!Objects.equals(isBlockBilling, that.isBlockBilling)) {
             return false;
         }
         if (blockedId != null ? !blockedId.equals(that.blockedId) : that.blockedId != null) {
