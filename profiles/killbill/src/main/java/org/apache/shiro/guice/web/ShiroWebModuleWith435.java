@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Sets up Shiro lifecycles within Guice, enables the injecting of Shiro objects, and binds a default
@@ -151,8 +152,8 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
                 }
             }
         }
-        for (final Key<? extends PathMatchingFilter> filterKey : configs.keySet()) {
-            bindPathMatchingFilter(filterKey, configs.get(filterKey));
+        for (final Entry<Key<? extends PathMatchingFilter>, Map<String, String>> entry : configs.entrySet()) {
+            bindPathMatchingFilter(entry.getKey(), entry.getValue());
         }
     }
 
