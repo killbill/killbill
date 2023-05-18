@@ -144,4 +144,25 @@
         <Method name="createCallContextWithAccountId" />
         <Bug pattern="DCN_NULLPOINTER_EXCEPTION" />
     </Match>
+
+    <!-- MODULE: Profiles -->
+    <Match>
+        <Class name="org.apache.shiro.guice.web.ShiroWebModuleWith435" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- See the log message: "Failed to register for event notifications, this is bad exiting!". -->
+    <Match>
+        <Class name="org.killbill.billing.server.listeners.KillbillGuiceListener" />
+        <Method name="startLifecycleStage2" />
+        <Bug pattern="DM_EXIT" />
+    </Match>
+
+    <!-- Return value ignored, as intended? -->
+    <Match>
+        <Class name="org.killbill.billing.server.security.KillbillJdbcTenantRealm$SerializableSimpleByteSource" />
+        <Method name="readExternal" />
+        <Bug pattern="RR_NOT_CHECKED" />
+    </Match>
+
 </FindBugsFilter>
