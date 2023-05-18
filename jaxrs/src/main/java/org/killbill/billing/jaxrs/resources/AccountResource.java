@@ -1136,9 +1136,9 @@ public class AccountResource extends JaxRsResourceBase {
         if (paymentId != null) {
             final Payment initialPayment = paymentApi.getPayment(paymentId, false, false, pluginProperties, callContext);
             final PaymentTransaction pendingOrSuccessTransaction = lookupPendingOrSuccessTransaction(initialPayment,
-                                                                                                     json != null ? json.getTransactionId() : null,
-                                                                                                     json != null ? json.getTransactionExternalKey() : null,
-                                                                                                     json != null ? json.getTransactionType() : null);
+                                                                                                     json.getTransactionId(),
+                                                                                                     json.getTransactionExternalKey(),
+                                                                                                     json.getTransactionType());
             // If transaction was already completed, return early (See #626)
             if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
                 return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId(), request);
