@@ -47,6 +47,7 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -490,7 +491,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {
         // TODO Switch to cached normalized timezone when available
-        return Objects.requireNonNullElse(toLocalDate(inputDate), clock.getToday(account.getTimeZone()));
+        final DateTimeZone dateTimeZone = (account == null || account.getTimeZone() == null) ?
+                                          DateTimeZone.UTC :
+                                          account.getTimeZone();
+        return Objects.requireNonNullElse(toLocalDate(inputDate), clock.getToday(dateTimeZone));
     }
 
     // API for subscription and invoice generation: keep null, the lower layers will default to now()
