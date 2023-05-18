@@ -38,11 +38,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.callcontext.TimeAwareContext;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -59,16 +56,16 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageUserApi;
-import org.killbill.commons.utils.Preconditions;
-import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.Iterables;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -136,7 +133,6 @@ public class UsageResource extends JaxRsResourceBase {
         final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), false, callContext);
         if (entitlement.getEffectiveEndDate() != null) {
             final DateTime highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
-            final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
             if (entitlement.getEffectiveEndDate().compareTo(highestRecordDate) < 0) {
                 return Response.status(Status.BAD_REQUEST).build();
             }
