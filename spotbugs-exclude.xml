@@ -135,4 +135,13 @@
         <Class name="org.killbill.billing.payment.core.sm.control.ControlPluginRunner$DefaultPaymentControlContext" />
         <Bug pattern="SE_NO_SUITABLE_CONSTRUCTOR_FOR_EXTERNALIZATION" />
     </Match>
+
+    <!-- MODULE: JaxRs -->
+
+    <!-- See this discussion: https://github.com/killbill/killbill/pull/1858#discussion_r1193803654 -->
+    <Match>
+        <Class name="org.killbill.billing.jaxrs.util.Context" />
+        <Method name="createCallContextWithAccountId" />
+        <Bug pattern="DCN_NULLPOINTER_EXCEPTION" />
+    </Match>
 </FindBugsFilter>
