@@ -128,9 +128,9 @@ public class UsageResource extends JaxRsResourceBase {
                 verifyNonNull(usageRecordJson.getRecordDate(), "UsageRecordJson recordDate needs to be set");
             }
         }
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccount = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         // Verify subscription exists..
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), false, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), false, callContextNoAccount);
         if (entitlement.getEffectiveEndDate() != null) {
             final DateTime highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
             if (entitlement.getEffectiveEndDate().compareTo(highestRecordDate) < 0) {
@@ -139,6 +139,8 @@ public class UsageResource extends JaxRsResourceBase {
         }
 
         final SubscriptionUsageRecord record = json.toSubscriptionUsageRecord();
+        // See this discussion: https://github.com/killbill/killbill/pull/1861#discussion_r1199581600
+        final CallContext callContext = context.createCallContextWithAccountId(entitlement.getAccountId(), createdBy, reason, comment, request);
         usageUserApi.recordRolledUpUsage(record, callContext);
         return Response.status(Status.CREATED).build();
     }
