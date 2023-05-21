@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -895,9 +896,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         final String tenantKeyStr;
         if (localeStr != null) {
             // Validation purpose:  Will throw bad stream
-            final InputStream stream = new ByteArrayInputStream(templateResource.getBytes());
+            final InputStream stream = new ByteArrayInputStream(templateResource.getBytes(StandardCharsets.UTF_8));
             new PropertyResourceBundle(stream);
-            final Locale locale = localeStr != null ? LocaleUtils.toLocale(localeStr) : defaultLocale;
+            final Locale locale = LocaleUtils.toLocale(localeStr);
             tenantKeyStr = LocaleUtils.localeString(locale, tenantKey.toString());
         } else {
             tenantKeyStr = tenantKey.toString();

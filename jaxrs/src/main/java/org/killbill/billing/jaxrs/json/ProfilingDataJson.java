@@ -83,7 +83,7 @@ public class ProfilingDataJson {
         return rawData;
     }
 
-    public class ProfilingDataJsonItem {
+    public static class ProfilingDataJsonItem {
 
         private final String name;
         private final Long startUsec;

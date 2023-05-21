@@ -519,7 +519,7 @@ public class AdminResource extends JaxRsResourceBase {
         return busEvents;
     }
 
-    private class BusEventWithRichMetadata extends BusEventWithMetadata<BusEvent> {
+    private static class BusEventWithRichMetadata extends BusEventWithMetadata<BusEvent> {
 
         private final String className;
 

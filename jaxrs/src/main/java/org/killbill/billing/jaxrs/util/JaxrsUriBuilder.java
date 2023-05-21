@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.util;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -95,8 +96,8 @@ public class JaxrsUriBuilder {
         final UriBuilder uriBuilder = getUriBuilder(uriInfo.getBaseUri().getPath(), theClass, getMethodName);
 
         if (null != params && !params.isEmpty()) {
-            for (final String key : params.keySet()) {
-                uriBuilder.queryParam(key, params.get(key));
+            for (final Entry<String, String> entry : params.entrySet()) {
+                uriBuilder.queryParam(entry.getKey(), entry.getValue());
             }
         }
 
@@ -129,11 +130,11 @@ public class JaxrsUriBuilder {
 
         final UriBuilder uriBuilder = getUriBuilder(theClass, getMethodName).queryParam(JaxRsResourceBase.QUERY_SEARCH_OFFSET, nextOffset)
                                                                             .queryParam(JaxRsResourceBase.QUERY_SEARCH_LIMIT, limit);
-        for (final String key : queryParams.keySet()) {
-            uriBuilder.queryParam(key, queryParams.get(key));
+        for (final Entry<String, String> entry : queryParams.entrySet()) {
+            uriBuilder.queryParam(entry.getKey(), entry.getValue());
         }
-        for (final String key : pathParams.keySet()) {
-            uriBuilder.resolveTemplate(key, pathParams.get(key));
+        for (final Entry<String, String> entry : pathParams.entrySet()) {
+            uriBuilder.resolveTemplate(entry.getKey(), entry.getValue());
         }
         return uriBuilder.build();
     }

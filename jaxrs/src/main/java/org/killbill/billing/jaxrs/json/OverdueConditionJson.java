@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import org.killbill.billing.jaxrs.json.CatalogJson.DurationJson;
 import org.killbill.billing.overdue.api.OverdueCondition;
@@ -98,7 +99,7 @@ public class OverdueConditionJson {
                ", controlTagInclusion=" + controlTagInclusion +
                ", controlTagExclusion=" + controlTagExclusion +
                ", numberOfUnpaidInvoicesEqualsOrExceeds=" + numberOfUnpaidInvoicesEqualsOrExceeds +
-               ", responseForLastFailedPayment=" + responseForLastFailedPayment +
+               ", responseForLastFailedPayment=" + Arrays.toString(responseForLastFailedPayment) +
                ", totalUnpaidInvoiceBalanceEqualsOrExceeds=" + totalUnpaidInvoiceBalanceEqualsOrExceeds +
                '}';
     }
@@ -139,7 +140,7 @@ public class OverdueConditionJson {
         result = 31 * result + (controlTagInclusion != null ? controlTagInclusion.hashCode() : 0);
         result = 31 * result + (controlTagExclusion != null ? controlTagExclusion.hashCode() : 0);
         result = 31 * result + (numberOfUnpaidInvoicesEqualsOrExceeds != null ? numberOfUnpaidInvoicesEqualsOrExceeds.hashCode() : 0);
-        result = 31 * result + (responseForLastFailedPayment != null ? responseForLastFailedPayment.hashCode() : 0);
+        result = 31 * result + (responseForLastFailedPayment != null ? Arrays.hashCode(responseForLastFailedPayment) : 0);
         result = 31 * result + (totalUnpaidInvoiceBalanceEqualsOrExceeds != null ? totalUnpaidInvoiceBalanceEqualsOrExceeds.hashCode() : 0);
         return result;
     }

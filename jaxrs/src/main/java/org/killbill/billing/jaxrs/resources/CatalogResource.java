@@ -472,8 +472,6 @@ public class CatalogResource extends JaxRsResourceBase {
         final DateTime requestedDateTime = requestedDateString != null ?
                                            DATE_TIME_FORMATTER.parseDateTime(requestedDateString).toDateTime(DateTimeZone.UTC) :
                                            clock.getUTCNow();
-        final LocalDate requestedDate = requestedDateTime.toLocalDate();
-
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, tenantContext);
         SubscriptionEvent lastEventBeforeRequestedDate = null;
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {

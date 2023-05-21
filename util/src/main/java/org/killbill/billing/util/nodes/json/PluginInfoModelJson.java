@@ -17,6 +17,7 @@
 
 package org.killbill.billing.util.nodes.json;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -119,7 +120,7 @@ public class PluginInfoModelJson {
         if (state != null ? !state.equals(that.state) : that.state != null) {
             return false;
         }
-        if (!isSelectedForStart.equals(that.isSelectedForStart)) {
+        if (!Objects.equals(isSelectedForStart, that.isSelectedForStart)) {
             return false;
         }
         if (pluginKey != null ? !pluginKey.equals(that.pluginKey) : that.pluginKey != null) {

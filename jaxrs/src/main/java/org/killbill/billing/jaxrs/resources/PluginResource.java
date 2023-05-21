@@ -24,11 +24,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
@@ -82,8 +84,7 @@ import io.swagger.annotations.Api;
 public class PluginResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(PluginResource.class);
-    private static final String UTF_8_STRING = "UTF-8";
-    private static final Charset UTF_8 = Charset.forName(UTF_8_STRING);
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     private final HttpServlet osgiServlet;
 
@@ -250,12 +251,12 @@ public class PluginResource extends JaxRsResourceBase {
 
     private void appendFormParametersToBody(final ByteArrayOutputStream out, final Map<String, String> data) throws IOException {
         int idx = 0;
-        for (final String key : data.keySet()) {
+        for (final Entry<String, String> entry : data.entrySet()) {
             if (idx > 0) {
                 out.write("&".getBytes(UTF_8));
             }
 
-            out.write((key + "=" + URLEncoder.encode(data.get(key), UTF_8_STRING)).getBytes(UTF_8));
+            out.write((entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)).getBytes(UTF_8));
             idx++;
         }
     }
@@ -279,18 +280,15 @@ public class PluginResource extends JaxRsResourceBase {
             // Query string parameters and posted form data must appear in the parameters
             final MultiValueMap<String, String> tmpParameterMap = new MultiValueHashMap<>();
             if (formData != null) {
-                for (final String formDataKey : formData.keySet()) {
-                    tmpParameterMap.put(formDataKey, formData.get(formDataKey));
-                }
+                tmpParameterMap.putAll(formData);
             }
-            for (final String queryParameterKey : queryParameters.keySet()) {
-                tmpParameterMap.put(queryParameterKey, queryParameters.get(queryParameterKey));
+            tmpParameterMap.putAll(queryParameters);
+            for (final Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+                tmpParameterMap.put(entry.getKey(), List.of(entry.getValue()));
             }
-            for (final String parameterKey : request.getParameterMap().keySet()) {
-                tmpParameterMap.put(parameterKey, List.of(request.getParameterMap().get(parameterKey)));
-            }
-            for (final String value : tmpParameterMap.keySet()) {
-                parameterMap.put(value, tmpParameterMap.get(value).toArray(new String[0]));
+
+            for (final Entry<String, List<String>> entry : tmpParameterMap.entrySet()) {
+                parameterMap.put(entry.getKey(), entry.getValue().toArray(new String[0]));
             }
         }
 

@@ -38,11 +38,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.callcontext.TimeAwareContext;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -59,16 +56,16 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageUserApi;
-import org.killbill.commons.utils.Preconditions;
-import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.Iterables;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -131,18 +128,19 @@ public class UsageResource extends JaxRsResourceBase {
                 verifyNonNull(usageRecordJson.getRecordDate(), "UsageRecordJson recordDate needs to be set");
             }
         }
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccount = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         // Verify subscription exists..
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), false, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), false, callContextNoAccount);
         if (entitlement.getEffectiveEndDate() != null) {
             final DateTime highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
-            final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
             if (entitlement.getEffectiveEndDate().compareTo(highestRecordDate) < 0) {
                 return Response.status(Status.BAD_REQUEST).build();
             }
         }
 
         final SubscriptionUsageRecord record = json.toSubscriptionUsageRecord();
+        // See this discussion: https://github.com/killbill/killbill/pull/1861#discussion_r1199581600
+        final CallContext callContext = context.createCallContextWithAccountId(entitlement.getAccountId(), createdBy, reason, comment, request);
         usageUserApi.recordRolledUpUsage(record, callContext);
         return Response.status(Status.CREATED).build();
     }
