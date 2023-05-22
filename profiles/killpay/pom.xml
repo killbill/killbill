@@ -27,6 +27,7 @@
     <packaging>war</packaging>
     <name>killbill-profiles-killpay</name>
     <properties>
+        <check.fail-spotbugs>true</check.fail-spotbugs>
         <main.basedir>${project.parent.parent.basedir}</main.basedir>
     </properties>
     <dependencies>

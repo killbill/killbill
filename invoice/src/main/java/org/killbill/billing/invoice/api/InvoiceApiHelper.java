@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -55,8 +54,6 @@ import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 public class InvoiceApiHelper {
 
     private final InvoicePluginDispatcher invoicePluginDispatcher;
@@ -74,7 +71,6 @@ public class InvoiceApiHelper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    @SuppressFBWarnings("NP_ALWAYS_NULL_EXCEPTION")
     public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId,
                                                                     final boolean isDryRun,
                                                                     final WithAccountLock withAccountLock,
