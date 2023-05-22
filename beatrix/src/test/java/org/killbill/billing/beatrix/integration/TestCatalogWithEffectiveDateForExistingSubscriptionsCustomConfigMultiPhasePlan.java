@@ -94,12 +94,12 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
         //move clock to 2023-06-01 (v2 effective) - Test fails here as invoice for $0 is generated
-        busHandler.pushExpectedEvents(NextEvent.INVOICE); //  INVOICE_PAYMENT, PAYMENT events not generated as a zero amount invoice is created
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 6, 1));
         assertListenerStatus();
-//        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-//                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 1), new LocalDate(2023, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99"))); // fails here
-//        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 1), new LocalDate(2023, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("10.5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
     }
 }
