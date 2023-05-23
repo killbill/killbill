@@ -69,7 +69,7 @@
     </rules>
 
     <plans>
-        <plan name="liability-monthly-no-trial">
+        <plan name="liability-monthly-discount">
             <product>Liability</product>
             <initialPhases>
                 <phase type="DISCOUNT">
@@ -104,12 +104,47 @@
                 </recurring>
             </finalPhase>
         </plan>
-
+        <plan name="liability-monthly-discount2">
+            <product>Liability</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>0.0</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                    <usages/>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>6.99</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
-                <plan>liability-monthly-no-trial</plan>
+                <plan>liability-monthly-discount</plan>
+                <plan>liability-monthly-discount2</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
