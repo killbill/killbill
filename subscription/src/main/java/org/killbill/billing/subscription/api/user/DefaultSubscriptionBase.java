@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
@@ -629,12 +630,23 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                                                                                            cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), catalogEffectiveDate);
                     result.add(billingTransition);
 
-                    if (isCreateOrTransfer || isChangeEvent) {
+                    if (isCreateOrTransfer || isChangeEvent || isPhaseEvent) {
 
                         // We are moving to a new Plan, we use the latest active catalog version at the time this operation took place.
                         final StaticCatalog catalogVersion = catalog.versionForDate(billingTransition.getEffectiveDate());
 
-                        final Plan currentPlan = catalogVersion.findPlan(billingTransition.getPlan().getName());
+                        final Plan currentPlan;
+                        try {
+                            currentPlan = catalogVersion.findPlan(billingTransition.getPlan().getName());
+                        } catch (final CatalogApiException e) {
+                            if (e.getCode() == ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
+                                // Retired plan
+                                continue;
+                            } else {
+                                throw e;
+                            }
+                        }
+
 
                         final Integer bcdLocal = cur.getNextBillingCycleDayLocal();
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
@@ -650,6 +662,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                 final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
                                 final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
                                                                                                                           cur.getTotalOrdering(), bcdLocal, catalogEffectiveDateForNextPlan);
+                                candidatesCatalogChangeEvents.removeIf(subscriptionBillingEvent -> subscriptionBillingEvent.getEffectiveDate().compareTo(newBillingTransition.getEffectiveDate()) == 0);
                                 candidatesCatalogChangeEvents.add(newBillingTransition);
                         	}
                             // TODO not so optimized as we keep parsing catalogs from the start...
