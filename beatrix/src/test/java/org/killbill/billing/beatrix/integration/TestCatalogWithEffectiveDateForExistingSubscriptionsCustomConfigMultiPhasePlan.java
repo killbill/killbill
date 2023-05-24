@@ -51,7 +51,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1862")
-    public void testSubscriptionWithMultiPhasePlan() throws Exception {
+    public void testMultiPhasePlanWithTrialPhase() throws Exception {
 
         final LocalDate today = new LocalDate(2023, 3, 18);
         clock.setDay(today);
@@ -59,23 +59,22 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
 
         //
-        // We have 2 catalog versions, V2 is effective on 2023-05-18 but there is an effectiveDateForExistingSubscriptions=2023-05-18 for the Liability Plan.
-        // The plan has a 14-day DISCOUNT phase followed by an EVERGREEN phase
+        // liability-monthly-trial has a a 14-day TRIAL phase followed by an EVERGREEN phase
         //
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(18));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-discount"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-trial"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement1 = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
-
         assertListenerStatus();
         assertNotNull(bpEntitlement1);
-        //invoice corresponding to discount phase
+
+        //invoice corresponding to trial phase
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO)); //TODO - This is of type recurring since the catalog defines a recurring price - maybe this should be changed to fixed?
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-04-01 (end of discount phase) - invoice generated for evergreen phase
+        //move clock to 2023-04-01 (end of trial phase) - invoice corresponding to evergreen phase as per v1
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
         clock.setDay(new LocalDate(2023, 4, 1));
         assertListenerStatus();
@@ -83,7 +82,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 1), new LocalDate(2023, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-05-01 - invoice generated for evergreen phase
+        //move clock to 2023-05-01 - invoice corresponding to evergreen phase as per v1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 5, 1));
         assertListenerStatus();
@@ -91,7 +90,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 1), new LocalDate(2023, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-06-01 (v2 effective) - invoice corresponding to v2
+        //move clock to 2023-06-01 (v2 effective) - invoice corresponding to evergreen phase as per v2
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 6, 1));
         assertListenerStatus();
@@ -102,7 +101,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1862")
-    public void testSubscriptionWithMultiPhasePlan3Versions() throws Exception {
+    public void testMultiPhasePlanWithDiscountPhaseSubAlignedWithChange() throws Exception { //This test is exactly the same as the scenario reported in https://github.com/killbill/killbill/issues/1862
 
         final LocalDate today = new LocalDate(2023, 3, 18);
         clock.setDay(today);
@@ -110,25 +109,22 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
 
         //
-        // We have 3 catalog versions, V2 is effective on 2023-05-18 but there is an effectiveDateForExistingSubscriptions=2023-05-18 for the Liability Plan.
-        // v3 is effective on 2023-07-25 and has effectiveDateForExistingSubscriptions==2023-07-25
-        // The plan has a 14-day DISCOUNT phase followed by an EVERGREEN phase
+        // liability-monthly-discount has a a 14-day DISCOUNT phase followed by an EVERGREEN phase
         //
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(18));
-
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-discount"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement1 = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
-
         assertListenerStatus();
         assertNotNull(bpEntitlement1);
+
         //invoice corresponding to discount phase
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO)); //TODO - This is of type recurring since the catalog defines a recurring price - maybe this should be changed to fixed?
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-04-01 (end of discount phase) - invoice generated for evergreen phase
+        //move clock to 2023-04-01 (end of discount phase) - invoice corresponding to evergreen phase as per v1
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
         clock.setDay(new LocalDate(2023, 4, 1));
         assertListenerStatus();
@@ -136,7 +132,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 1), new LocalDate(2023, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-05-01 - invoice generated for evergreen phase
+        //move clock to 2023-05-01 - invoice corresponding to evergreen phase as per v1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 5, 1));
         assertListenerStatus();
@@ -144,7 +140,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 1), new LocalDate(2023, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-06-01 (v2 effective) - invoice generated for evergreen phase as per v2
+        //move clock to 2023-06-01 (v2 effective) - invoice corresponding to evergreen phase as per v2
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 6, 1));
         assertListenerStatus();
@@ -152,7 +148,108 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 1), new LocalDate(2023, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("10.5")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
-        //move clock to 2023-07-01 (v2 effective) - invoice generated for evergreen phase as per v2
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1862")
+    public void testMultiPhasePlanWithDiscountPhaseSubNotAlignedWithChange() throws Exception {
+
+        final LocalDate today = new LocalDate(2023, 4, 1);
+        clock.setDay(today);
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
+        //
+        // liability-monthly-discount has a a 14-day DISCOUNT phase followed by an EVERGREEN phase
+        //
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(18));
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-discount"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement bpEntitlement1 = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertListenerStatus();
+        assertNotNull(bpEntitlement1);
+
+        //invoice corresponding to discount phase
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 1), new LocalDate(2023, 4, 15), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-04-15 (end of discount phase) - invoice corresponding to evergreen phase as per v1
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
+        clock.setDay(new LocalDate(2023, 4, 15));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 15), new LocalDate(2023, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-05-15 - invoice corresponding to evergreen phase as per v1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 5, 15));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 15), new LocalDate(2023, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-06-15 (v2 effective) - invoice corresponding to evergreen phase as per v2
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 6, 15));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 15), new LocalDate(2023, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("10.5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1862")
+    public void testMultiPhasePlanWithDiscountPhaseAndThreeCatalogVersions() throws Exception {
+
+        final LocalDate today = new LocalDate(2023, 3, 18);
+        clock.setDay(today);
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
+        //
+        // liability-monthly-discount has a a 14-day DISCOUNT phase followed by an EVERGREEN phase
+        //
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(18));
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-discount"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement bpEntitlement1 = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertListenerStatus();
+        assertNotNull(bpEntitlement1);
+
+        //invoice corresponding to discount phase
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-04-01 (end of discount phase) - invoice corresponding to evergreen phase as per v1
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
+        clock.setDay(new LocalDate(2023, 4, 1));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 1), new LocalDate(2023, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-05-01 - invoice corresponding to evergreen phase as per v1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 5, 1));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 1), new LocalDate(2023, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-06-01 (v2 effective) - invoice corresponding to evergreen phase as per v2
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 6, 1));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 1), new LocalDate(2023, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("10.5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+
+        //move clock to 2023-07-01 (v2 effective) - invoice corresponding to evergreen phase as per v2
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 7, 1));
         assertListenerStatus();
@@ -160,7 +257,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2023, 7, 1), new LocalDate(2023, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("10.5")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
-        //move clock to 2023-08-01 (v3 effective) - invoice generated for evergreen phase as per v3
+        //move clock to 2023-08-01 (v3 effective) - invoice corresponding to evergreen phase as per v3
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 8, 1));
         assertListenerStatus();
@@ -171,7 +268,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1862")
-    public void testSubscriptionWithMultiPhasePlanWithoutEffectiveDateForExistingSubs() throws Exception {
+    public void testMultiPhasePlanPriceChangeInDiscountPhaseSubAlignedWithChange() throws Exception {
 
         final LocalDate today = new LocalDate(2023, 3, 18);
         clock.setDay(today);
@@ -179,10 +276,121 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
 
         //
-        // We have 2 catalog versions, V2 is effective on 2023-05-18 but there is an effectiveDateForExistingSubscriptions=2023-05-18 for the Liability Plan.
-        // The plan has a 14-day DISCOUNT phase followed by an EVERGREEN phase
-        // The invoices are generated correctly up until 2023-05-01
-        // On moving the clock to 2023-06-01 (v2 effective), invoices are generated for $0
+        // liability-monthly-discount3 has a 4-MONTH DISCOUNT phase followed by an EVERGREEN phase
+        //
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(18));
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-discount3"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement bpEntitlement1 = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertListenerStatus();
+        assertNotNull(bpEntitlement1);
+
+        //invoice corresponding to discount phase as per v1
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 18), InvoiceItemType.RECURRING, new BigDecimal("5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-04-18 invoice generated for discount phase as per v1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 4, 18));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 18), new LocalDate(2023, 5, 18), InvoiceItemType.RECURRING, new BigDecimal("5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-05-18 - invoice generated for discount phase as per v2
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 5, 18));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 18), new LocalDate(2023, 6, 18), InvoiceItemType.RECURRING, new BigDecimal("7")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+
+        //move clock to 2023-06-18 - invoice generated for discount phase as per v2
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 6, 18));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 18), new LocalDate(2023, 7, 18), InvoiceItemType.RECURRING, new BigDecimal("7")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+
+        //move clock to 2023-07-18 - invoice generated for evergreen phase as per v2
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
+        clock.setDay(new LocalDate(2023, 7, 18));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 7, 18), new LocalDate(2023, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("10.5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1862")
+    public void testMultiPhasePlanPriceChangeInDiscountPhaseSubNotAlignedWithChange() throws Exception {
+
+        final LocalDate today = new LocalDate(2023, 3, 1);
+        clock.setDay(today);
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
+        //
+        // liability-monthly-discount3 has a 4-MONTH DISCOUNT phase followed by an EVERGREEN phase
+        //
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(18));
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-discount3"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement bpEntitlement1 = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertListenerStatus();
+        assertNotNull(bpEntitlement1);
+
+        //invoice corresponding to discount phase as per v1
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 1), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-04-1 invoice generated for discount phase as per v1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 4, 1));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 1), new LocalDate(2023, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-05-1 - invoice generated for discount phase as per v1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 5, 1));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 1), new LocalDate(2023, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        //move clock to 2023-06-1 - invoice generated for discount phase as per v2
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 6, 1));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 1), new LocalDate(2023, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("7")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+
+        //move clock to 2023-07-1 - invoice generated for evergreen phase as per v2
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
+        clock.setDay(new LocalDate(2023, 7, 1));
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2023, 7, 1), new LocalDate(2023, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("10.5")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1862")
+    public void testMultiPhasePlanWithoutEffectiveDateForExistingSubs() throws Exception {
+
+        final LocalDate today = new LocalDate(2023, 3, 18);
+        clock.setDay(today);
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
+        //
+        // liability-monthly-discount2 has a a 14-day DISCOUNT phase followed by an EVERGREEN phase and no effectiveDateForExistingSubscriptions
         //
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(18));
@@ -190,15 +398,15 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("liability-monthly-discount2"), null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement1 = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
-
         assertListenerStatus();
         assertNotNull(bpEntitlement1);
+
         //invoice corresponding to discount phase
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO)); //TODO - This is of type recurring since the catalog defines a recurring price - maybe this should be changed to fixed?
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2023, 3, 18), new LocalDate(2023, 4, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-04-01 (end of discount phase) - invoice generated for evergreen phase
+        //move clock to 2023-04-01 (end of discount phase) - invoice generated for evergreen phase as per v1
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
         clock.setDay(new LocalDate(2023, 4, 1));
         assertListenerStatus();
@@ -206,7 +414,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigMul
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 1), new LocalDate(2023, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("6.99")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        //move clock to 2023-05-01 - invoice generated for evergreen phase
+        //move clock to 2023-05-01 - invoice generated for evergreen phase as per v1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2023, 5, 1));
         assertListenerStatus();

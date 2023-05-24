@@ -69,6 +69,42 @@
     </rules>
 
     <plans>
+        <plan name="liability-monthly-trial">
+            <product>Liability</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>0.0</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                    <usages/>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>6.99</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+    
         <plan name="liability-monthly-discount">
             <product>Liability</product>
             <initialPhases>
@@ -139,12 +175,50 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="liability-monthly-discount3">
+            <product>Liability</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>4</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>5</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                    <usages/>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>6.99</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
+            	<plan>liability-monthly-trial</plan>
                 <plan>liability-monthly-discount</plan>
                 <plan>liability-monthly-discount2</plan>
+                <plan>liability-monthly-discount3</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
