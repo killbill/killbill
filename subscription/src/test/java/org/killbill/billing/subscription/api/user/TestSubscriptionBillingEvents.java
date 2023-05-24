@@ -219,6 +219,86 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
 
         // Nothing after cancel -> we correctly discarded subsequent catalog update events after the cancel
     }
+    
+    @Test(groups = "fast")
+    public void testWithCancelation_After_EffSubDtV4() throws Exception {
+
+        final DateTime createDate = new DateTime(2011, 1, 2, 0, 0, DateTimeZone.UTC);
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate), subscriptionBaseApiService, clock);
+
+        final UUID subscriptionId = UUID.randomUUID();
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEventPlan("gold-monthly")
+                                                                .setEventPlanPhase("gold-monthly-trial")
+                                                                .setEventPriceList("DEFAULT")
+                                                                .setFromDisk(true)
+                                                                .setUuid(UUID.randomUUID())
+                                                                .setSubscriptionId(subscriptionId)
+                                                                .setCreatedDate(createDate)
+                                                                .setUpdatedDate(createDate)
+                                                                .setEffectiveDate(createDate)
+                                                                .setTotalOrdering(1)
+                                                                .setActive(true)));
+
+        final DateTime evergreenPhaseDate = createDate.plusDays(30);
+        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("gold-monthly-evergreen")
+                                                                  .setUuid(UUID.randomUUID())
+                                                                  .setSubscriptionId(subscriptionId)
+                                                                  .setCreatedDate(evergreenPhaseDate)
+                                                                  .setUpdatedDate(evergreenPhaseDate)
+                                                                  .setEffectiveDate(evergreenPhaseDate)
+                                                                  .setTotalOrdering(2)
+                                                                  .setActive(true)));
+
+        final DateTime cancelDate = new DateTime(2011, 3, 15, 0, 0, DateTimeZone.UTC);
+
+        inputEvents.add(new ApiEventCancel(new ApiEventBuilder().setApiEventType(ApiEventType.CANCEL)
+                                                                .setEventPlan(null)
+                                                                .setEventPlanPhase(null)
+                                                                .setEventPriceList(null)
+                                                                .setFromDisk(true)
+                                                                .setUuid(UUID.randomUUID())
+                                                                .setSubscriptionId(subscriptionId)
+                                                                .setCreatedDate(createDate)
+                                                                .setUpdatedDate(null)
+                                                                .setEffectiveDate(cancelDate)
+                                                                .setTotalOrdering(3)
+                                                                .setActive(true)));
+        subscriptionBase.rebuildTransitions(inputEvents, catalog);
+
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), internalCallContext);
+
+        Assert.assertEquals(result.size(), 5);
+        Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
+        Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(createDate), 0);
+        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("gold-monthly"), 0);
+        Assert.assertEquals(toDateTime(result.get(0).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
+
+        Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.PHASE);
+        Assert.assertEquals(result.get(1).getEffectiveDate().compareTo(evergreenPhaseDate), 0);
+        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("gold-monthly"), 0);
+        Assert.assertEquals(toDateTime(result.get(1).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
+
+        // Catalog change event for EFF_SUB_DT_V3
+        Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
+        Assert.assertEquals(result.get(2).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V3.toLocalDate()), 0);
+        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
+        Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
+
+        // Catalog change event for EFF_SUB_DT_V4
+        Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
+        Assert.assertEquals(result.get(3).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V4.toLocalDate()), 0);
+        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("gold-monthly"), 0);
+        Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V4), 0);
+        
+        // Cancel event
+        Assert.assertEquals(result.get(4).getType(), SubscriptionBaseTransitionType.CANCEL);
+        Assert.assertEquals(result.get(4).getEffectiveDate().compareTo(cancelDate), 0);
+        Assert.assertNull(result.get(4).getPlan());
+
+        // Nothing after cancel -> we correctly discarded subsequent catalog update events after the cancel
+    }
 
     @Test(groups = "fast")
     public void testWithChange_Before_EffSubDtV2() throws Exception {

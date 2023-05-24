@@ -17,7 +17,7 @@
 
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
-    <effectiveDate>2022-05-18T00:00:00+00:00</effectiveDate>
+    <effectiveDate>2023-07-25T00:00:00+00:00</effectiveDate>
     <catalogName>Insurance</catalogName>
 
     <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
@@ -69,43 +69,8 @@
     </rules>
 
     <plans>
-        <plan name="liability-monthly-trial">
-            <product>Liability</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>14</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>0.0</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                    <usages/>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>6.99</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-    
         <plan name="liability-monthly-discount">
+            <effectiveDateForExistingSubscriptions>2023-07-25T00:00:00+00:00</effectiveDateForExistingSubscriptions>
             <product>Liability</product>
             <initialPhases>
                 <phase type="DISCOUNT">
@@ -134,7 +99,7 @@
                     <recurringPrice>
                         <price>
                             <currency>USD</currency>
-                            <value>6.99</value>
+                            <value>15.5</value>
                         </price>
                     </recurringPrice>
                 </recurring>
@@ -169,56 +134,18 @@
                     <recurringPrice>
                         <price>
                             <currency>USD</currency>
-                            <value>6.99</value>
+                            <value>10.5</value>
                         </price>
                     </recurringPrice>
                 </recurring>
             </finalPhase>
         </plan>
-        <plan name="liability-monthly-discount3">
-            <product>Liability</product>
-            <initialPhases>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>4</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>5</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                    <usages/>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>6.99</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
-            	<plan>liability-monthly-trial</plan>
                 <plan>liability-monthly-discount</plan>
                 <plan>liability-monthly-discount2</plan>
-                <plan>liability-monthly-discount3</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
