@@ -43,7 +43,7 @@
         </changePolicy>
         <changeAlignment>
             <changeAlignmentCase>
-                <alignment>CHANGE_OF_PLAN</alignment>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
             </changeAlignmentCase>
         </changeAlignment>
         <cancelPolicy>
