@@ -43,7 +43,7 @@
         </changePolicy>
         <changeAlignment>
             <changeAlignmentCase>
-                <alignment>CHANGE_OF_PLAN</alignment>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
             </changeAlignmentCase>
         </changeAlignment>
         <cancelPolicy>
@@ -99,7 +99,7 @@
                     <recurringPrice>
                         <price>
                             <currency>USD</currency>
-                            <value>10.5</value>
+                            <value>8.5</value>
                         </price>
                     </recurringPrice>
                 </recurring>
