@@ -44,7 +44,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigNon
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigWeeklyPlan");
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogWithEffectiveDateForExistingSubscriptionsCustomConfigNonMonthlyPlans");
         // Custom subscription config to test the alignment for the catalog effectiveDateForExistingSubscriptions
         allExtraProperties.put("org.killbill.subscription.align.effectiveDateForExistingSubscriptions", "true");
         return super.getConfigSource(null, allExtraProperties);
