@@ -31,6 +31,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.ObjectType;
@@ -51,6 +52,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -1109,6 +1111,129 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+    }
+    
+    @Test(groups = "slow")
+    public void testBillRunWithUsageAndRecurringAccount_EST() throws Exception {
+    	
+        invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+        invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+        invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
+
+        DateTime referenceTime = new DateTime("2023-01-01T6:00:00");
+        clock.setTime(referenceTime);
+
+        // Create Account with EST TZ
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1, DateTimeZone.forID("EST"), referenceTime));
+        assertNotNull(account);
+
+        // Set AUTO_INVOICING_OFF, AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT tags.
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        
+        // Create an in-arrear RECURRING subscription
+        final LocalDate effDt1 = new LocalDate(2018, 8, 1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 1, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
+        assertListenerStatus();
+
+        // Create an in-arrear USAGE subscription
+        final LocalDate effDt2 = new LocalDate(2018, 8, 1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("training-usage-in-arrear");
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
+        final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, false, callContext);
+        assertListenerStatus();
+        
+        // Record usage for current month
+        recordUsageData(sub2.getId(), "tracking-1", "hours", new LocalDate(2023, 1, 19), BigDecimal.valueOf(10L), callContext);
+        
+        // Generate invoice with targetDate 2023-2-1
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("1000.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        //  Generate invoice again with same targetDate 2023-2-1 and verify there is no duplicate
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 4, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("1000.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+    }
+    
+    @Test(groups = "slow")
+    public void testBillRunWithUsageMultipleTiersAndRecurringAccount_EST() throws Exception {
+    	
+        invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+        invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+        invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
+
+        DateTime referenceTime = new DateTime("2023-01-01T6:00:00");
+        clock.setTime(referenceTime);
+
+        // Create Account with EST TZ
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1, DateTimeZone.forID("EST"), referenceTime));
+        assertNotNull(account);
+
+
+        // Set AUTO_INVOICING_OFF, AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT tags.
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        
+        // Create an in-arrear RECURRING subscription
+        final LocalDate effDt1 = new LocalDate(2018, 8, 1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("pistol-in-arrear-monthly-notrial");
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 1, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        final Subscription baseSubscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
+        assertListenerStatus();
+
+        // Create an in-arrear USAGE subscription
+        final LocalDate effDt2 = new LocalDate(2018, 8, 1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("bullets-usage-in-arrear");
+        
+        final UUID entitlementId2 = entitlementApi.addEntitlement(baseSubscription.getBundleId(), new DefaultEntitlementSpecifier(spec2, 1, null, null, null), effDt2, effDt2, false, Collections.emptyList(), callContext);
+        
+        final Subscription addOnSub = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, false, callContext);
+        assertListenerStatus();
+        
+        //record usage for current month
+        recordUsageData(addOnSub.getId(), "tracking-1", "bullets", new LocalDate(2023, 1, 19), BigDecimal.valueOf(1200L), callContext);
+        
+        // Generate invoice with targetDate 2023-2-1
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("29.50")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("5.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // Generate invoice again with same targetDate 2023-2-1 and verify there is no duplicate
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 2, 1), Collections.emptyList(), callContext);
+        getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 5, 10);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("29.50")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.USAGE, new BigDecimal("5.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 11, 1), new LocalDate(2022, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
     }
 
