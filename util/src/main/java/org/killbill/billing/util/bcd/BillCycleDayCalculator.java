@@ -75,23 +75,27 @@ public abstract class BillCycleDayCalculator {
         return resultingLocalDate;
     }
 
-
-    public static LocalDate alignProposedNextBillCycleDate(final LocalDate proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
+    public static LocalDate alignProposedNextBillCycleDate(final LocalDate proposedDate, final LocalDate originalDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
         // billingCycleDay alignment only makes sense for month based BillingPeriod (MONTHLY, QUARTERLY, BIANNUAL, ANNUAL)
         final boolean isMonthBased = (billingPeriod.getPeriod().getMonths() | billingPeriod.getPeriod().getYears()) > 0;
         if (!isMonthBased) {
-            return proposedDate;
+            LocalDate newDate = originalDate.plus(billingPeriod.getPeriod());
+            while (newDate.isBefore(proposedDate)) {
+                newDate = newDate.plus(billingPeriod.getPeriod());
+            }
+            return newDate;
         }
-       if (proposedDate.getDayOfMonth() > billingCycleDay) {
-           return alignProposedBillCycleDate(proposedDate.plusMonths(1), billingCycleDay, billingPeriod);
-       } else {
-           return alignProposedBillCycleDate(proposedDate, billingCycleDay, billingPeriod);
-       }
+        if (proposedDate.getDayOfMonth() > billingCycleDay) {
+            return alignProposedBillCycleDate(proposedDate.plusMonths(1), billingCycleDay, billingPeriod);
+        } else {
+            return alignProposedBillCycleDate(proposedDate, billingCycleDay, billingPeriod);
+        }
     }
 
-    public static LocalDate alignProposedNextBillCycleDate(final DateTime proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
+    public static LocalDate alignProposedNextBillCycleDate(final DateTime proposedDate, final DateTime originalDate, final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
         final LocalDate proposedLocalDate = internalTenantContext.toLocalDate(proposedDate);
-        final LocalDate resultingLocalDate = alignProposedNextBillCycleDate(proposedLocalDate, billingCycleDay, billingPeriod);
+        final LocalDate originalLocalDate = internalTenantContext.toLocalDate(originalDate);
+        final LocalDate resultingLocalDate = alignProposedNextBillCycleDate(proposedLocalDate, originalLocalDate, billingCycleDay, billingPeriod);
         return resultingLocalDate;
     }
 
