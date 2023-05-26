@@ -69,7 +69,44 @@
     </rules>
 
     <plans>
-        <plan name="liability-monthly-with-trial-weekly">
+        <plan name="liability-with-trial-biweekly">
+            <product>Liability</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>14</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>BIWEEKLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>1.5</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                    <usages/>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>BIWEEKLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>4.5</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages/>
+            </finalPhase>
+        </plan>
+        <plan name="liability-with-trial-weekly">
             <product>Liability</product>
             <initialPhases>
                 <phase type="TRIAL">
@@ -106,8 +143,44 @@
                 <usages/>
             </finalPhase>
         </plan>
-        
-        <plan name="liability-monthly-with-trial-monthly">
+        <plan name="liability-monthly-trial-weekly-evergreen">
+            <product>Liability</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>3</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>1.5</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                    <usages/>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>WEEKLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>4.5</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages/>
+            </finalPhase>
+        </plan>
+        <plan name="liability-with-trial-monthly">
             <product>Liability</product>
             <initialPhases>
                 <phase type="TRIAL">
@@ -149,8 +222,10 @@
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
-                <plan>liability-monthly-with-trial-weekly</plan>
-                <plan>liability-monthly-with-trial-monthly</plan>
+                <plan>liability-with-trial-weekly</plan>
+                <plan>liability-monthly-trial-weekly-evergreen</plan>
+                <plan>liability-with-trial-biweekly</plan>
+                <plan>liability-with-trial-monthly</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
