@@ -469,7 +469,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getPrevValue(false);
     }
 
-
     private Integer getPrevValue(final boolean bcd) {
 
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
@@ -479,7 +478,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             final SubscriptionBaseTransition cur = it.next();
             if (bcd && cur.getTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
                 return cur.getNextBillingCycleDayLocal();
-            } else if (!bcd &&  cur.getTransitionType() == SubscriptionBaseTransitionType.QUANTITY_CHANGE) {
+            } else if (!bcd && cur.getTransitionType() == SubscriptionBaseTransitionType.QUANTITY_CHANGE) {
                 return cur.getNextQuantity();
             }
         }
@@ -629,10 +628,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
             // Recomputed for each event from the active Plan -- if Plan is null (cancellation this is not set)
             StaticCatalog lastActiveCatalog = null;
-            final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<SubscriptionBillingEvent>();
+            final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<>();
             boolean foundInitialEvent = false;
 
-            SubscriptionBaseTransitionData lastPhaseTransition = null;
+            SubscriptionBaseTransitionData lastPlanTransition = null;
             while (it.hasNext()) {
 
                 final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
@@ -649,9 +648,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // Remove anything prior to first CREATE
                 if (foundInitialEvent) {
 
-                    // Track the last transition that may modify the phase -- either from a new Plan or new PlanPhase of the same Plan
-                    if (isCreateOrTransfer || isChangeEvent || isPhaseEvent) {
-                        lastPhaseTransition = cur;
+                    // Track the last transition where we changed Plan
+                    if (isCreateOrTransfer || isChangeEvent) {
+                        lastPlanTransition = cur;
                     }
 
                     // Look for any catalog change transition whose date is less the cur event
@@ -662,8 +661,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
                     }
 
-                    // If we see a change or a cancellation and we still have catalog change transitions, we discard them
-                    if (isChangeEvent || isCancelEvent) {
+                    if (isChangeEvent || isCancelEvent || isPhaseEvent) {
                         candidatesCatalogChangeEvents.clear();
                     } else if (prevCandidateForCatalogChangeEvents != null) {
                         candidatesCatalogChangeEvents.add(prevCandidateForCatalogChangeEvents);
@@ -683,18 +681,20 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                                                                                            catalogEffectiveDate);
                     result.add(billingTransition);
 
-                    if (isCreateOrTransfer || isChangeEvent) {
+                    if (isCreateOrTransfer || isChangeEvent || isPhaseEvent) {
 
-                        // We are moving to a new Plan, we use the latest active catalog version at the time this operation took place.
-                        final StaticCatalog catalogVersion = catalog.versionForDate(billingTransition.getEffectiveDate());
+                        // If we are moving to a new Plan, we use the latest active catalog version at the time this operation took place.
+                        final DateTime billingTransitionEffectiveDate = isPhaseEvent ? lastPlanTransition.getEffectiveTransitionTime() : billingTransition.getEffectiveDate();
+                        final StaticCatalog catalogVersion = catalog.versionForDate(billingTransitionEffectiveDate);
 
                         final Plan currentPlan = catalogVersion.findPlan(billingTransition.getPlan().getName());
-
                         final Integer bcdLocal = cur.getNextBillingCycleDayLocal();
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
                         Plan nextPlan = catalog.getNextPlanVersion(currentPlan);
+
                         while (nextPlan != null) {
                             if (nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
+
                                 DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
@@ -704,6 +704,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                 final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
                                 final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
                                                                                                                           cur.getTotalOrdering(), bcdLocal, cur.getNextQuantity(), catalogEffectiveDateForNextPlan);
+
                                 candidatesCatalogChangeEvents.add(newBillingTransition);
                             }
                             // TODO not so optimized as we keep parsing catalogs from the start...
@@ -983,7 +984,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 case QUANTITY_UPDATE:
                     // Skip, taken into account from NextBillingCycleDayLocal
                     break;
-
 
                 case API_USER:
                     final ApiEvent userEV = (ApiEvent) cur;
