@@ -166,10 +166,21 @@ public class DefaultEntitlementApiBase {
     }
 
     public void pause(final UUID bundleId, @Nullable final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
+        final DateTime effectiveDateTime = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, internalCallContext.getCreatedDate(), internalCallContext);
+
+        final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = List.of(
+                new DefaultBaseEntitlementWithAddOnsSpecifier(
+                        bundleId,
+                        null,
+                        null,
+                        effectiveDateTime,
+                        effectiveDateTime,
+                        false));
+
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.PAUSE_BUNDLE,
                                                                                null,
                                                                                null,
-                                                                               null,
+                                                                               baseEntitlementWithAddOnsSpecifierList,
                                                                                null,
                                                                                properties,
                                                                                internalCallContextFactory.createCallContext(internalCallContext));

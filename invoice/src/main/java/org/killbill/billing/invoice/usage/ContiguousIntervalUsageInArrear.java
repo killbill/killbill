@@ -196,7 +196,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         final BillingEvent firstBillingEvent = billingEvents.get(0);
         final DateTime startDate = firstBillingEvent.getEffectiveDate();
 
-        final DateTime targetDateEndOfDay = toEndOfDay(targetDate);
+        final DateTime targetDateEndOfDay = toEndOfDay(targetDate, internalTenantContext.getFixedOffsetTimeZone());
 
         if (targetDateEndOfDay.isBefore(startDate)) {
             return this;
@@ -238,8 +238,9 @@ public abstract class ContiguousIntervalUsageInArrear {
         return this;
     }
 
-    private static DateTime toEndOfDay(final LocalDate input) {
-        return input.plusDays(1).toDateTimeAtStartOfDay(DateTimeZone.UTC).minus(Period.millis(1));
+    private static DateTime toEndOfDay(final LocalDate input, final DateTimeZone tz) {
+        // We compute the date at the end of fay as seen from the Account TZ
+        return input.toDateTimeAtStartOfDay(tz).plusDays(1).minus(Period.millis(1)).toDateTime(DateTimeZone.UTC);
     }
 
     private void addTransitionTimesForBillingEvent(final BillingEvent event, final DateTime startDate, final DateTime endDate, final int bcd, final boolean lastEvent) {
@@ -250,7 +251,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         int numberOfPeriod = 0;
         final LocalDate futureBillingDateFor = bid.getFutureBillingDateFor(numberOfPeriod);
-        DateTime nextBillCycleDateEndOfDay =  futureBillingDateFor.compareTo(startDateLocal) == 0 ? startDate : futureBillingDateFor.toDateTimeAtStartOfDay(DateTimeZone.UTC);
+        DateTime nextBillCycleDateEndOfDay =  futureBillingDateFor.compareTo(startDateLocal) == 0 ? startDate : futureBillingDateFor.toDateTimeAtStartOfDay(internalTenantContext.getFixedOffsetTimeZone());
         while (isBefore(nextBillCycleDateEndOfDay, endDate, lastEvent)) {
             if (nextBillCycleDateEndOfDay.compareTo(rawUsageStartDate) >= 0) {
                 final TransitionTime lastTransition = transitionTimes.isEmpty() ? null : transitionTimes.get(transitionTimes.size() - 1);
@@ -260,7 +261,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                 }
             }
             numberOfPeriod++;
-            nextBillCycleDateEndOfDay = bid.getFutureBillingDateFor(numberOfPeriod).toDateTimeAtStartOfDay(DateTimeZone.UTC);
+            nextBillCycleDateEndOfDay = bid.getFutureBillingDateFor(numberOfPeriod).toDateTimeAtStartOfDay(internalTenantContext.getFixedOffsetTimeZone());
         }
     }
     

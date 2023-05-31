@@ -124,6 +124,8 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
         // Catalog v2 is 2022-04-01, but Liability effDt is 2022-05-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); // 2022-05-15
+
+        //Thread.sleep(1000 * 3600);
         assertListenerStatus();
 
         // We expect to see no pro-ration because of property 'align.effectiveDateForExistingSubscriptions' and new price

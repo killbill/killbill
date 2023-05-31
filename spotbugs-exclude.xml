@@ -48,6 +48,18 @@
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
 
+    <!-- MODULE: INTERNAL-API -->
+    <!-- Affected class (LightSecureRandom) are private class. Invocation controlled in single class. -->
+    <Match>
+        <Class name="org.killbill.billing.util.UUIDs$LightSecureRandom" />
+        <Bug pattern="UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR" />
+    </Match>
+    <!-- serialization/deserialization not needed -->
+    <Match>
+        <Class name="org.killbill.billing.util.UUIDs$LightSecureRandom" />
+        <Bug pattern="SE_BAD_FIELD" />
+    </Match>
+
     <!-- MODULE: UTIL -->
     <!-- Either this, or we have to changes class name with better name and this changes will affect ~97 location in this project -->
     <Match>
@@ -135,4 +147,34 @@
         <Class name="org.killbill.billing.payment.core.sm.control.ControlPluginRunner$DefaultPaymentControlContext" />
         <Bug pattern="SE_NO_SUITABLE_CONSTRUCTOR_FOR_EXTERNALIZATION" />
     </Match>
+
+    <!-- MODULE: JaxRs -->
+
+    <!-- See this discussion: https://github.com/killbill/killbill/pull/1858#discussion_r1193803654 -->
+    <Match>
+        <Class name="org.killbill.billing.jaxrs.util.Context" />
+        <Method name="createCallContextWithAccountId" />
+        <Bug pattern="DCN_NULLPOINTER_EXCEPTION" />
+    </Match>
+
+    <!-- MODULE: Profiles -->
+    <Match>
+        <Class name="org.apache.shiro.guice.web.ShiroWebModuleWith435" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- See the log message: "Failed to register for event notifications, this is bad exiting!". -->
+    <Match>
+        <Class name="org.killbill.billing.server.listeners.KillbillGuiceListener" />
+        <Method name="startLifecycleStage2" />
+        <Bug pattern="DM_EXIT" />
+    </Match>
+
+    <!-- Return value ignored, as intended? -->
+    <Match>
+        <Class name="org.killbill.billing.server.security.KillbillJdbcTenantRealm$SerializableSimpleByteSource" />
+        <Method name="readExternal" />
+        <Bug pattern="RR_NOT_CHECKED" />
+    </Match>
+
 </FindBugsFilter>

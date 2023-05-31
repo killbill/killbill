@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -100,5 +101,10 @@ public class BlockPriceJson {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getUnitName(), getSize(), getPrice(), getMax());
     }
 }

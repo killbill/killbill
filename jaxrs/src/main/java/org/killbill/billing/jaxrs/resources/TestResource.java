@@ -112,7 +112,7 @@ public class TestResource extends JaxRsResourceBase {
         this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
-    public final class ClockResource {
+    public static final class ClockResource {
 
         private final DateTime currentUtcTime;
         private final String timeZone;

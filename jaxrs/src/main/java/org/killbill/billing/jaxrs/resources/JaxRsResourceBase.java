@@ -89,9 +89,6 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.commons.utils.Joiner;
-import org.killbill.commons.utils.Preconditions;
-import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -104,7 +101,6 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.StringCustomField;
 import org.killbill.billing.util.entity.Entity;
@@ -113,6 +109,10 @@ import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
+import org.killbill.commons.utils.Joiner;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.Strings;
+import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -488,9 +488,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return toLocalDateDefaultToday(account, inputDate, context);
     }
 
-    protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {
+    protected LocalDate toLocalDateDefaultToday(@Nullable final Account account, @Nullable final String inputDate, final TenantContext context) {
         // TODO Switch to cached normalized timezone when available
-        return Objects.requireNonNullElse(toLocalDate(inputDate), clock.getToday(account.getTimeZone()));
+        return Objects.requireNonNullElse(toLocalDate(inputDate), clock.getToday(account == null ? null : account.getTimeZone()));
     }
 
     // API for subscription and invoice generation: keep null, the lower layers will default to now()

@@ -188,7 +188,7 @@ public class PushNotificationListener {
         final Long tenantRecordId = internalCallContextFactory.getRecordIdFromObject(key.getTenantId(), ObjectType.TENANT, tenantContext);
         try {
             final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.SERVER_SERVICE.getServiceName(), PushNotificationRetryService.QUEUE_NAME);
-            notificationQueue.recordFutureNotification(nextNotificationTime, key, null, Objects.requireNonNullElse(accountRecordId, new Long(0)), tenantRecordId);
+            notificationQueue.recordFutureNotification(nextNotificationTime, key, null, Objects.requireNonNullElse(accountRecordId, 0L), tenantRecordId);
         } catch (final NoSuchNotificationQueue noSuchNotificationQueue) {
             log.error("Failed to push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId(), noSuchNotificationQueue);
         } catch (final IOException e) {

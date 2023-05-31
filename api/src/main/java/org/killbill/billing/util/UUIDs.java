@@ -22,14 +22,11 @@ import java.security.SecureRandom;
 import java.util.Random;
 import java.util.UUID;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * UUIDs helper.
  *
  * @author kares
  */
-@SuppressFBWarnings({"UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR", "SE_BAD_FIELD", "DMI_RANDOM_USED_ONLY_ONCE"})
 public abstract class UUIDs {
 
     public static UUID randomUUID() { return rndUUIDv4(); }

@@ -64,7 +64,6 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -76,12 +75,13 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.MetricTag;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
+import org.killbill.commons.utils.Strings;
+import org.killbill.commons.utils.collect.Iterables;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -528,15 +528,20 @@ public class PaymentResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentId, (json != null ? json.getPaymentExternalKey() : null), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
 
         final String transactionExternalKey = json != null ? json.getTransactionExternalKey() : null;
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), json.getEffectiveDate(), transactionExternalKey,
-                                                pluginProperties, paymentOptions, callContext);
+        paymentApi.createVoidWithPaymentControl(account,
+                                                initialPayment.getId(),
+                                                (json != null ? json.getEffectiveDate() : null),
+                                                transactionExternalKey,
+                                                pluginProperties,
+                                                paymentOptions,
+                                                callContext);
 
         return Response.status(Status.NO_CONTENT).build();
     }
@@ -955,7 +960,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                                final UriInfo uriInfo,
                                                                final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
-        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json != null ? json.getProperties() : Collections.emptyList());
 
         final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
 

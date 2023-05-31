@@ -166,18 +166,6 @@ public class AccountTimelineJson {
         return result;
     }
 
-    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<SubscriptionBundle> bundles) {
-        if (invoiceId == null) {
-            return null;
-        }
-        for (final Invoice cur : invoices) {
-            if (cur.getId().equals(invoiceId)) {
-                return getBundleExternalKey(cur, bundles);
-            }
-        }
-        return null;
-    }
-
     private String getBundleExternalKey(final Invoice invoice, final List<SubscriptionBundle> bundles) {
         final Set<UUID> b = new HashSet<UUID>();
         for (final InvoiceItem cur : invoice.getInvoiceItems()) {

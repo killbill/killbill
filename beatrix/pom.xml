@@ -19,13 +19,14 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.24.3-SNAPSHOT</version>
+        <version>0.24.4-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
     <packaging>jar</packaging>
     <name>killbill-beatrix</name>
     <properties>
+        <check.fail-spotbugs>true</check.fail-spotbugs>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
     <dependencies>

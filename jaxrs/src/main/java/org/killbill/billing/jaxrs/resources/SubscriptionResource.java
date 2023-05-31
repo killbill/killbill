@@ -1053,7 +1053,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     }
     
     private DateTime getDateTimeFromInput(final String inputDate, final TimeAwareContext timeAwareContext) {
-        if (inputDate == null || (inputDate != null && inputDate.isEmpty())) {
+        if (inputDate == null || inputDate.isEmpty()) {
             return null;
         }
         if (isDateTime(inputDate)) {

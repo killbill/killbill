@@ -26,9 +26,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.payment.api.PaymentResponse;
 import org.killbill.billing.util.tag.Tag;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-@SuppressFBWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class BillingState {
 
     private final UUID objectId;

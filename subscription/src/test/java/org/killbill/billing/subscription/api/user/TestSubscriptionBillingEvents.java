@@ -195,7 +195,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
 
         final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), internalCallContext);
 
-        Assert.assertEquals(result.size(), 4);
+        Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(createDate), 0);
         Assert.assertEquals(result.get(0).getPlan().getName().compareTo("gold-monthly"), 0);
@@ -206,16 +206,22 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(result.get(1).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(1).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
-        // Catalog change event for EFF_SUB_DT_V3
+        // Catalog change event for EFF_SUB_DT_V2
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
-        Assert.assertEquals(result.get(2).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V3.toLocalDate()), 0);
+        Assert.assertEquals(result.get(2).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V2.toLocalDate()), 0);
         Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
-        Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
+        Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V2), 0);
+
+        // Catalog change event for EFF_SUB_DT_V3
+        Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
+        Assert.assertEquals(result.get(3).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V3.toLocalDate()), 0);
+        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("gold-monthly"), 0);
+        Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // Cancel event
-        Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CANCEL);
-        Assert.assertEquals(result.get(3).getEffectiveDate().compareTo(cancelDate), 0);
-        Assert.assertNull(result.get(3).getPlan());
+        Assert.assertEquals(result.get(4).getType(), SubscriptionBaseTransitionType.CANCEL);
+        Assert.assertEquals(result.get(4).getEffectiveDate().compareTo(cancelDate), 0);
+        Assert.assertNull(result.get(4).getPlan());
 
         // Nothing after cancel -> we correctly discarded subsequent catalog update events after the cancel
     }
@@ -419,7 +425,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
 
         final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), internalCallContext);
 
-        Assert.assertEquals(result.size(), 4);
+        Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(createDate), 0);
         Assert.assertEquals(result.get(0).getPlan().getName().compareTo("gold-monthly"), 0);
@@ -430,17 +436,23 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(result.get(1).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(1).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
-        // Catalog change event for EFF_SUB_DT_V3
+        // Catalog change event for EFF_SUB_DT_V2
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
-        Assert.assertEquals(result.get(2).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V3.toLocalDate()), 0);
+        Assert.assertEquals(result.get(2).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V2.toLocalDate()), 0);
         Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
-        Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
+        Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V2), 0);
+
+        // Catalog change event for EFF_SUB_DT_V3
+        Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
+        Assert.assertEquals(result.get(3).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V3.toLocalDate()), 0);
+        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("gold-monthly"), 0);
+        Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // User CHANGE event
-        Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
-        Assert.assertEquals(result.get(3).getEffectiveDate().compareTo(changeDate), 0);
-        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("silver-monthly"), 0);
-        Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
+        Assert.assertEquals(result.get(4).getType(), SubscriptionBaseTransitionType.CHANGE);
+        Assert.assertEquals(result.get(4).getEffectiveDate().compareTo(changeDate), 0);
+        Assert.assertEquals(result.get(4).getPlan().getName().compareTo("silver-monthly"), 0);
+        Assert.assertEquals(toDateTime(result.get(4).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // We should not see any more catalog CHANGE events
     }
