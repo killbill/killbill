@@ -715,7 +715,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             }
             SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             while (prevCandidateForCatalogChangeEvents != null) {
-                result.add(prevCandidateForCatalogChangeEvents);
+            	final DateTime effectiveDateTime = prevCandidateForCatalogChangeEvents.getEffectiveDate();
+            	if (!result.stream().anyMatch(subBillingEvent -> subBillingEvent.getEffectiveDate().compareTo(effectiveDateTime) == 0)) {
+            		result.add(prevCandidateForCatalogChangeEvents);
+            	}
                 prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             }
 
