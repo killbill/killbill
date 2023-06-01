@@ -699,13 +699,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
                                 nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, nextEffectiveDate, cur.getEffectiveTransitionTime(), catalog, bcdLocal, context);
+                                // Add the catalog change transition if it is for a date past our current transition
+                                if (!nextEffectiveDate.isBefore(cur.getEffectiveTransitionTime())) {
+                                    // Computed from the nextPlan
+                                    final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
+                                    final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
+                                                                                                                              cur.getTotalOrdering(), bcdLocal, cur.getNextQuantity(), catalogEffectiveDateForNextPlan);
 
-                                // Computed from the nextPlan
-                                final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
-                                final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
-                                                                                                                          cur.getTotalOrdering(), bcdLocal, cur.getNextQuantity(), catalogEffectiveDateForNextPlan);
+                                    candidatesCatalogChangeEvents.add(newBillingTransition);
+                                }
 
-                                candidatesCatalogChangeEvents.add(newBillingTransition);
                             }
                             // TODO not so optimized as we keep parsing catalogs from the start...
                             nextPlan = catalog.getNextPlanVersion(nextPlan);
@@ -715,10 +718,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             }
             SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             while (prevCandidateForCatalogChangeEvents != null) {
-            	final DateTime effectiveDateTime = prevCandidateForCatalogChangeEvents.getEffectiveDate();
-            	if (!result.stream().anyMatch(subBillingEvent -> subBillingEvent.getEffectiveDate().compareTo(effectiveDateTime) == 0)) {
-            		result.add(prevCandidateForCatalogChangeEvents);
-            	}
+                result.add(prevCandidateForCatalogChangeEvents);
                 prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             }
 
