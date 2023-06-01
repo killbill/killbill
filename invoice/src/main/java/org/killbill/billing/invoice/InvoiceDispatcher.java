@@ -110,6 +110,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.optimizer.BusOptimizer;
+import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
@@ -215,6 +216,7 @@ public class InvoiceDispatcher {
             processSubscriptionStartRequestedDateWithLock(accountId, transition, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId.toString(), e);
+            throw new QueueRetryException(e);
         } finally {
             if (lock != null) {
                 lock.release();
@@ -1288,6 +1290,7 @@ public class InvoiceDispatcher {
             processParentInvoiceForInvoiceGenerationWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
+            throw new QueueRetryException(e);
         } finally {
             if (lock != null) {
                 lock.release();
@@ -1374,6 +1377,7 @@ public class InvoiceDispatcher {
             processParentInvoiceForAdjustmentsWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
+            throw new QueueRetryException(e);
         } finally {
             if (lock != null) {
                 lock.release();
