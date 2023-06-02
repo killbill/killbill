@@ -644,11 +644,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                                 nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, nextEffectiveDate, cur.getEffectiveTransitionTime(), catalog, bcdLocal, context);
 
-                                // Computed from the nextPlan
-                                final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
-                                final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
-                                                                                                                          cur.getTotalOrdering(), bcdLocal, catalogEffectiveDateForNextPlan);
-                                candidatesCatalogChangeEvents.add(newBillingTransition);
+                                if (!nextEffectiveDate.isBefore(cur.getEffectiveTransitionTime())) {
+                                    // Computed from the nextPlan
+                                    final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
+                                    final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
+                                                                                                                              cur.getTotalOrdering(), bcdLocal, catalogEffectiveDateForNextPlan);
+                                    candidatesCatalogChangeEvents.add(newBillingTransition);
+                                }
                             }
                             // TODO not so optimized as we keep parsing catalogs from the start...
                             nextPlan = catalog.getNextPlanVersion(nextPlan);
