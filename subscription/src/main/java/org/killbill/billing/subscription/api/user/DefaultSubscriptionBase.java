@@ -576,6 +576,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<>();
             boolean foundInitialEvent = false;
 
+            SubscriptionBaseTransitionData lastPhaseTransition = null;
             SubscriptionBaseTransitionData lastPlanTransition = null;
             while (it.hasNext()) {
 
@@ -592,6 +593,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                 // Remove anything prior to first CREATE
                 if (foundInitialEvent) {
+
+                    // Track the last transition that may modify the phase -- either from a new Plan or new PlanPhase of the same Plan
+                    if (isCreateOrTransfer || isChangeEvent || isPhaseEvent) {
+                        lastPhaseTransition = cur;
+                    }
 
                     // Track the last transition where we changed Plan
                     if (isCreateOrTransfer || isChangeEvent) {
@@ -662,15 +668,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             // Ideally, we should have a special transition type (e.g 'EXPIRED') and not compute this transition dynamically
             // See https://github.com/killbill/killbill/issues/824
             SubscriptionBillingEvent expiredTransition = null;
-            if (lastPlanTransition != null &&
-                lastPlanTransition.getNextPhase() != null &&
-                lastPlanTransition.getNextPhase().getPhaseType() != PhaseType.EVERGREEN) {
-                final DateTime effectiveDate = lastPlanTransition.getNextPhase().getDuration().addToDateTime(lastPlanTransition.getEffectiveTransitionTime());
+            if (lastPhaseTransition != null &&
+                lastPhaseTransition.getNextPhase() != null &&
+                lastPhaseTransition.getNextPhase().getPhaseType() != PhaseType.EVERGREEN) {
+                final DateTime effectiveDate = lastPhaseTransition.getNextPhase().getDuration().addToDateTime(lastPhaseTransition.getEffectiveTransitionTime());
                 // Insert the expiredTransition at the right place depending on whether or not we still have pending catalog version transitions
                 // (there is a sorting of all billing event in junction, so this is not strictly necessary but cleaner)
                 expiredTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CANCEL, null, null, effectiveDate,
-                                                                        lastPlanTransition.getTotalOrdering(), lastPlanTransition.getNextBillingCycleDayLocal(),
-                                                                        CatalogDateHelper.toUTCDateTime(lastPlanTransition.getNextPlan().getCatalog().getEffectiveDate()));
+                                                                        lastPhaseTransition.getTotalOrdering(), lastPhaseTransition.getNextBillingCycleDayLocal(),
+                                                                        CatalogDateHelper.toUTCDateTime(lastPhaseTransition.getNextPlan().getCatalog().getEffectiveDate()));
             }
 
             SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
