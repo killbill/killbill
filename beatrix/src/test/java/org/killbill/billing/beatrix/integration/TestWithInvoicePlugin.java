@@ -516,7 +516,32 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2017, 8, 18), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2017, 9, 25), BigDecimal.valueOf(100L), callContext);
 
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2018, 8, 15), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
+        final List<PluginProperty> expectedProperties = new ArrayList<>();
+        expectedProperties.add(new PluginProperty("foo", "bar", true));
+        expectedProperties.add(new PluginProperty("another", "one", true));
+        testInvoicePluginApi.checkPluginProperties = new Function<Iterable<PluginProperty>, Boolean>() {
+            @Override
+            public Boolean apply(final Iterable<PluginProperty> pluginProperties) {
+                final BigInteger found = StreamSupport.stream(pluginProperties.spliterator(), false)
+                                                      .filter(expectedProperties::contains)
+                                                      .map(p -> BigInteger.ONE)
+                                                      .reduce(BigInteger.ZERO, BigInteger::add);
+                assertEquals(expectedProperties.size(), found.intValue());
+
+                final Optional<PluginProperty> p1 = Iterables.toStream(pluginProperties)
+                                                             .filter(input -> "DRY_RUN_CUR_DATE".equals(input.getKey()))
+                                                             .findFirst();
+                assertTrue(p1.isPresent());
+
+                final Optional<PluginProperty> p2 = Iterables.toStream(pluginProperties)
+                                                             .filter(input -> "DRY_RUN_TARGET_DATE".equals(input.getKey()))
+                                                             .findFirst();
+                assertTrue(p2.isPresent());
+                return true;
+            }
+        };
+
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2018, 8, 15), new TestDryRunArguments(DryRunType.TARGET_DATE), expectedProperties, callContext);
         assertEquals(dryRunInvoice.getInvoiceItems().size(), 16);
 
     }
@@ -1106,19 +1131,6 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final InvoiceContext invoiceContext) {
 
             assertTrue(checkPluginProperties.apply(pluginProperties));
-
-            if (isDryRun) {
-                assertEquals(Iterables.size(pluginProperties), 2);
-                final Optional<PluginProperty> p1 = Iterables.toStream(pluginProperties)
-                        .filter(input -> "DRY_RUN_CUR_DATE".equals(input.getKey()))
-                        .findFirst();
-                assertTrue(p1.isPresent());
-
-                final Optional<PluginProperty> p2 = Iterables.toStream(pluginProperties)
-                        .filter(input -> "DRY_RUN_TARGET_DATE".equals(input.getKey()))
-                        .findFirst();
-                assertTrue(p2.isPresent());
-            }
 
             final List<InvoiceItem> res;
             if (shouldThrowException) {
