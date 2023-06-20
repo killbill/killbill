@@ -53,7 +53,7 @@ tableValues() ::= <<
 , :createdDate
 >>
 
-getInvoiceItemsForInvoices() ::= <<
+getInvoiceItemsForInvoices(invoiceIds) ::= <<
   SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE invoice_id in (<invoiceIds>)

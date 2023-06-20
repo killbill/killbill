@@ -150,7 +150,7 @@ and service = :service
 ;
 >>
 
-getByBlockingIds() ::= <<
+getByBlockingIds(ids) ::= <<
 select
 <allTableFields("")>
 from
@@ -162,7 +162,7 @@ where blockable_id in (<ids>)
 ;
 >>
 
-getByBlockingIdsIncludingDeleted() ::= <<
+getByBlockingIdsIncludingDeleted(ids) ::= <<
 select
 <allTableFields("")>
 from
