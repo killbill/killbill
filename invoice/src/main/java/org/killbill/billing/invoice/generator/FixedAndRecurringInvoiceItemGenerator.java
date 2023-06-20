@@ -58,6 +58,7 @@ import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoic
 import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.MultiValueHashMap;
@@ -88,7 +89,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                 final AccountInvoices existingInvoices, final LocalDate targetDate,
                                                 final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                 final DryRunInfo dryRunInfo,
-                                                final InternalCallContext internalCallContext) throws InvoiceApiException {
+                                                final Iterable<PluginProperty> pluginProperties, final InternalCallContext internalCallContext) throws InvoiceApiException {
         final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription = new MultiValueHashMap<>();
 
 

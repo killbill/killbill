@@ -36,7 +36,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGeneratorResult;
@@ -44,6 +43,7 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFu
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
@@ -78,6 +78,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                final LocalDate targetDate,
                                                final Currency targetCurrency,
                                                @Nullable final DryRunInfo dryRunInfo,
+                                               final Iterable<PluginProperty> inputProperties,
                                                final InternalCallContext context) throws InvoiceApiException {
         if (events == null) {
             return new InvoiceWithMetadata(null, Collections.emptySet(), Collections.emptyMap(), false, context);
@@ -94,10 +95,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
 
-        final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunInfo, context);
+        final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunInfo, inputProperties, context);
         invoice.addInvoiceItems(fixedAndRecurringItems.getItems());
 
-        final InvoiceGeneratorResult usageItemsWithTrackingIds = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunInfo, context);
+        final InvoiceGeneratorResult usageItemsWithTrackingIds = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunInfo, inputProperties, context);
         invoice.addInvoiceItems(usageItemsWithTrackingIds.getItems());
 
         if (targetInvoiceId != null) {

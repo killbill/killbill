@@ -30,6 +30,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.BaseUserApi;
 import org.killbill.billing.usage.api.DefaultUsageContext;
@@ -60,7 +61,7 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
     }
 
     @Override
-    public List<RawUsageRecord> getRawUsageForAccount(final DateTime startDate, final DateTime endDate, @Nullable final DryRunInfo dryRunInfo, final InternalTenantContext internalTenantContext) {
+    public List<RawUsageRecord> getRawUsageForAccount(final DateTime startDate, final DateTime endDate, @Nullable final DryRunInfo dryRunInfo, final Iterable<PluginProperty> pluginProperties, final InternalTenantContext internalTenantContext) {
 
         log.info("GetRawUsageForAccount startDate='{}', endDate='{}'", startDate, endDate);
 
@@ -71,7 +72,7 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
 
         final UsageContext usageContext = new DefaultUsageContext(dryRunType, inputTargetDate, tenantContext);
 
-        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, Collections.emptyList(), usageContext);
+        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, pluginProperties, usageContext);
         if (resultFromPlugin != null) {
             return resultFromPlugin;
         }

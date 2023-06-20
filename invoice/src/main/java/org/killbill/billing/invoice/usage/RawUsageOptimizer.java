@@ -45,6 +45,7 @@ import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
 import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
@@ -73,7 +74,7 @@ public class RawUsageOptimizer {
         this.clock = clock;
     }
 
-    public RawUsageOptimizerResult getInArrearUsage(final DateTime firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, @Nullable final DryRunInfo dryRunInfo, final InternalCallContext internalCallContext) {
+    public RawUsageOptimizerResult getInArrearUsage(final DateTime firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, @Nullable final DryRunInfo dryRunInfo, final Iterable<PluginProperty> inputProperties, final InternalCallContext internalCallContext) {
 
         // The idea is that if we need to come up with a DateTime we use the largest possible based on the provided LocalDate to return enough points and have the usage invoice code filter what is not relevant.
         final DateTime targetDateMax = targetDate.plusDays(1).toDateTimeAtStartOfDay(DateTimeZone.UTC).minus(Period.millis(1));
@@ -82,7 +83,7 @@ public class RawUsageOptimizer {
         log.debug("RawUsageOptimizerResult accountRecordId='{}', configRawUsagePreviousPeriod='{}', firstEventStartDate='{}', optimizedStartDate='{}',  targetDate='{}'",
                   internalCallContext.getAccountRecordId(), configRawUsagePreviousPeriod, firstEventStartDate, optimizedStartDate, targetDate);
 
-        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(optimizedStartDate, targetDateMax, dryRunInfo, internalCallContext);
+        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(optimizedStartDate, targetDateMax, dryRunInfo, inputProperties, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(optimizedStartDate.toLocalDate(), targetDate, internalCallContext);
         final Set<TrackingRecordId> existingTrackingIds = new HashSet<>();

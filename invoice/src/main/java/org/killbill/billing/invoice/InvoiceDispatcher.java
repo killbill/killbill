@@ -668,7 +668,7 @@ public class InvoiceDispatcher {
 
 
         startNano = System.nanoTime();
-        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, null, isPropertyReuseDraftSet(inputProperties), getReuseDraftInvoiceId(inputProperties), internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, null, inputProperties, internalCallContext);
         invoiceTimings.put(InvoiceTiming.INVOICE_GENERATION, System.nanoTime() - startNano);
 
         final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
@@ -844,7 +844,7 @@ public class InvoiceDispatcher {
         }
 
         startNano = System.nanoTime();
-        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, dryRunInfo, isPropertyReuseDraftSet(inputProperties), getReuseDraftInvoiceId(inputProperties), internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, dryRunInfo, pluginProperties, internalCallContext);
         invoiceTimings.put(InvoiceTiming.INVOICE_GENERATION, System.nanoTime() - startNano);
 
 
@@ -902,8 +902,12 @@ public class InvoiceDispatcher {
 
     }
 
-    private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account, final LocalDate targetDate, final BillingEventSet billingEvents, final AccountInvoices accountInvoices, @Nullable final DryRunInfo dryRunInfo, final boolean reuseDraftIfExist, @Nullable final UUID reuseInvoiceDraftId, final InternalCallContext context) throws InvoiceApiException {
+    private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account, final LocalDate targetDate, final BillingEventSet billingEvents, final AccountInvoices accountInvoices, @Nullable final DryRunInfo dryRunInfo, final Iterable<PluginProperty> inputProperties, final InternalCallContext context) throws InvoiceApiException {
         final UUID targetInvoiceId;
+
+        final boolean reuseDraftIfExist = isPropertyReuseDraftSet(inputProperties);
+        final UUID reuseInvoiceDraftId = getReuseDraftInvoiceId(inputProperties);
+
         // Filter out DRAFT invoices for computation  of existing items unless Account is in AUTO_INVOICING_REUSE_DRAFT
         if (billingEvents.isAccountAutoInvoiceReuseDraft() || reuseDraftIfExist || reuseInvoiceDraftId != null) {
             final Invoice existingDraft = accountInvoices.getInvoices().stream()
@@ -915,7 +919,7 @@ public class InvoiceDispatcher {
             targetInvoiceId = null;
         }
 
-        return generator.generateInvoice(account, billingEvents, accountInvoices, targetInvoiceId, targetDate, account.getCurrency(), dryRunInfo, context);
+        return generator.generateInvoice(account, billingEvents, accountInvoices, targetInvoiceId, targetDate, account.getCurrency(), dryRunInfo, inputProperties, context);
     }
 
     private FutureAccountNotifications createNextFutureNotificationDate(final DateTime rescheduleDate, final BillingEventSet billingEvents, final InternalCallContext context) {

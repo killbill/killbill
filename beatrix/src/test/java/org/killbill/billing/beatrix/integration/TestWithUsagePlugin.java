@@ -39,6 +39,7 @@ import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
@@ -51,6 +52,8 @@ import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
 import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.commons.utils.collect.Iterables;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -96,7 +99,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         if (hasFailed()) {
             return;
         }
-        testUsagePluginApi.clearUsageData();
+        testUsagePluginApi.clear();
     }
 
     @Test(groups = "slow")
@@ -187,16 +190,57 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
 
     }
 
+
+    @Test(groups = "slow")
+    public void testDryRunWithPluginProperties() throws Exception {
+
+        clock.setDay(new LocalDate(2023, 6, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+
+        //
+        // ADD ADD_ON ON THE SAME DAY
+        //
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new DateTime(2023, 6, 1, 13, 25, 14, DateTimeZone.UTC), BigDecimal.valueOf(150), callContext);
+
+        final List<PluginProperty> pluginProperties = new ArrayList<>();
+        pluginProperties.add(new PluginProperty("foo", "bar", true));
+        pluginProperties.add(new PluginProperty("lily", "lolo", true));
+        pluginProperties.add(new PluginProperty("", "", true));
+
+        // We expect to see those 3 + 2 (DRY_RUN_CUR_DATE, DRY_RUN_TARGET_DATE) set by the system
+        testUsagePluginApi.setExpectedPluginProperties(5);
+
+        invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2023, 7, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), pluginProperties, callContext);
+
+    }
+
     public static class TestUsagePluginApi implements UsagePluginApi {
 
         private final SortedMap<DateTime, List<RawUsageRecord>> usageData;
+        private int expectedPluginProperties;
 
         public TestUsagePluginApi() {
             this.usageData = new TreeMap<>();
+            this.expectedPluginProperties = 0;
         }
 
         @Override
         public List<RawUsageRecord> getUsageForAccount(final DateTime startDate, final DateTime endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
+
+            final int nbProps = Iterables.size(properties);
+            if (nbProps != expectedPluginProperties) {
+                Assert.fail(String.format("Expected %d plugin properties, got %d", expectedPluginProperties, nbProps));
+            }
 
             final List<RawUsageRecord> result = new LinkedList<>();
             for (final DateTime curDate : usageData.keySet()) {
@@ -233,8 +277,13 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
             record.add(new DefaultRawUsage(subscriptionId, startDate, unitType, amount, trackingId));
         }
 
-        public void clearUsageData() {
+        public void setExpectedPluginProperties(final int expectedPluginProperties) {
+            this.expectedPluginProperties = expectedPluginProperties;
+        }
+
+        public void clear() {
             usageData.clear();
+            expectedPluginProperties = 0;
         }
     }
 
