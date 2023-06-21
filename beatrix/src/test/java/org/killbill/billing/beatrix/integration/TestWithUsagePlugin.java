@@ -238,9 +238,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         public List<RawUsageRecord> getUsageForAccount(final DateTime startDate, final DateTime endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
             final int nbProps = Iterables.size(properties);
-            if (nbProps != expectedPluginProperties) {
-                Assert.fail(String.format("Expected %d plugin properties, got %d", expectedPluginProperties, nbProps));
-            }
+            Assert.assertEquals(nbProps, expectedPluginProperties, String.format("Expected %d plugin properties, got %d", expectedPluginProperties, nbProps));
 
             final List<RawUsageRecord> result = new LinkedList<>();
             for (final DateTime curDate : usageData.keySet()) {
