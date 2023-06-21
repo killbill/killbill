@@ -28,8 +28,9 @@ import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.payment.api.PluginProperty;
 
 public interface InvoiceGenerator {
     InvoiceWithMetadata generateInvoice(ImmutableAccountData account, @Nullable BillingEventSet events, AccountInvoices existingInvoices,
-                                        UUID targetInvoiceId, LocalDate targetDate, Currency targetCurrency, @Nullable DryRunInfo dryRunInfo, InternalCallContext context) throws InvoiceApiException;
+                                        UUID targetInvoiceId, LocalDate targetDate, Currency targetCurrency, @Nullable DryRunInfo dryRunInfo, Iterable<PluginProperty> pluginProperties, InternalCallContext context) throws InvoiceApiException;
 }
