@@ -37,7 +37,7 @@ where id = :id
 >>
 
 
-renameBundleExternalKey(prefix)  ::= <<
+renameBundleExternalKey(prefix, ids)  ::= <<
 update bundles
 set external_key = concat('kb', '<prefix>', '-', record_id, ':', external_key)
 where <idField("")> in (<ids>)

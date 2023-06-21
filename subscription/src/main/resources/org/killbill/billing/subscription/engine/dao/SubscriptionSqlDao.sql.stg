@@ -76,7 +76,7 @@ where id = :id
 ;
 >>
 
-updateChargedThroughDates() ::= <<
+updateChargedThroughDates(ids) ::= <<
 update <tableName()>
 set
 charged_through_date = :chargedThroughDate

@@ -82,7 +82,7 @@ getInvoicePayments() ::= <<
     ;
 >>
 
-getPaymentsForInvoices() ::= <<
+getPaymentsForInvoices(invoiceIds) ::= <<
     SELECT <allTableFields("")>
     FROM <tableName()>
     WHERE invoice_id in (<invoiceIds>)

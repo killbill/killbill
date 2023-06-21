@@ -29,7 +29,7 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-deactivateByIds() ::= <<
+deactivateByIds(ids) ::= <<
 update <tableName()>
 set
   is_active = FALSE
