@@ -135,4 +135,9 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Ability to overwrite an existing payment method from a control plugin")
     boolean isAllowedToOverwritePaymentMethodId();
 
+    @Config("org.killbill.payment.allow.emptyInvoice")
+    @Default("false")
+    @Description(" Ability to allow payments for zero amount invoices")
+    boolean allowEmptyInvoice();
+
 }

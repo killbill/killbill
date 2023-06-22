@@ -175,6 +175,11 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
     }
 
     @Override
+    public boolean allowEmptyInvoice() {
+        return staticConfig.allowEmptyInvoice();
+    }
+
+    @Override
     protected Class<? extends KillbillConfig> getConfigClass() {
         return PaymentConfig.class;
     }
