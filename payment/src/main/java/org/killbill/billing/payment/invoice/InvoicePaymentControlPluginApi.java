@@ -355,8 +355,15 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             // Is remaining amount > 0?
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
             if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                log.info("Aborting payment: invoiceId='{}' has already been paid", invoice.getId());
-                return new DefaultPriorPaymentControlResult(true);
+                if (paymentConfig.allowEmptyInvoice()) {
+                    log.info("Not aborting payment for zero amount invoice: invoiceId='{}' since allowEmptyInvoice is set", invoice.getId());
+                    return new DefaultPriorPaymentControlResult(false, requestedAmount);
+                }
+                else {
+                    log.info("Aborting payment: invoiceId='{}' has already been paid", invoice.getId());
+                    return new DefaultPriorPaymentControlResult(true);
+
+                }
             }
 
             // Are we in auto-payoff (do the check as soon as possible -- https://github.com/killbill/killbill/issues/812)?
