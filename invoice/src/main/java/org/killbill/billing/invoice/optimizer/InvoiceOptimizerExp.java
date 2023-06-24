@@ -87,20 +87,6 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
         return new AccountInvoicesExp(cutoffDt, beCutoffDt, existingInvoices);
     }
 
-    @Override
-    public boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
-        // Anything below 1sec, we would ignore
-        final TimeSpan timeSpan = invoiceConfig.getRescheduleIntervalOnLock(context);
-        final int delaySec = (int) TimeUnit.SECONDS.convert(timeSpan.getMillis(), TimeUnit.MILLISECONDS);
-        if (delaySec <= 0) {
-            return false;
-        }
-        final DateTime nextRescheduleDt = clock.getUTCNow().plusSeconds(delaySec);
-        logger.info("Rescheduling invoice call at time {}", nextRescheduleDt);
-        invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
-        return true;
-    }
-
     public static class AccountInvoicesExp extends AccountInvoices {
 
         public AccountInvoicesExp(final LocalDate cutoffDate, final LocalDate beCutoffDate, final List<Invoice> invoices) {

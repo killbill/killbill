@@ -26,5 +26,4 @@ public interface InvoiceOptimizer {
 
     AccountInvoices getInvoices(final InternalCallContext callContext);
 
-    boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context);
 }
