@@ -34,28 +34,39 @@ import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.payment.api.InvoicePaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentListenerService;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.core.janitor.Janitor;
+import org.killbill.billing.platform.api.LifecycleHandlerType;
+import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
+import org.killbill.billing.util.queue.QueueRetryException;
+import org.killbill.clock.Clock;
 import org.killbill.commons.eventbus.AllowConcurrentEvents;
 import org.killbill.commons.eventbus.Subscribe;
+import org.killbill.commons.locker.LockFailedException;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.queue.retry.RetryableService;
+import org.killbill.queue.retry.RetryableSubscriber;
+import org.killbill.queue.retry.RetryableSubscriber.SubscriberAction;
+import org.killbill.queue.retry.RetryableSubscriber.SubscriberQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PaymentBusEventHandler {
+public class PaymentBusEventHandler extends RetryableService implements PaymentListenerService {
 
+    public static final String PAYMENT_BUS_HANDLER_NAME = "payment-bus-handler-service";
     private static final Logger log = LoggerFactory.getLogger(PaymentBusEventHandler.class);
 
-    private final AccountInternalApi accountApi;
-    private final InvoicePaymentInternalApi invoicePaymentInternalApi;
-    private final InternalCallContextFactory internalCallContextFactory;
-    private final PaymentConfig paymentConfig;
     private final Janitor janitor;
+    private final RetryableSubscriber retryableSubscriber;
     private final BusDispatcherOptimizer busDispatcherOptimizer;
+    private final SubscriberQueueHandler subscriberQueueHandler;
 
     @Inject
     public PaymentBusEventHandler(final PaymentConfig paymentConfig,
@@ -63,13 +74,66 @@ public class PaymentBusEventHandler {
                                   final InvoicePaymentInternalApi invoicePaymentInternalApi,
                                   final Janitor janitor,
                                   final BusDispatcherOptimizer busDispatcherOptimizer,
-                                  final InternalCallContextFactory internalCallContextFactory) {
-        this.paymentConfig = paymentConfig;
-        this.accountApi = accountApi;
-        this.invoicePaymentInternalApi = invoicePaymentInternalApi;
+                                  final NotificationQueueService notificationQueueService,
+                                  final InternalCallContextFactory internalCallContextFactory,
+                                  final Clock clock) {
+        super(notificationQueueService);
         this.janitor = janitor;
         this.busDispatcherOptimizer = busDispatcherOptimizer;
-        this.internalCallContextFactory = internalCallContextFactory;
+        this.subscriberQueueHandler = new SubscriberQueueHandler();
+
+        subscriberQueueHandler.subscribe(InvoiceCreationInternalEvent.class, new SubscriberAction<InvoiceCreationInternalEvent>() {
+            @Override
+            public void run(final InvoiceCreationInternalEvent event) {
+                log.info("Received invoice creation notification for accountId='{}', invoiceId='{}'", event.getAccountId(), event.getInvoiceId());
+
+                final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+
+                final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
+                final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
+
+                final Account account;
+                try {
+
+                    account = accountApi.getAccountById(event.getAccountId(), internalContext);
+
+                    invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
+                                                                              account,
+                                                                              event.getInvoiceId(),
+                                                                              account.getPaymentMethodId(),
+                                                                              null,
+                                                                              amountToBePaid,
+                                                                              account.getCurrency(),
+                                                                              null,
+                                                                              null,
+                                                                              null,
+                                                                              Collections.emptyList(),
+                                                                              new PaymentOptions() {
+                                                                                  @Override
+                                                                                  public boolean isExternalPayment() {
+                                                                                      return false;
+                                                                                  }
+
+                                                                                  @Override
+                                                                                  public List<String> getPaymentControlPluginNames() {
+                                                                                      return paymentControlPluginNames;
+                                                                                  }
+                                                                              },
+                                                                              internalContext);
+                } catch (final AccountApiException e) {
+                    log.warn("Failed to process invoice payment", e);
+                } catch (final PaymentApiException e) {
+                    if (e.getCause() instanceof LockFailedException) {
+                        throw new QueueRetryException();
+                    }
+                    // Log as warn unless nothing left to be paid
+                    if (e.getCode() != ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
+                        log.warn("Failed to process invoice payment", e);
+                    }
+                }
+            }
+        });
+        this.retryableSubscriber = new RetryableSubscriber(clock, this, subscriberQueueHandler);
     }
 
     @AllowConcurrentEvents
@@ -83,51 +147,34 @@ public class PaymentBusEventHandler {
     @AllowConcurrentEvents
     @Subscribe
     public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
-
         if (busDispatcherOptimizer.shouldDispatch(event)) {
-            log.info("Received invoice creation notification for accountId='{}', invoiceId='{}'", event.getAccountId(), event.getInvoiceId());
-
-            final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-
-            final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
-            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
-
-            final Account account;
-            try {
-                account = accountApi.getAccountById(event.getAccountId(), internalContext);
-
-                invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
-                                                                          account,
-                                                                          event.getInvoiceId(),
-                                                                          account.getPaymentMethodId(),
-                                                                          null,
-                                                                          amountToBePaid,
-                                                                          account.getCurrency(),
-                                                                          null,
-                                                                          null,
-                                                                          null,
-                                                                          Collections.emptyList(),
-                                                                          new PaymentOptions() {
-                                                                              @Override
-                                                                              public boolean isExternalPayment() {
-                                                                                  return false;
-                                                                              }
-
-                                                                              @Override
-                                                                              public List<String> getPaymentControlPluginNames() {
-                                                                                  return paymentControlPluginNames;
-                                                                              }
-                                                                          },
-                                                                          internalContext);
-            } catch (final AccountApiException e) {
-                log.warn("Failed to process invoice payment", e);
-            } catch (final PaymentApiException e) {
-                // Log as warn unless nothing left to be paid
-                if (e.getCode() != ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
-                    log.warn("Failed to process invoice payment", e);
-                }
-            }
+            retryableSubscriber.handleEvent(event);
         }
+    }
+
+    @Override
+    public String getName() {
+        return PAYMENT_BUS_HANDLER_NAME;
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.PAYMENT_SERVICE.getRegistrationOrdering() + 1;
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+    public void initialize() {
+        super.initialize("payment-bus-handler", subscriberQueueHandler);
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void start() {
+        super.start();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() throws NoSuchNotificationQueue {
+        super.stop();
     }
 }
 

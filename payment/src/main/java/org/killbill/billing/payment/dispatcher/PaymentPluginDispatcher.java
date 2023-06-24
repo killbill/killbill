@@ -59,9 +59,9 @@ public class PaymentPluginDispatcher {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
             } else if (e.getCause() instanceof LockFailedException) {
-                final String format = String.format("Failed to lock accountExternalKey='%s'", accountExternalKey);
+                final String format = String.format("Failed to lock account accountId='%s', externalKey='%s'", accountId, accountExternalKey);
                 log.warn(format);
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } else {
                 // Unwraps the ExecutionException (e.getCause()), since it's a dispatch implementation detail
                 throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
