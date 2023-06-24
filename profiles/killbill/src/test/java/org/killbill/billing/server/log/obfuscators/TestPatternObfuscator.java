@@ -256,6 +256,67 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
 
     }
 
+    @Test(groups = "fast", enabled=false) //This tests passes only when killbill.server.log.keywordstoobfuscate=accountnumber,authenticationdata,banknumber,bic,cardvalidationnum,cavv,ccFirstName,ccLastName,ccNumber,ccTrackData,ccVerificationValue,ccvv,cvNumber,cvc,cvv,email,iban,name,number,password,xid,cell_phone is set as a system property. Disabled to prevent CI from failing
+    public void testJSONWithCellPhoneObfuscated() throws Exception {
+        verify("{\n" +
+               "  \"card\": {\n" +
+               "    \"id\": \"card_483etw4er9fg4vF3sQdrt3FG\",\n" +
+               "    \"object\": \"card\",\n" +
+               "    \"banknumber\": 4111111111111111,\n" +
+               "    \"cvv\" : 111,\n" +
+               "    \"cvv\": 111,\n" +
+               "    \"cvv\": \"111\",\n" +
+               "    \"data\": {\"cvv\" : 111 },\n" +
+               "    \"last4\": \"0000\",\n" +
+               "    \"brand\": \"Visa\",\n" +
+               "    \"funding\": \"credit\",\n" +
+               "    \"exp_month\": 6,\n" +
+               "    \"exp_year\": 2019,\n" +
+               "    \"fingerprint\": \"HOh74kZU387WlUvy\",\n" +
+               "    \"country\": \"US\",\n" +
+               "    \"name\": \"Bob Smith\",\n" +
+               "    \"cell_phone\": \"212-421-1278\",\n" +
+               "    \"address_line1\": null,\n" +
+               "    \"address_line2\": null,\n" +
+               "    \"address_city\": null,\n" +
+               "    \"address_state\": null,\n" +
+               "    \"address_zip\": null,\n" +
+               "    \"address_country\": null,\n" +
+               "    \"dynamic_last4\": \"4242\",\n" +
+               "    \"customer\": null,\n" +
+               "    \"type\": \"Visa\"}\n" +
+               "}",
+               "{\n" +
+               "  \"card\": {\n" +
+               "    \"id\": \"card_483etw4er9fg4vF3sQdrt3FG\",\n" +
+               "    \"object\": \"card\",\n" +
+               "    \"banknumber\": ****************,\n" +
+               "    \"cvv\" : ***,\n" +
+               "    \"cvv\": ***,\n" +
+               "    \"cvv\": *****,\n" +
+               "    \"data\": {\"cvv\" : ****},\n" +
+               "    \"last4\": \"0000\",\n" +
+               "    \"brand\": \"Visa\",\n" +
+               "    \"funding\": \"credit\",\n" +
+               "    \"exp_month\": 6,\n" +
+               "    \"exp_year\": 2019,\n" +
+               "    \"fingerprint\": \"HOh74kZU387WlUvy\",\n" +
+               "    \"country\": \"US\",\n" +
+               "    \"name\": ***********,\n" +
+               "    \"cell_phone\": **************,\n" +
+               "    \"address_line1\": null,\n" +
+               "    \"address_line2\": null,\n" +
+               "    \"address_city\": null,\n" +
+               "    \"address_state\": null,\n" +
+               "    \"address_zip\": null,\n" +
+               "    \"address_country\": null,\n" +
+               "    \"dynamic_last4\": \"4242\",\n" +
+               "    \"customer\": null,\n" +
+               "    \"type\": \"Visa\"}\n" +
+               "}");
+
+    }
+
     @Test(groups = "fast")
     public void testPayU() throws Exception {
         verify("<entry>\n" +
