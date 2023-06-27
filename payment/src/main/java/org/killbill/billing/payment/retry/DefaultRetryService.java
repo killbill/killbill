@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.google.inject.Inject;
@@ -34,8 +35,8 @@ public class DefaultRetryService extends BaseRetryService implements RetryServic
     private final PluginControlPaymentProcessor processor;
 
     @Inject
-    public DefaultRetryService(final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory, final PluginControlPaymentProcessor processor) {
-        super(notificationQueueService, internalCallContextFactory);
+    public DefaultRetryService(final NotificationQueueService notificationQueueService, final Clock clock, final InternalCallContextFactory internalCallContextFactory, final PluginControlPaymentProcessor processor) {
+        super(notificationQueueService, clock, internalCallContextFactory);
         this.processor = processor;
     }
 

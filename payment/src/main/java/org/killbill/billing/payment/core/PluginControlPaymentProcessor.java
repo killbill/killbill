@@ -53,6 +53,8 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.queue.QueueRetryException;
+import org.killbill.commons.locker.LockFailedException;
 import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -332,6 +334,9 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
         } catch (final AccountApiException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PaymentApiException e) {
+            if (e.getCause() instanceof LockFailedException) {
+                throw new QueueRetryException();
+            }
             // Log exception unless nothing left to be paid
             if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode() &&
                 paymentControlPluginNames != null &&
