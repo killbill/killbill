@@ -123,8 +123,14 @@ public class PaymentBusEventHandler extends RetryableService implements PaymentL
                 } catch (final AccountApiException e) {
                     log.warn("Failed to process invoice payment", e);
                 } catch (final PaymentApiException e) {
-                    if (e.getCause() instanceof LockFailedException) {
-                        throw new QueueRetryException();
+                    // Look for a LockFailedException cause to decide if we should reschedule
+                    // (It should be the first cause of the PaymentApiException, but we support additional levels mostly for testing)
+                    Throwable curCause = e.getCause();
+                    while (curCause != null) {
+                        if (curCause instanceof LockFailedException) {
+                            throw new QueueRetryException();
+                        }
+                        curCause = curCause.getCause();
                     }
                     // Log as warn unless nothing left to be paid
                     if (e.getCode() != ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
