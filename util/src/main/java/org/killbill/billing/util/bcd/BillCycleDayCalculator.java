@@ -93,11 +93,8 @@ public abstract class BillCycleDayCalculator {
         }
     }
 
-    public static LocalDate alignProposedNextBillCycleDate(final DateTime proposedDate, final DateTime originalDate, final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
-        final LocalDate proposedLocalDate = internalTenantContext.toLocalDate(proposedDate);
-        final LocalDate originalLocalDate = internalTenantContext.toLocalDate(originalDate);
-        final LocalDate resultingLocalDate = alignProposedNextBillCycleDate(originalLocalDate, proposedLocalDate, billingCycleDay, billingPeriod);
-        return resultingLocalDate;
+    public static LocalDate alignProposedNextBillCycleDate(final DateTime prevTransitionDate, final DateTime curTransitionDate, final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
+        return alignProposedNextBillCycleDate(internalTenantContext.toLocalDate(prevTransitionDate), internalTenantContext.toLocalDate(curTransitionDate), billingCycleDay, billingPeriod);
     }
 
     private static int calculateOrRetrieveBcdFromSubscription(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) {

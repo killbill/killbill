@@ -744,7 +744,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
 
         final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedNextBillCycleDate(originalTransitionDate, lastTransitionDate, bcd, billingPeriod, context);
+        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedNextBillCycleDate(lastTransitionDate, originalTransitionDate, bcd, billingPeriod, context);
         final DateTime candidateResult = context.toUTCDateTime(resultingLocalDate);
         return candidateResult;
     }
