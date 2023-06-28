@@ -29,10 +29,12 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 
 public class PatternObfuscator extends Obfuscator {
 
-    private static final String KILLBILL_KEYWORDS_TO_OBFUSCATE_PROPERTY = "killbill.server.log.keywordstoobfuscate";
     // Hide by default sensitive bank, PCI and PII data. For PANs, see LuhnMaskingObfuscator
-    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = loadKeywordsToObfuscate();
+    private static final String KILLBILL_KEYWORDS_TO_OBFUSCATE_PROPERTY = "killbill.server.log.keywordstoobfuscate";
+    private static final String KILLBILL_KEY_VALUE_PATTERNS_PROPERTY = "killbill.server.log.keyvaluepatternstoobfuscate";
 
+    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = loadKeywordsToObfuscate();
+    private static final Collection<String> DEFAULT_STR_PATTERNS = loadPatterns();
 
     private final Collection<Pattern> patterns = new LinkedList<>();
 
@@ -55,8 +57,9 @@ public class PatternObfuscator extends Obfuscator {
             this.patterns.add(buildJSONPattern(sensitiveKey));
             this.patterns.add(buildXMLPattern(sensitiveKey));
             this.patterns.add(buildMultiValuesXMLPattern(sensitiveKey));
-            this.patterns.add(buildKeyValuePattern1(sensitiveKey));
-            this.patterns.add(buildKeyValuePattern2(sensitiveKey));
+            for (final String additionalPattern : DEFAULT_STR_PATTERNS) {
+                this.patterns.add(buildKeyValuePatterns(additionalPattern, sensitiveKey));
+            }
         }
         this.patterns.addAll(extraPatterns);
     }
@@ -78,14 +81,8 @@ public class PatternObfuscator extends Obfuscator {
         return Pattern.compile(key + "</key>\\s*<value[^>]*>([^<\\n]+)</value>", DEFAULT_PATTERN_FLAGS);
     }
 
-    // Splunk-type logging
-    private Pattern buildKeyValuePattern1(final String key) {
-        return Pattern.compile(key + "\\s*=\\s*'([^']+)'", DEFAULT_PATTERN_FLAGS);
-    }
-
-    // Splunk-type logging
-    private Pattern buildKeyValuePattern2(final String key) {
-        return Pattern.compile(key + "\\s*=\\s*\"([^\"]+)\"", DEFAULT_PATTERN_FLAGS);
+    private Pattern buildKeyValuePatterns(final String pattern, final String key) {
+        return Pattern.compile(key + pattern, DEFAULT_PATTERN_FLAGS);
     }
 
     private static Collection<String> loadKeywordsToObfuscate() {
@@ -117,4 +114,14 @@ public class PatternObfuscator extends Obfuscator {
                     "xid");
         }
     }
+
+    private static Collection<String> loadPatterns() {
+        if (System.getProperty(KILLBILL_KEY_VALUE_PATTERNS_PROPERTY) != null && !System.getProperty(KILLBILL_KEY_VALUE_PATTERNS_PROPERTY).isEmpty()) {
+            return Arrays.asList(System.getProperty(KILLBILL_KEY_VALUE_PATTERNS_PROPERTY).split("\\s*,\\s*"));
+        } else {
+            return List.of("\\s*=\\s*'([^']+)'",
+                           "\\s*=\\s*\"([^\"]+)\"");
+        }
+    }
+
 }
