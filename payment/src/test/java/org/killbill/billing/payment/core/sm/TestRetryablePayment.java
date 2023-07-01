@@ -221,6 +221,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                       tagApi,
                                                       paymentDao,
                                                       locker,
+                                                      paymentConfig,
                                                       internalCallContextFactory,
                                                       runner,
                                                       retrySMHelper,

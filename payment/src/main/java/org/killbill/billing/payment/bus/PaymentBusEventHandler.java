@@ -42,6 +42,7 @@ import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.config.TimeSpanConverter;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.killbill.billing.util.queue.QueueRetryException;
@@ -128,7 +129,7 @@ public class PaymentBusEventHandler extends RetryableService implements PaymentL
                     Throwable curCause = e.getCause();
                     while (curCause != null) {
                         if (curCause instanceof LockFailedException) {
-                            throw new QueueRetryException();
+                            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(paymentConfig.getRescheduleIntervalOnLock(internalContext)));
                         }
                         curCause = curCause.getCause();
                     }

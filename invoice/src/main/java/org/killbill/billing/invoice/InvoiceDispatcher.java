@@ -44,6 +44,7 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -108,6 +109,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.TimeSpanConverter;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.optimizer.BusOptimizer;
@@ -218,7 +220,7 @@ public class InvoiceDispatcher {
             processSubscriptionStartRequestedDateWithLock(accountId, transition, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId, e);
-            throw new QueueRetryException(e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();
@@ -349,13 +351,13 @@ public class InvoiceDispatcher {
 
 
     private boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
-        // Anything below 1sec, we would ignore
-        final TimeSpan timeSpan = invoiceConfig.getRescheduleIntervalOnLock(context);
-        final int delaySec = (int) TimeUnit.SECONDS.convert(timeSpan.getMillis(), TimeUnit.MILLISECONDS);
-        if (delaySec <= 0) {
+
+        final List<Period> periods = TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context));
+        if (periods.size() == 0) {
             return false;
         }
-        final DateTime nextRescheduleDt = clock.getUTCNow().plusSeconds(delaySec);
+        // Since we can't keep track of attempts, we only look at the first value
+        final DateTime nextRescheduleDt = clock.getUTCNow().plus(periods.get(0));
         log.info("Rescheduling invoice call at time {}", nextRescheduleDt);
         invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
         return true;
@@ -1314,7 +1316,7 @@ public class InvoiceDispatcher {
             processParentInvoiceForInvoiceGenerationWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
-            throw new QueueRetryException(e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();
@@ -1401,7 +1403,7 @@ public class InvoiceDispatcher {
             processParentInvoiceForAdjustmentsWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
-            throw new QueueRetryException(e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();

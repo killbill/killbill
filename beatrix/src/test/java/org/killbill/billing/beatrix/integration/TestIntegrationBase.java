@@ -1431,12 +1431,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
-        public TimeSpan getRescheduleIntervalOnLock() {
+        public List<TimeSpan> getRescheduleIntervalOnLock() {
             return defaultInvoiceConfig.getRescheduleIntervalOnLock();
         }
 
         @Override
-        public TimeSpan getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+        public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
             return getRescheduleIntervalOnLock();
         }
 

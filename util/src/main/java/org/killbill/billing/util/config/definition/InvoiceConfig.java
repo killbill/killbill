@@ -189,14 +189,14 @@ public interface InvoiceConfig extends KillbillConfig {
 
     // Disabled by default
     @Config("org.killbill.invoice.rescheduleIntervalOnLock")
-    @Default("0s")
+    @Default("30s, 1m, 1m, 3m, 3m, 10m")
     @Description("Tme delay to reschedule an invoice run when lock is held")
-    TimeSpan getRescheduleIntervalOnLock();
+    List<TimeSpan> getRescheduleIntervalOnLock();
 
     @Config("org.killbill.invoice.rescheduleIntervalOnLock")
-    @Default("0s")
+    @Default("30s, 1m, 1m, 3m, 3m, 10m")
     @Description("Tme delay to reschedule an invoice run when lock is held")
-    TimeSpan getRescheduleIntervalOnLock(@Param("dummy") final InternalTenantContext tenantContext);
+    List<TimeSpan> getRescheduleIntervalOnLock(@Param("dummy") final InternalTenantContext tenantContext);
 
     @Config("org.killbill.invoice.maxInvoiceLimit")
     @Default(DEFAULT_NULL_PERIOD)

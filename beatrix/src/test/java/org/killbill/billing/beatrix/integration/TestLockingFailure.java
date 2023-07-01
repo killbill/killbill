@@ -94,10 +94,9 @@ public class TestLockingFailure extends TestIntegrationBase {
         adminPaymentApi.fixPaymentTransactionState(payments.get(0), payments.get(0).getTransactions().get(0), TransactionStatus.PAYMENT_FAILURE, null, null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        // Move time to 5' ahead, matching the first retry from default Period QueueRetryException.DEFAULT_RETRY_SCHEDULE
-        // and verify payment was made
+        // Move ahead by 30' to match default payment config - add 5 for safety
         busHandler.pushExpectedEvents(NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        clock.addDeltaFromReality((1000 * 60 * 5) + 30);
+        clock.addDeltaFromReality(1000 * 35);
         assertListenerStatus();
     }
 
@@ -134,10 +133,10 @@ public class TestLockingFailure extends TestIntegrationBase {
         final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, Collections.emptyList(), callContext);
         Assert.assertEquals(0, payments.size());
 
-        // Move time to 5' ahead, matching the first retry from default Period QueueRetryException.DEFAULT_RETRY_SCHEDULE
+        // Move ahead by 30' to match default payment config - add 5 for safety
         // and verify payment was made
         busHandler.pushExpectedEvents(NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        clock.addDeltaFromReality(1000 * 60 * 5);
+        clock.addDeltaFromReality(1000 * 35);
         assertListenerStatus();
     }
 
