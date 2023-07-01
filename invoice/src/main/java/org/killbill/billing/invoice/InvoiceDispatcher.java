@@ -321,13 +321,6 @@ public class InvoiceDispatcher {
             log.warn("Unable to determine parking state for accountId='{}'", accountId);
         }
 
-        // Optimization to not even attempt to grab the lock if already taken and we are configured to reschedule
-        if (!isApiCall &&
-            !locker.isFree(LockerType.ACCNT_INV_PAY.toString(), accountId.toString()) &&
-            rescheduleProcessAccount(accountId, context)) {
-            return Collections.emptyList();
-        }
-
         GlobalLock lock = null;
         try {
             // Grab lock unless we do a dry-run
