@@ -198,9 +198,38 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         Assert.assertEquals(result, new LocalDate(2022, 2, 28));
     }
 
+    @Test(groups = "fast")
+    public void testAlignProposedNextBillCycleDateWeeklyBilling1() {
+        final DateTime proposedDate = new DateTime(2022, 2, 19, 17, 28, 0, DateTimeZone.UTC);
+        final DateTime originalDate = new DateTime(2022, 2, 2, 17, 28, 0, DateTimeZone.UTC);
+        final BillingPeriod billingPeriod = BillingPeriod.WEEKLY;
+        final int bcd = 31;
 
+        final LocalDate result = BillCycleDayCalculator.alignToNextBillCycleDate(originalDate, proposedDate, bcd, billingPeriod, internalCallContext);
+        Assert.assertEquals(result, new LocalDate(2022, 2, 23));
+    }
 
+    @Test(groups = "fast")
+    public void testAlignProposedNextBillCycleDateWeeklyBilling2() {
+        final DateTime proposedDate = new DateTime(2022, 2, 25, 17, 28, 0, DateTimeZone.UTC);
+        final DateTime originalDate = new DateTime(2022, 2, 18, 17, 28, 0, DateTimeZone.UTC);
+        final BillingPeriod billingPeriod = BillingPeriod.WEEKLY;
+        final int bcd = 31;
 
+        final LocalDate result = BillCycleDayCalculator.alignToNextBillCycleDate(originalDate, proposedDate, bcd, billingPeriod, internalCallContext);
+        Assert.assertEquals(result, new LocalDate(2022, 2, 25));
+    }
+
+    @Test(groups = "fast")
+    public void testAlignProposedNextBillCycleDateBiWeeklyBilling1() {
+        final DateTime proposedDate = new DateTime(2022, 2, 25, 17, 28, 0, DateTimeZone.UTC);
+        final DateTime originalDate = new DateTime(2022, 2, 2, 17, 28, 0, DateTimeZone.UTC);
+        final BillingPeriod billingPeriod = BillingPeriod.BIWEEKLY;
+        final int bcd = 31;
+
+        final LocalDate result = BillCycleDayCalculator.alignToNextBillCycleDate(originalDate, proposedDate, bcd, billingPeriod, internalCallContext);
+        Assert.assertEquals(result, new LocalDate(2022, 3, 2));
+    }
 
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
