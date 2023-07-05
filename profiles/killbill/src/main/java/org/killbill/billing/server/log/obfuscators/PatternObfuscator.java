@@ -25,15 +25,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
 public class PatternObfuscator extends Obfuscator {
 
     // Hide by default sensitive bank, PCI and PII data. For PANs, see LuhnMaskingObfuscator
-    private static final String KILLBILL_KEYWORDS_TO_OBFUSCATE_PROPERTY = "killbill.server.log.keywordstoobfuscate";
-    private static final String KILLBILL_KEY_VALUE_PATTERNS_PROPERTY = "killbill.server.log.keyvaluepatternstoobfuscate";
+    private static final String KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY = "killbill.server.log.obfuscate.keywords";
+    private static final String KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY = "killbill.server.log.obfuscate.patterns";
 
-    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = loadKeywordsToObfuscate();
+    private static final String KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY = "killbill.server.log.obfuscate.patterns.separator";
+
+    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = loadKeywords();
     private static final Collection<String> DEFAULT_STR_PATTERNS = loadPatterns();
 
     private final Collection<Pattern> patterns = new LinkedList<>();
@@ -85,9 +89,9 @@ public class PatternObfuscator extends Obfuscator {
         return Pattern.compile(key + pattern, DEFAULT_PATTERN_FLAGS);
     }
 
-    private static Collection<String> loadKeywordsToObfuscate() {
-        if (System.getProperty(KILLBILL_KEYWORDS_TO_OBFUSCATE_PROPERTY) != null && !System.getProperty(KILLBILL_KEYWORDS_TO_OBFUSCATE_PROPERTY).isEmpty()) {
-            return Arrays.asList(System.getProperty(KILLBILL_KEYWORDS_TO_OBFUSCATE_PROPERTY).split("\\s*,\\s*"));
+    static Collection<String> loadKeywords() {
+        if (System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY).isEmpty()) {
+            return Arrays.asList(System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY).split("\\s*,\\s*"));
         } else {
             return List.of(
                     "accountnumber",
@@ -115,9 +119,11 @@ public class PatternObfuscator extends Obfuscator {
         }
     }
 
-    private static Collection<String> loadPatterns() {
-        if (System.getProperty(KILLBILL_KEY_VALUE_PATTERNS_PROPERTY) != null && !System.getProperty(KILLBILL_KEY_VALUE_PATTERNS_PROPERTY).isEmpty()) {
-            return Arrays.asList(System.getProperty(KILLBILL_KEY_VALUE_PATTERNS_PROPERTY).split("\\s*,\\s*"));
+    @VisibleForTesting
+    static Collection<String> loadPatterns() {
+        if (System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY).isEmpty()) {
+            final String separator = System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY).isEmpty() ? System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY) : ",";
+            return Arrays.asList(System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY).split("\\s*"+separator+"\\s*"));
         } else {
             return List.of("\\s*=\\s*'([^']+)'",
                            "\\s*=\\s*\"([^\"]+)\"");

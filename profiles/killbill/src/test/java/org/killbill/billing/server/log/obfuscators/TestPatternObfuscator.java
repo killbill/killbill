@@ -17,6 +17,12 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -27,6 +33,68 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 public class TestPatternObfuscator extends ServerTestSuiteNoDB {
 
     private final PatternObfuscator obfuscator = new PatternObfuscator();
+
+    @Test
+    public void testLoadKeywords() {
+        //without setting the killbill.server.log.obfuscate.patterns property
+        Collection<String> keywords =  PatternObfuscator.loadKeywords();
+        Assert.assertEquals(22, keywords.size());
+        Collection<String> actual = List.of(
+                "accountnumber",
+                "authenticationdata",
+                "bankaccountnumber",
+                "banknumber",
+                "bic",
+                "cardvalidationnum",
+                "cavv",
+                "ccFirstName",
+                "ccLastName",
+                "ccNumber",
+                "ccTrackData",
+                "ccVerificationValue",
+                "ccvv",
+                "cvNumber",
+                "cvc",
+                "cvv",
+                "email",
+                "iban",
+                "name",
+                "number",
+                "password",
+                "xid");
+        Assert.assertEquals(actual, keywords);
+
+        //after setting the the killbill.server.log.obfuscate.patterns property
+        System.setProperty("killbill.server.log.obfuscate.keywords","accountnumber,authenticationdata");
+        keywords =  PatternObfuscator.loadKeywords();
+        Assert.assertEquals(2, keywords.size());
+        actual = List.of(
+                "accountnumber",
+                "authenticationdata");
+        Assert.assertEquals(actual, keywords);
+
+    }
+
+    @Test
+    public void testLoadPatterns() {
+        //without setting the killbill.server.log.obfuscate.patterns property
+        Collection<String> patterns =  PatternObfuscator.loadPatterns();
+        Assert.assertEquals(2, patterns.size());
+        Collection<String> actual = List.of("\\s*=\\s*'([^']+)'",
+                                            "\\s*=\\s*\"([^\"]+)\"");
+        Assert.assertEquals(actual, patterns);
+
+        // after setting the killbill.server.log.obfuscate.patterns property
+        System.setProperty("killbill.server.log.obfuscate.patterns.separator", "#");
+        System.setProperty("killbill.server.log.obfuscate.patterns","\\s*=\\s*'([^']+)'#\\s*=\\s*\"([^\"]+)#\\s*=\\s*([^ '\",{}]+)#\\s*:\\s*'([^'\",{}]+)'");
+        patterns =  PatternObfuscator.loadPatterns();
+        Assert.assertEquals(4, patterns.size());
+        actual = List.of("\\s*=\\s*'([^']+)'",
+                         "\\s*=\\s*\"([^\"]+)",
+                         "\\s*=\\s*([^ '\",{}]+)",
+                         "\\s*:\\s*'([^'\",{}]+)'");
+        Assert.assertEquals(actual, patterns);
+    }
 
     @Test(groups = "fast")
     public void testAdyen() throws Exception {
@@ -256,8 +324,8 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
 
     }
 
-    @Test(groups = "fast", enabled=false) //This tests passes only when killbill.server.log.keywordstoobfuscate=accountnumber,authenticationdata,banknumber,bic,cardvalidationnum,cavv,ccFirstName,ccLastName,ccNumber,ccTrackData,ccVerificationValue,ccvv,cvNumber,cvc,cvv,email,iban,name,number,password,xid,cell_phone is set as a system property. Disabled to prevent CI from failing
-    public void testJSONWithCellPhoneObfuscated() throws Exception {
+    @Test(groups = "fast", description="test for custom keyword (cell_phone) in JSON", enabled=false) //works with -Dkillbill.server.log.obfuscate.keywords=accountnumber,authenticationdata,banknumber,bic,cardvalidationnum,cavv,ccFirstName,ccLastName,ccNumber,ccTrackData,ccVerificationValue,ccvv,cvNumber,cvc,cvv,email,iban,name,number,password,xid,cell_phone
+    public void testJSONWithCustomKeyWord() throws Exception {
         verify("{\n" +
                "  \"card\": {\n" +
                "    \"id\": \"card_483etw4er9fg4vF3sQdrt3FG\",\n" +
@@ -370,16 +438,35 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                event);
     }
 
-    @Test(groups = "fast")
-    public void testPluginProperties() throws Exception {
+    @Test(groups = "fast", description="test for key='value', key=\"value\"")
+    public void testKeyValuePattern1() throws Exception { // works with default keywords/patterns
         verify("ENTERING onSuccessCall paymentMethodId='e92a3bfd-0713-4396-a1e2-ff46cb051f8c' ccVerificationValue='123' ccNumber = '4111111111111111' ccTrackData=\"XXX\" ccFirstName = \"John\" ccLastName=\"'Smith'\"",
                "ENTERING onSuccessCall paymentMethodId='e92a3bfd-0713-4396-a1e2-ff46cb051f8c' ccVerificationValue='***' ccNumber = '****************' ccTrackData=\"***\" ccFirstName = \"****\" ccLastName=\"*******\"");
     }
 
-    @Test(groups = "fast", enabled = false) // This tests passes only when killbill.server.log.keyvaluepatternstoobfuscate=\s*=\s*'([^']+)',\s*=\s*\"([^\"]+)\",\s*:\s*'([^']+)' is set as a system property. Disabled to prevent CI from failing
-    public void testAdditionalKeyValuePattern() throws Exception {
-        verify("paymentMethodId:'e92a3bfd-0713-4396-a1e2-ff46cb051f8c' ccVerificationValue:'123' ccNumber:'4111111111111111' ccTrackData=\"XXX\" ccFirstName = \"John\" ccLastName=\"'Smith'\"",
-               "paymentMethodId:'e92a3bfd-0713-4396-a1e2-ff46cb051f8c' ccVerificationValue:'***' ccNumber:'****************' ccTrackData=\"***\" ccFirstName = \"****\" ccLastName=\"*******\"");
+    @Test(groups = "fast", description = "test for key=value", enabled = false) //Works with -Dkillbill.server.log.obfuscate.patterns.separator=# -Dkillbill.server.log.obfuscate.patterns="\s*=\s*'([^']+)'#\s*=\s*\"([^\"]+)#\s*=\s*([^ '\",]+)"
+    public void testKeyValuePattern2() throws Exception {
+        verify("ENTERING onSuccessCall password=e92a3bfd password = ff46cb051f8c, ccNumber = '4111111111111111' ccTrackData=\"XXX\" ccFirstName = \"John\" ccLastName=\"'Smith'\"",
+               "ENTERING onSuccessCall password=******** password = ************, ccNumber = '****************' ccTrackData=\"***\" ccFirstName = \"****\" ccLastName=\"*******\"");
+    }
+
+    @Test(groups = "fast", description = "testing key:value", enabled = false) //Works with -Dkillbill.server.log.obfuscate.patterns.separator=# -Dkillbill.server.log.obfuscate.patterns=\s*=\s*'([^']+)'#\s*=\s*\"([^\"]+)#\s*:\s*'([^'\",{}]+)'
+    public void testKeyValuePattern3() throws Exception {
+        String testInput = "paymentMethodId:UUIDArgument{value=null},currency:USD,id:UUIDArgument{value=ae373eb5-0863-4707-b3d2-8c62d4516b72},reasonCode:'Create Account',migrated:null,class:class org.killbill.billing.callcontext.InternalCallContext,email:'Dnk910tlpslbb@gmail.com',callOrigin:INTERNAL,tenantRecordId:1,comments:'Create Account by ICO plugin',updatedBy:'spa-ico-plugin-cb',address2:'',address1:'508 e Prospect st'";
+        String expectedOutput = "paymentMethodId:UUIDArgument{value=null},currency:USD,id:UUIDArgument{value=ae373eb5-0863-4707-b3d2-8c62d4516b72},reasonCode:'Create Account',migrated:null,class:class org.killbill.billing.callcontext.InternalCallContext,email:'***********************',callOrigin:INTERNAL,tenantRecordId:1,comments:'Create Account by ICO plugin',updatedBy:'spa-ico-plugin-cb',address2:'',address1:'508 e Prospect st'";
+        verify(testInput, expectedOutput);
+    }
+
+    @Test(groups = "fast", description = "test key=\"value\" for firstName", enabled = false) //Works with -Dkillbill.server.log.obfuscate.patterns.separator=# -Dkillbill.server.log.obfuscate.patterns="\s*=\s*'([^']+)'#\s*=\s*\"([^\"]+)#\s*=\s*([^ '\",]+)"
+    public void testKeyValuePattern4() throws Exception {
+        verify("ENTERING onSuccessCall password=e92a3bfd password = ff46cb051f8c, ccNumber = '4111111111111111' ccTrackData=\"XXX\" firstName = \"santosh.kallihosurranga@gmail.com\" lastName=\"kallihosur ranga\"",
+               "ENTERING onSuccessCall password=******** password = ************, ccNumber = '****************' ccTrackData=\"***\" firstName = \"*********************************\" lastName=\"****************\"");
+    }
+
+    @Test(groups = "fast", description = "test req.requestURI keyword and key=value pattern", enabled = false) // works with -Dkillbill.server.log.obfuscate.patterns.separator=# -Dkillbill.server.log.obfuscate.keywords=req.requestURI -Dkillbill.server.log.obfuscate.patterns="\s*=\s*'([^']+)'#\s*=\s*\"([^\"]+)#\s*=\s*([^ '\",]+)"
+    public void testCustomKeywordAndKeyValuePattern() throws Exception {
+        verify("req.requestURI= /strommerce/1.0/kb/accounts/search/grucaunicegroi-4387@yopmail.com",
+               "req.requestURI= ******************************************************************");
     }
 
     private void verify(final String input, final ILoggingEvent event) {
