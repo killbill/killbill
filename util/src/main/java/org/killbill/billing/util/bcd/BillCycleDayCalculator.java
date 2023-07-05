@@ -76,7 +76,7 @@ public abstract class BillCycleDayCalculator {
     }
 
 
-    private static LocalDate alignProposedNextBillCycleDate(final LocalDate prevTransitionDate, final LocalDate curTransitionDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
+    private static LocalDate alignToNextBillCycleDate(final LocalDate prevTransitionDate, final LocalDate curTransitionDate, /* date to be aligned */ final int billingCycleDay, final BillingPeriod billingPeriod) {
         // billingCycleDay alignment only makes sense for month based BillingPeriod (MONTHLY, QUARTERLY, BIANNUAL, ANNUAL)
         final boolean isMonthBased = (billingPeriod.getPeriod().getMonths() | billingPeriod.getPeriod().getYears()) > 0;
         if (!isMonthBased) {
@@ -93,8 +93,8 @@ public abstract class BillCycleDayCalculator {
         }
     }
 
-    public static LocalDate alignProposedNextBillCycleDate(final DateTime prevTransitionDate, final DateTime curTransitionDate, final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
-        return alignProposedNextBillCycleDate(internalTenantContext.toLocalDate(prevTransitionDate), internalTenantContext.toLocalDate(curTransitionDate), billingCycleDay, billingPeriod);
+    public static LocalDate alignToNextBillCycleDate(final DateTime prevTransitionDate, final DateTime curTransitionDate,/* date to be aligned */ final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
+        return alignToNextBillCycleDate(internalTenantContext.toLocalDate(prevTransitionDate), internalTenantContext.toLocalDate(curTransitionDate), billingCycleDay, billingPeriod);
     }
 
     private static int calculateOrRetrieveBcdFromSubscription(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) {
