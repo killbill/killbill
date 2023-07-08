@@ -698,7 +698,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                 DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
-                                nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, nextEffectiveDate, cur.getEffectiveTransitionTime(), catalog, bcdLocal, context);
+                                nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, cur.getEffectiveTransitionTime(), nextEffectiveDate, catalog, bcdLocal, context);
                                 // Add the catalog change transition if it is for a date past our current transition
                                 if (!nextEffectiveDate.isBefore(cur.getEffectiveTransitionTime())) {
                                     // Computed from the nextPlan
@@ -728,14 +728,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
-    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalTransitionDate, final DateTime lastTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime prevTransitionDate, final DateTime curTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
 
         if (!apiService.isEffectiveDateForExistingSubscriptionsAlignedToBCD(context)) {
-            return originalTransitionDate;
+            return curTransitionDate;
         }
 
         final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
-                                                                           originalTransitionDate, lastTransitionDate);
+                                                                           curTransitionDate, prevTransitionDate);
         final int accountBillCycleDayLocal = apiService.getAccountBCD(context);
         Integer bcd = bcdLocal;
         if (bcd == null) {
@@ -744,7 +744,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
 
         final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedNextBillCycleDate(originalTransitionDate, lastTransitionDate, bcd, billingPeriod, context);
+        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignToNextBillCycleDate(prevTransitionDate, curTransitionDate, bcd, billingPeriod, context);
         final DateTime candidateResult = context.toUTCDateTime(resultingLocalDate);
         return candidateResult;
     }
