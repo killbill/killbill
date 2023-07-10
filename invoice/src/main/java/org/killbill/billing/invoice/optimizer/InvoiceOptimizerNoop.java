@@ -60,11 +60,6 @@ public class InvoiceOptimizerNoop extends InvoiceOptimizerBase {
         return new AccountInvoices(null, null, existingInvoices);
     }
 
-    @Override
-    public boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
-        return false;
-    }
-
     private void logDisabledFeatureIfNeeded(final InternalCallContext callContext) {
 
         final Period maxInvoiceLimit = invoiceConfig.getMaxInvoiceLimit(callContext);

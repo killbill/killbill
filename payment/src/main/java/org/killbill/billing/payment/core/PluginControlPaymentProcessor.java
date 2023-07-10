@@ -53,11 +53,15 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.TimeSpanConverter;
+import org.killbill.billing.util.config.definition.PaymentConfig;
+import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
+import org.killbill.commons.utils.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +77,8 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
     private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
+    private final PaymentConfig paymentConfig;
+
     @Inject
     public PluginControlPaymentProcessor(final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                          final AccountInternalApi accountInternalApi,
@@ -80,6 +86,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                          final TagInternalApi tagUserApi,
                                          final PaymentDao paymentDao,
                                          final GlobalLocker locker,
+                                         final PaymentConfig paymentConfig,
                                          final InternalCallContextFactory internalCallContextFactory,
                                          final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                          final PaymentControlStateMachineHelper paymentControlStateMachineHelper,
@@ -87,6 +94,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
         super(paymentPluginServiceRegistration, accountInternalApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
         this.paymentControlStateMachineHelper = paymentControlStateMachineHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
+        this.paymentConfig = paymentConfig;
     }
 
     public Payment createAuthorization(final boolean isApiPayment, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency, final DateTime effectiveDate, final String paymentExternalKey, final String transactionExternalKey,
@@ -332,6 +340,9 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
         } catch (final AccountApiException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PaymentApiException e) {
+            if (e.getCause() instanceof LockFailedException) {
+                throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(paymentConfig.getRescheduleIntervalOnLock(internalCallContext)));
+            }
             // Log exception unless nothing left to be paid
             if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode() &&
                 paymentControlPluginNames != null &&

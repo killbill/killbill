@@ -140,6 +140,21 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
     }
 
     @Override
+    public List<TimeSpan> getRescheduleIntervalOnLock() {
+        return staticConfig.getRescheduleIntervalOnLock();
+    }
+
+    @Override
+    public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+
+        final String result = getStringTenantConfig("getRescheduleIntervalOnLock", tenantContext);
+        if (result != null) {
+            return convertToListTimeSpan(result, "getRescheduleIntervalOnLock");
+        }
+        return getRescheduleIntervalOnLock();
+    }
+
+    @Override
     public TimeSpan getJanitorRunningRate() {
         return staticConfig.getJanitorRunningRate();
     }

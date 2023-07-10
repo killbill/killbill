@@ -48,6 +48,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.commons.locker.LockFailedException;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -74,6 +75,8 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     private final AtomicBoolean makeNextPaymentFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextPaymentFailWithCancellation = new AtomicBoolean(false);
     private final AtomicBoolean makeNextPaymentFailWithException = new AtomicBoolean(false);
+
+    private final AtomicBoolean makeNextPaymentFailWithLockFailedException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllPaymentsFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextPaymentPending = new AtomicBoolean(false);
     private final AtomicBoolean makeNextPaymentUnknown = new AtomicBoolean(false);
@@ -203,6 +206,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public void clear() {
         makeNextPaymentFailWithException.set(false);
+        makeNextPaymentFailWithLockFailedException.set(false);
         makeAllPaymentsFailWithError.set(false);
         makeNextPaymentFailWithError.set(false);
         makeNextPaymentFailWithCancellation.set(false);
@@ -234,6 +238,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public void makeNextPaymentFailWithException() {
         makeNextPaymentFailWithException.set(true);
+    }
+
+    public void makeNextPaymentFailWithLockFailedException() {
+        makeNextPaymentFailWithLockFailedException.set(true);
     }
 
     public void makeAllInvoicesFailWithError(final boolean failure) {
@@ -464,6 +472,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
         if (makeNextPaymentFailWithException.getAndSet(false)) {
             throw new PaymentPluginApiException("", "test error");
+        }
+
+        if (makeNextPaymentFailWithLockFailedException.getAndSet(false)) {
+            throw new PaymentPluginApiException("Force a LockFailedException", new LockFailedException());
         }
 
         final PluginProperty paymentPluginStatusOverride = Iterables.toStream(pluginProperties)

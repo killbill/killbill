@@ -263,15 +263,16 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
-    public TimeSpan getRescheduleIntervalOnLock() {
+    public List<TimeSpan> getRescheduleIntervalOnLock() {
         return staticConfig.getRescheduleIntervalOnLock();
     }
 
     @Override
-    public TimeSpan getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+    public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+
         final String result = getStringTenantConfig("getRescheduleIntervalOnLock", tenantContext);
         if (result != null) {
-            return new TimeSpan(result);
+            return convertToListTimeSpan(result, "getRescheduleIntervalOnLock");
         }
         return getRescheduleIntervalOnLock();
     }

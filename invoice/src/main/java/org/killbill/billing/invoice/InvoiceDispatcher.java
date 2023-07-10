@@ -36,6 +36,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -43,6 +44,7 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -107,6 +109,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.TimeSpanConverter;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.optimizer.BusOptimizer;
@@ -123,6 +126,7 @@ import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -215,8 +219,8 @@ public class InvoiceDispatcher {
 
             processSubscriptionStartRequestedDateWithLock(accountId, transition, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId.toString(), e);
-            throw new QueueRetryException(e);
+            log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId, e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();
@@ -317,14 +321,6 @@ public class InvoiceDispatcher {
             log.warn("Unable to determine parking state for accountId='{}'", accountId);
         }
 
-
-        if (!isApiCall &&
-            !locker.isFree(LockerType.ACCNT_INV_PAY.toString(), accountId.toString())) {
-            if (invoiceOptimizer.rescheduleProcessAccount(accountId, context)) {
-                return Collections.emptyList();
-            }
-        }
-
         GlobalLock lock = null;
         try {
             // Grab lock unless we do a dry-run
@@ -335,8 +331,8 @@ public class InvoiceDispatcher {
             if (isApiCall) {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
-            if (!invoiceOptimizer.rescheduleProcessAccount(accountId, context)) {
-                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);
+            if (!rescheduleProcessAccount(accountId, context)) {
+                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
             }
         } finally {
             if (lock != null) {
@@ -345,6 +341,21 @@ public class InvoiceDispatcher {
         }
         return Collections.emptyList();
     }
+
+
+    private boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
+
+        final List<Period> periods = TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context));
+        if (periods.size() == 0) {
+            return false;
+        }
+        // Since we can't keep track of attempts, we only look at the first value
+        final DateTime nextRescheduleDt = clock.getUTCNow().plus(periods.get(0));
+        log.info("Rescheduling invoice call at time {}", nextRescheduleDt);
+        invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
+        return true;
+    }
+
 
     private enum InvoiceTiming {
         BILLING_EVENTS,
@@ -1298,7 +1309,7 @@ public class InvoiceDispatcher {
             processParentInvoiceForInvoiceGenerationWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
-            throw new QueueRetryException(e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();
@@ -1385,7 +1396,7 @@ public class InvoiceDispatcher {
             processParentInvoiceForAdjustmentsWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
-            throw new QueueRetryException(e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();

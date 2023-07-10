@@ -1,6 +1,6 @@
 /*
- * Copyright 2020-2021 Equinix, Inc
- * Copyright 2014-2021 The Billing Project, LLC
+ * Copyright 2020-2023 Equinix, Inc
+ * Copyright 2014-2023 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,15 +15,9 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.optimizer;
+package org.killbill.billing.payment.api;
 
-import java.util.UUID;
+import org.killbill.billing.platform.api.KillbillService;
 
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
-
-public interface InvoiceOptimizer {
-
-    AccountInvoices getInvoices(final InternalCallContext callContext);
-
+public interface PaymentListenerService extends KillbillService {
 }

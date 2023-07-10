@@ -33,66 +33,82 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
+import org.killbill.queue.retry.RetryableHandler;
+import org.killbill.queue.retry.RetryableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseRetryService implements RetryService {
+public abstract class BaseRetryService extends RetryableService implements RetryService {
+
 
     private static final Logger log = LoggerFactory.getLogger(BaseRetryService.class);
 
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
     private final String paymentRetryService;
+    private final Clock clock;
 
     private NotificationQueue retryQueue;
 
     public BaseRetryService(final NotificationQueueService notificationQueueService,
+                            final Clock clock,
                             final InternalCallContextFactory internalCallContextFactory) {
+        super(notificationQueueService);
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.clock = clock;
         this.paymentRetryService = KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName() + "-" + getQueueName();
     }
 
     @Override
     public void initialize() throws NotificationQueueAlreadyExists {
+        final NotificationQueueHandler originalHandler = new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+                if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
+                    log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
+                    return;
+                }
+                final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
+                final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, paymentRetryService, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+                retryPaymentTransaction(key.getAttemptId(), key.getPaymentControlPluginNames(), callContext);
+            }
+        };
+        final RetryableHandler retryQueueHandler = new RetryableHandler(clock, this, originalHandler);
+
         retryQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(),
                                                                       getQueueName(),
-                                                                      new NotificationQueueHandler() {
-                                                                          @Override
-                                                                          public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-                                                                              if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
-                                                                                  log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
-                                                                                  return;
-                                                                              }
-                                                                              final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
-                                                                              final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, paymentRetryService, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
-                                                                              retryPaymentTransaction(key.getAttemptId(), key.getPaymentControlPluginNames(), callContext);
-                                                                          }
-                                                                      }
-                                                                     );
+                                                                      retryQueueHandler);
+
+        super.initialize(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), originalHandler);
     }
 
     @Override
     public void start() {
+        super.start();
         retryQueue.startQueue();
     }
 
     @Override
     public void stop() throws NoSuchNotificationQueue {
-        if (retryQueue != null) {
-            if (!retryQueue.stopQueue()) {
-                log.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", retryQueue.getFullQName());
+        try {
+            if (retryQueue != null) {
+                if (!retryQueue.stopQueue()) {
+                    log.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", retryQueue.getFullQName());
+                }
+                notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
             }
-            notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
+        } finally {
+            super.stop();
         }
     }
-
 
     @Override
     public abstract String getQueueName();
