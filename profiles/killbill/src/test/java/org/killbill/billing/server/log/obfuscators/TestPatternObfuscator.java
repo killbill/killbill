@@ -43,8 +43,8 @@ public class TestPatternObfuscator {
     public void testLoadKeywords() {
         //without setting the killbill.server.log.obfuscate.patterns property
         System.clearProperty("killbill.server.log.obfuscate.keywords");
-        Collection<String> keywords = PatternObfuscator.loadKeywords();
-        Assert.assertEquals(22, keywords.size());
+        Collection<String> keywords = obfuscator.loadKeywords();
+        Assert.assertEquals(keywords.size(), 22);
         Collection<String> actual = List.of(
                 "accountnumber",
                 "authenticationdata",
@@ -72,8 +72,8 @@ public class TestPatternObfuscator {
 
         //after setting the the killbill.server.log.obfuscate.patterns property
         System.setProperty("killbill.server.log.obfuscate.keywords", "accountnumber,authenticationdata");
-        keywords = PatternObfuscator.loadKeywords();
-        Assert.assertEquals(2, keywords.size());
+        keywords = obfuscator.loadKeywords();
+        Assert.assertEquals(keywords.size(), 2);
         actual = List.of(
                 "accountnumber",
                 "authenticationdata");
@@ -83,24 +83,45 @@ public class TestPatternObfuscator {
 
     @Test
     public void testLoadPatterns() {
-        //without setting the killbill.server.log.obfuscate.patterns property
+        //without setting any properties
         System.clearProperty("killbill.server.log.obfuscate.patterns");
-        Collection<String> patterns = PatternObfuscator.loadPatterns();
-        Assert.assertEquals(2, patterns.size());
+        System.clearProperty("killbill.server.log.obfuscate.patterns.separator");
+        Collection<String> patterns = obfuscator.loadPatterns();
+        Assert.assertEquals(patterns.size(), 2);
         Collection<String> actual = List.of("\\s*=\\s*'([^']+)'",
                                             "\\s*=\\s*\"([^\"]+)\"");
         Assert.assertEquals(actual, patterns);
 
-        // after setting the killbill.server.log.obfuscate.patterns property
-        System.setProperty("killbill.server.log.obfuscate.patterns.separator", "#");
-        System.setProperty("killbill.server.log.obfuscate.patterns", "\\s*=\\s*'([^']+)'#\\s*=\\s*\"([^\"]+)#\\s*=\\s*([^ '\",{}]+)#\\s*:\\s*'([^'\",{}]+)'");
-        patterns = PatternObfuscator.loadPatterns();
-        Assert.assertEquals(4, patterns.size());
+        //without setting the killbill.server.log.obfuscate.patterns.separator property
+        System.setProperty("killbill.server.log.obfuscate.patterns", "\\s*=\\s*'([^']+)',\\s*=\\s*\"([^\"]+)\"");
+        patterns = obfuscator.loadPatterns();
+        Assert.assertEquals(patterns.size(), 2);
+        actual = List.of("\\s*=\\s*'([^']+)'",
+                         "\\s*=\\s*\"([^\"]+)\"");
+        Assert.assertEquals(actual, patterns);
+
+        // after setting the killbill.server.log.obfuscate.patterns property and killbill.server.log.obfuscate.patterns.separator property
+        System.setProperty("killbill.server.log.obfuscate.patterns.separator", "~");
+        System.setProperty("killbill.server.log.obfuscate.patterns", "\\s*=\\s*'([^']+)'~\\s*=\\s*\"([^\"]+)~\\s*=\\s*([^ '\",{}]+)~\\s*:\\s*'([^'\",{}]+)'");
+        patterns = obfuscator.loadPatterns();
+        Assert.assertEquals(patterns.size(), 4);
         actual = List.of("\\s*=\\s*'([^']+)'",
                          "\\s*=\\s*\"([^\"]+)",
                          "\\s*=\\s*([^ '\",{}]+)",
                          "\\s*:\\s*'([^'\",{}]+)'");
         Assert.assertEquals(actual, patterns);
+    }
+
+    @Test
+    public void testLoadPatternSeparator() {
+        //without setting the killbill.server.log.obfuscate.patterns.separator property
+        System.clearProperty("killbill.server.log.obfuscate.patterns.separator");
+        String patternSeparator = obfuscator.loadPatternSeparator();
+        Assert.assertEquals(patternSeparator, ",");
+        // after setting the killbill.server.log.obfuscate.patterns.separator property
+        System.setProperty("killbill.server.log.obfuscate.patterns.separator", "#");
+        patternSeparator = obfuscator.loadPatternSeparator();
+        Assert.assertEquals(patternSeparator, "#");
     }
 
     @Test(groups = "fast")

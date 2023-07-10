@@ -91,7 +91,7 @@ public class PatternObfuscator extends Obfuscator {
         return Pattern.compile(key + pattern, DEFAULT_PATTERN_FLAGS);
     }
 
-    static Collection<String> loadKeywords() {
+    Collection<String> loadKeywords() {
         if (System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY).isEmpty()) {
             return Arrays.asList(System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY).split("\\s*,\\s*"));
         } else {
@@ -122,13 +122,22 @@ public class PatternObfuscator extends Obfuscator {
     }
 
     @VisibleForTesting
-    static Collection<String> loadPatterns() {
+    Collection<String> loadPatterns() {
         if (System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY).isEmpty()) {
-            final String separator = System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY).isEmpty() ? System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY) : ",";
-            return Arrays.asList(System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY).split("\\s*"+separator+"\\s*"));
+            final String separator = loadPatternSeparator();
+            return Arrays.asList(System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY).split("\\s*" + separator + "\\s*"));
         } else {
             return List.of("\\s*=\\s*'([^']+)'",
                            "\\s*=\\s*\"([^\"]+)\"");
+        }
+    }
+
+    @VisibleForTesting
+    String loadPatternSeparator() {
+        if (System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY).isEmpty()) {
+            return System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY);
+        } else {
+            return ",";
         }
     }
 
