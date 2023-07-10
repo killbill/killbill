@@ -37,8 +37,8 @@ public class PatternObfuscator extends Obfuscator {
 
     private static final String KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY = "killbill.server.log.obfuscate.patterns.separator";
 
-    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = loadKeywords();
-    private static final Collection<String> DEFAULT_STR_PATTERNS = loadPatterns();
+    private final Collection<String> defaultSensitiveKeys;
+    private final Collection<String> defaultStrPatterns;
 
     private final Collection<Pattern> patterns = new LinkedList<>();
 
@@ -52,7 +52,9 @@ public class PatternObfuscator extends Obfuscator {
 
     public PatternObfuscator(final Collection<Pattern> extraPatterns, final Collection<String> extraKeywords) {
         super();
-        final Collection<String> keywords = new ArrayList<>(DEFAULT_SENSITIVE_KEYS);
+        defaultSensitiveKeys = loadKeywords();
+        defaultStrPatterns = loadPatterns();
+        final Collection<String> keywords = new ArrayList<>(defaultSensitiveKeys);
         if (extraKeywords != null) {
             keywords.addAll(extraKeywords);
         }
@@ -61,7 +63,7 @@ public class PatternObfuscator extends Obfuscator {
             this.patterns.add(buildJSONPattern(sensitiveKey));
             this.patterns.add(buildXMLPattern(sensitiveKey));
             this.patterns.add(buildMultiValuesXMLPattern(sensitiveKey));
-            for (final String additionalPattern : DEFAULT_STR_PATTERNS) {
+            for (final String additionalPattern : defaultStrPatterns) {
                 this.patterns.add(buildKeyValuePatterns(additionalPattern, sensitiveKey));
             }
         }
