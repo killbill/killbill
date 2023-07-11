@@ -74,7 +74,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         cleanupAllTables();
 
         mockDispatcher = new OverdueDispatcherMock(internalCallContextFactory);
-        notifierForMock = new OverdueCheckNotifier(notificationQueueService, overdueProperties, internalCallContextFactory, mockDispatcher);
+        notifierForMock = new OverdueCheckNotifier(notificationQueueService, overdueProperties, clock, internalCallContextFactory, mockDispatcher);
 
         notifierForMock.initialize();
         notifierForMock.start();

@@ -37,6 +37,8 @@ import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,10 +102,14 @@ public class DefaultOverdueService implements OverdueService {
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
     public void initialize() {
-        registerForBus();
-        checkNotifier.initialize();
-        asyncNotifier.initialize();
-        tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.OVERDUE_CONFIG, overdueCacheInvalidationCallback);
+        try {
+            registerForBus();
+            checkNotifier.initialize();
+            asyncNotifier.initialize();
+            tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.OVERDUE_CONFIG, overdueCacheInvalidationCallback);
+        } catch (NotificationQueueAlreadyExists e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void registerForBus() {
@@ -124,11 +130,13 @@ public class DefaultOverdueService implements OverdueService {
     public void stop() {
         try {
             busService.getBus().unregister(listener);
+            checkNotifier.stop();
+            asyncNotifier.stop();
         } catch (final EventBusException e) {
             log.error("Failed to unregister OverdueListener", e);
+        } catch (final NoSuchNotificationQueue e) {
+            throw new RuntimeException(e);
         }
-        checkNotifier.stop();
-        asyncNotifier.stop();
     }
 
     @Override

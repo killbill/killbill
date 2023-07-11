@@ -22,6 +22,9 @@ package org.killbill.billing.overdue.notification;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.clock.Clock;
+import org.killbill.queue.retry.RetryableHandler;
+import org.killbill.queue.retry.RetryableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +42,7 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 
-public abstract class DefaultOverdueNotifierBase implements OverdueNotifier {
+public abstract class DefaultOverdueNotifierBase extends RetryableService implements OverdueNotifier {
 
 
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueNotifierBase.class);
@@ -50,56 +53,66 @@ public abstract class DefaultOverdueNotifierBase implements OverdueNotifier {
     protected final OverdueDispatcher dispatcher;
     protected NotificationQueue overdueQueue;
 
+    private final Clock clock;
+
+    private final String queueName;
+
     public abstract String getQueueName();
 
     public abstract void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId);
 
-    public DefaultOverdueNotifierBase(final NotificationQueueService notificationQueueService,
+    public DefaultOverdueNotifierBase(final String queueName,
+                                      final NotificationQueueService notificationQueueService,
                                       final OverdueProperties config,
+                                      final Clock clock,
                                       final InternalCallContextFactory internalCallContextFactory,
                                       final OverdueDispatcher dispatcher) {
+        super(notificationQueueService);
+        this.queueName = queueName;
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.dispatcher = dispatcher;
+        this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public void initialize() {
+    public void initialize() throws NotificationQueueAlreadyExists {
 
         final OverdueNotifier myself = this;
 
-        final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
+        final NotificationQueueHandler originalHandler = new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                 myself.handleReadyNotification(notificationKey, eventDate, userToken, accountRecordId, tenantRecordId);
             }
         };
 
-        try {
-            overdueQueue = notificationQueueService.createNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
-                                                                            getQueueName(),
-                                                                            notificationQueueHandler);
-        } catch (NotificationQueueAlreadyExists e) {
-            throw new RuntimeException(e);
-        }
+        final RetryableHandler retryQueueHandler = new RetryableHandler(clock, this, originalHandler);
+        overdueQueue = notificationQueueService.createNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
+                                                                        getQueueName(),
+                                                                        retryQueueHandler);
+        super.initialize(queueName, originalHandler);
     }
 
     @Override
     public void start() {
+        super.start();
         overdueQueue.startQueue();
     }
 
     @Override
-    public void stop() {
+    public void stop() throws NoSuchNotificationQueue {
         if (overdueQueue != null) {
-            if (!overdueQueue.stopQueue()) {
-                log.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", overdueQueue.getFullQName());
-            }
             try {
+                if (!overdueQueue.stopQueue()) {
+                    log.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", overdueQueue.getFullQName());
+                }
                 notificationQueueService.deleteNotificationQueue(overdueQueue.getServiceName(), overdueQueue.getQueueName());
             } catch (NoSuchNotificationQueue e) {
                 log.error("Error deleting a queue by its own name - this should never happen", e);
+            } finally {
+                super.stop();
             }
         }
     }

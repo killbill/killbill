@@ -26,6 +26,7 @@ import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.caching.DefaultOverdueConfigCache;
 import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
+import org.killbill.billing.overdue.config.MultiTenantOverdueConfig;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
 import org.killbill.billing.overdue.notification.OverdueAsyncBusPoster;
@@ -37,6 +38,7 @@ import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
+import org.killbill.billing.util.config.definition.OverdueConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -54,6 +56,9 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
 
     @Override
     protected void configure() {
+
+        installConfig();
+
         installOverdueUserApi();
 
         installOverdueConfigCache();
@@ -73,6 +78,15 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
         bind(OverduePoster.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_CHECK_NAMED)).to(OverdueCheckPoster.class).asEagerSingleton();
         bind(OverduePoster.class).annotatedWith(Names.named(OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)).to(OverdueAsyncBusPoster.class).asEagerSingleton();
     }
+
+    protected void installConfig() {
+        installConfig(new ConfigurationObjectFactory(skifeConfigSource).build(OverdueConfig.class));
+    }
+    protected void installConfig(final OverdueConfig staticOverdueConfig) {
+        bind(OverdueConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(staticOverdueConfig);
+        bind(OverdueConfig.class).to(MultiTenantOverdueConfig.class).asEagerSingleton();
+    }
+
 
     protected void installOverdueService() {
         bind(OverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
