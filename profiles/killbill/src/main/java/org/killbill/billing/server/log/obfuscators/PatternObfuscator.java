@@ -18,40 +18,27 @@
 package org.killbill.billing.server.log.obfuscators;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
 public class PatternObfuscator extends Obfuscator {
 
     // Hide by default sensitive bank, PCI and PII data. For PANs, see LuhnMaskingObfuscator
-    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = List.of(
-            "accountnumber",
-            "authenticationdata",
-            "bankaccountnumber",
-            "banknumber",
-            "bic",
-            "cardvalidationnum",
-            "cavv",
-            "ccFirstName",
-            "ccLastName",
-            "ccNumber",
-            "ccTrackData",
-            "ccVerificationValue",
-            "ccvv",
-            "cvNumber",
-            "cvc",
-            "cvv",
-            "email",
-            "iban",
-            "name",
-            "number",
-            "password",
-            "xid");
+    private static final String KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY = "killbill.server.log.obfuscate.keywords";
+    private static final String KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY = "killbill.server.log.obfuscate.patterns";
+
+    private static final String KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY = "killbill.server.log.obfuscate.patterns.separator";
+
+    private final Collection<String> defaultSensitiveKeys;
+    private final Collection<String> defaultStrPatterns;
 
     private final Collection<Pattern> patterns = new LinkedList<>();
 
@@ -65,7 +52,9 @@ public class PatternObfuscator extends Obfuscator {
 
     public PatternObfuscator(final Collection<Pattern> extraPatterns, final Collection<String> extraKeywords) {
         super();
-        final Collection<String> keywords = new ArrayList<>(DEFAULT_SENSITIVE_KEYS);
+        defaultSensitiveKeys = loadKeywords();
+        defaultStrPatterns = loadPatterns();
+        final Collection<String> keywords = new ArrayList<>(defaultSensitiveKeys);
         if (extraKeywords != null) {
             keywords.addAll(extraKeywords);
         }
@@ -74,8 +63,9 @@ public class PatternObfuscator extends Obfuscator {
             this.patterns.add(buildJSONPattern(sensitiveKey));
             this.patterns.add(buildXMLPattern(sensitiveKey));
             this.patterns.add(buildMultiValuesXMLPattern(sensitiveKey));
-            this.patterns.add(buildKeyValuePattern1(sensitiveKey));
-            this.patterns.add(buildKeyValuePattern2(sensitiveKey));
+            for (final String additionalPattern : defaultStrPatterns) {
+                this.patterns.add(buildKeyValuePatterns(additionalPattern, sensitiveKey));
+            }
         }
         this.patterns.addAll(extraPatterns);
     }
@@ -97,13 +87,58 @@ public class PatternObfuscator extends Obfuscator {
         return Pattern.compile(key + "</key>\\s*<value[^>]*>([^<\\n]+)</value>", DEFAULT_PATTERN_FLAGS);
     }
 
-    // Splunk-type logging
-    private Pattern buildKeyValuePattern1(final String key) {
-        return Pattern.compile(key + "\\s*=\\s*'([^\']+)'", DEFAULT_PATTERN_FLAGS);
+    private Pattern buildKeyValuePatterns(final String pattern, final String key) {
+        return Pattern.compile(key + pattern, DEFAULT_PATTERN_FLAGS);
     }
 
-    // Splunk-type logging
-    private Pattern buildKeyValuePattern2(final String key) {
-        return Pattern.compile(key + "\\s*=\\s*\"([^\"]+)\"", DEFAULT_PATTERN_FLAGS);
+    Collection<String> loadKeywords() {
+        if (System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY).isEmpty()) {
+            return Arrays.asList(System.getProperty(KILLBILL_OBFUSCATE_KEYWORDS_PROPERTY).split("\\s*,\\s*"));
+        } else {
+            return List.of(
+                    "accountnumber",
+                    "authenticationdata",
+                    "bankaccountnumber",
+                    "banknumber",
+                    "bic",
+                    "cardvalidationnum",
+                    "cavv",
+                    "ccFirstName",
+                    "ccLastName",
+                    "ccNumber",
+                    "ccTrackData",
+                    "ccVerificationValue",
+                    "ccvv",
+                    "cvNumber",
+                    "cvc",
+                    "cvv",
+                    "email",
+                    "iban",
+                    "name",
+                    "number",
+                    "password",
+                    "xid");
+        }
     }
+
+    @VisibleForTesting
+    Collection<String> loadPatterns() {
+        if (System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY).isEmpty()) {
+            final String separator = loadPatternSeparator();
+            return Arrays.asList(System.getProperty(KILLBILL_OBFUSCATE_KEY_VALUE_PATTERNS_PROPERTY).split("\\s*" + separator + "\\s*"));
+        } else {
+            return List.of("\\s*=\\s*'([^']+)'",
+                           "\\s*=\\s*\"([^\"]+)\"");
+        }
+    }
+
+    @VisibleForTesting
+    String loadPatternSeparator() {
+        if (System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY) != null && !System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY).isEmpty()) {
+            return System.getProperty(KILLBILL_OBFUSCATE_PATTERNS_SEPARATOR_PROPERTY);
+        } else {
+            return ",";
+        }
+    }
+
 }
