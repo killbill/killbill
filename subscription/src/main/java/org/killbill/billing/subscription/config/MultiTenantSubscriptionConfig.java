@@ -33,7 +33,7 @@ public class MultiTenantSubscriptionConfig extends MultiTenantConfigBase impleme
 
     @Inject
     public MultiTenantSubscriptionConfig(@Named(KillBillModule.STATIC_CONFIG) final SubscriptionConfig staticConfig, final CacheConfig cacheConfig) {
-        super(cacheConfig);
+        super(staticConfig, cacheConfig);
         this.staticConfig = staticConfig;
     }
 

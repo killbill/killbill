@@ -17,27 +17,6 @@
 
 package org.killbill.billing.util.config.definition;
 
-import java.util.List;
-
-import org.joda.time.Period;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.skife.config.Config;
-import org.skife.config.Default;
-import org.skife.config.Description;
-import org.skife.config.Param;
-import org.skife.config.TimeSpan;
-
 public interface OverdueConfig extends KillbillConfig {
-
-    // Disabled by default
-    @Config("org.killbill.overdue.rescheduleIntervalOnLock")
-    @Default("30s, 1m, 1m, 3m, 3m, 10m")
-    @Description("Tme delay to reschedule an invoice run when lock is held")
-    List<TimeSpan> getRescheduleIntervalOnLock();
-
-    @Config("org.killbill.overdue.rescheduleIntervalOnLock")
-    @Default("30s, 1m, 1m, 3m, 3m, 10m")
-    @Description("Tme delay to reschedule an invoice run when lock is held")
-    List<TimeSpan> getRescheduleIntervalOnLock(@Param("dummy") final InternalTenantContext tenantContext);
 
 }

@@ -75,7 +75,7 @@ public class TestTimeSpanConverter {
         final ConfigSource configSource = new ConfigSource() {
             @Override
             public String getString(final String propertyName) {
-                if ("org.killbill.invoice.rescheduleIntervalOnLock".equals(propertyName)) {
+                if ("org.killbill.rescheduleIntervalOnLock".equals(propertyName)) {
                     return "";
                 } else {
                     return null;

@@ -130,16 +130,6 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Maximum number of times the system will retry to grab global lock (with a 100ms wait each time)")
     int getMaxGlobalLockRetries();
 
-    @Config("org.killbill.payment.rescheduleIntervalOnLock")
-    @Default("30s, 1m, 1m, 3m, 3m, 10m")
-    @Description("Tme delay to reschedule an invoice run when lock is held")
-    List<TimeSpan> getRescheduleIntervalOnLock();
-
-    @Config("org.killbill.payment.rescheduleIntervalOnLock")
-    @Default("30s, 1m, 1m, 3m, 3m, 10m")
-    @Description("Tme delay to reschedule an invoice run when lock is held")
-    List<TimeSpan> getRescheduleIntervalOnLock(@Param("dummy") final InternalTenantContext tenantContext);
-
     @Config("org.killbill.payment.method.overwrite")
     @Default("false")
     @Description("Ability to overwrite an existing payment method from a control plugin")

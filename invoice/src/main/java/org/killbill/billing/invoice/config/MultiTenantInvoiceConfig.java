@@ -38,7 +38,7 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
 
     @Inject
     public MultiTenantInvoiceConfig(@Named(KillBillModule.STATIC_CONFIG) final InvoiceConfig staticConfig, final CacheConfig cacheConfig) {
-        super(cacheConfig);
+        super(staticConfig, cacheConfig);
         this.staticConfig = staticConfig;
     }
 
@@ -260,21 +260,6 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
             return Boolean.parseBoolean(result);
         }
         return shouldParkAccountsWithUnknownUsage();
-    }
-
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock() {
-        return staticConfig.getRescheduleIntervalOnLock();
-    }
-
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
-
-        final String result = getStringTenantConfig("getRescheduleIntervalOnLock", tenantContext);
-        if (result != null) {
-            return convertToListTimeSpan(result, "getRescheduleIntervalOnLock");
-        }
-        return getRescheduleIntervalOnLock();
     }
 
     @Override

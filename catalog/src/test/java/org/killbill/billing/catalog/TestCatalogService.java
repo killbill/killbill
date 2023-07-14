@@ -18,9 +18,14 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.killbill.billing.util.config.definition.CatalogConfig;
+import org.skife.config.TimeSpan;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -29,6 +34,14 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCatalogServiceDirectory() throws ServiceException, CatalogApiException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
+            @Override
+            public List<TimeSpan> getRescheduleIntervalOnLock() {
+                return Collections.emptyList();
+            }
+            @Override
+            public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+                return Collections.emptyList();
+            }
             @Override
             public String getCatalogURI() {
                 return "org/killbill/billing/catalog/versionedCatalog";
@@ -48,10 +61,17 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
     public void testCatalogServiceFile() throws ServiceException, CatalogApiException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
+            public List<TimeSpan> getRescheduleIntervalOnLock() {
+                return Collections.emptyList();
+            }
+            @Override
+            public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+                return Collections.emptyList();
+            }
+            @Override
             public String getCatalogURI() {
                 return "org/killbill/billing/catalog/WeaponsHire.xml";
             }
-
             @Override
             public Integer getCatalogThreadNb() {
                 return null;

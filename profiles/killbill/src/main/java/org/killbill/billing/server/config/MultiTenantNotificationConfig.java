@@ -41,7 +41,7 @@ public class MultiTenantNotificationConfig extends MultiTenantConfigBase impleme
 
     @Inject
     public MultiTenantNotificationConfig(@Named(KillBillModule.STATIC_CONFIG) final NotificationConfig staticConfig, final CacheConfig cacheConfig) {
-        super(cacheConfig);
+        super(staticConfig, cacheConfig);
         this.staticConfig = staticConfig;
     }
 

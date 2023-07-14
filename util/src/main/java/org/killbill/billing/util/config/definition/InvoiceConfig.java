@@ -187,17 +187,6 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether to park accounts when usage data is recorded but not defined in the catalog")
     boolean shouldParkAccountsWithUnknownUsage(@Param("dummy") final InternalTenantContext tenantContext);
 
-    // Disabled by default
-    @Config("org.killbill.invoice.rescheduleIntervalOnLock")
-    @Default("30s, 1m, 1m, 3m, 3m, 10m")
-    @Description("Tme delay to reschedule an invoice run when lock is held")
-    List<TimeSpan> getRescheduleIntervalOnLock();
-
-    @Config("org.killbill.invoice.rescheduleIntervalOnLock")
-    @Default("30s, 1m, 1m, 3m, 3m, 10m")
-    @Description("Tme delay to reschedule an invoice run when lock is held")
-    List<TimeSpan> getRescheduleIntervalOnLock(@Param("dummy") final InternalTenantContext tenantContext);
-
     @Config("org.killbill.invoice.maxInvoiceLimit")
     @Default(DEFAULT_NULL_PERIOD)
     @Description("How far back in time should invoice generation look at")

@@ -32,9 +32,11 @@ import org.skife.config.Config;
 import org.skife.config.Separator;
 import org.skife.config.TimeSpan;
 
-public abstract class MultiTenantConfigBase {
+public abstract class MultiTenantConfigBase implements KillbillConfig {
 
     private final Map<String, Method> methodsCache = new HashMap<>();
+    private final KillbillConfig staticConfig;
+
     protected final CacheConfig cacheConfig;
 
     private static final Function<String, Integer> INT_CONVERTER = Integer::valueOf;
@@ -44,7 +46,8 @@ public abstract class MultiTenantConfigBase {
     private static final Function<String, BusInternalEventType> BUS_EVENT_TYPE_CONVERTER = BusInternalEventType::valueOf;
 
 
-    public MultiTenantConfigBase(final CacheConfig cacheConfig) {
+    public MultiTenantConfigBase(final KillbillConfig staticConfig, final CacheConfig cacheConfig) {
+        this.staticConfig = staticConfig;
         this.cacheConfig = cacheConfig;
     }
 
@@ -52,6 +55,22 @@ public abstract class MultiTenantConfigBase {
     // The conversion methds are rather limited (but this is all we need).
     // Ideally we could reuse the bully/Coercer from skife package, but those are kept private.
     //
+
+
+    @Override
+    public List<TimeSpan> getRescheduleIntervalOnLock() {
+        return staticConfig.getRescheduleIntervalOnLock();
+    }
+
+    @Override
+    public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+
+        final String result = getStringTenantConfig("getRescheduleIntervalOnLock", tenantContext);
+        if (result != null) {
+            return convertToListTimeSpan(result, "getRescheduleIntervalOnLock");
+        }
+        return getRescheduleIntervalOnLock();
+    }
 
     protected List<String> convertToListString(final String value, final String methodName) {
         final Method method = getConfigStaticMethodWithChecking(methodName);

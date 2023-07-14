@@ -36,23 +36,8 @@ public class MultiTenantOverdueConfig extends MultiTenantConfigBase implements O
 
     @Inject
     public MultiTenantOverdueConfig(@Named(KillBillModule.STATIC_CONFIG) final OverdueConfig staticConfig, final CacheConfig cacheConfig) {
-        super(cacheConfig);
+        super(staticConfig, cacheConfig);
         this.staticConfig = staticConfig;
-    }
-
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock() {
-        return staticConfig.getRescheduleIntervalOnLock();
-    }
-
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
-        final String result = getStringTenantConfig("getRescheduleIntervalOnLock", tenantContext);
-        if (result != null) {
-            return convertToListTimeSpan(result, "getRescheduleIntervalOnLock");
-        }
-        return getRescheduleIntervalOnLock();
-
     }
 
     @Override
