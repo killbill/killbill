@@ -17,6 +17,6 @@
 
 package org.killbill.billing.util.config.definition;
 
-public interface OverdueConfig extends KillbillConfig {
+public interface OverdueConfig extends LockAwareConfig {
 
 }

@@ -35,14 +35,6 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
     public void testCatalogServiceDirectory() throws ServiceException, CatalogApiException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
-            public List<TimeSpan> getRescheduleIntervalOnLock() {
-                return Collections.emptyList();
-            }
-            @Override
-            public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
-                return Collections.emptyList();
-            }
-            @Override
             public String getCatalogURI() {
                 return "org/killbill/billing/catalog/versionedCatalog";
             }
@@ -60,14 +52,6 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCatalogServiceFile() throws ServiceException, CatalogApiException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
-            @Override
-            public List<TimeSpan> getRescheduleIntervalOnLock() {
-                return Collections.emptyList();
-            }
-            @Override
-            public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
-                return Collections.emptyList();
-            }
             @Override
             public String getCatalogURI() {
                 return "org/killbill/billing/catalog/WeaponsHire.xml";

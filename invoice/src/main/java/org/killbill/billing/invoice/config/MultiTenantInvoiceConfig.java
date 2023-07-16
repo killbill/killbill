@@ -28,10 +28,11 @@ import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
+import org.killbill.billing.util.config.tenant.MultiTenantLockAwareConfigBase;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.TimeSpan;
 
-public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements InvoiceConfig {
+public class MultiTenantInvoiceConfig extends MultiTenantLockAwareConfigBase implements InvoiceConfig {
 
 
     private final InvoiceConfig staticConfig;

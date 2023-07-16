@@ -26,7 +26,7 @@ import org.skife.config.Description;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
-public interface PaymentConfig extends KillbillConfig {
+public interface PaymentConfig extends LockAwareConfig {
 
     @Config("org.killbill.payment.retry.days")
     @Default("8,8,8")

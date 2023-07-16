@@ -35,7 +35,7 @@ import org.skife.config.TimeSpan;
 public abstract class MultiTenantConfigBase implements KillbillConfig {
 
     private final Map<String, Method> methodsCache = new HashMap<>();
-    private final KillbillConfig staticConfig;
+    protected final KillbillConfig staticConfig;
 
     protected final CacheConfig cacheConfig;
 
@@ -52,26 +52,9 @@ public abstract class MultiTenantConfigBase implements KillbillConfig {
     }
 
     //
-    // The conversion methds are rather limited (but this is all we need).
+    // The conversion methods are rather limited (but this is all we need).
     // Ideally we could reuse the bully/Coercer from skife package, but those are kept private.
     //
-
-
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock() {
-        return staticConfig.getRescheduleIntervalOnLock();
-    }
-
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
-
-        final String result = getStringTenantConfig("getRescheduleIntervalOnLock", tenantContext);
-        if (result != null) {
-            return convertToListTimeSpan(result, "getRescheduleIntervalOnLock");
-        }
-        return getRescheduleIntervalOnLock();
-    }
-
     protected List<String> convertToListString(final String value, final String methodName) {
         final Method method = getConfigStaticMethodWithChecking(methodName);
         final List<String> tokens = getTokens(method, value);

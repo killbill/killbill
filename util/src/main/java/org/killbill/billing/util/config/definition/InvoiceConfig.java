@@ -27,7 +27,7 @@ import org.skife.config.Description;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
-public interface InvoiceConfig extends KillbillConfig {
+public interface InvoiceConfig extends LockAwareConfig {
 
 
     // Default period value for when nothing is specified
