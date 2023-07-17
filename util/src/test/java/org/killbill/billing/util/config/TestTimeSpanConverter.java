@@ -21,6 +21,10 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.queue.QueueRetryException;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -62,4 +66,30 @@ public class TestTimeSpanConverter {
         Assert.assertTrue(TimeSpanConverter.toListPeriod(null).isEmpty());
         Assert.assertTrue(TimeSpanConverter.toListPeriod(List.of()).isEmpty());
     }
+
+
+    @Test(groups = "fast")
+    public void testEmptyRescheduleIntervalOnLock() {
+
+        // Simulate a case where we don't want any retry schedule
+        final ConfigSource configSource = new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                if ("org.killbill.rescheduleIntervalOnLock".equals(propertyName)) {
+                    return "";
+                } else {
+                    return null;
+                }
+            }
+        };
+        final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(configSource).build(InvoiceConfig.class);
+
+        final List<TimeSpan> retryIntervals = invoiceConfig.getRescheduleIntervalOnLock();
+        Assert.assertEquals(0, retryIntervals.size());
+
+        final List<Period> periods = TimeSpanConverter.toListPeriod(retryIntervals);
+        final QueueRetryException e = new QueueRetryException(null, periods);
+        Assert.assertEquals(0, e.getRetrySchedule().size());
+    }
+
 }

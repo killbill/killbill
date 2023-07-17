@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.listener.OverdueDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
@@ -39,10 +40,12 @@ public class OverdueCheckNotifier extends DefaultOverdueNotifierBase implements 
 
 
     @Inject
-    public OverdueCheckNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
+    public OverdueCheckNotifier(final NotificationQueueService notificationQueueService,
+                                final OverdueProperties config,
+                                final Clock clock,
                                 final InternalCallContextFactory internalCallContextFactory,
                                 final OverdueDispatcher dispatcher) {
-        super(notificationQueueService, config, internalCallContextFactory, dispatcher);
+        super(OVERDUE_CHECK_NOTIFIER_QUEUE, notificationQueueService, config, clock, internalCallContextFactory, dispatcher);
     }
 
     @Override

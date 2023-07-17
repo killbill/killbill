@@ -34,7 +34,7 @@ public class MultiTenantEventConfig extends MultiTenantConfigBase implements Eve
 
     @Inject
     public MultiTenantEventConfig(@Named(KillBillModule.STATIC_CONFIG) final EventConfig staticConfig, final CacheConfig cacheConfig) {
-        super(cacheConfig);
+        super(staticConfig, cacheConfig);
         this.staticConfig = staticConfig;
     }
 

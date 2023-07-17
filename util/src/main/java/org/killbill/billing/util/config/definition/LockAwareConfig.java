@@ -25,9 +25,16 @@ import org.skife.config.Description;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
-/*
- * Marker interface for killbill config files
- */
-public interface KillbillConfig {
+public interface LockAwareConfig extends KillbillConfig {
+
+    @Config("org.killbill.rescheduleIntervalOnLock")
+    @Default("30s, 1m, 1m, 3m, 3m, 10m")
+    @Description("Tme delay to reschedule an invoice run when lock is held")
+    List<TimeSpan> getRescheduleIntervalOnLock();
+
+    @Config("org.killbill.rescheduleIntervalOnLock")
+    @Default("30s, 1m, 1m, 3m, 3m, 10m")
+    @Description("Tme delay to reschedule an invoice run when lock is held")
+    List<TimeSpan> getRescheduleIntervalOnLock(@Param("dummy") final InternalTenantContext tenantContext);
 
 }

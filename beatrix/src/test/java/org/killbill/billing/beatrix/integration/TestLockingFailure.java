@@ -17,6 +17,9 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -26,12 +29,19 @@ import java.util.concurrent.Semaphore;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
+import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -40,8 +50,11 @@ import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
 
 public class TestLockingFailure extends TestIntegrationBase {
 
@@ -136,6 +149,67 @@ public class TestLockingFailure extends TestIntegrationBase {
         // Move ahead by 30' to match default payment config - add 5 for safety
         // and verify payment was made
         busHandler.pushExpectedEvents(NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDeltaFromReality(1000 * 35);
+        assertListenerStatus();
+    }
+
+
+    @Test(groups = "slow")
+    public void testOverdueLockingFailure() throws Exception {
+
+        final String configXml = "<overdueConfig>" +
+                                 "   <accountOverdueStates>" +
+                                 "       <initialReevaluationInterval>" +
+                                 "           <unit>DAYS</unit><number>5</number>" +
+                                 "       </initialReevaluationInterval>" +
+                                 "       <state name=\"OD1\">" +
+                                 "           <condition>" +
+                                 "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "                   <unit>DAYS</unit><number>5</number>" +
+                                 "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "           </condition>" +
+                                 "           <externalMessage>Reached OD1</externalMessage>" +
+                                 "           <blockChanges>true</blockChanges>" +
+                                 "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                                 "           <autoReevaluationInterval>" +
+                                 "               <unit>DAYS</unit><number>5</number>" +
+                                 "           </autoReevaluationInterval>" +
+                                 "       </state>" +
+                                 "   </accountOverdueStates>" +
+                                 "</overdueConfig>";
+
+        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
+        overdueConfigCache.loadDefaultOverdueConfig(config);
+
+        final LocalDate initialDate = new LocalDate(2023, 6, 1);
+        clock.setDay(initialDate);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        paymentPlugin.makeNextPaymentFailWithError();
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", initialDate, initialDate, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        // First overdue event 5 days after payment failure as configured
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        clock.addDays(5);
+        assertListenerStatus();
+
+        // Grab lock for 3 sec in a different thread
+        final OtherLocker other = new OtherLocker(locker, account.getId().toString(), 3);
+        new Thread(other).start();
+
+        // Payment retry is scheduled 8 days after payment failure, so 3 days after OD1
+        // Because we hold the global lock, this is rescheduled and we do not see any events.
+        clock.addDays(3);
+        other.waitUntilLockIsFree();
+        assertListenerStatus();
+
+        // Move ahead by 30' to match default overdue config - add 5 for safety
+        // and verify overdue state is cleared and payment went through.
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addDeltaFromReality(1000 * 35);
         assertListenerStatus();
     }

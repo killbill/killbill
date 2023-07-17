@@ -22,14 +22,16 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 
 public interface OverdueNotifier {
 
-    public void initialize();
+    public void initialize() throws NotificationQueueAlreadyExists;
 
     public void start();
 
-    public void stop();
+    public void stop() throws NoSuchNotificationQueue;
 
     public abstract void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId);
 

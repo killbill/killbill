@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.listener.OverdueDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
@@ -39,10 +40,12 @@ public class OverdueAsyncBusNotifier extends DefaultOverdueNotifierBase implemen
 
 
     @Inject
-    public OverdueAsyncBusNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
+    public OverdueAsyncBusNotifier(final NotificationQueueService notificationQueueService,
+                                   final OverdueProperties config,
                                    final InternalCallContextFactory internalCallContextFactory,
+                                   final Clock clock,
                                    final OverdueDispatcher dispatcher) {
-        super(notificationQueueService, config, internalCallContextFactory, dispatcher);
+        super(OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationQueueService, config, clock, internalCallContextFactory, dispatcher);
     }
 
     @Override

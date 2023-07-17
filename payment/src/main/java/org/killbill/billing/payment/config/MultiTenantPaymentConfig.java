@@ -27,17 +27,18 @@ import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
+import org.killbill.billing.util.config.tenant.MultiTenantLockAwareConfigBase;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
-public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements PaymentConfig {
+public class MultiTenantPaymentConfig extends MultiTenantLockAwareConfigBase implements PaymentConfig {
 
     private final PaymentConfig staticConfig;
 
     @Inject
     public MultiTenantPaymentConfig(@Named(KillBillModule.STATIC_CONFIG) final PaymentConfig staticConfig, final CacheConfig cacheConfig) {
-        super(cacheConfig);
+        super(staticConfig, cacheConfig);
         this.staticConfig = staticConfig;
     }
 
@@ -139,20 +140,6 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
         return getPaymentControlPluginNames();
     }
 
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock() {
-        return staticConfig.getRescheduleIntervalOnLock();
-    }
-
-    @Override
-    public List<TimeSpan> getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
-
-        final String result = getStringTenantConfig("getRescheduleIntervalOnLock", tenantContext);
-        if (result != null) {
-            return convertToListTimeSpan(result, "getRescheduleIntervalOnLock");
-        }
-        return getRescheduleIntervalOnLock();
-    }
 
     @Override
     public TimeSpan getJanitorRunningRate() {

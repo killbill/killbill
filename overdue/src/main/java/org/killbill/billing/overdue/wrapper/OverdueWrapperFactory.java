@@ -29,7 +29,6 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.overdue.api.OverdueApiException;
-import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.calculator.BillingStateCalculator;
@@ -39,6 +38,7 @@ import org.killbill.billing.overdue.config.DefaultOverdueStateSet;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.definition.OverdueConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
@@ -56,11 +56,13 @@ public class OverdueWrapperFactory {
     private final Clock clock;
     private final OverdueConfigCache overdueConfigCache;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final OverdueConfig overdueConfig;
 
     @Inject
     public OverdueWrapperFactory(final BlockingInternalApi api,
                                  final GlobalLocker locker,
                                  final Clock clock,
+                                 final OverdueConfig overdueConfig,
                                  final BillingStateCalculator billingStateCalculator,
                                  final OverdueStateApplicator overdueStateApplicatorBundle,
                                  final OverdueConfigCache overdueConfigCache,
@@ -72,28 +74,29 @@ public class OverdueWrapperFactory {
         this.api = api;
         this.locker = locker;
         this.clock = clock;
+        this.overdueConfig = overdueConfig;
         this.overdueConfigCache = overdueConfigCache;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
     public OverdueWrapper createOverdueWrapperFor(final Account blockable, final InternalTenantContext context) throws OverdueException {
-        return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
+        return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, overdueConfig, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
     }
 
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
         try {
             final Account account = accountApi.getAccountById(id, context);
-            return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
+            return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, overdueConfig, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
     }
 
     private OverdueStateSet getOverdueStateSet(final InternalTenantContext context) throws OverdueException {
-        final OverdueConfig overdueConfig;
+        final org.killbill.billing.overdue.api.OverdueConfig overdueConfigDesc;
         try {
-            overdueConfig = overdueConfigCache.getOverdueConfig(context);
-            if (overdueConfig == null || overdueConfig.getOverdueStatesAccount() == null) {
+            overdueConfigDesc = overdueConfigCache.getOverdueConfig(context);
+            if (overdueConfigDesc == null || overdueConfigDesc.getOverdueStatesAccount() == null) {
                 return new DefaultOverdueStateSet() {
 
                     @SuppressWarnings("unchecked")
@@ -108,7 +111,7 @@ public class OverdueWrapperFactory {
                     }
                 };
             } else {
-                return ((DefaultOverdueConfig) overdueConfig).getOverdueStatesAccount();
+                return ((DefaultOverdueConfig) overdueConfigDesc).getOverdueStatesAccount();
             }
         } catch (final OverdueApiException e) {
             throw new OverdueException(e);

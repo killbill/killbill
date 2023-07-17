@@ -1,6 +1,6 @@
 /*
- * Copyright 2020-2022 Equinix, Inc
- * Copyright 2014-2022 The Billing Project, LLC
+ * Copyright 2020-2023 Equinix, Inc
+ * Copyright 2014-2023 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,44 +15,34 @@
  * under the License.
  */
 
-package org.killbill.billing.subscription.config;
+package org.killbill.billing.overdue.config;
+
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.config.definition.KillbillConfig;
-import org.killbill.billing.util.config.definition.SubscriptionConfig;
+import org.killbill.billing.util.config.definition.OverdueConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
+import org.killbill.billing.util.config.tenant.MultiTenantLockAwareConfigBase;
 import org.killbill.billing.util.glue.KillBillModule;
+import org.skife.config.TimeSpan;
 
-public class MultiTenantSubscriptionConfig extends MultiTenantConfigBase implements SubscriptionConfig {
+public class MultiTenantOverdueConfig extends MultiTenantLockAwareConfigBase implements OverdueConfig {
 
-    private final SubscriptionConfig staticConfig;
+    private final OverdueConfig staticConfig;
 
     @Inject
-    public MultiTenantSubscriptionConfig(@Named(KillBillModule.STATIC_CONFIG) final SubscriptionConfig staticConfig, final CacheConfig cacheConfig) {
+    public MultiTenantOverdueConfig(@Named(KillBillModule.STATIC_CONFIG) final OverdueConfig staticConfig, final CacheConfig cacheConfig) {
         super(staticConfig, cacheConfig);
         this.staticConfig = staticConfig;
     }
 
     @Override
-    public boolean isEffectiveDateForExistingSubscriptionsAlignedToBCD() {
-        return staticConfig.isEffectiveDateForExistingSubscriptionsAlignedToBCD();
-    }
-
-    @Override
-    public boolean isEffectiveDateForExistingSubscriptionsAlignedToBCD(final InternalTenantContext tenantContext) {
-        final String result = getStringTenantConfig("isEffectiveDateForExistingSubscriptionsAlignedToBCD", tenantContext);
-        if (result != null) {
-            return Boolean.parseBoolean(result);
-        }
-        return isEffectiveDateForExistingSubscriptionsAlignedToBCD();
-    }
-
-    @Override
     protected Class<? extends KillbillConfig> getConfigClass() {
-        return SubscriptionConfig.class;
+        return OverdueConfig.class;
     }
 }

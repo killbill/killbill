@@ -34,7 +34,10 @@ import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.TimeSpanConverter;
+import org.killbill.billing.util.config.definition.OverdueConfig;
 import org.killbill.billing.util.globallocker.LockerType;
+import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -60,12 +63,15 @@ public class OverdueWrapper {
     private final BillingStateCalculator billingStateCalcuator;
     private final OverdueStateApplicator overdueStateApplicator;
     private final InternalCallContextFactory internalCallContextFactory;
+    private  final OverdueConfig overdueConfig;
+
 
     public OverdueWrapper(final Account overdueable,
                           final BlockingInternalApi api,
                           final OverdueStateSet overdueStateSet,
                           final GlobalLocker locker,
                           final Clock clock,
+                          final OverdueConfig overdueConfig,
                           final BillingStateCalculator billingStateCalcuator,
                           final OverdueStateApplicator overdueStateApplicator,
                           final InternalCallContextFactory internalCallContextFactory) {
@@ -74,6 +80,7 @@ public class OverdueWrapper {
         this.api = api;
         this.locker = locker;
         this.clock = clock;
+        this.overdueConfig = overdueConfig;
         this.billingStateCalcuator = billingStateCalcuator;
         this.overdueStateApplicator = overdueStateApplicator;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -90,7 +97,7 @@ public class OverdueWrapper {
 
             refreshWithLock(effectiveDate, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process overdue for accountId='{}'", overdueable.getId(), e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(overdueConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();
@@ -126,7 +133,7 @@ public class OverdueWrapper {
 
             clearWithLock(effectiveDate, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to clear overdue for accountId='{}'", overdueable.getId(), e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(overdueConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();
