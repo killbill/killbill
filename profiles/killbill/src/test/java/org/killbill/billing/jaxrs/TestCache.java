@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
@@ -107,8 +108,8 @@ public class TestCache extends TestJaxrsBase {
 
         // Uploading the test catalog using the new Tenant created before
         callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
-        final String catalogPath = Resources.getResource("SpyCarAdvanced.xml").getPath();
-        final String body = Files.readString(Path.of(catalogPath));
+        final Path catalogPath = Paths.get(Resources.getResource("SpyCarAdvanced.xml").toURI());
+        final String body = Files.readString(catalogPath);
         catalogApi.uploadCatalogXml(body, requestOptions);
         callbackServlet.assertListenerStatus();
 

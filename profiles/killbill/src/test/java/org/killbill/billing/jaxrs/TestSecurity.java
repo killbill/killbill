@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -193,8 +194,8 @@ public class TestSecurity extends TestJaxrsBase {
 
         boolean success = false;
         try {
-            final String catalogPath = Resources.getResource("org/killbill/billing/server/SpyCarBasic.xml").getPath();
-            final String body = Files.readString(Path.of(catalogPath));
+            final Path catalogPath = Paths.get(Resources.getResource("org/killbill/billing/server/SpyCarBasic.xml").toURI());
+            final String body = Files.readString(catalogPath);
             catalogApi.uploadCatalogXml(body, requestOptions);
             success = true;
         } catch (final Exception e) {
