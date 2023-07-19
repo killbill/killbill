@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.24.4</version>
+        <version>0.24.5-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-subscription</artifactId>
