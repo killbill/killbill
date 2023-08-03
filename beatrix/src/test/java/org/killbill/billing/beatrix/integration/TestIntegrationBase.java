@@ -506,6 +506,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return account;
     }
 
+    protected DefaultCallContext setupCallContextWithTenantAndAccount(UUID tenantId, UUID accountId) throws TenantApiException {
+        return new DefaultCallContext(accountId,
+                                      tenantId,
+                                      "tester",
+                                      CallOrigin.EXTERNAL,
+                                      UserType.TEST,
+                                      "good reason",
+                                      "trust me",
+                                      UUID.randomUUID(),
+                                      clock);
+    }
+
     protected Account createAccount(final AccountData accountData) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
