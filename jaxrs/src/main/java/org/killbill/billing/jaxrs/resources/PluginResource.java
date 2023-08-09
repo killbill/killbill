@@ -58,6 +58,7 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -221,9 +222,18 @@ public class PluginResource extends JaxRsResourceBase {
             log.warn("{} responded {}", request.getPathInfo(), response.getStatus());
         }
 
-        return Response.status(response.getStatus())
-                       .entity(byteArrayOutputStream.toByteArray())
-                       .build();
+        final Response.ResponseBuilder builder  = Response.status(response.getStatus())
+                .entity(byteArrayOutputStream.toByteArray());
+        for (String name : response.getHeaderNames()) {
+            builder.header(name, response.getHeaders(name));
+        }
+        if (response.getCharacterEncoding() != null) {
+            builder.encoding(response.getCharacterEncoding());
+        }
+        if (response.getContentType() != null) {
+            builder.type(response.getContentType());
+        }
+        return builder.build();
     }
 
     private InputStream createInputStream(final HttpServletRequest request, final MultivaluedMap<String, String> form) throws IOException {
