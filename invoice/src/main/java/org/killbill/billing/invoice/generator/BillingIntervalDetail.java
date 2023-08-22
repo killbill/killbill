@@ -133,6 +133,18 @@ public class BillingIntervalDetail {
 
     private void calculateInArrearEffectiveEndDate() {
 
+        //
+        // If we have an event mid-billing period (CHANGE, CANCELLATION) that aligns
+        // with the target date, we bill immediately for the period instead of waiting for
+        // the next billing cycle date, a.k.a firstBillingCycleDate. See #1907
+        //
+        // The following condition may be even more generic, but targetDate will typically align with the event so perhaps unnecessary:
+        // if (endDate != null && targetDate.compareTo(endDate) >= 0 && targetDate.isBefore(cutoffStartDt)) { ...}
+        if (endDate != null && targetDate.compareTo(endDate) == 0) {
+            effectiveEndDate = targetDate;
+            return;
+        }
+
         final LocalDate cutoffStartDt = inArrearGreedy ? startDate : firstBillingCycleDate;
         if (targetDate.isBefore(cutoffStartDt)) {
             // Nothing to bill for, hasSomethingToBill will return false

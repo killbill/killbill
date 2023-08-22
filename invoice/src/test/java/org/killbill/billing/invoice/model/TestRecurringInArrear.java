@@ -148,6 +148,32 @@ public class TestRecurringInArrear extends InvoiceTestSuiteNoDB {
         verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
+    @Test(groups = "fast", description = "See https://github.com/killbill/killbill/issues/1907")
+    public void testWithUpcomingChangeFromBeginingOfPeriod() throws Exception {
+        final LocalDate startDate = new LocalDate(2023, 8, 11);
+        final LocalDate endDate = new LocalDate(2023, 8, 20);
+        final LocalDate targetDate = new LocalDate(2023, 8, 20);
+        final int billingCycleDayLocal = 11;
+
+        final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
+        expectedDates.put(new LocalDate(2023, 8, 11), new LocalDate(2023, 8, 20));
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+    }
+
+
+    @Test(groups = "fast", description = "See https://github.com/killbill/killbill/issues/1907")
+    public void testWithUpcomingChangeAfterBeginingOfPeriod() throws Exception {
+        final LocalDate startDate = new LocalDate(2023, 8, 15);
+        final LocalDate endDate = new LocalDate(2023, 8, 20);
+        final LocalDate targetDate = new LocalDate(2023, 8, 20);
+        final int billingCycleDayLocal = 11;
+
+        final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
+        expectedDates.put(new LocalDate(2023, 8, 15), new LocalDate(2023, 8, 20));
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+    }
+
+
     private void verifyInvoiceItems(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate,
                                     final int billingCycleDayLocal, final BillingPeriod billingPeriod,
                                     final LinkedHashMap<LocalDate, LocalDate> expectedDates) throws InvalidDateSequenceException {

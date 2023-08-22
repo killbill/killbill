@@ -81,7 +81,7 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1907")
-    public void testCancelAddOnAfterChangePlan() throws Exception { //Create, upgrade and cancel add on - DOES NOT WORK as expected, no invoice is generated after CANCEL
+    public void testCancelAddOnAfterChangePlan() throws Exception {
 
         final LocalDate today = new LocalDate(2023, 8, 11);
         clock.setDay(today);
@@ -113,14 +113,12 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 11), new LocalDate(2023, 8, 15), InvoiceItemType.RECURRING, new BigDecimal("116.13")));
 
-        //The following is commented since the test fails here
-
-        //        //move clock to 2023-08-20 and cancel ADDON
-        //        clock.setDay(new LocalDate(2023, 8, 20));
-        //        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        //        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext);
-        //        addOnEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
-        //        assertListenerStatus();
+        // Move clock to 2023-08-20 and cancel ADDON
+        clock.setDay(new LocalDate(2023, 8, 20));
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final Entitlement addOnEntitlement2 = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext);
+        addOnEntitlement2.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
+        assertListenerStatus();
     }
 
 }
