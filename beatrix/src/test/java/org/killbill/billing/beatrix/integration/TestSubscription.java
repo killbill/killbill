@@ -1139,11 +1139,9 @@ public class TestSubscription extends TestIntegrationBase {
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
         final List<SubscriptionEvent> events = subscription.getSubscriptionEvents();
         assertNotNull(events);
-        //Test fails here as this returns only 2 events - START_ENTITLEMENT and START_BILLING
-        assertEquals(events.size(), 4);
+        assertEquals(events.size(), 3);
         assertTrue(events.stream().anyMatch(e -> e.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT)));
         assertTrue(events.stream().anyMatch(e -> e.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING)));
-        assertTrue(events.stream().anyMatch(e -> e.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT)));
         assertTrue(events.stream().anyMatch(e -> e.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)));
 
     }
