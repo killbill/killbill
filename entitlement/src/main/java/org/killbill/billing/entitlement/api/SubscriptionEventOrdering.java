@@ -91,6 +91,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
             case CHANGE:
                 return List.of(SubscriptionEventType.CHANGE);
             case CANCEL:
+            case EXPIRED:
                 return List.of(SubscriptionEventType.STOP_BILLING);
             case PHASE:
                 return List.of(SubscriptionEventType.PHASE);
