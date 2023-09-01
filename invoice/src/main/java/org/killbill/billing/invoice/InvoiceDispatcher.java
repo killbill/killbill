@@ -547,6 +547,21 @@ public class InvoiceDispatcher {
 
         final PriorityQueue<LocalDate> pq = new PriorityQueue<LocalDate>(allCandidateTargetDates);
 
+        final Invoice latestInvoice = accountInvoices.getInvoices().stream()
+                       .max(new Comparator<Invoice>() {
+            @Override
+            public int compare(final Invoice o1, final Invoice o2) {
+                return o1.getTargetDate().compareTo(o2.getTargetDate());
+            }
+        }).orElse(null);
+
+        for (final BillingEvent be : billingEvents) {
+            final LocalDate effDt = context.toLocalDate(be.getEffectiveDate());
+            if (latestInvoice == null || latestInvoice.getTargetDate().compareTo(effDt) < 0) {
+                pq.add(effDt);
+            }
+        }
+
         // Keeps track of generated invoices as we go through the list
         // The list is an ordered list of items merged from existing notifications and upcoming notifications, each of these the result of a previous invoice being generated.
         // Note: we reuse the underlying list from  the AccountInvoices to avoid recreating such object (which is feature dependent)
