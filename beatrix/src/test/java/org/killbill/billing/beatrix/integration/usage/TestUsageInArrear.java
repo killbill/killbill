@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
@@ -785,8 +786,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testRecordUsageOnLastDayWithDate() throws Exception {
-        // We take april as it has 30 days (easier to play with BCD)
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        // Set clock to 2012-04-01T7:00
         final DateTime initialDateTime = new DateTime(2012, 4, 1, 7, 0, 0);
         clock.setTime(initialDateTime);
 
@@ -795,9 +795,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         assertEquals(account.getReferenceTime().compareTo(initialDateTime), 0); //Reference time set to 2012-04-01T7:00
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
-        //
+        // CREATE SUBSCRIPTION
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
         final UUID baseSubscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
@@ -805,9 +803,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(baseSubscriptionId, internalCallContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
 
-        //
         // ADD ADD_ON ON THE SAME DAY
-        //
         final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("bullets-usage-in-arrear");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonSubscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(addonSpec, null, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
@@ -823,14 +819,21 @@ public class TestUsageInArrear extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); //Move to 2012-05-01
         assertListenerStatus();
-        final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
-        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1"), internalCallContext);
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1"), internalCallContext); //tracking-2 is not included
+
+        //the USAGE item (tracking-2) is included in the subsequent invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); //Move to 2012-06-01
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-2"), internalCallContext);
+
     }
 
     @Test(groups = "slow")
     public void testRecordUsageOnLastDayWithDateTime() throws Exception {
-        // We take april as it has 30 days (easier to play with BCD)
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        // Set clock to 2012-04-01T7:00
         final DateTime initialDateTime = new DateTime(2012, 4, 1, 7, 0, 0);
         clock.setTime(initialDateTime);
 
@@ -839,9 +842,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         assertEquals(account.getReferenceTime().compareTo(initialDateTime), 0); //Reference time set to 2012-04-01T7:00
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
-        //
+        // CREATE SUBSCRIPTION
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
         final UUID baseSubscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
@@ -849,9 +850,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(baseSubscriptionId, internalCallContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
 
-        //
         // ADD ADD_ON ON THE SAME DAY
-        //
         final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("bullets-usage-in-arrear");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonSubscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(addonSpec, null, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
@@ -867,25 +866,30 @@ public class TestUsageInArrear extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); //Move to 2012-05-01
         assertListenerStatus();
-        final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
-        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1"), internalCallContext);
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1"), internalCallContext); //tracking-2 is not included
+
+        //the USAGE item (tracking-2) is included in the subsequent invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); //Move to 2012-06-01
+        assertListenerStatus();
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-2"), internalCallContext);
+
     }
 
     @Test(groups = "slow")
-    public void testRecordUsageOnLastDayWithDateTime2() throws Exception {
-        // We take april as it has 30 days (easier to play with BCD)
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+    public void testRecordUsageOnLastDayWithDateTimeAccountInPSTTimeZone() throws Exception {
+        // Set clock to 2012-04-01T7:00
         final DateTime initialDateTime = new DateTime(2012, 4, 1, 7, 0, 0);
         clock.setTime(initialDateTime);
 
-        final AccountData accountData = getAccountData(1);
+        final AccountData accountData = getAccountData(1, DateTimeZone.forID("America/Los_Angeles"));
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         assertEquals(account.getReferenceTime().compareTo(initialDateTime), 0); //Reference time set to 2012-04-01T7:00
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
-        //
+        // CREATE SUBSCRIPTION
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
         final UUID baseSubscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
@@ -893,9 +897,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(baseSubscriptionId, internalCallContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
 
-        //
         // ADD ADD_ON ON THE SAME DAY
-        //
         final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("bullets-usage-in-arrear");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonSubscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(addonSpec, null, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
@@ -903,23 +905,17 @@ public class TestUsageInArrear extends TestIntegrationBase {
 
         final Subscription aoSubscription = subscriptionApi.getSubscriptionForEntitlementId(addonSubscriptionId, false, callContext);
 
-        //Record usage for 2012-05-01T2:00 - this usage is NOT included in the invoice - Should it be included since it is recorded before the reference time?
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new DateTime(2012, 5, 1, 2, 0, 0), BigDecimal.valueOf(100L), callContext);
+        //Record usage for 2012-04-30T2:00 - this usage is included in the invoice
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new DateTime(2012, 4, 30, 2, 0, 0), BigDecimal.valueOf(100L), callContext);
+        //Record usage for 2012-05-01T2:00 - this usage is ALSO included in the invoice (it is not included if account timezone is UTC)
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new DateTime(2012, 5, 1, 2, 0, 0), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); //Move to 2012-05-01
         assertListenerStatus();
-        //Test fails at this line below as a $0 invoice item is created corresponding to USAGE
-        //        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
-        //        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1"), internalCallContext);
-
-        //the USAGE item is included in the subsequent invoice
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1); //Move to 2012-06-01
-        assertListenerStatus();
-        final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
-        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1"), internalCallContext);
-
+        //Test fails at the line below for UTC timezone but passes for PST timezone
+        final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext); ////tracking-2 is included
     }
 
 }
