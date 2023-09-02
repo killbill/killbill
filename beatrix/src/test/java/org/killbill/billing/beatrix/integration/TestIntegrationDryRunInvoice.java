@@ -797,12 +797,12 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         //block with date=2023-09-01
         final DateTime blockingDate = new DateTime(2023, 9, 1, 0, 0, 0, 0, testTimeZone);
-        final BlockingState block = new DefaultBlockingState(subscription.getId(), BlockingStateType.ACCOUNT, "subscriptionBlock", "svc2", false, false, true, blockingDate);
+        final BlockingState block = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "subscriptionBlock", "svc2", false, false, true, blockingDate);
         subscriptionApi.addBlockingState(block, blockingDate, Collections.emptyList(), callContext);
 
         //unblock with date=2023-09-15
         final DateTime unBlockingDate = new DateTime(2023, 9, 15, 0, 0, 0, 0, testTimeZone);
-        final BlockingState unBlock = new DefaultBlockingState(subscription.getId(), BlockingStateType.ACCOUNT, "subscriptionUnBlock", "svc2", false, false, false, unBlockingDate);
+        final BlockingState unBlock = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "subscriptionUnBlock", "svc2", false, false, false, unBlockingDate);
         subscriptionApi.addBlockingState(unBlock, unBlockingDate, Collections.emptyList(), callContext);
 
         //Dry Run with date =2023-09-01 - no invoice generated as expected
