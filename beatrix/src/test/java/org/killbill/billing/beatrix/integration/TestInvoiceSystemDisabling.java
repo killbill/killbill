@@ -75,12 +75,11 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 0);
 
-        // Dry-run generation
+        // Dry-run generation - only shows the latest item as generated on 2012-5-1 as if system was 'up to date'
         Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         assertListenerStatus();
-        final List<ExpectedInvoiceItemCheck> expected = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
-                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        invoiceChecker.checkInvoiceNoAudits(invoice, expected);
+        final List<ExpectedInvoiceItemCheck> expectedDryRun = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoiceNoAudits(invoice, expectedDryRun);
 
         // Still parked
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
@@ -92,7 +91,9 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        // Now unparked
+        // Now unpark
+        final List<ExpectedInvoiceItemCheck> expected = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
+                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
         invoiceChecker.checkInvoice(invoice, callContext, expected);
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);

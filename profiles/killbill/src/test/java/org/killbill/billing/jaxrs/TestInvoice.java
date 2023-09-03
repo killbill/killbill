@@ -296,8 +296,8 @@ public class TestInvoice extends TestJaxrsBase {
 
         final LocalDate targetDt2 = effDt.plusDays(30);
         final Invoice dryRunInvoice2 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt2, NULL_PLUGIN_PROPERTIES, requestOptions);
-        // Two items for the FIXED & RECURRING price validating the future targetDate
-        assertEquals(dryRunInvoice2.getItems().size(), 2);
+        // One item for the RECURRING price validating the future targetDate
+        assertEquals(dryRunInvoice2.getItems().size(), 1);
     }
 
     @Test(groups = "slow", description = "Can retrieve invoice payments")
