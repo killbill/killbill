@@ -545,7 +545,27 @@ public class InvoiceDispatcher {
 
         LinkedList<PluginProperty> pluginProperties;
 
+
+        // Identifies the latest invoice and insert subsequent billing events in the queue:
+        // - We don't want to insert billing events 'in the past' as we could re-invoice differently (based on provided dryRun SUBSCRIPTION_ACTION and date)
+        // - However, we do want subsequent billing events prior our target date to catch cases where we have blocked billing (no triggering an intermediate
+        //   invoice below) followed by resume billing
+        // See issue https://github.com/killbill/killbill/issues/1920
+        final Invoice latestInvoice = accountInvoices.getInvoices().stream()
+                       .max(new Comparator<Invoice>() {
+            @Override
+            public int compare(final Invoice o1, final Invoice o2) {
+                return o1.getTargetDate().compareTo(o2.getTargetDate());
+            }
+        }).orElse(null);
+
         final PriorityQueue<LocalDate> pq = new PriorityQueue<LocalDate>(allCandidateTargetDates);
+        for (final BillingEvent be : billingEvents) {
+            final LocalDate effDt = context.toLocalDate(be.getEffectiveDate());
+            if (latestInvoice == null || latestInvoice.getTargetDate().compareTo(effDt) < 0) {
+                pq.add(effDt);
+            }
+        }
 
         // Keeps track of generated invoices as we go through the list
         // The list is an ordered list of items merged from existing notifications and upcoming notifications, each of these the result of a previous invoice being generated.
