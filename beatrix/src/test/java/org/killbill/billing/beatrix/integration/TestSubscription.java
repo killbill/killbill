@@ -37,6 +37,8 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
@@ -51,6 +53,7 @@ import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.junction.DefaultBlockingState;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -91,6 +94,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
         List<ExpectedInvoiceItemCheck> toBeChecked = List.of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
+        final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 9, 30), new LocalDate(2023, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 31), new LocalDate(2023, 9, 30), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         //
@@ -1180,6 +1184,122 @@ public class TestSubscription extends TestIntegrationBase {
         assertTrue(events.stream().anyMatch(e -> e.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING)));
         assertTrue(events.stream().anyMatch(e -> e.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT)));
         assertTrue(events.stream().anyMatch(e -> e.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)));
+
+    }
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionPauseResume() throws Exception {
+        final LocalDate initialDate = new LocalDate(2022, 12, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        //create subscription
+        final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly-notrial");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //verify invoice
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
+        List<ExpectedInvoiceItemCheck> toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, toBeChecked);
+
+        final String pauseStateName = "PAUSE";
+        final String activeStateName= "ACTIVE";
+        final String serviceName = "service1";
+
+        //pause with future date
+        DateTime effectiveDate = new DateTime("2022-12-04T18:04:06");
+        BlockingState blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, pauseStateName, serviceName, true, true, true, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+
+        //resume with future date
+        effectiveDate = new DateTime("2023-01-04T18:04:06");
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+
+        //move clock to 2023-01-01
+        DateTime currentDateTime = new DateTime("2023-01-01T18:55:31");
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.NULL_INVOICE);
+        clock.setTime(currentDateTime);
+        assertListenerStatus();
+        //Pause is effective, so invoice with credit is generated for the paused duration
+        toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 4), new LocalDate(2023, 1, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("18.02").negate()), new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 1, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("18.02")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, toBeChecked);
+
+        //verify that there are two invoices
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
+
+        //cancel future resume by adding another PAUSE state
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        effectiveDate = null;
+        //If stateName=PAUSE is specified here, the blocking state is not inserted, so stateName=ACTIVE is specified with blockChange=true, blockEntitlement=true, blockBilling=true is specified.
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, true, true, true, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //Fix state name - now set it to PAUSE
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        effectiveDate = null;
+        //insert another blocking state with stateName=PAUSE and blockChange=true, blockEntitlement=true, blockBilling=true
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, pauseStateName, serviceName, true, true, true, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //Resume with wrong effectiveDate
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        effectiveDate = currentDateTime.minusHours(1);
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //move clock to 2023-04-07
+        currentDateTime = new DateTime("2023-04-07T18:04:06");
+        clock.setTime(currentDateTime);
+
+        //resume with right effectiveDate - no invoice generated
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        effectiveDate = null;
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        // verify that there are still only two invoices
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
+
+        //explicitly trigger invoice generation - Invoice is generated
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        Invoice invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, Collections.emptyList(), callContext);
+        assertNotNull(invoice);
+        toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 7), new LocalDate(2023, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("15.96")), new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 7), new LocalDate(2023, 4, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("15.96").negate()));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, toBeChecked);
+
+        //verify that there are now 3 invoices
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 3);
+        assertListenerStatus();
+
+        //move clock by a month - subsequence invoice is generated
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); //2023-05-07
+        assertListenerStatus();
+        toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 1), new LocalDate(2023, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")), new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 7), new LocalDate(2023, 5, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("2.06").negate()));
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext, toBeChecked);
+
+        //verify that there are now 4 invoices
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 4);
+        assertListenerStatus();
+
+        //move clock by a month - subsequence invoice is generated - no more credit to consume
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); //2023-06-07
+        assertListenerStatus();
+        toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 1), new LocalDate(2023, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        invoiceChecker.checkInvoice(account.getId(), 5, callContext, toBeChecked);
+
+        //verify that there are now 5 invoices
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 5);
+        assertListenerStatus();
 
     }
 }
