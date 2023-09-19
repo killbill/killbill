@@ -204,7 +204,7 @@ public class PlanAligner extends BaseAligner {
                 throw new SubscriptionBaseError(String.format("Unknown PlanAlignmentCreate %s", alignment));
         }
 
-        return getPhaseAlignments(plan, initialPhase, planStartDate);
+        return getPhaseAlignments(plan, initialPhase, planStartDate, context);
     }
 
     private TimedPhase getTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
@@ -277,11 +277,11 @@ public class PlanAligner extends BaseAligner {
                 throw new SubscriptionBaseError(String.format("Unknown PlanAlignmentChange %s", alignment));
         }
 
-        final List<TimedPhase> timedPhases = getPhaseAlignments(nextPlan, initialPhase, planStartDate);
+        final List<TimedPhase> timedPhases = getPhaseAlignments(nextPlan, initialPhase, planStartDate, context);
         return getTimedPhase(timedPhases, effectiveDate, which);
     }
 
-    private List<TimedPhase> getPhaseAlignments(final Plan plan, @Nullable final PhaseType initialPhase, final DateTime initialPhaseStartDate) throws SubscriptionBaseApiException {
+    private List<TimedPhase> getPhaseAlignments(final Plan plan, @Nullable final PhaseType initialPhase, final DateTime initialPhaseStartDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
         if (plan == null) {
             return Collections.emptyList();
         }
@@ -303,7 +303,7 @@ public class PlanAligner extends BaseAligner {
             // STEPH check for duration null instead TimeUnit UNLIMITED
             if (cur.getPhaseType() != PhaseType.EVERGREEN) {
                 final Duration curPhaseDuration = cur.getDuration();
-                nextPhaseStart = addDuration(curPhaseStart, curPhaseDuration);
+                nextPhaseStart = addDuration(curPhaseStart, curPhaseDuration, context);
                 if (nextPhaseStart == null) {
                     throw new SubscriptionBaseError(String.format("Unexpected non ending UNLIMITED phase for plan %s",
                                                                   plan.getName()));

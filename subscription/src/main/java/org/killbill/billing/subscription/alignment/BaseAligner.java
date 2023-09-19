@@ -19,19 +19,24 @@
 package org.killbill.billing.subscription.alignment;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Duration;
 
 public class BaseAligner {
 
-    protected DateTime addDuration(final DateTime input, final Duration duration) {
-        return addOrRemoveDuration(input, duration, true);
+    protected DateTime addDuration(final DateTime input, final Duration duration, final InternalTenantContext context) {
+        return addOrRemoveDuration(input, duration, true, context);
     }
 
-    protected DateTime removeDuration(final DateTime input, final Duration duration) {
-        return addOrRemoveDuration(input, duration, false);
+    protected DateTime removeDuration(final DateTime input, final Duration duration, final InternalTenantContext context) {
+        return addOrRemoveDuration(input, duration, false, context);
     }
 
-    private DateTime addOrRemoveDuration(final DateTime input, final Duration duration, final boolean add) {
-        return add ? input.plus(duration.toJodaPeriod()) : input.minus(duration.toJodaPeriod());
+    private DateTime addOrRemoveDuration(final DateTime input, final Duration duration, final boolean add, final InternalTenantContext context) {
+        final DateTime inputInAccountTz = input.toDateTime(context.getFixedOffsetTimeZone());
+        final DateTime resultInAccountTz = add ? inputInAccountTz.plus(duration.toJodaPeriod()) : inputInAccountTz.minus(duration.toJodaPeriod());
+        return resultInAccountTz.toDateTime(DateTimeZone.UTC);
     }
 }

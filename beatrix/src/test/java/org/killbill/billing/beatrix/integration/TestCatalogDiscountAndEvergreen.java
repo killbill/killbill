@@ -125,23 +125,18 @@ public class TestCatalogDiscountAndEvergreen extends TestIntegrationBase {
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 28), new LocalDate(2023, 5, 28), InvoiceItemType.RECURRING, new BigDecimal("4.95")));
 
-        //2023-05-29 - end of discount phase - prorated invoice corresponding to discount phase
-        clock.setTime(new DateTime(2023, 5, 29,3,47,56));
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 28), new LocalDate(2023, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("0.48")));
-
-        //2023-06-01 - Prorated invoice corresponding to evergreen phase
-        clock.setTime(new DateTime(2023, 6, 1,3,47,56));
+        //2023-06-01
+        clock.addMonths(1);
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.NULL_INVOICE);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 5, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 31), new LocalDate(2023, 6, 28), InvoiceItemType.RECURRING, new BigDecimal("22.54")));
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 5, 28), new LocalDate(2023, 6, 28), InvoiceItemType.RECURRING, new BigDecimal("24.95")));
 
-        //2023-06-29 - Invoice corresponding to evergreen phase
-        clock.setTime(new DateTime(2023, 6, 29,3,47,56));
+        //2023-07-01
+        clock.addMonths(1);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 6, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 28), new LocalDate(2023, 7, 28), InvoiceItemType.RECURRING, new BigDecimal("24.95")));
+        invoiceChecker.checkInvoice(account.getId(), 5, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 6, 28), new LocalDate(2023, 7, 28), InvoiceItemType.RECURRING, new BigDecimal("24.95")));
+
     }
 
 }

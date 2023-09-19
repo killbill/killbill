@@ -23,11 +23,16 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.DefaultDuration;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -67,6 +72,25 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         }
         super.beforeMethod();
         currentVersion = catalog.versionForDate(clock.getUTCNow());
+    }
+
+    @Test(groups = "fast")
+    public void testAddPhaseWithTimeZone() throws Exception {
+        final DateTime input = new DateTime(2023, 3, 1, 3, 47, 56, DateTimeZone.UTC);
+        final Duration duration = new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(3);
+
+        final DateTime referenceTime = new DateTime(2023, 3, 1,3,47,56,  DateTimeZone.UTC);
+        final DateTimeZone tz = DateTimeZone.forID("America/New_York");
+
+        final DateTime inputLocalTz = input.toDateTime(tz);
+
+        final InternalTenantContext context = new InternalTenantContext(1L, 2L, tz, referenceTime);
+        final DateTime result = planAligner.addDuration(input, duration, context);
+
+        // Note that initial time difference was 5 hours and now it is only 4 hours hence time component in UTC set to 2:47:56
+        final DateTime expected = new DateTime(2023, 5, 29, 2, 47, 56,  DateTimeZone.UTC);
+        Assert.assertEquals(result, expected);
+
     }
 
     @Test(groups = "fast")
