@@ -1302,4 +1302,80 @@ public class TestSubscription extends TestIntegrationBase {
         assertListenerStatus();
 
     }
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionPauseResumeSimplified() throws Exception {
+        final LocalDate initialDate = new LocalDate(2022, 12, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        //create subscription
+        final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly-notrial");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //verify invoice
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
+        List<ExpectedInvoiceItemCheck> toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 1), new LocalDate(2023, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, toBeChecked);
+
+        final String pauseStateName = "PAUSE";
+        final String activeStateName= "ACTIVE";
+        final String serviceName = "service1";
+
+        //pause with future date
+        DateTime effectiveDate = new DateTime("2022-12-04T18:04:06");
+        BlockingState blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, pauseStateName, serviceName, true, true, true, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+
+        //resume with future date
+        effectiveDate = new DateTime("2023-01-04T18:04:06");
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+
+        //move clock to 2023-01-01
+        DateTime currentDateTime = new DateTime("2023-01-01T18:55:31");
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.NULL_INVOICE);
+        clock.setTime(currentDateTime);
+        assertListenerStatus();
+        //Pause is effective, so invoice with credit is generated for the paused duration
+        toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2022, 12, 4), new LocalDate(2023, 1, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("18.02").negate()), new ExpectedInvoiceItemCheck(new LocalDate(2023, 1, 1), new LocalDate(2023, 1, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("18.02")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, toBeChecked);
+
+        //verify that there are two invoices
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
+
+        //cancel future resume by adding another PAUSE state with a different service name
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        effectiveDate = null;
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, pauseStateName, "service2", true, true, true, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //Resume with wrong effectiveDate
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        effectiveDate = currentDateTime.minusHours(1);
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //move clock to 2023-04-07
+        currentDateTime = new DateTime("2023-04-07T18:04:06");
+        clock.setTime(currentDateTime);
+
+        //resume with right effectiveDate - invoice is automatically generated
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
+        effectiveDate = null;
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, "service2", false, false, false, effectiveDate);
+        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 3);
+
+        toBeChecked = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 7), new LocalDate(2023, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("15.96")), new ExpectedInvoiceItemCheck(new LocalDate(2023, 4, 7), new LocalDate(2023, 4, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("15.96").negate()));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, toBeChecked);
+    }
+
 }
