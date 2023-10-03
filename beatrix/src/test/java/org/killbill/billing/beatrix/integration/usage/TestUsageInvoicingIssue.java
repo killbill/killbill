@@ -19,6 +19,8 @@ package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -32,7 +34,9 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -40,6 +44,13 @@ import static org.testng.Assert.assertEquals;
 
 public class TestUsageInvoicingIssue extends TestIntegrationBase {
 
+    @Override
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
+        allExtraProperties.put(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
+        return getConfigSource(null, allExtraProperties);
+    }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
@@ -49,6 +60,13 @@ public class TestUsageInvoicingIssue extends TestIntegrationBase {
         invoiceConfig.setMaxRawUsagePreviousPeriod(0);
     }
 
+    /*
+    1.  Set clock to 8/28, create new account, create new subscription w/ start date 8/28 billing in arrear w/ unit pricing, BCD = 1
+2.  Record some usage for period 8/28-8/31
+3.  Generate invoice w/ target date 9/1 and commit
+4.  Set clock to 9/21
+5.  Generate invoice w/ target date 10/1 and see the error!
+     */
     @Test(groups = "slow")
     public void testWithUsageInvoicingIssue() throws Exception {
         clock.setDay(new LocalDate(2023, 8, 28));
@@ -66,7 +84,7 @@ public class TestUsageInvoicingIssue extends TestIntegrationBase {
         assertListenerStatus();
 
         //Record usage for 2023-08-29
-        recordUsageData(subscriptionId, "tracking-1", "stones", new LocalDate(2023, 8, 28), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(subscriptionId, "tracking-1", "stones", new LocalDate(2023, 8, 29), BigDecimal.valueOf(50L), callContext);
 
         //generate invoice with date 2023-09-01 and commit it
         Invoice invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 9, 1), Collections.emptyList(), callContext);
@@ -83,6 +101,7 @@ public class TestUsageInvoicingIssue extends TestIntegrationBase {
         invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 10, 1), Collections.emptyList(), callContext);
         assertListenerStatus();
 
+        Thread.sleep(1000 * 3600);
     }
 
 }
