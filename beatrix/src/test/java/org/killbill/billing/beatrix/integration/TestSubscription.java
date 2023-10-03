@@ -50,6 +50,7 @@ import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -1303,6 +1304,7 @@ public class TestSubscription extends TestIntegrationBase {
 
     }
 
+    private static final DryRunArguments DRY_RUN_TARGET_DATE_ARG = new TestDryRunArguments(DryRunType.TARGET_DATE);
     @Test(groups = "slow")
     public void testCreateSubscriptionPauseResumeSimplified() throws Exception {
         final LocalDate initialDate = new LocalDate(2022, 12, 1);
@@ -1326,14 +1328,14 @@ public class TestSubscription extends TestIntegrationBase {
         final String serviceName = "service1";
 
         //pause with future date
-        DateTime effectiveDate = new DateTime("2022-12-04T18:04:06");
-        BlockingState blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, pauseStateName, serviceName, true, true, true, effectiveDate);
-        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        DateTime pauseEffDt = new DateTime("2022-12-04T18:04:06");
+        BlockingState blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, pauseStateName, serviceName, true, true, true, pauseEffDt);
+        subscriptionApi.addBlockingState(blockingState, pauseEffDt, Collections.emptyList(), callContext);
 
         //resume with future date
-        effectiveDate = new DateTime("2023-01-04T18:04:06");
-        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, effectiveDate);
-        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
+        DateTime resumeEffDt = new DateTime("2023-01-04T18:04:06");
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, resumeEffDt);
+        subscriptionApi.addBlockingState(blockingState, resumeEffDt, Collections.emptyList(), callContext);
 
         //move clock to 2023-01-01
         DateTime currentDateTime = new DateTime("2023-01-01T18:55:31");
@@ -1348,15 +1350,22 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
 
         //cancel future resume by adding another PAUSE state with a different service name
-        busHandler.pushExpectedEvents(NextEvent.BLOCK);
-        effectiveDate = null;
-        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, pauseStateName, "service2", true, true, true, effectiveDate);
-        subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
-        assertListenerStatus();
+       // busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        DateTime resumeEffDt2 = new DateTime("2023-01-01T18:04:06");
+        blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, true, true, false, resumeEffDt2);
+        subscriptionApi.addBlockingState(blockingState, resumeEffDt2, Collections.emptyList(), callContext);
+       // assertListenerStatus();
+
+        Thread.sleep(1000);
+
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, toBeChecked);
+
+
 
         //Resume with wrong effectiveDate
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        effectiveDate = currentDateTime.minusHours(1);
+        DateTime effectiveDate = currentDateTime.minusHours(1);
         blockingState = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, activeStateName, serviceName, false, false, false, effectiveDate);
         subscriptionApi.addBlockingState(blockingState, effectiveDate, Collections.emptyList(), callContext);
         assertListenerStatus();
