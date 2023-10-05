@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2010-2013 Ning, Inc.
+  ~ Copyright 2014-2018 Groupon, Inc
+  ~ Copyright 2014-2018 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<!-- Use cases covered so far: Tiered Product (Pistol/Shotgun/Assault-Rifle) 
+	Multiple changeEvent plan policies Multiple PlanAlignment (see below, trial 
+	add-on alignments and rescue discount package) Product transition rules Add 
+	on (Scopes, Hoster) Multi-pack addon (Extra-Ammo) Addon Trial aligned to 
+	base plan (holster-monthly-regular) Addon Trial aligned to creation (holster-monthly-special) 
+	Rescue discount package (assault-rifle-annual-rescue) Plan phase with a reccurring 
+	and a one off (refurbish-maintenance) Phan with more than 2 phase (gunclub 
+	discount plans) Use Cases to do: Tiered Add On Riskfree period -->
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+    <effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
+    <catalogName>Firearms</catalogName>
+
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>USD</currency>
+        <currency>EUR</currency>
+        <currency>GBP</currency>
+    </currencies>
+
+    <units>
+        <unit name="stones"/>
+    </units>
+
+    <products>
+        <product name="Trebuchet">
+            <category>BASE</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+    </rules>
+    <plans>
+        <plan name="trebuchet-usage-in-arrear" prettyName="Trebuchet Monthly Plan">
+            <product>Trebuchet</product>
+            <recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>30.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage name="trebuchet-in-arrear-usage" billingMode="IN_ARREAR" usageType="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>stones</unit>
+                                        <max>100</max>
+                                    </limit>
+                                </limits>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>USD</currency>
+                                        <value>100</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>stones</unit>
+                                        <max>-1</max>
+                                    </limit>
+                                </limits>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>USD</currency>
+                                        <value>1000</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>trebuchet-usage-in-arrear</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+
+</catalog>
