@@ -19,6 +19,8 @@ package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -28,11 +30,15 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.integration.TestIntegrationBase;
+import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -47,6 +53,15 @@ public class TestUsageInvoicingIssue extends TestIntegrationBase {
 
         invoiceConfig.setMaxInvoiceLimit(new Period("P1M"));
         invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+    }
+
+    @Override
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogInArrearWithRecurringAndUsage");
+        //allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES); //this adds the default catalog, so commented this out
+        allExtraProperties.put(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
+        return super.getConfigSource(null, allExtraProperties);
     }
 
     @Test(groups = "slow")
@@ -75,14 +90,30 @@ public class TestUsageInvoicingIssue extends TestIntegrationBase {
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
 
-        //set date to 2023-09-21
-        clock.setDay(new LocalDate(2023, 9, 21));
+        invoice = invoiceUserApi.getInvoice(invoice.getId(), callContext);
+        assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 28), new LocalDate(2023, 9, 1), InvoiceItemType.USAGE, new BigDecimal("100.0")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 28), new LocalDate(2023, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("3.87")));
 
-        //generate invoice with date 2023-10-01
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE); // no usage recorded so null invoice
-        invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 10, 1), Collections.emptyList(), callContext);
+        //set date to 2023-09-21
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE); //why?
+        clock.setDay(new LocalDate(2023, 9, 21));
         assertListenerStatus();
 
+        //generate invoice with date 2023-10-01
+        invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2023, 10, 1), Collections.emptyList(), callContext);
+        assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoice = invoiceUserApi.getInvoice(invoice.getId(), callContext);
+        assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED);
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 9, 1), new LocalDate(2023, 10, 1), InvoiceItemType.USAGE, BigDecimal.ZERO),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 9, 1), new LocalDate(2023, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("30.0")));
     }
 
 }
