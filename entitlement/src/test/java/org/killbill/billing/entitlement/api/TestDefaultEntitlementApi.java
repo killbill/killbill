@@ -40,6 +40,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.testng.Assert;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -1156,6 +1157,57 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow")
+    @Ignore(value = "This testcase shows a new misbehavior left after fixing GH#1355")
+    public void testCreateBaseSubscriptionsWithAddOnsOnBaseChangeCanceled() throws AccountApiException, EntitlementApiException
+    {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        // Create base entitlement
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", PhaseType.EVERGREEN);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), initialDate, initialDate, false, true, Collections.emptyList(), callContext);
+        Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext);
+
+        // Change base entitlement
+        final LocalDate changeDate = initialDate.plusDays(10);
+        testListener.pushExpectedEvents(NextEvent.CHANGE);
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("shotgun-monthly", PhaseType.EVERGREEN);
+        baseEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), changeDate, Collections.emptyList(), callContext);
+
+        // Add ADD_ON compatible with the new plan after undoing the change
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("telescopic-scope-monthly", PhaseType.EVERGREEN);
+        final UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(spec2), changeDate, changeDate, false, Collections.emptyList(), callContext);
+        final Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, false, callContext);
+
+        final LocalDate undoDate = changeDate.minusDays(5);
+        clock.setDay(undoDate);
+
+        // Cancel the change of base entitlement
+        testListener.pushExpectedEvents(NextEvent.UNDO_CHANGE);
+        baseEntitlement.undoChangePlan(Collections.emptyList(), callContext);
+
+        clock.setDay(changeDate.plusDays(1));
+
+        List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
+
+        final Entitlement baseEntitlementFinal = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext);
+        assertEquals(baseEntitlementFinal.getLastActivePlan().getName(), "pistol-monthly"); // Original plan
+        assertEquals(baseEntitlementFinal.getEffectiveStartDate().toLocalDate(), initialDate); // Original start date
+        assertNull(baseEntitlementFinal.getEffectiveEndDate());
+
+        assertEquals(addOnEntitlement.getLastActiveProductCategory(), ProductCategory.ADD_ON);
+        assertEquals(addOnEntitlement.getLastActivePlan().getName(), "telescopic-scope-monthly");
+        assertEquals(addOnEntitlement.getEffectiveStartDate().toLocalDate(), changeDate);
+        assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);
+        assertNull(addOnEntitlement.getEffectiveEndDate());
+    }
+
+    @Test(groups = "slow")
     public void testCreatedBundledStandaloneEntitlements() throws AccountApiException, EntitlementApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
@@ -1198,7 +1250,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(account.getId(), account.getExternalKey(), callContext);
         assertEquals(bundleEntitlements.size(), 2);
     }
-    
+
     @Test(groups = "slow")
     public void testCreateBaseEntitlement() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final DateTime initialDateTime = new DateTime(2013, 8, 7, 10, 30);
@@ -1226,5 +1278,5 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(initialDateTime), 0);
 
-    }    
+    }
 }
