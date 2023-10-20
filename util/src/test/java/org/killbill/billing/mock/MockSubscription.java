@@ -156,6 +156,12 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public Plan getFuturePlanAt(DateTime at)
+    {
+        return sub.getFuturePlanAt(at);
+    }
+
+    @Override
     public PriceList getCurrentPriceList() {
         return new MockPriceList();
     }

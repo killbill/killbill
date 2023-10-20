@@ -27,6 +27,7 @@ import java.util.PriorityQueue;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -230,6 +231,29 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return getPendingTransition().getNextPlan();
         } else {
             return getCurrentPlan();
+        }
+    }
+
+    @Override
+    public Plan getFuturePlanAt(DateTime at) {
+        if (!at.isAfter(clock.getUTCNow()) || transitions == null) {
+            return getCurrentPlan();
+        }
+
+        final List<SubscriptionBaseTransition> previousChanges = transitions.stream()
+                .filter(t -> !t.getEffectiveTransitionTime().isAfter(at))
+                .filter(t -> t.getTransitionType().equals(SubscriptionBaseTransitionType.CHANGE)
+                        || t.getTransitionType().equals(SubscriptionBaseTransitionType.UNDO_CHANGE))
+                .collect(Collectors.toList());
+        final SubscriptionBaseTransition lastChange = !previousChanges.isEmpty()
+                ? previousChanges.get(previousChanges.size() - 1)
+                : null;
+
+        if (lastChange != null) {
+            return lastChange.getNextPlan();
+
+        } else {
+            return getCurrentOrPendingPlan();
         }
     }
 
