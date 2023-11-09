@@ -27,11 +27,13 @@ import org.killbill.clock.ClockUtil;
 
 public class TimeAwareContext {
 
+    private final DateTimeZone accountTimeZone;
     private final DateTimeZone fixedOffsetTimeZone;
     private final DateTime referenceDateTime;
     private final LocalTime referenceLocalTime;
 
-    public TimeAwareContext(@Nullable final DateTimeZone fixedOffsetTimeZone, @Nullable final DateTime referenceDateTime) {
+    public TimeAwareContext(@Nullable final DateTimeZone accountTimeZone, @Nullable final DateTimeZone fixedOffsetTimeZone, @Nullable final DateTime referenceDateTime) {
+        this.accountTimeZone = accountTimeZone;
         this.fixedOffsetTimeZone = fixedOffsetTimeZone;
         this.referenceDateTime = referenceDateTime;
         this.referenceLocalTime = computeReferenceTime(referenceDateTime);
@@ -39,13 +41,11 @@ public class TimeAwareContext {
 
     public DateTime toUTCDateTime(final LocalDate localDate) {
         validateContext();
-
         return ClockUtil.toUTCDateTime(localDate, getReferenceLocalTime(), getFixedOffsetTimeZone());
     }
 
     public LocalDate toLocalDate(final DateTime dateTime) {
         validateContext();
-
         return ClockUtil.toLocalDate(dateTime, getFixedOffsetTimeZone());
     }
 
@@ -69,6 +69,10 @@ public class TimeAwareContext {
     //@VisibleForTesting
     public DateTimeZone getFixedOffsetTimeZone() {
         return fixedOffsetTimeZone;
+    }
+
+    public DateTimeZone getAccountTimeZone() {
+        return accountTimeZone;
     }
 
     //@VisibleForTesting

@@ -173,7 +173,7 @@ public class TestTimeAwareContext extends UtilTestSuiteNoDB {
         while (currentDateTime.compareTo(endDateTime) <= 0) {
             for (final DateTimeZone dateTimeZone : dateTimeZones) {
                 for (final DateTime referenceDateTime : referenceDateTimes) {
-                    final TimeAwareContext timeAwareContext = new TimeAwareContext(dateTimeZone, referenceDateTime);
+                    final TimeAwareContext timeAwareContext = new TimeAwareContext(dateTimeZone, dateTimeZone, referenceDateTime);
 
                     final LocalDate computedLocalDate = timeAwareContext.toLocalDate(currentDateTime);
                     final DateTime computedDateTime = timeAwareContext.toUTCDateTime(computedLocalDate);

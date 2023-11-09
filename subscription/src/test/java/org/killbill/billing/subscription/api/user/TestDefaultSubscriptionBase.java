@@ -276,7 +276,7 @@ public class TestDefaultSubscriptionBase extends SubscriptionTestSuiteNoDB {
 
         final BillingActionPolicy billingPolicy = BillingActionPolicy.START_OF_TERM;
         final BillingAlignment alignment = BillingAlignment.ACCOUNT;
-        final InternalTenantContext context = new InternalTenantContext(null, null,
+        final InternalTenantContext context = new InternalTenantContext(null, null, DateTimeZone.UTC,
                                                                         DateTimeZone.UTC, clock.getUTCNow());
 
         DateTime result = subscriptionBase.getEffectiveDateForPolicy(billingPolicy, alignment, context);

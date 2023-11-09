@@ -208,6 +208,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             final InvoiceTrackingSqlDao dao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
                                             final InternalCallContext updatedContext = new InternalCallContext(internalCallContext.getTenantRecordId(),
                                                                                                                internalCallContext.getAccountRecordId(),
+                                                                                                               internalCallContext.getAccountTimeZone(),
                                                                                                                internalCallContext.getFixedOffsetTimeZone(),
                                                                                                                clock.getUTCNow(),
                                                                                                                internalCallContext.getUserToken(),

@@ -45,6 +45,7 @@ public class InternalCallContext extends InternalTenantContext {
 
     public InternalCallContext(final Long tenantRecordId,
                                @Nullable final Long accountRecordId,
+                               @Nullable final DateTimeZone accountTimeZone,
                                @Nullable final DateTimeZone fixedOffsetTimeZone,
                                @Nullable final DateTime referenceDateTime,
                                final UUID userToken,
@@ -55,7 +56,7 @@ public class InternalCallContext extends InternalTenantContext {
                                final String comment,
                                final DateTime createdDate,
                                final DateTime updatedDate) {
-        super(tenantRecordId, accountRecordId, fixedOffsetTimeZone, referenceDateTime);
+        super(tenantRecordId, accountRecordId, accountTimeZone, fixedOffsetTimeZone, referenceDateTime);
         this.userToken = userToken;
         this.createdBy = userName;
         this.updatedBy = userName;
@@ -72,6 +73,7 @@ public class InternalCallContext extends InternalTenantContext {
              null,
              null,
              null,
+             null,
              callContext.getUserToken(),
              callContext.getUserName(),
              callContext.getCallOrigin(),
@@ -82,9 +84,10 @@ public class InternalCallContext extends InternalTenantContext {
              utcNow);
     }
 
-    public InternalCallContext(final InternalCallContext context, final Long accountRecordId, final DateTimeZone fixedOffsetTimeZone, final DateTime referenceDateTime, final DateTime utcNow) {
+    public InternalCallContext(final InternalCallContext context, final Long accountRecordId, final DateTimeZone accountTimeZone, final DateTimeZone fixedOffsetTimeZone, final DateTime referenceDateTime, final DateTime utcNow) {
         this(context.getTenantRecordId(),
              accountRecordId,
+             accountTimeZone,
              fixedOffsetTimeZone,
              referenceDateTime,
              context.getUserToken(),
@@ -98,7 +101,7 @@ public class InternalCallContext extends InternalTenantContext {
     }
 
     public InternalCallContext(final InternalCallContext context, final DateTime updatedDate) {
-        this(context.getTenantRecordId(), context.getAccountRecordId(), context.getFixedOffsetTimeZone(), context.getReferenceDateTime(), context.getUserToken(), context.getCreatedBy(), context.getCallOrigin(),
+        this(context.getTenantRecordId(), context.getAccountRecordId(), context.getAccountTimeZone(), context.getFixedOffsetTimeZone(), context.getReferenceDateTime(), context.getUserToken(), context.getCreatedBy(), context.getCallOrigin(),
              context.getContextUserType(), context.getReasonCode(), context.getComments(), context.getCreatedDate(), updatedDate);
     }
 
