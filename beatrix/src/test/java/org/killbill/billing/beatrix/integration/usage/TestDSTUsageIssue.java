@@ -55,6 +55,7 @@ public class TestDSTUsageIssue extends TestIntegrationBase {
         allExtraProperties.put("org.killbill.invoice.maxInvoiceLimit", "P1M");
         allExtraProperties.put("org.killbill.invoice.disable.usage.zero.amount", "true");
         allExtraProperties.put("org.killbill.invoice.item.result.behavior.mode", "DETAIL");
+        allExtraProperties.put("org.killbill.invoice.usage.tz.mode", "VARIABLE");
         return super.getConfigSource(null, allExtraProperties);
     }
 

@@ -102,6 +102,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected final InternalTenantContext internalTenantContext;
     protected final UsageDetailMode usageDetailMode;
     protected final boolean isDryRun;
+    protected final UsageClockUtil usageClockUtil;
 
     @VisibleForTesting
     static class TransitionTime {
@@ -157,6 +158,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.isDryRun = isDryRun;
         this.isBuilt = new AtomicBoolean(false);
         this.usageDetailMode = usageDetailMode;
+        this.usageClockUtil = new UsageClockUtil(invoiceConfig);
     }
 
     /**
@@ -197,7 +199,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         final BillingEvent firstBillingEvent = billingEvents.get(0);
         final DateTime startDate = firstBillingEvent.getEffectiveDate();
 
-        final DateTime targetDateEndOfDay = UsageClockUtil.toDateTimeAtEndOfDay(targetDate, internalTenantContext);
+        final DateTime targetDateEndOfDay = usageClockUtil.toDateTimeAtEndOfDay(targetDate, internalTenantContext);
         if (targetDateEndOfDay.isBefore(startDate)) {
             return this;
         }
@@ -239,14 +241,14 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
 
     private void addTransitionTimesForBillingEvent(final BillingEvent event, final DateTime startDate, final DateTime endDate, final int bcd, final boolean lastEvent) {
-        final LocalDate startDateLocal = UsageClockUtil.toLocalDate(startDate, internalTenantContext);
-        final LocalDate endDateLocal =  UsageClockUtil.toLocalDate(endDate, internalTenantContext);
+        final LocalDate startDateLocal = usageClockUtil.toLocalDate(startDate, internalTenantContext);
+        final LocalDate endDateLocal =  usageClockUtil.toLocalDate(endDate, internalTenantContext);
 
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDateLocal, endDateLocal, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode(), InArrearMode.DEFAULT);
 
         int numberOfPeriod = 0;
         final LocalDate futureBillingDateFor = bid.getFutureBillingDateFor(numberOfPeriod);
-        DateTime nextBillCycleDateEndOfDay =  futureBillingDateFor.compareTo(startDateLocal) == 0 ? startDate : UsageClockUtil.toDateTimeAtStartOfDay(futureBillingDateFor, internalTenantContext);
+        DateTime nextBillCycleDateEndOfDay =  futureBillingDateFor.compareTo(startDateLocal) == 0 ? startDate : usageClockUtil.toDateTimeAtStartOfDay(futureBillingDateFor, internalTenantContext);
         while (isBefore(nextBillCycleDateEndOfDay, endDate, lastEvent)) {
             if (nextBillCycleDateEndOfDay.compareTo(rawUsageStartDate) >= 0) {
                 final TransitionTime lastTransition = transitionTimes.isEmpty() ? null : transitionTimes.get(transitionTimes.size() - 1);
@@ -256,7 +258,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                 }
             }
             numberOfPeriod++;
-            nextBillCycleDateEndOfDay = UsageClockUtil.toDateTimeAtStartOfDay(bid.getFutureBillingDateFor(numberOfPeriod), internalTenantContext);
+            nextBillCycleDateEndOfDay = usageClockUtil.toDateTimeAtStartOfDay(bid.getFutureBillingDateFor(numberOfPeriod), internalTenantContext);
         }
     }
     
@@ -298,8 +300,8 @@ public abstract class ContiguousIntervalUsageInArrear {
         // Each RolledUpUsage 'ru' is for a specific time period and across all units
         for (final RolledUpUsageWithMetadata ru : allUsage) {
 
-            final LocalDate ruStartLocal = UsageClockUtil.toLocalDate(ru.getStart(), internalTenantContext);
-            final LocalDate ruEndLocal = UsageClockUtil.toLocalDate(ru.getEnd(), internalTenantContext);
+            final LocalDate ruStartLocal = usageClockUtil.toLocalDate(ru.getStart(), internalTenantContext);
+            final LocalDate ruEndLocal = usageClockUtil.toLocalDate(ru.getEnd(), internalTenantContext);
 
             final InvoiceItem existingOverlappingItem = isContainedIntoExistingUsage(ruStartLocal, ruEndLocal, existingUsage);
             if (existingOverlappingItem != null) {
@@ -374,15 +376,15 @@ public abstract class ContiguousIntervalUsageInArrear {
         while (eventIt.hasNext()) {
             final BillingEvent thisEvent = nextEvent;
             nextEvent = eventIt.next();
-            final LocalDate startDate = UsageClockUtil.toLocalDate(thisEvent.getEffectiveDate(), internalTenantContext);
-            final LocalDate endDate = UsageClockUtil.toLocalDate(nextEvent.getEffectiveDate(), internalTenantContext);
+            final LocalDate startDate = usageClockUtil.toLocalDate(thisEvent.getEffectiveDate(), internalTenantContext);
+            final LocalDate endDate = usageClockUtil.toLocalDate(nextEvent.getEffectiveDate(), internalTenantContext);
 
             final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR, InArrearMode.DEFAULT);
             final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
             result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         }
 
-        final LocalDate startDate = UsageClockUtil.toLocalDate(nextEvent.getEffectiveDate(), internalTenantContext);
+        final LocalDate startDate = usageClockUtil.toLocalDate(nextEvent.getEffectiveDate(), internalTenantContext);
 
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR, InArrearMode.DEFAULT);
         final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
@@ -450,7 +452,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                         final BigDecimal currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
                         final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
                         perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
-                        trackingIds.add(new TrackingRecordId(prevRawUsage.getTrackingId(), invoiceId, prevRawUsage.getSubscriptionId(), prevRawUsage.getUnitType(), UsageClockUtil.toLocalDate(prevRawUsage.getDate(), internalTenantContext)));
+                        trackingIds.add(new TrackingRecordId(prevRawUsage.getTrackingId(), invoiceId, prevRawUsage.getSubscriptionId(), prevRawUsage.getUnitType(), usageClockUtil.toLocalDate(prevRawUsage.getDate(), internalTenantContext)));
                         prevRawUsage = null;
                     }
                 }
@@ -477,7 +479,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                         final BigDecimal currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
                         final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
                         perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
-                        trackingIds.add(new TrackingRecordId(curRawUsage.getTrackingId(), invoiceId, curRawUsage.getSubscriptionId(), curRawUsage.getUnitType(), UsageClockUtil.toLocalDate(curRawUsage.getDate(), internalTenantContext)));
+                        trackingIds.add(new TrackingRecordId(curRawUsage.getTrackingId(), invoiceId, curRawUsage.getSubscriptionId(), curRawUsage.getUnitType(), usageClockUtil.toLocalDate(curRawUsage.getDate(), internalTenantContext)));
                     }
                 }
 

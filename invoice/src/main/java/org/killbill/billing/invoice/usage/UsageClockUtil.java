@@ -22,9 +22,15 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig.AccountTzOffset;
 import org.killbill.clock.ClockUtil;
 
+// * AccountTzOffset=FIXED:
+// We use the same logic to compute a LocalDate from a DateTime as we use in the rest of the invoice code.
+// This is the default.
 //
+// * AccountTzOffset=VARIABLE:
 // We use a different logic for usage code to convert dates to guarantee some stability
 // across accounts created with the same TZ but at different dates during the year (daylight saving or standard).
 // See https://github.com/killbill/killbill/issues/1934 for an example of a scenario
@@ -35,14 +41,25 @@ import org.killbill.clock.ClockUtil;
 //
 public class UsageClockUtil {
 
-    public UsageClockUtil() {
+    private final InvoiceConfig config;
+
+    public UsageClockUtil(final InvoiceConfig config) {
+        this.config = config;
     }
 
-    public static DateTime toDateTimeAtStartOfDay(final LocalDate input, final InternalTenantContext context) {
-        return toDateTimeAtStartOfDay(input, context.getAccountTimeZone());
+    private DateTimeZone getEffectiveDateTimeZone(final InternalTenantContext context) {
+        final AccountTzOffset mode = config.getAccountTzOffsetMode(context);
+        if (mode == AccountTzOffset.VARIABLE) {
+            return context.getAccountTimeZone();
+        } else {
+            return context.getFixedOffsetTimeZone();
+        }
+    }
+    public DateTime toDateTimeAtStartOfDay(final LocalDate input, final InternalTenantContext context) {
+        return toDateTimeAtStartOfDay(input, getEffectiveDateTimeZone(context));
     }
 
-    private static DateTime toDateTimeAtStartOfDay(final LocalDate input, final DateTimeZone refTz) {
+    private DateTime toDateTimeAtStartOfDay(final LocalDate input, final DateTimeZone refTz) {
 
         // We compute the date at the beginning of the day based on the account TZ
         //
@@ -54,20 +71,21 @@ public class UsageClockUtil {
         return input.toDateTimeAtStartOfDay(tz).toDateTime(DateTimeZone.UTC);
     }
 
-    public static  DateTime toDateTimeAtEndOfDay(final LocalDate input, final InternalTenantContext context) {
-        return toDateTimeAtEndOfDay(input, context.getAccountTimeZone());
+    public DateTime toDateTimeAtEndOfDay(final LocalDate input, final InternalTenantContext context) {
+        return toDateTimeAtEndOfDay(input, getEffectiveDateTimeZone(context));
     }
 
-    private static DateTime toDateTimeAtEndOfDay(final LocalDate input, final DateTimeZone refTz) {
+    private DateTime toDateTimeAtEndOfDay(final LocalDate input, final DateTimeZone refTz) {
+        // final DateTime targetDateEndOfDay = toEndOfDay(targetDate, internalTenantContext.getFixedOffsetTimeZone());
         DateTime dateTimeAtStartOfDay = toDateTimeAtStartOfDay(input, refTz);
         return dateTimeAtStartOfDay.plusDays(1).minus(Period.millis(1)).toDateTime(DateTimeZone.UTC);
     }
 
-    public static LocalDate toLocalDate(final DateTime input, final InternalTenantContext context) {
-        return toLocalDate(input, context.getAccountTimeZone());
+    public LocalDate toLocalDate(final DateTime input, final InternalTenantContext context) {
+        return toLocalDate(input, getEffectiveDateTimeZone(context));
     }
 
-    private static LocalDate toLocalDate(final DateTime input, final DateTimeZone refTz) {
+    private LocalDate toLocalDate(final DateTime input, final DateTimeZone refTz) {
         return ClockUtil.toLocalDate(input, refTz);
     }
 }
