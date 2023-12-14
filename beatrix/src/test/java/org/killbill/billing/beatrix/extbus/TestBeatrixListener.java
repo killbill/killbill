@@ -127,7 +127,7 @@ public class TestBeatrixListener {
         InternalCallContext internalContext = new InternalCallContext(
                 TENANT_RECORD_ID,
                 ACCOUNT_RECORD_ID,
-                null,  null,
+                null,  null, null,
                 USER_TOKEN,
                 null, null, null, null, null, null, null
         );

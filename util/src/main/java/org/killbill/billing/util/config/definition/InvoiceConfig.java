@@ -36,12 +36,26 @@ public interface InvoiceConfig extends LockAwareConfig {
     //
     String DEFAULT_NULL_PERIOD = "P200Y";
 
-    public enum UsageDetailMode {
+    enum AccountTzOffset {
+        /*
+         * Use the one time computation offset from when account was created, i.e context#fixedOffsetTimeZone.
+         * This is the same behavior we use for other invoice items (RECURRING)
+         */
+        FIXED,
+        /*
+         * Recompute offset based on where we are during the year, i.e context#accountTimeZone.
+         * This produces consistent results across similar accounts (same TZ, same subscriptions, usage points)
+         * even though they were started at different time during the year, i.e summer/winter.
+         */
+        VARIABLE,
+    }
+
+    enum UsageDetailMode {
         AGGREGATE,
         DETAIL,
     }
 
-    public enum InArrearMode {
+    enum InArrearMode {
         DEFAULT,
         GREEDY
     }
@@ -166,6 +180,17 @@ public interface InvoiceConfig extends LockAwareConfig {
     @Default("AGGREGATE")
     @Description("How the result for an item will be reported (aggregate mode or detail mode). ")
     UsageDetailMode getItemResultBehaviorMode(@Param("dummy") final InternalTenantContext tenantContext);
+
+
+    @Config("org.killbill.invoice.usage.tz.mode")
+    @Default("FIXED")
+    @Description("Behavior to include usage points with respect to day light saving")
+    AccountTzOffset getAccountTzOffsetMode();
+
+    @Config("org.killbill.invoice.usage.tz.mode")
+    @Default("FIXED")
+    @Description("Behavior to include usage points with respect to day light saving")
+    AccountTzOffset getAccountTzOffsetMode(@Param("dummy") final InternalTenantContext tenantContext);
 
     @Config("org.killbill.invoice.inArrear.mode")
     @Default("DEFAULT")

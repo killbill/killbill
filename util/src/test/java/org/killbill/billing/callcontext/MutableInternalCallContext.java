@@ -45,6 +45,7 @@ public class MutableInternalCallContext extends InternalCallContext {
 
     public MutableInternalCallContext(final Long tenantRecordId,
                                       @Nullable final Long accountRecordId,
+                                      @Nullable final DateTimeZone accountTimeZone,
                                       @Nullable final DateTimeZone fixedOffsetTimeZone,
                                       @Nullable final DateTime referenceTime,
                                       final UUID userToken,
@@ -55,7 +56,7 @@ public class MutableInternalCallContext extends InternalCallContext {
                                       final String comment,
                                       final DateTime createdDate,
                                       final DateTime updatedDate) {
-        super(tenantRecordId, accountRecordId, fixedOffsetTimeZone, referenceTime, userToken, userName, callOrigin, userType, reasonCode, comment, createdDate, updatedDate);
+        super(tenantRecordId, accountRecordId, accountTimeZone, fixedOffsetTimeZone, referenceTime, userToken, userName, callOrigin, userType, reasonCode, comment, createdDate, updatedDate);
         this.initialAccountRecordId = accountRecordId;
         this.initialTenantRecordId = tenantRecordId;
         this.initialReferenceDateTimeZone = fixedOffsetTimeZone;

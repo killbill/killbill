@@ -352,7 +352,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 entitlementSpecifierList.add(spec);
             }
 
-            final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+            final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getTimeZone(), account.getFixedOffsetTimeZone(), account.getReferenceTime());
 
             final DateTime entitlementDateTime = getDateTimeFromInput(entitlementDate, timeAwareContext);
             final DateTime billingDateTime = getDateTimeFromInput(billingDate, timeAwareContext);
@@ -627,7 +627,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     newEntitlement = current.cancelEntitlementWithPolicy(entitlementPolicy, pluginProperties, ctx);
                 } else if (billingPolicy != null && entitlementPolicy == null) {
                     final Account account = accountUserApi.getAccountById(current.getAccountId(), callContextNoAccountId);
-                    final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+                    final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getTimeZone(), account.getFixedOffsetTimeZone(), account.getReferenceTime());
                     //Since there is no DateTime version of cancelEntitlementWithDateOverrideBillingPolicy currently, the code below converts input DateTime to LocalDate and uses it. If in the future a DateTime version of this method is added, the code below needs to be updated accordingly
                     newEntitlement = isDateTime(requestedDate) ? current.cancelEntitlementWithDateOverrideBillingPolicy(timeAwareContext.toLocalDate(toDateTime(requestedDate)), billingPolicy, pluginProperties, ctx) : current.cancelEntitlementWithDateOverrideBillingPolicy(toLocalDate(requestedDate), billingPolicy, pluginProperties, ctx);                	
                 } else {

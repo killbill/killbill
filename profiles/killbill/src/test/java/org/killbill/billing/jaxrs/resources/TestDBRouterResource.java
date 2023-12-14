@@ -41,6 +41,7 @@ public class TestDBRouterResource implements JaxrsResource {
     private final MutableInternalCallContext internalCallContext = new MutableInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID,
                                                                                                   1687L,
                                                                                                   DateTimeZone.UTC,
+                                                                                                  DateTimeZone.UTC,
                                                                                                   new DateTime(DateTimeZone.UTC),
                                                                                                   UUID.randomUUID(),
                                                                                                   UUID.randomUUID().toString(),

@@ -84,7 +84,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         final DateTime inputLocalTz = input.toDateTime(tz);
 
-        final InternalTenantContext context = new InternalTenantContext(1L, 2L, tz, referenceTime);
+        final InternalTenantContext context = new InternalTenantContext(1L, 2L, tz, tz, referenceTime);
         final DateTime result = planAligner.addDuration(input, duration, context);
 
         // Note that initial time difference was 5 hours and now it is only 4 hours hence time component in UTC set to 2:47:56

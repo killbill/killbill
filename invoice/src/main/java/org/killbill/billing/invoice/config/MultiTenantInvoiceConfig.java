@@ -223,12 +223,28 @@ public class MultiTenantInvoiceConfig extends MultiTenantLockAwareConfigBase imp
         if (result != null){
             return UsageDetailMode.valueOf(result);
         }
-
         if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {
             return mode;
         }
-
         return UsageDetailMode.AGGREGATE;
+    }
+
+    @Override
+    public AccountTzOffset getAccountTzOffsetMode() {
+        final AccountTzOffset mode = staticConfig.getAccountTzOffsetMode();
+        if (mode == AccountTzOffset.FIXED || mode == AccountTzOffset.VARIABLE) {
+            return mode;
+        }
+        return AccountTzOffset.FIXED;
+    }
+
+    @Override
+    public AccountTzOffset getAccountTzOffsetMode(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getAccountTzOffsetMode", tenantContext);
+        if (result != null){
+            return AccountTzOffset.valueOf(result);
+        }
+        return getAccountTzOffsetMode();
     }
 
     @Override

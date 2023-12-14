@@ -160,9 +160,10 @@ public class InternalCallContextFactory {
             return new InternalTenantContext(tenantRecordId);
         } else {
             final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, tenantRecordId);
+            final DateTimeZone accountTimeZone = immutableAccountData.getTimeZone();
             final DateTimeZone fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
             final DateTime referenceTime = immutableAccountData.getReferenceTime();
-            return new InternalTenantContext(tenantRecordId, accountRecordId, fixedOffsetTimeZone, referenceTime);
+            return new InternalTenantContext(tenantRecordId, accountRecordId, accountTimeZone, fixedOffsetTimeZone, referenceTime);
         }
     }
 
@@ -256,24 +257,27 @@ public class InternalCallContextFactory {
     // Used when we need to re-hydrate the callcontext with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
         final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, context.getTenantRecordId());
+        final DateTimeZone accountTimeZone = immutableAccountData.getTimeZone();
         final DateTimeZone fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
         final DateTime referenceTime = immutableAccountData.getReferenceTime();
         populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
-        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
+        return new InternalCallContext(context, accountRecordId, accountTimeZone, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
     }
 
     // Used during the account creation transaction (account not visible outside of the transaction yet)
     public InternalCallContext createInternalCallContext(final TimeZoneAwareEntity accountModelDao, final Long accountRecordId, final InternalCallContext context) {
         // See DefaultImmutableAccountData implementation
+        final DateTimeZone accountTimeZone = accountModelDao.getTimeZone();
         final DateTimeZone fixedOffsetTimeZone = AccountDateTimeUtils.getFixedOffsetTimeZone(accountModelDao);
         final DateTime referenceTime = accountModelDao.getReferenceTime();
         populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
-        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
+        return new InternalCallContext(context, accountRecordId, accountTimeZone, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
     }
 
-    public InternalCallContext createInternalCallContext(final DateTimeZone fixedOffsetTimeZone, final DateTime referenceTime, final Long accountRecordId, final InternalCallContext context) {
+
+    public InternalCallContext createInternalCallContext(final DateTimeZone accountTimeZone, final DateTimeZone fixedOffsetTimeZone, final DateTime referenceTime, final Long accountRecordId, final InternalCallContext context) {
         populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
-        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
+        return new InternalCallContext(context, accountRecordId, accountTimeZone, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
     }
 
     private InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId,
@@ -288,14 +292,17 @@ public class InternalCallContextFactory {
                                                           @Nullable final DateTime updatedDate) {
         final Long nonNulTenantRecordId = Objects.requireNonNullElse(tenantRecordId, INTERNAL_TENANT_RECORD_ID);
 
+        final DateTimeZone accountTimeZone;
         final DateTimeZone fixedOffsetTimeZone;
         final DateTime referenceTime;
         if (accountRecordId == null) {
             // TENANT_CONFIG_CHANGE event for instance
+            accountTimeZone = null;
             fixedOffsetTimeZone = null;
             referenceTime = null;
         } else {
             final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, nonNulTenantRecordId);
+            accountTimeZone = immutableAccountData.getTimeZone();
             fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
             referenceTime = immutableAccountData.getReferenceTime();
         }
@@ -304,6 +311,7 @@ public class InternalCallContextFactory {
 
         return new InternalCallContext(nonNulTenantRecordId,
                                        accountRecordId,
+                                       accountTimeZone,
                                        fixedOffsetTimeZone,
                                        referenceTime,
                                        userToken,
@@ -318,7 +326,7 @@ public class InternalCallContextFactory {
 
     private ImmutableAccountData getImmutableAccountData(final Long accountRecordId, final Long tenantRecordId) {
         Preconditions.checkNotNull(accountRecordId, "Missing accountRecordId");
-        final InternalTenantContext tmp = new InternalTenantContext(tenantRecordId, accountRecordId, null, null);
+        final InternalTenantContext tmp = new InternalTenantContext(tenantRecordId, accountRecordId, null, null, null);
         try {
             final ImmutableAccountData immutableAccountData = accountInternalApi.getImmutableAccountDataByRecordId(accountRecordId, tmp);
             Preconditions.checkNotNull(immutableAccountData, "Unable to retrieve immutableAccountData");

@@ -36,15 +36,16 @@ public class InternalTenantContext extends TimeAwareContext {
 
     public InternalTenantContext(final Long tenantRecordId,
                                  @Nullable final Long accountRecordId,
+                                 @Nullable final DateTimeZone accountTimeZone,
                                  @Nullable final DateTimeZone fixedOffsetTimeZone,
                                  @Nullable final DateTime referenceDateTime) {
-        super(fixedOffsetTimeZone, referenceDateTime);
+        super(accountTimeZone, fixedOffsetTimeZone, referenceDateTime);
         this.tenantRecordId = tenantRecordId;
         this.accountRecordId = accountRecordId;
     }
 
     public InternalTenantContext(final Long defaultTenantRecordId) {
-        this(defaultTenantRecordId, null, null, null);
+        this(defaultTenantRecordId, null, null, null, null);
     }
 
     public TenantContext toTenantContext(final UUID accountId, final UUID tenantId) {
