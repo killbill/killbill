@@ -25,6 +25,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
+import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceDaoHelper;
@@ -34,6 +35,7 @@ import org.killbill.billing.invoice.glue.TestInvoiceModuleNoDB;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.TagUserApi;
@@ -95,6 +97,8 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected InvoiceDaoHelper invoiceDaoHelper;
     @Inject
     protected FixedAndRecurringInvoiceItemGenerator fixedAndRecurringInvoiceItemGenerator;
+    @Inject
+    protected OSGIServiceRegistration<InvoiceFormatterFactory> invoiceFormatterFactoryPluginRegistry;
 
     protected UsageDetailMode usageDetailMode;
 

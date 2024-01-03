@@ -134,6 +134,10 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(new TypeLiteral<OSGIServiceRegistration<InvoicePluginApi>>() {}).toProvider(DefaultInvoiceProviderPluginRegistryProvider.class).asEagerSingleton();
     }
 
+    protected void installInvoiceFormatterFactory() {
+        bind(new TypeLiteral<OSGIServiceRegistration<InvoiceFormatterFactory>>() {}).toProvider(DefaultInvoiceFormatterFactoryProviderPluginRegistryProvider.class).asEagerSingleton();
+    }
+
     protected void installInvoiceOptimizer() {
         if (killbillFeatures.isInvoiceOptimizationOn()) {
             bind(InvoiceOptimizer.class).to(InvoiceOptimizerExp.class).asEagerSingleton();
@@ -146,6 +150,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     protected void configure() {
         installConfig();
         installInvoicePluginApi();
+        installInvoiceFormatterFactory();
         installInvoiceServices();
         installNotifiers();
         installInvoiceDispatcher();

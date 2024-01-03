@@ -20,20 +20,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
+import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultInvoiceProviderPluginRegistry implements OSGIServiceRegistration<InvoicePluginApi> {
+public class DefaultInvoiceFormatterFactoryProviderPluginRegistry implements OSGIServiceRegistration<InvoiceFormatterFactory> {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceProviderPluginRegistry.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceFormatterFactoryProviderPluginRegistry.class);
 
-    private final Map<String, InvoicePluginApi> pluginsByName = new ConcurrentHashMap<String, InvoicePluginApi>();
+    private final Map<String, InvoiceFormatterFactory> pluginsByName = new ConcurrentHashMap<String, InvoiceFormatterFactory>();
 
     @Override
-    public void registerService(final OSGIServiceDescriptor desc, final InvoicePluginApi service) {
+    public void registerService(final OSGIServiceDescriptor desc, final InvoiceFormatterFactory service) {
         log.info("Registering service='{}'", desc.getRegistrationName());
         pluginsByName.put(desc.getRegistrationName(), service);
     }
@@ -45,12 +46,12 @@ public class DefaultInvoiceProviderPluginRegistry implements OSGIServiceRegistra
     }
 
     @Override
-    public InvoicePluginApi getServiceForName(final String name) {
+    public InvoiceFormatterFactory getServiceForName(final String name) {
         if (name == null) {
-            throw new IllegalArgumentException("Null invoice plugin API name");
+            throw new IllegalArgumentException("Null invoice formatter factory API name");
         }
-        final InvoicePluginApi plugin = pluginsByName.get(name);
-        return plugin;
+
+        return pluginsByName.get(name);
     }
 
     @Override
@@ -59,6 +60,7 @@ public class DefaultInvoiceProviderPluginRegistry implements OSGIServiceRegistra
     }
 
     @Override
-    public Class<InvoicePluginApi> getServiceType() {
-        return InvoicePluginApi.class;
-    }}
+    public Class<InvoiceFormatterFactory> getServiceType() {
+        return InvoiceFormatterFactory.class;
+    }
+}

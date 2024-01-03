@@ -19,18 +19,18 @@ package org.killbill.billing.invoice.glue;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
-import org.killbill.billing.invoice.provider.DefaultInvoiceProviderPluginRegistry;
+import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import org.killbill.billing.invoice.provider.DefaultInvoiceFormatterFactoryProviderPluginRegistry;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 
-public class DefaultInvoiceProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<InvoicePluginApi>> {
+public class DefaultInvoiceFormatterFactoryProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<InvoiceFormatterFactory>> {
 
     @Inject
-    public DefaultInvoiceProviderPluginRegistryProvider() {
+    public DefaultInvoiceFormatterFactoryProviderPluginRegistryProvider() {
     }
 
     @Override
-    public OSGIServiceRegistration<InvoicePluginApi> get() {
-        return new DefaultInvoiceProviderPluginRegistry();
+    public OSGIServiceRegistration<InvoiceFormatterFactory> get() {
+        return new DefaultInvoiceFormatterFactoryProviderPluginRegistry();
     }
 }
