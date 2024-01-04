@@ -30,6 +30,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.commons.utils.Preconditions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -151,7 +152,7 @@ public class Item {
 
         final Item[] result =  new Item[2];
 
-        final BigDecimal amount0 = InvoiceDateUtils.calculateProrationBetweenDates(startDate, splitDate, Days.daysBetween(startDate, endDate).getDays()).multiply(amount);
+        final BigDecimal amount0 = InvoiceDateUtils.calculateProrationBetweenDates(startDate, splitDate, Days.daysBetween(startDate, endDate).getDays(), 0).multiply(amount); //TODO_fixed_proration - setting to 0, revisit
         final BigDecimal amount1 = amount.subtract(amount0);
 
         result[0] = new Item(this, this.startDate, splitDate, amount0);
@@ -177,7 +178,7 @@ public class Item {
         final boolean prorated = !(newStartDate.compareTo(startDate) == 0 && newEndDate.compareTo(endDate) == 0);
 
         // Pro-ration is built by using the startDate, endDate and amount of this item instead of using the rate and a potential full period.
-        final BigDecimal positiveAmount = prorated ? InvoiceDateUtils.calculateProrationBetweenDates(newStartDate, newEndDate, nbTotalDays)
+        final BigDecimal positiveAmount = prorated ? InvoiceDateUtils.calculateProrationBetweenDates(newStartDate, newEndDate, nbTotalDays, 0) //TODO_fixed_proration - setting to 0, revisit
                                                                      .multiply(amount) : amount;
 
         if (action == ItemAction.ADD) {
