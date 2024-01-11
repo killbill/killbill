@@ -64,7 +64,7 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
     }
 
     @Test(groups = "fast")
-    public void testProRationBeforeFirstBillingPeriod() throws Exception {
+    public void testProRationBeforeFirstBillingPeriod1() throws Exception {
         LocalDate startDate = new LocalDate("2023-05-23");
         LocalDate nextBillingCycleDate = new LocalDate("2023-06-15");
         BigDecimal proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
@@ -89,8 +89,46 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
 
     }
 
+    @Test(groups = "fast")
+    public void testProRationBeforeFirstBillingPeriod2() throws Exception {
+        LocalDate startDate = new LocalDate("2023-05-15");
+        LocalDate nextBillingCycleDate = new LocalDate("2023-05-23");
+        BigDecimal proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        Assert.assertEquals(proration, new BigDecimal("0.266666667"));
+
+        startDate = new LocalDate("2023-06-15");
+        nextBillingCycleDate = new LocalDate("2023-06-23");
+        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        Assert.assertEquals(proration, new BigDecimal("0.266666667"));
+    }
+
     @Test
-    public void testDaysBetweenWithFixedDaysInMonth() {
+    public void testDaysBetweenWithFixedDaysInMonthForSameMonth() {
+        LocalDate startDate = new LocalDate("2023-05-15");
+        LocalDate endDate = new LocalDate("2023-05-23");
+        int days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, invoiceConfig.getProrationFixedDays());
+        Assert.assertEquals(days, 8);
+
+        startDate = new LocalDate("2023-06-15");
+        endDate = new LocalDate("2023-06-23");
+        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, invoiceConfig.getProrationFixedDays());
+        Assert.assertEquals(days, 8);
+
+        //Feb
+        startDate = new LocalDate("2023-02-15");
+        endDate = new LocalDate("2023-02-23");
+        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, invoiceConfig.getProrationFixedDays());
+        Assert.assertEquals(days, 8);
+
+        //Feb wih leap year
+        startDate = new LocalDate("2024-02-15");
+        endDate = new LocalDate("2024-02-23");
+        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, invoiceConfig.getProrationFixedDays());
+        Assert.assertEquals(days, 8);
+    }
+
+    @Test
+    public void testDaysBetweenWithFixedDaysInMonthForDifferentMonths() {
         LocalDate startDate = new LocalDate("2023-05-23");
         LocalDate endDate = new LocalDate("2023-06-15");
         int days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, invoiceConfig.getProrationFixedDays());

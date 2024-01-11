@@ -92,6 +92,9 @@ public class InvoiceDateUtils {
     @VisibleForTesting
     public static int daysBetweenWithFixedDaysInMonth(final LocalDate startDate, final LocalDate endDate, final int fixedDaysInMonth) {
         final int daysBetween = Days.daysBetween(startDate, endDate).getDays();
+        if(startDate.getMonthOfYear() == endDate.getMonthOfYear()) { //same month, no need for extra logic
+            return daysBetween;
+        }
         final int lastDayOfMonth = startDate.dayOfMonth().withMaximumValue().getDayOfMonth();
         if (lastDayOfMonth == fixedDaysInMonth) {
             return daysBetween;
