@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
-import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
+import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.slf4j.Logger;
