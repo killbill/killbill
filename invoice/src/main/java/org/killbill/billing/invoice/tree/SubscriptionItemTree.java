@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 
@@ -46,9 +47,11 @@ public class SubscriptionItemTree {
     private final UUID targetInvoiceId;
     private final UUID subscriptionId;
 
-    private ItemsNodeInterval root = new ItemsNodeInterval();
+    private ItemsNodeInterval root;
     private boolean isBuilt = false;
     private boolean isMerged = false;
+
+    private InvoiceConfig invoiceConfig;
 
     private static final Comparator<InvoiceItem> INVOICE_ITEM_COMPARATOR = new Comparator<InvoiceItem>() {
         @Override
@@ -71,9 +74,11 @@ public class SubscriptionItemTree {
     };
 
     // targetInvoiceId is the new invoice id being generated
-    public SubscriptionItemTree(final UUID subscriptionId, final UUID targetInvoiceId) {
+    public SubscriptionItemTree(final UUID subscriptionId, final UUID targetInvoiceId, InvoiceConfig invoiceConfig) {
         this.subscriptionId = subscriptionId;
         this.targetInvoiceId = targetInvoiceId;
+        this.invoiceConfig = invoiceConfig;
+        this.root  = new ItemsNodeInterval(invoiceConfig);
     }
 
     /**
@@ -90,12 +95,12 @@ public class SubscriptionItemTree {
                     // Nothing to repair -- https://github.com/killbill/killbill/issues/783
                     existingIgnoredItems.add(invoiceItem);
                 } else {
-                    root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
+                    root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD, invoiceConfig), invoiceConfig));
                 }
                 break;
 
             case REPAIR_ADJ:
-                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.CANCEL)));
+                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.CANCEL, invoiceConfig), invoiceConfig));
                 break;
 
             case FIXED:
@@ -145,10 +150,10 @@ public class SubscriptionItemTree {
             build();
         }
 
-        root = new ItemsNodeInterval();
+        root = new ItemsNodeInterval(invoiceConfig);
         for (final Item item : items) {
             Preconditions.checkState(item.getAction() == ItemAction.ADD);
-            root.addExistingItem(new ItemsNodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD)));
+            root.addExistingItem(new ItemsNodeInterval(root, new Item(item, reverse ? ItemAction.CANCEL : ItemAction.ADD), invoiceConfig));
         }
         items.clear();
         isBuilt = false;
@@ -171,7 +176,7 @@ public class SubscriptionItemTree {
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
                 // merged means we've either matched the proposed to an existing, or triggered a repair
-                final List<ItemsNodeInterval> newNodes = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
+                final List<ItemsNodeInterval> newNodes = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD, invoiceConfig), invoiceConfig));
                 for (final ItemsNodeInterval cur : newNodes) {
                     items.addAll(cur.getItems());
                 }

@@ -95,7 +95,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
         final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices);
         final Set<UUID> toBeIgnored = invoicePruner.getFullyRepairedItemsClosure();
-        final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
+        final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId, config);
         for (final Invoice invoice : existingInvoices.getInvoices()) {
             for (final InvoiceItem item : invoice.getInvoiceItems()) {
                 if (toBeIgnored.contains(item.getId())) {

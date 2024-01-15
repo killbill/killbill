@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.jackson.ObjectMapper;
@@ -49,22 +50,21 @@ public class ItemsNodeInterval extends NodeInterval {
 
     private final ItemsInterval items;
 
-    public ItemsNodeInterval() {
-        this.items = new ItemsInterval(this);
+    private InvoiceConfig invoiceConfig;
+
+    public ItemsNodeInterval(InvoiceConfig invoiceConfig) {
+        this.items = new ItemsInterval(this, invoiceConfig);
+        this.invoiceConfig = invoiceConfig;
     }
 
-    private ItemsNodeInterval(final ItemsInterval items) {
-        this.items = items;
-    }
-
-    public ItemsNodeInterval(final NodeInterval parent, final Item item) {
+    public ItemsNodeInterval(final NodeInterval parent, final Item item, InvoiceConfig invoiceConfig) {
         super(parent, item.getStartDate(), item.getEndDate());
-        this.items = new ItemsInterval(this, item);
+        this.items = new ItemsInterval(this, item, invoiceConfig);
     }
 
-    public ItemsNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
+    public ItemsNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate, InvoiceConfig invoiceConfig) {
         super(parent, startDate, endDate);
-        this.items = new ItemsInterval(this);
+        this.items = new ItemsInterval(this, invoiceConfig);
     }
 
     public ItemsNodeInterval[] split(final LocalDate splitDate) {
@@ -80,8 +80,8 @@ public class ItemsNodeInterval extends NodeInterval {
 
         final Item[] splitItems = rawItems.get(0).split(splitDate);
 
-        final ItemsNodeInterval split1 = new ItemsNodeInterval(this.parent, splitItems[0]);
-        final ItemsNodeInterval split2 = new ItemsNodeInterval(this.parent, splitItems[1]);
+        final ItemsNodeInterval split1 = new ItemsNodeInterval(this.parent, splitItems[0], invoiceConfig);
+        final ItemsNodeInterval split2 = new ItemsNodeInterval(this.parent, splitItems[1], invoiceConfig);
         final ItemsNodeInterval[] result = new ItemsNodeInterval[2];
         result[0] = split1;
         result[1] = split2;

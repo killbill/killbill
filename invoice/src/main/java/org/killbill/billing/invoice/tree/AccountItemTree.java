@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.collect.Iterables;
 
@@ -57,13 +58,16 @@ public class AccountItemTree {
 
     private boolean isBuilt;
 
-    public AccountItemTree(final UUID accountId, final UUID targetInvoiceId) {
+    private InvoiceConfig invoiceConfig;
+
+    public AccountItemTree(final UUID accountId, final UUID targetInvoiceId, final InvoiceConfig invoiceConfig) {
         this.accountId = accountId;
         this.targetInvoiceId = targetInvoiceId;
         this.subscriptionItemTree = new HashMap<UUID, SubscriptionItemTree>();
         this.isBuilt = false;
         this.allExistingItems = new LinkedList<InvoiceItem>();
         this.pendingItemAdj = new LinkedList<InvoiceItem>();
+        this.invoiceConfig = invoiceConfig;
     }
 
     /**
@@ -119,7 +123,7 @@ public class AccountItemTree {
         }
 
         if (!subscriptionItemTree.containsKey(subscriptionId)) {
-            subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId, targetInvoiceId));
+            subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId, targetInvoiceId, invoiceConfig));
         }
         final SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
         tree.addItem(existingItem);
@@ -141,7 +145,7 @@ public class AccountItemTree {
             final UUID subscriptionId = getSubscriptionId(item, null);
             SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
             if (tree == null) {
-                tree = new SubscriptionItemTree(subscriptionId, targetInvoiceId);
+                tree = new SubscriptionItemTree(subscriptionId, targetInvoiceId, invoiceConfig);
                 subscriptionItemTree.put(subscriptionId, tree);
             }
             tree.mergeProposedItem(item);

@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.collect.Iterables;
 
@@ -44,13 +45,16 @@ public class ItemsInterval {
     private final ItemsNodeInterval interval;
     private final LinkedList<Item> items;
 
-    public ItemsInterval(final ItemsNodeInterval interval) {
-        this(interval, null);
+    private InvoiceConfig invoiceConfig;
+
+    public ItemsInterval(final ItemsNodeInterval interval, final InvoiceConfig invoiceConfig) {
+        this(interval, null, invoiceConfig);
     }
 
-    public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem) {
+    public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem, final InvoiceConfig invoiceConfig) {
         this.interval = interval;
         this.items = new LinkedList<>();
+        this.invoiceConfig = invoiceConfig;
         if (initialItem != null) {
             items.add(initialItem);
         }
@@ -135,7 +139,7 @@ public class ItemsInterval {
         final InvoiceItem proratedInvoiceItem = item.toProratedInvoiceItem(startDate, endDate);
         // Keep track of the repaired amount for this item
         item.incrementCurrentRepairedAmount(proratedInvoiceItem.getAmount().abs());
-        return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction());
+        return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction(), invoiceConfig);
     }
 
     private Item getResultingItem(final boolean mergeMode) {
