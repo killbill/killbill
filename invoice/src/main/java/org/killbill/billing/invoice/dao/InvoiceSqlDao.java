@@ -18,6 +18,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,10 +30,12 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.statement.SmartFetchSize;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
@@ -63,5 +66,29 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     @SqlQuery
     InvoiceModelDao getParentDraftInvoice(@Bind("accountId") final String parentAccountId,
                                           @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    @SmartFetchSize(shouldStream = true)
+    Iterator<InvoiceModelDao> searchByAccountOrInvoiceId(@Bind("searchKey") final String searchKey,
+                                                         @Bind("offset") final Long offset,
+                                                         @Bind("rowCount") final Long rowCount,
+                                                         @Define("ordering") final String ordering,
+                                                         @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    Long getSearchByAccountOrInvoiceIdCount(@Bind("searchKey") final String searchKey,
+                                            @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    @SmartFetchSize(shouldStream = true)
+    Iterator<InvoiceModelDao> searchByCurrency(@Bind("searchKey") final String searchKey,
+                                               @Bind("offset") final Long offset,
+                                               @Bind("rowCount") final Long rowCount,
+                                               @Define("ordering") final String ordering,
+                                               @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    Long getSearchByCurrencyCount(@Bind("searchKey") final String searchKey,
+                                  @SmartBindBean final InternalTenantContext context);
 }
 

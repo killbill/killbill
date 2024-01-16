@@ -75,7 +75,9 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.ClockMock;
+import org.killbill.commons.utils.collect.Iterables;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -2035,5 +2037,49 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(targetInvoice.getInvoiceItems().size(), 1);
         assertEquals(targetInvoice.getInvoiceItems().get(0).getId(), recurringItem1.getId());
     }
+
+    @Test(groups = "slow")
+    public void testSearch() throws EntityPersistenceException, InvoiceApiException {
+        Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        invoiceUtil.createInvoice(invoice, context);
+
+        invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        invoiceUtil.createInvoice(invoice, context);
+
+        invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.EUR);
+        invoiceUtil.createInvoice(invoice, context);
+
+        //search based on invoice id
+        Pagination<InvoiceModelDao> page = invoiceDao.searchInvoices(invoice.getId().toString(), 0L, 10L, internalCallContext);
+        List<InvoiceModelDao> all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
+        //search based on account id with limit=2
+        page = invoiceDao.searchInvoices(invoice.getAccountId().toString(), 0L, 2L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 2);
+
+        // search based on currency
+        page = invoiceDao.searchInvoices("USD", 0L, 10L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 2);
+
+        // search based on currency with limit=1
+        page = invoiceDao.searchInvoices("USD", 0L, 1L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
+        //search based on invoice number
+        page = invoiceDao.searchInvoices(all.get(0).getInvoiceNumber().toString(), 0L, 10L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
+    }
+
 
 }

@@ -94,3 +94,62 @@ getInvoiceByAccountRecordIdAfter() ::= <<
    <AND_CHECK_TENANT("")>
    <defaultOrderBy("")>
 >>
+
+searchByAccountOrInvoiceId(ordering) ::= <<
+(select
+<allTableFields("t.")>
+from <tableName()> t
+where (<idField("t.")> = :searchKey)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>)
+UNION
+(select
+<allTableFields("t.")>
+from <tableName()> t
+where (t.account_id = :searchKey)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>)
+order by <recordIdField("")> <ordering>
+limit :rowCount offset :offset
+;
+>>
+
+getSearchByAccountOrInvoiceIdCount() ::= <<
+select count(*) from
+((select
+<allTableFields("t.")>
+from <tableName()> t
+where (<idField("t.")> = :searchKey)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>)
+UNION
+(select
+<allTableFields("t.")>
+from <tableName()> t
+where (t.account_id = :searchKey)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>)) as count
+;
+>>
+
+searchByCurrency(ordering) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where (t.currency = :searchKey)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("")> <ordering>
+limit :rowCount offset :offset
+;
+>>
+
+getSearchByCurrencyCount() ::= <<
+select
+count(*)
+from <tableName()> t
+where (t.currency = :searchKey)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+;
+>>
