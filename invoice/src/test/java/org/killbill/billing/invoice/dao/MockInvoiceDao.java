@@ -135,7 +135,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceModelDao getByNumber(final Integer number, final InternalTenantContext context) {
+    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) {
         synchronized (monitor) {
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (invoice.getInvoiceNumber().equals(number)) {

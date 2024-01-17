@@ -242,7 +242,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoiceModelDao getByNumber(final Integer number, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) throws InvoiceApiException {
         if (number == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_NUMBER, "(null)");
         }
@@ -257,11 +257,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 throw new InvoiceApiException(ErrorCode.INVOICE_NUMBER_NOT_FOUND, number.longValue());
             }
 
-            // The context may not contain the account record id at this point - we couldn't do it in the API above
-            // as we couldn't get access to the invoice object until now.
-            final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
-
+            if (includeInvoiceChildren) {
+                // The context may not contain the account record id at this point - we couldn't do it in the API above
+                // as we couldn't get access to the invoice object until now.
+                final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+                invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+            }
             return invoice;
         });
     }
@@ -557,7 +558,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                   public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering, final InternalTenantContext context) {
                                                       try {
                                                           if (invoiceNumber != null) {
-                                                              return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, context)).iterator();
+                                                              return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, false, context)).iterator();
                                                           }
                                                           if (isSearchKeyCurrency) {
                                                               return invoiceSqlDao.searchByCurrency(searchKey, offset, limit, ordering.toString(), context);

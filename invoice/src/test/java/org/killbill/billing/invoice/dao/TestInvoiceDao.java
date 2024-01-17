@@ -114,7 +114,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final InvoiceModelDao retrievedInvoice = invoiceDao.getById(invoice.getId(), context);
         invoiceUtil.checkInvoicesEqual(retrievedInvoice, invoice);
-        invoiceUtil.checkInvoicesEqual(invoiceDao.getByNumber(retrievedInvoice.getInvoiceNumber(), context), invoice);
+        invoiceUtil.checkInvoicesEqual(invoiceDao.getByNumber(retrievedInvoice.getInvoiceNumber(), true, context), invoice);
     }
 
     @Test(groups = "slow")
@@ -318,14 +318,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         }
 
         try {
-            invoiceDao.getByNumber(null, context);
+            invoiceDao.getByNumber(null, true, context);
             Assert.fail();
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_INVALID_NUMBER.getCode());
         }
 
         try {
-            invoiceDao.getByNumber(Integer.MIN_VALUE, context);
+            invoiceDao.getByNumber(Integer.MIN_VALUE, true, context);
             Assert.fail();
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NUMBER_NOT_FOUND.getCode());
