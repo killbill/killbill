@@ -1535,12 +1535,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private boolean isSearchKeyCurrency(String searchKey) {
-        if (searchKey.equals("USD")) {
-            return true;
-        }
-        Currency currency = Currency.fromCode(searchKey);
-        if (!currency.toString().equals("USD")) {
-            return true;
+
+        for (Currency cur : Currency.values()) {
+            if (cur.toString().equalsIgnoreCase(searchKey)) {
+                return true;
+            }
         }
         return false;
     }
