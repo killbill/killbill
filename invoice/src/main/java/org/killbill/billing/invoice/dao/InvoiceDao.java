@@ -61,7 +61,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     void rescheduleInvoiceNotification(final UUID accountId, final DateTime nextRescheduleDt, final InternalCallContext context);
 
-    InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
+    InvoiceModelDao getByNumber(Integer number, Boolean includeInvoiceComponents, InternalTenantContext context) throws InvoiceApiException;
 
     InvoiceModelDao getByInvoiceItem(final UUID uuid, final InternalTenantContext context) throws InvoiceApiException;
 

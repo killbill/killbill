@@ -70,9 +70,7 @@ import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.dao.AuditDao;
@@ -80,7 +78,6 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
@@ -96,6 +93,9 @@ import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.commons.utils.collect.Sets;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -242,7 +242,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoiceModelDao getByNumber(final Integer number, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) throws InvoiceApiException {
         if (number == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_NUMBER, "(null)");
         }
@@ -257,11 +257,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 throw new InvoiceApiException(ErrorCode.INVOICE_NUMBER_NOT_FOUND, number.longValue());
             }
 
-            // The context may not contain the account record id at this point - we couldn't do it in the API above
-            // as we couldn't get access to the invoice object until now.
-            final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
-
+            if (includeInvoiceChildren) {
+                // The context may not contain the account record id at this point - we couldn't do it in the API above
+                // as we couldn't get access to the invoice object until now.
+                final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+                invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+            }
             return invoice;
         });
     }
@@ -537,19 +538,32 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
 
         final Integer invoiceNumber = invoiceNumberParsed;
+
+        final boolean isSearchKeyCurrency = isSearchKeyCurrency(searchKey);
+
         return paginationHelper.getPagination(InvoiceSqlDao.class,
                                               new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
                                                   @Override
                                                   public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-                                                      return invoiceNumber != null ? (Long) 1L : invoiceSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                      if (invoiceNumber != null) {
+                                                          return (Long) 1L;
+                                                      }
+                                                      if (isSearchKeyCurrency) {
+                                                          return invoiceSqlDao.getSearchByCurrencyCount(searchKey, context);
+                                                      }
+                                                      return invoiceSqlDao.getSearchByAccountOrInvoiceIdCount(searchKey, context);
                                                   }
 
                                                   @Override
                                                   public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering, final InternalTenantContext context) {
                                                       try {
-                                                          return invoiceNumber != null ?
-                                                                 List.<InvoiceModelDao>of(getByNumber(invoiceNumber, context)).iterator() :
-                                                                 invoiceSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
+                                                          if (invoiceNumber != null) {
+                                                              return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, false, context)).iterator();
+                                                          }
+                                                          if (isSearchKeyCurrency) {
+                                                              return invoiceSqlDao.searchByCurrency(searchKey, offset, limit, ordering.toString(), context);
+                                                          }
+                                                          return invoiceSqlDao.searchByAccountOrInvoiceId(searchKey, offset, limit, ordering.toString(), context);
                                                       } catch (final InvoiceApiException ignored) {
                                                           return Collections.emptyIterator();
                                                       }
@@ -1518,6 +1532,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             itemShouldBeUpdated = existingInvoiceItem.getItemDetails() == null || inputInvoiceItem.getItemDetails().compareTo(existingInvoiceItem.getItemDetails()) != 0;
         }
         return itemShouldBeUpdated;
+    }
+
+    private boolean isSearchKeyCurrency(String searchKey) {
+
+        for (Currency cur : Currency.values()) {
+            if (cur.toString().equalsIgnoreCase(searchKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

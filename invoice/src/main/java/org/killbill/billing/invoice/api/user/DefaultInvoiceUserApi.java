@@ -251,7 +251,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
         // The account record id will be populated in the DAO
         final InternalTenantContext internalTenantContextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
-        final InvoiceModelDao invoice = dao.getByNumber(number, internalTenantContextWithoutAccountRecordId);
+        final InvoiceModelDao invoice = dao.getByNumber(number, true, internalTenantContextWithoutAccountRecordId);
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
         return new DefaultInvoice(invoice, getCatalogSafelyForPrettyNames(internalTenantContext));
