@@ -198,6 +198,7 @@ CREATE TABLE notifications_history (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX notifications_history_tenant_account_record_id ON notifications_history(search_key2, search_key1);
+CREATE INDEX notifications_history_effective_date ON notifications_history (effective_date);
 
 DROP TABLE IF EXISTS bus_events;
 CREATE TABLE bus_events (
@@ -237,6 +238,7 @@ CREATE TABLE bus_events_history (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX bus_events_history_tenant_account_record_id ON bus_events_history(search_key2, search_key1);
+CREATE INDEX bus_events_history_created_date ON bus_events_history(created_date);
 
 drop table if exists sessions;
 create table sessions (
