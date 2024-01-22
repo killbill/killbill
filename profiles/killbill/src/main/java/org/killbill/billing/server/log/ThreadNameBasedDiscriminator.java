@@ -17,6 +17,8 @@
 
 package org.killbill.billing.server.log;
 
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.sift.Discriminator;
 
@@ -56,6 +58,31 @@ public class ThreadNameBasedDiscriminator implements Discriminator<ILoggingEvent
 
     public boolean isStarted() {
         return started;
+    }
+
+    @VisibleForTesting
+    static int lookupNextToken(final char[] classNameChars, final int start, final String nextToken) {
+        final char[] nextTokenChars = nextToken.toCharArray();
+        int i;
+        for (i = 0; i < nextTokenChars.length; i++) {
+            if (start + i >= classNameChars.length) {
+                return -1;
+            }
+            if (classNameChars[start + i] != nextTokenChars[i]) {
+                return -1;
+            }
+        }
+        return i + start;
+    }
+
+    @VisibleForTesting
+    static String findNextToken(final char[] classNameChars, final int start, final char nextChar) {
+        for (int i = start; i < classNameChars.length; i++) {
+            if (classNameChars[i] == nextChar) {
+                return new String(classNameChars, start, i - start + 1);
+            }
+        }
+        return null;
     }
 
     private String getKillbillCaller() {
@@ -173,9 +200,22 @@ public class ThreadNameBasedDiscriminator implements Discriminator<ILoggingEvent
                     markerName += kar;
                 }
                 return markerName;
+            } else { /* Support for plugins as well */
+                int next = lookupNextToken(classNameChars, 0, "com.killbill.billing.plugin.");
+                if (next == -1) {
+                    next = lookupNextToken(classNameChars, 0, "org.killbill.billing.plugin.");
+                }
+                if (next != -1) {
+                    String markerName = null;
+                    String cur;
+                    while ((cur = findNextToken(classNameChars, next, '.')) != null) {
+                        markerName = cur.substring(0, cur.length() - 1);
+                        next += cur.length();
+                    }
+                    return markerName;
+                }
             }
         }
-
         return null;
     }
 
