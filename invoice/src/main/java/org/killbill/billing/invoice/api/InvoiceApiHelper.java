@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.InvoicePluginDispatcher.AdditionalInvoiceItemsResult;
 import org.killbill.billing.invoice.InvoicePluginDispatcher.PriorCallResult;
+import org.killbill.billing.invoice.dao.ExistingInvoiceMetadata;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -119,7 +120,10 @@ public class InvoiceApiHelper {
                 invoiceModelDaos.add(invoiceModelDao);
             }
 
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, null, true,  internalCallContext);
+            List<Invoice> invoices = new LinkedList<>();
+            invoicesForPlugins.forEach(invoice -> invoices.add((Invoice)invoice));
+            ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(invoices);
+            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, existingInvoiceMetadata, true,  internalCallContext);
             success = true;
 
             return fromInvoiceItemModelDao(createdInvoiceItems);
