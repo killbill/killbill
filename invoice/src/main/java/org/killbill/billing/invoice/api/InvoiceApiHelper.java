@@ -120,9 +120,18 @@ public class InvoiceApiHelper {
                 invoiceModelDaos.add(invoiceModelDao);
             }
 
-            List<Invoice> invoices = new LinkedList<>();
-            invoicesForPlugins.forEach(invoice -> invoices.add((Invoice)invoice));
-            ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(invoices);
+            final List<Invoice> invoices = new LinkedList<>();
+            for (Invoice invoice : invoicesForPlugins) {
+                try {
+                    final Invoice invoiceFromDB = new DefaultInvoice(dao.getById(invoice.getId(), internalCallContext));
+                    if (invoiceFromDB != null) {
+                        invoices.add(invoiceFromDB);
+                    }
+                }
+                catch (InvoiceApiException e) { //invoice not present in DB, do nothing
+                }
+            }
+            final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(invoices);
             final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, existingInvoiceMetadata, true,  internalCallContext);
             success = true;
 
