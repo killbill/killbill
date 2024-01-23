@@ -41,24 +41,24 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
     public void testProRationAfterLastBillingCycleDate() throws Exception {
         LocalDate endDate = new LocalDate("2023-06-15");
         LocalDate previousBillThroughDate = new LocalDate("2023-05-23");
-        BigDecimal proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig);
+        BigDecimal proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
         endDate = new LocalDate("2023-07-15");
         previousBillThroughDate = new LocalDate("2023-06-23");
-        proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig);
+        proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
         //Feb
         endDate = new LocalDate("2023-03-15");
         previousBillThroughDate = new LocalDate("2023-02-23");
-        proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig);
+        proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
         //Feb with leap year
         endDate = new LocalDate("2024-03-15");
         previousBillThroughDate = new LocalDate("2024-02-23");
-        proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig);
+        proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
     }
@@ -67,24 +67,24 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
     public void testProRationBeforeFirstBillingPeriod1() throws Exception {
         LocalDate startDate = new LocalDate("2023-05-23");
         LocalDate nextBillingCycleDate = new LocalDate("2023-06-15");
-        BigDecimal proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        BigDecimal proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
         startDate = new LocalDate("2023-06-23");
         nextBillingCycleDate = new LocalDate("2023-07-15");
-        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
         //Feb
         startDate = new LocalDate("2023-02-23");
         nextBillingCycleDate = new LocalDate("2023-03-15");
-        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
         //Feb with leap year
         startDate = new LocalDate("2024-02-23");
         nextBillingCycleDate = new LocalDate("2024-03-15");
-        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.733333333"));
 
     }
@@ -93,16 +93,16 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
     public void testProRationBeforeFirstBillingPeriod2() throws Exception {
         LocalDate startDate = new LocalDate("2023-05-15");
         LocalDate nextBillingCycleDate = new LocalDate("2023-05-23");
-        BigDecimal proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        BigDecimal proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.266666667"));
 
         startDate = new LocalDate("2023-06-15");
         nextBillingCycleDate = new LocalDate("2023-06-23");
-        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig);
+        proration = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, nextBillingCycleDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("0.266666667"));
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testDaysBetweenWithFixedDaysInMonthForSameMonth() {
         LocalDate startDate = new LocalDate("2023-05-15");
         LocalDate endDate = new LocalDate("2023-05-23");
@@ -127,7 +127,7 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
         Assert.assertEquals(days, 8);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testDaysBetweenWithFixedDaysInMonthForDifferentMonths() {
         LocalDate startDate = new LocalDate("2023-05-23");
         LocalDate endDate = new LocalDate("2023-06-15");
@@ -152,9 +152,37 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
         Assert.assertEquals(days, 22);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testDaysBetweenWithFixedDaysInMonth28() {
         final int fixedDaysInMonth = 28;
+
+        LocalDate startDate = new LocalDate("2023-05-23");
+        LocalDate endDate = new LocalDate("2023-06-15");
+        int days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
+        Assert.assertEquals(days, 20);
+
+        startDate = new LocalDate("2023-06-23");
+        endDate = new LocalDate("2023-07-15");
+        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
+        Assert.assertEquals(days, 20);
+
+        //Feb
+        startDate = new LocalDate("2023-02-23");
+        endDate = new LocalDate("2023-03-15");
+        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
+        Assert.assertEquals(days, 20);
+
+        //Feb wih leap year
+        startDate = new LocalDate("2024-02-23");
+        endDate = new LocalDate("2024-03-15");
+        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
+        Assert.assertEquals(days, 20);
+
+    }
+
+    @Test(groups = "fast")
+    public void testDaysBetweenWithFixedDaysInMonth31() {
+        final int fixedDaysInMonth = 31;
 
         LocalDate startDate = new LocalDate("2023-05-23");
         LocalDate endDate = new LocalDate("2023-06-15");

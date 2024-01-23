@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
-import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.collect.Iterables;
 
@@ -45,16 +44,16 @@ public class ItemsInterval {
     private final ItemsNodeInterval interval;
     private final LinkedList<Item> items;
 
-    private InvoiceConfig invoiceConfig;
+    private int prorationFixedDays;
 
-    public ItemsInterval(final ItemsNodeInterval interval, final InvoiceConfig invoiceConfig) {
-        this(interval, null, invoiceConfig);
+    public ItemsInterval(final ItemsNodeInterval interval, final int prorationFixedDays) {
+        this(interval, null, prorationFixedDays);
     }
 
-    public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem, final InvoiceConfig invoiceConfig) {
+    public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem, final int prorationFixedDays) {
         this.interval = interval;
         this.items = new LinkedList<>();
-        this.invoiceConfig = invoiceConfig;
+        this.prorationFixedDays = prorationFixedDays;
         if (initialItem != null) {
             items.add(initialItem);
         }
@@ -139,7 +138,7 @@ public class ItemsInterval {
         final InvoiceItem proratedInvoiceItem = item.toProratedInvoiceItem(startDate, endDate);
         // Keep track of the repaired amount for this item
         item.incrementCurrentRepairedAmount(proratedInvoiceItem.getAmount().abs());
-        return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction(), invoiceConfig);
+        return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction(), prorationFixedDays);
     }
 
     private Item getResultingItem(final boolean mergeMode) {

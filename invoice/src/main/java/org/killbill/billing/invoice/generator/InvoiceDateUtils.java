@@ -26,7 +26,6 @@ import org.joda.time.Months;
 import org.joda.time.Weeks;
 import org.joda.time.Years;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 
@@ -52,16 +51,16 @@ public class InvoiceDateUtils {
     }
 
     public static BigDecimal calculateProRationBeforeFirstBillingPeriod(final LocalDate startDate, final LocalDate nextBillingCycleDate,
-                                                                        final BillingPeriod billingPeriod, final InvoiceConfig invoiceConfig) {
+                                                                        final BillingPeriod billingPeriod, final int prorationFixedDays) {
         final LocalDate previousBillingCycleDate = nextBillingCycleDate.minus(billingPeriod.getPeriod());
-        return calculateProrationBetweenDates(startDate, nextBillingCycleDate, previousBillingCycleDate, nextBillingCycleDate, invoiceConfig.getProrationFixedDays());
+        return calculateProrationBetweenDates(startDate, nextBillingCycleDate, previousBillingCycleDate, nextBillingCycleDate, prorationFixedDays);
     }
 
     public static BigDecimal calculateProRationAfterLastBillingCycleDate(final LocalDate endDate, final LocalDate previousBillThroughDate,
-                                                                         final BillingPeriod billingPeriod, final InvoiceConfig invoiceConfig) {
+                                                                         final BillingPeriod billingPeriod, final int prorationFixedDays) {
         // Note: assumption is that previousBillThroughDate is correctly aligned with the billing cycle day
         final LocalDate nextBillThroughDate = previousBillThroughDate.plus(billingPeriod.getPeriod());
-        return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate, invoiceConfig.getProrationFixedDays());
+        return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate, prorationFixedDays);
     }
 
     /**

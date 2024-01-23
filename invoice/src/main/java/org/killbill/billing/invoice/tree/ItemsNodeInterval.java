@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
-import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.jackson.ObjectMapper;
@@ -50,21 +49,21 @@ public class ItemsNodeInterval extends NodeInterval {
 
     private final ItemsInterval items;
 
-    private InvoiceConfig invoiceConfig;
+    private int prorationFixedDays;
 
-    public ItemsNodeInterval(InvoiceConfig invoiceConfig) {
-        this.items = new ItemsInterval(this, invoiceConfig);
-        this.invoiceConfig = invoiceConfig;
+    public ItemsNodeInterval(final int prorationFixedDays) {
+        this.items = new ItemsInterval(this, prorationFixedDays);
+        this.prorationFixedDays = prorationFixedDays;
     }
 
-    public ItemsNodeInterval(final NodeInterval parent, final Item item, InvoiceConfig invoiceConfig) {
+    public ItemsNodeInterval(final NodeInterval parent, final Item item, final int prorationFixedDays) {
         super(parent, item.getStartDate(), item.getEndDate());
-        this.items = new ItemsInterval(this, item, invoiceConfig);
+        this.items = new ItemsInterval(this, item, prorationFixedDays);
     }
 
-    public ItemsNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate, InvoiceConfig invoiceConfig) {
+    public ItemsNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate, final int prorationFixedDays) {
         super(parent, startDate, endDate);
-        this.items = new ItemsInterval(this, invoiceConfig);
+        this.items = new ItemsInterval(this, prorationFixedDays);
     }
 
     public ItemsNodeInterval[] split(final LocalDate splitDate) {
@@ -80,8 +79,8 @@ public class ItemsNodeInterval extends NodeInterval {
 
         final Item[] splitItems = rawItems.get(0).split(splitDate);
 
-        final ItemsNodeInterval split1 = new ItemsNodeInterval(this.parent, splitItems[0], invoiceConfig);
-        final ItemsNodeInterval split2 = new ItemsNodeInterval(this.parent, splitItems[1], invoiceConfig);
+        final ItemsNodeInterval split1 = new ItemsNodeInterval(this.parent, splitItems[0], prorationFixedDays);
+        final ItemsNodeInterval split2 = new ItemsNodeInterval(this.parent, splitItems[1], prorationFixedDays);
         final ItemsNodeInterval[] result = new ItemsNodeInterval[2];
         result[0] = split1;
         result[1] = split2;
