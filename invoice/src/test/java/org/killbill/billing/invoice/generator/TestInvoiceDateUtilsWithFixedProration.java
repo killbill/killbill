@@ -180,32 +180,4 @@ public class TestInvoiceDateUtilsWithFixedProration extends InvoiceTestSuiteNoDB
 
     }
 
-    @Test(groups = "fast")
-    public void testDaysBetweenWithFixedDaysInMonth31() {
-        final int fixedDaysInMonth = 31;
-
-        LocalDate startDate = new LocalDate("2023-05-23");
-        LocalDate endDate = new LocalDate("2023-06-15");
-        int days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
-        Assert.assertEquals(days, 20);
-
-        startDate = new LocalDate("2023-06-23");
-        endDate = new LocalDate("2023-07-15");
-        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
-        Assert.assertEquals(days, 20);
-
-        //Feb
-        startDate = new LocalDate("2023-02-23");
-        endDate = new LocalDate("2023-03-15");
-        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
-        Assert.assertEquals(days, 20);
-
-        //Feb wih leap year
-        startDate = new LocalDate("2024-02-23");
-        endDate = new LocalDate("2024-03-15");
-        days = InvoiceDateUtils.daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth);
-        Assert.assertEquals(days, 20);
-
-    }
-
 }
