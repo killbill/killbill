@@ -95,11 +95,7 @@ public class InvoiceDateUtils {
             return daysBetween;
         }
         final int lastDayOfMonth = startDate.dayOfMonth().withMaximumValue().getDayOfMonth();
-        if (lastDayOfMonth == fixedDaysInMonth) {
-            return daysBetween;
-        } else {
-            return daysBetween - (lastDayOfMonth - fixedDaysInMonth);
-        }
+        return daysBetween - (lastDayOfMonth - fixedDaysInMonth);
     }
 
     public static LocalDate advanceByNPeriods(final LocalDate initialDate, final BillingPeriod billingPeriod, final int nbPeriods) {
