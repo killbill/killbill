@@ -222,4 +222,14 @@ public interface InvoiceConfig extends LockAwareConfig {
     @Description("How far back in time should invoice generation look at")
     Period getMaxInvoiceLimit(@Param("dummy") final InternalTenantContext tenantContext);
 
+    @Config("org.killbill.invoice.proration.fixed.days")
+    @Default("0")
+    @Description("Fixed number of days in a month to avoid proration")
+    int getProrationFixedDays();
+
+    @Config("org.killbill.invoice.proration.fixed.days")
+    @Default("0")
+    @Description("Fixed number of days in a month to avoid proration")
+    int getProrationFixedDays(@Param("dummy") final InternalTenantContext tenantContext);
+
 }

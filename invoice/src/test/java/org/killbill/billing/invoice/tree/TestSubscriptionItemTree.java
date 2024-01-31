@@ -69,7 +69,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startPeriod, endPeriod, fullAmount, monthlyRate, currency);
         final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endPeriod, newEndPeriod, halfAmount, monthlyRate, currency);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(item1);
         tree.addItem(item2);
         tree.build();
@@ -103,7 +103,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItemStartPeriod, existingItemEndPeriod, fullAmount, monthlyRate, currency);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(item1);
         tree.build();
 
@@ -146,7 +146,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem1StartPeriod, existingItem1EndPeriod, fullAmount, monthlyRate, currency);
         final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2StartPeriod, existingItem2EndPeriod, fullAmount, monthlyRate, currency);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(item1);
         tree.addItem(item2);
         tree.build();
@@ -198,7 +198,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem item3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem3StartPeriod, existingItem3EndPeriod, fullAmount, monthlyRate, currency);
         final InvoiceItem item4 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem4StartPeriod, existingItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(item1);
         tree.addItem(item2);
         tree.addItem(item3);
@@ -241,7 +241,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         expectedResult.add(annual1Prorated);
         expectedResult.add(annual2);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(annual1);
         tree.addItem(annual2);
         tree.addItem(repair);
@@ -260,7 +260,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         final InvoiceItem annual = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, yearlyAmount, yearlyRate, currency);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(annual);
         tree.build();
 
@@ -303,7 +303,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startBlock, endBlock, new BigDecimal("-6.85"), currency, annual1.getId());
         final InvoiceItem annual2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endDate, newEndDate, yearlyAmount, yearlyRate, currency);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(annual1);
         tree.addItem(repair);
         tree.addItem(annual2);
@@ -335,7 +335,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, amount, rate, currency);
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate, endDate, new BigDecimal("-23.96"), currency, recurring1.getId());
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(recurring1);
         tree.addItem(repair1);
         tree.build();
@@ -387,7 +387,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem newItem21 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startRepairDate21, endRepairDate22, amount, rate, currency);
         final InvoiceItem repair22 = new RepairAdjInvoiceItem(invoiceId, accountId, startRepairDate21, endRepairDate22, amount.negate(), currency, newItem2.getId());
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(initial);
         tree.addItem(newItem1);
         tree.addItem(repair1);
@@ -429,7 +429,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", "someelse", null, repairDate, endDate, amount2, rate2, currency);
         expectedResult.add(expected2);
 
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(initial);
         tree.addItem(newItem);
         tree.addItem(repair);
@@ -449,7 +449,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem tooLateRepair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate.plusDays(1), rate.negate(), currency, initial.getId());
 
         List<InvoiceItem> result;
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(initial);
         tree.addItem(tooEarlyRepair);
         tree.build();
@@ -457,7 +457,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         result  = tree.getView();
         Assert.assertEquals(result.size(), 0);
 
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(initial);
         tree.addItem(tooLateRepair);
         tree.build();
@@ -500,7 +500,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, repairDate2, endDate, amount3, rate3, currency);
         expectedResult.add(expected3);
 
-        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(initial);
         tree.addItem(newItem1);
         tree.addItem(repair1);
@@ -539,7 +539,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         expectedResult.add(expected3);
 
         // First test with items in order
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(initial);
         tree.addItem(block1);
         tree.addItem(block2);
@@ -570,7 +570,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         expectedResult.add(expected1);
         expectedResult.add(expected2);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(first);
         tree.addItem(second);
         tree.addItem(block1);
@@ -608,7 +608,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         expectedResult.add(annual);
 
         // First test with items in order
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(monthly1);
         tree.addItem(monthly2);
         tree.addItem(repair);
@@ -645,7 +645,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         expectedResult.add(annual);
 
         // First test with items in order
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(monthly1);
         tree.addItem(monthly2);
         tree.addItem(repair);
@@ -666,7 +666,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate1, endDate, amount, rate, currency);
         final InvoiceItem recurring2 = new RecurringInvoiceItem(UUID.randomUUID(), accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate1, endDate, amount, rate, currency);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(recurring1);
         tree.addItem(recurring2);
 
@@ -704,7 +704,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate2, endDate, amount2.negate(), currency, initial.getId());
 
         // Out-of-order insertion to show ordering doesn't matter
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(repair1);
         tree.addItem(repair2);
         tree.addItem(initial);
@@ -727,7 +727,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate = new BigDecimal("12.00");
         final BigDecimal monthlyAmount = monthlyRate;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.flatten(true);
 
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount, monthlyRate, currency);
@@ -748,7 +748,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate = new BigDecimal("12.00");
         final BigDecimal monthlyAmount = monthlyRate;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount, monthlyRate, currency);
         tree.addItem(monthly1);
         tree.flatten(true);
@@ -774,7 +774,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate2 = new BigDecimal("15.00");
         final BigDecimal monthlyAmount2 = monthlyRate2;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(monthly1);
         tree.flatten(true);
@@ -801,7 +801,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(monthly1);
         tree.flatten(true);
@@ -827,7 +827,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(monthly1);
         tree.flatten(true);
@@ -853,7 +853,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(monthly1);
         tree.flatten(true);
@@ -884,7 +884,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate = new BigDecimal("12.00");
         final BigDecimal monthlyAmount = monthlyRate;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount, monthlyRate, currency);
         tree.addItem(monthly);
         tree.flatten(true);
@@ -906,7 +906,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
 
         // Dot it again but with proposed items out of order
-        final SubscriptionItemTree treeAgain = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree treeAgain = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthlyAgain = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount, monthlyRate, currency);
         treeAgain.addItem(monthlyAgain);
         treeAgain.flatten(true);
@@ -936,7 +936,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate2 = new BigDecimal("20.00");
         final BigDecimal monthlyAmount2 = monthlyRate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(monthly1);
         tree.flatten(true);
@@ -971,7 +971,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal rate3 = new BigDecimal("29.95");
         final BigDecimal proratedAmount3 = new BigDecimal("23.19");
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, amount1, rate1, currency);
         final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "foo", "foo", "foo", null, change1, endDate, proratedAmount2, rate2, currency);
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, change1, endDate, new BigDecimal("-483.86"), currency, initial.getId());
@@ -1006,7 +1006,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyAmount = monthlyRate;
         final BigDecimal fixedAmount = new BigDecimal("5.00");
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount, monthlyRate, currency);
         final InvoiceItem fixed = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, fixedAmount, currency);
         tree.addItem(monthly);
@@ -1032,7 +1032,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyAmount = monthlyRate;
         final BigDecimal fixedAmount = new BigDecimal("5.00");
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem monthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount, monthlyRate, currency);
         tree.addItem(monthly);
         tree.flatten(true);
@@ -1060,7 +1060,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, amount1, rate1, currency);
         final InvoiceItem itemAdj = new ItemAdjInvoiceItem(initial, itemAdjDate, new BigDecimal("-2.00"), currency);
         tree.addItem(initial);
@@ -1090,7 +1090,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, amount1, rate1, currency);
         final InvoiceItem itemAdj = new ItemAdjInvoiceItem(initial, itemAdjDate, new BigDecimal("-10.00"), currency);
         tree.addItem(initial);
@@ -1120,7 +1120,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem originalAdjusted = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, amount1, rate1, currency);
         final InvoiceItem itemAdj = new ItemAdjInvoiceItem(originalAdjusted, itemAdjDate, amount1.negate(), currency);
 
@@ -1158,7 +1158,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endMonthly1, endMonthly2, monthlyAmount, monthlyRate, currency);
 
         // First test with items in order
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         tree.addItem(monthly1);
         tree.addItem(monthly2);
         tree.flatten(true);
@@ -1181,7 +1181,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void verifyJson() throws IOException {
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final UUID id1 = UUID.fromString("e8ba6ce7-9bd4-417d-af53-70951ecaa99f");
         final InvoiceItem yearly1 = new RecurringInvoiceItem(id1, new DateTime(), invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, new LocalDate("2014-01-01"), new LocalDate("2015-01-01"), BigDecimal.TEN, BigDecimal.TEN, currency);
         tree.addItem(yearly1);
@@ -1212,7 +1212,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
 
         final InvoiceItem existing1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(existing1);
@@ -1243,7 +1243,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyAmount1 = monthlyRate1;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
 
         final InvoiceItem existing1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
         tree.addItem(existing1);
@@ -1270,7 +1270,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal rate = new BigDecimal("12.00");
         final BigDecimal amount = rate;
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
 
         final InvoiceItem wrongInitialItem = new RecurringInvoiceItem(invoiceId,
                                                                       accountId,
@@ -1337,7 +1337,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal monthlyRate1 = new BigDecimal("12.00");
         final BigDecimal monthlyRate2 = new BigDecimal("24.00");
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
         final InvoiceItem freeMonthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, BigDecimal.ZERO, BigDecimal.ZERO, currency);
         tree.addItem(freeMonthly);
         final InvoiceItem payingMonthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, monthlyRate1, monthlyRate1, currency);
@@ -1360,7 +1360,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final LocalDate startDate = new LocalDate(2019, 11, 1);
         final LocalDate endDate = new LocalDate(2019, 12, 1);
 
-        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId, invoiceConfig.getProrationFixedDays());
 
         final DateTime catalogEffectiveDate = new DateTime();
 

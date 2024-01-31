@@ -57,13 +57,16 @@ public class AccountItemTree {
 
     private boolean isBuilt;
 
-    public AccountItemTree(final UUID accountId, final UUID targetInvoiceId) {
+    private int prorationFixedDays;
+
+    public AccountItemTree(final UUID accountId, final UUID targetInvoiceId, final int prorationFixedDays) {
         this.accountId = accountId;
         this.targetInvoiceId = targetInvoiceId;
         this.subscriptionItemTree = new HashMap<UUID, SubscriptionItemTree>();
         this.isBuilt = false;
         this.allExistingItems = new LinkedList<InvoiceItem>();
         this.pendingItemAdj = new LinkedList<InvoiceItem>();
+        this.prorationFixedDays = prorationFixedDays;
     }
 
     /**
@@ -119,7 +122,7 @@ public class AccountItemTree {
         }
 
         if (!subscriptionItemTree.containsKey(subscriptionId)) {
-            subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId, targetInvoiceId));
+            subscriptionItemTree.put(subscriptionId, new SubscriptionItemTree(subscriptionId, targetInvoiceId, prorationFixedDays));
         }
         final SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
         tree.addItem(existingItem);
@@ -141,7 +144,7 @@ public class AccountItemTree {
             final UUID subscriptionId = getSubscriptionId(item, null);
             SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
             if (tree == null) {
-                tree = new SubscriptionItemTree(subscriptionId, targetInvoiceId);
+                tree = new SubscriptionItemTree(subscriptionId, targetInvoiceId, prorationFixedDays);
                 subscriptionItemTree.put(subscriptionId, tree);
             }
             tree.mergeProposedItem(item);

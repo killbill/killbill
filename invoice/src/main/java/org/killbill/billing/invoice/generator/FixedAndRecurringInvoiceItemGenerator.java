@@ -95,7 +95,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
         final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices);
         final Set<UUID> toBeIgnored = invoicePruner.getFullyRepairedItemsClosure();
-        final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
+        final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId, config.getProrationFixedDays(internalCallContext));
         for (final Invoice invoice : existingInvoices.getInvoices()) {
             for (final InvoiceItem item : invoice.getInvoiceItems()) {
                 if (toBeIgnored.contains(item.getId())) {
@@ -347,7 +347,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         // is to charge for that period
         //
         if (endDate != null && !endDate.isAfter(billingIntervalDetail.getFirstBillingCycleDate())) {
-            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
+            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod, config.getProrationFixedDays(internalCallContext));
             final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
             results.add(itemData);
             return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail);
@@ -359,7 +359,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         // ii) The endDate is is not null and is strictly after our firstBillingCycleDate (previous check)
         //
         if (billingIntervalDetail.getFirstBillingCycleDate().isAfter(startDate)) {
-            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, billingIntervalDetail.getFirstBillingCycleDate(), billingPeriod);
+            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, billingIntervalDetail.getFirstBillingCycleDate(), billingPeriod, config.getProrationFixedDays(internalCallContext));
             if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
                 // Not common - add info in the logs for debugging purposes
                 final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, billingIntervalDetail.getFirstBillingCycleDate(), leadingProRationPeriods);
@@ -402,7 +402,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         // Now we check if indeed we need a trailing proration and add that incomplete item
         //
         if (effectiveEndDate.isAfter(lastBillingCycleDate)) {
-            final BigDecimal trailingProRationPeriods = calculateProRationAfterLastBillingCycleDate(effectiveEndDate, lastBillingCycleDate, billingPeriod);
+            final BigDecimal trailingProRationPeriods = calculateProRationAfterLastBillingCycleDate(effectiveEndDate, lastBillingCycleDate, billingPeriod, config.getProrationFixedDays(internalCallContext));
             if (trailingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
                 // Not common - add info in the logs for debugging purposes
                 final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(lastBillingCycleDate, effectiveEndDate, trailingProRationPeriods);

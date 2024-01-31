@@ -47,15 +47,15 @@ public class TestTreePrinter extends InvoiceTestSuiteNoDB {
         final InvoiceItem item = Mockito.mock(InvoiceItem.class);
         Mockito.when(item.getAmount()).thenReturn(BigDecimal.ZERO);
 
-        root = new ItemsNodeInterval(null, new Item(item, new LocalDate(2016, 1, 1), new LocalDate(2016, 2, 1), null, ItemAction.ADD));
+        root = new ItemsNodeInterval(null, new Item(item, new LocalDate(2016, 1, 1), new LocalDate(2016, 2, 1), null, ItemAction.ADD, invoiceConfig.getProrationFixedDays()), invoiceConfig.getProrationFixedDays());
 
-        node11 = new ItemsNodeInterval(root, new Item(item, new LocalDate(2016, 1, 10), new LocalDate(2016, 1, 15), null, ItemAction.ADD));
-        node21 = new ItemsNodeInterval(node11, new Item(item, new LocalDate(2016, 1, 10), new LocalDate(2016, 1, 12), null, ItemAction.ADD));
-        node22 = new ItemsNodeInterval(node11, new Item(item, new LocalDate(2016, 1, 14), new LocalDate(2016, 1, 15), null, ItemAction.ADD));
+        node11 = new ItemsNodeInterval(root, new Item(item, new LocalDate(2016, 1, 10), new LocalDate(2016, 1, 15), null, ItemAction.ADD, invoiceConfig.getProrationFixedDays()), invoiceConfig.getProrationFixedDays());
+        node21 = new ItemsNodeInterval(node11, new Item(item, new LocalDate(2016, 1, 10), new LocalDate(2016, 1, 12), null, ItemAction.ADD, invoiceConfig.getProrationFixedDays()), invoiceConfig.getProrationFixedDays());
+        node22 = new ItemsNodeInterval(node11, new Item(item, new LocalDate(2016, 1, 14), new LocalDate(2016, 1, 15), null, ItemAction.ADD, invoiceConfig.getProrationFixedDays()), invoiceConfig.getProrationFixedDays());
 
-        node12 = new ItemsNodeInterval(root, new Item(item, new LocalDate(2016, 1, 20), new LocalDate(2016, 1, 25), null, ItemAction.ADD));
-        node23 = new ItemsNodeInterval(node12, new Item(item, new LocalDate(2016, 1, 22), new LocalDate(2016, 1, 24), null, ItemAction.ADD));
-        node31 = new ItemsNodeInterval(node23, new Item(item, new LocalDate(2016, 1, 22), new LocalDate(2016, 1, 23), null, ItemAction.ADD));
+        node12 = new ItemsNodeInterval(root, new Item(item, new LocalDate(2016, 1, 20), new LocalDate(2016, 1, 25), null, ItemAction.ADD, invoiceConfig.getProrationFixedDays()), invoiceConfig.getProrationFixedDays());
+        node23 = new ItemsNodeInterval(node12, new Item(item, new LocalDate(2016, 1, 22), new LocalDate(2016, 1, 24), null, ItemAction.ADD, invoiceConfig.getProrationFixedDays()), invoiceConfig.getProrationFixedDays());
+        node31 = new ItemsNodeInterval(node23, new Item(item, new LocalDate(2016, 1, 22), new LocalDate(2016, 1, 23), null, ItemAction.ADD, invoiceConfig.getProrationFixedDays()), invoiceConfig.getProrationFixedDays());
     }
 
     @Test(groups = "fast")

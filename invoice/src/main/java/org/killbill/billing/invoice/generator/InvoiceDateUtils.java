@@ -27,6 +27,7 @@ import org.joda.time.Weeks;
 import org.joda.time.Years;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 public class InvoiceDateUtils {
 
@@ -50,16 +51,16 @@ public class InvoiceDateUtils {
     }
 
     public static BigDecimal calculateProRationBeforeFirstBillingPeriod(final LocalDate startDate, final LocalDate nextBillingCycleDate,
-                                                                        final BillingPeriod billingPeriod) {
+                                                                        final BillingPeriod billingPeriod, final int prorationFixedDays) {
         final LocalDate previousBillingCycleDate = nextBillingCycleDate.minus(billingPeriod.getPeriod());
-        return calculateProrationBetweenDates(startDate, nextBillingCycleDate, previousBillingCycleDate, nextBillingCycleDate);
+        return calculateProrationBetweenDates(startDate, nextBillingCycleDate, previousBillingCycleDate, nextBillingCycleDate, prorationFixedDays);
     }
 
     public static BigDecimal calculateProRationAfterLastBillingCycleDate(final LocalDate endDate, final LocalDate previousBillThroughDate,
-                                                                         final BillingPeriod billingPeriod) {
+                                                                         final BillingPeriod billingPeriod, final int prorationFixedDays) {
         // Note: assumption is that previousBillThroughDate is correctly aligned with the billing cycle day
         final LocalDate nextBillThroughDate = previousBillThroughDate.plus(billingPeriod.getPeriod());
-        return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate);
+        return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate, prorationFixedDays);
     }
 
     /**
@@ -69,21 +70,32 @@ public class InvoiceDateUtils {
      * @param endDate                  end date of the prorated interval
      * @param previousBillingCycleDate start date of the period
      * @param nextBillingCycleDate     end date of the period
+     * @param fixedDaysInMonth         fixed days to consider in a month (to avoid proration)
      */
-    private static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, final LocalDate previousBillingCycleDate, final LocalDate nextBillingCycleDate) {
-        final int daysBetween = Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays();
-        return calculateProrationBetweenDates(startDate, endDate, daysBetween);
+    private static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, final LocalDate previousBillingCycleDate, final LocalDate nextBillingCycleDate, final int fixedDaysInMonth) {
+        final int daysBetween = fixedDaysInMonth == 0 ? Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays() : fixedDaysInMonth;
+        return calculateProrationBetweenDates(startDate, endDate, daysBetween, fixedDaysInMonth);
     }
 
-    public static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, int daysBetween) {
+    public static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, final int daysBetween, final int fixedDaysInMonth) {
         if (daysBetween <= 0) {
             return BigDecimal.ZERO;
         }
 
         final BigDecimal daysInPeriod = new BigDecimal(daysBetween);
-        final BigDecimal days = new BigDecimal(Days.daysBetween(startDate, endDate).getDays());
+        final BigDecimal days = fixedDaysInMonth == 0 ? new BigDecimal(Days.daysBetween(startDate, endDate).getDays()) : new BigDecimal(daysBetweenWithFixedDaysInMonth(startDate, endDate, fixedDaysInMonth));
 
         return days.divide(daysInPeriod, KillBillMoney.MAX_SCALE, KillBillMoney.ROUNDING_METHOD);
+    }
+
+    @VisibleForTesting
+    public static int daysBetweenWithFixedDaysInMonth(final LocalDate startDate, final LocalDate endDate, final int fixedDaysInMonth) {
+        final int daysBetween = Days.daysBetween(startDate, endDate).getDays();
+        if(startDate.getMonthOfYear() == endDate.getMonthOfYear()) { //same month, no need for extra logic
+            return daysBetween;
+        }
+        final int lastDayOfMonth = startDate.dayOfMonth().withMaximumValue().getDayOfMonth();
+        return daysBetween - (lastDayOfMonth - fixedDaysInMonth);
     }
 
     public static LocalDate advanceByNPeriods(final LocalDate initialDate, final BillingPeriod billingPeriod, final int nbPeriods) {

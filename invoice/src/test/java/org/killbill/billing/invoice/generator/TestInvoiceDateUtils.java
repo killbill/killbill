@@ -32,7 +32,7 @@ public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
     public void testProRationAfterLastBillingCycleDate() throws Exception {
         final LocalDate endDate = new LocalDate("2012-06-02");
         final LocalDate previousBillThroughDate = new LocalDate("2012-03-02");
-        final BigDecimal proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY);
+        final BigDecimal proration = InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate(endDate, previousBillThroughDate, BillingPeriod.MONTHLY, invoiceConfig.getProrationFixedDays());
         Assert.assertEquals(proration, new BigDecimal("2.967741935"));
     }
 

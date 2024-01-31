@@ -44,13 +44,16 @@ public class ItemsInterval {
     private final ItemsNodeInterval interval;
     private final LinkedList<Item> items;
 
-    public ItemsInterval(final ItemsNodeInterval interval) {
-        this(interval, null);
+    private int prorationFixedDays;
+
+    public ItemsInterval(final ItemsNodeInterval interval, final int prorationFixedDays) {
+        this(interval, null, prorationFixedDays);
     }
 
-    public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem) {
+    public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem, final int prorationFixedDays) {
         this.interval = interval;
         this.items = new LinkedList<>();
+        this.prorationFixedDays = prorationFixedDays;
         if (initialItem != null) {
             items.add(initialItem);
         }
@@ -135,7 +138,7 @@ public class ItemsInterval {
         final InvoiceItem proratedInvoiceItem = item.toProratedInvoiceItem(startDate, endDate);
         // Keep track of the repaired amount for this item
         item.incrementCurrentRepairedAmount(proratedInvoiceItem.getAmount().abs());
-        return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction());
+        return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction(), prorationFixedDays);
     }
 
     private Item getResultingItem(final boolean mergeMode) {

@@ -28,6 +28,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.tree.NodeInterval.AddNodeCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.BuildNodeCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.WalkCallback;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -41,13 +42,16 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
     public static class DummyNodeInterval extends ItemsNodeInterval {
 
         private final UUID id;
+        private int prorationFixedDays;
 
-        public DummyNodeInterval() {
+        public DummyNodeInterval(final int prorationFixedDays) {
+            super(prorationFixedDays);
             this.id = UUID.randomUUID();
+            this.prorationFixedDays = prorationFixedDays;
         }
 
-        public DummyNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
-            super(parent, startDate, endDate);
+        public DummyNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate, final int prorationFixedDays) {
+            super(parent, startDate, endDate, prorationFixedDays);
             this.id = UUID.randomUUID();
         }
 
@@ -62,8 +66,8 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
             Assert.assertNull(leftChild, "leftChild is not null");
             Assert.assertNull(rightSibling, "rightSibling is not null");
 
-            final DummyNodeInterval split1 = new DummyNodeInterval(this.parent, this.start, splitDate);
-            final DummyNodeInterval split2 = new DummyNodeInterval(this.parent, splitDate, this.end);
+            final DummyNodeInterval split1 = new DummyNodeInterval(this.parent, this.start, splitDate, prorationFixedDays);
+            final DummyNodeInterval split2 = new DummyNodeInterval(this.parent, splitDate, this.end, prorationFixedDays);
             final DummyNodeInterval[] result = new DummyNodeInterval[2];
             result[0] = split1;
             result[1] = split2;
@@ -114,7 +118,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddExistingItemSimple() {
-        final DummyNodeInterval root = new DummyNodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval(invoiceConfig.getProrationFixedDays());
 
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
@@ -146,7 +150,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddOverlapNode1() {
-        final DummyNodeInterval root = new DummyNodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval(invoiceConfig.getProrationFixedDays());
 
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
@@ -176,7 +180,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddOverlapNode2() {
-        final DummyNodeInterval root = new DummyNodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval(invoiceConfig.getProrationFixedDays());
 
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
@@ -209,7 +213,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddOverlapNode3() {
-        final DummyNodeInterval root = new DummyNodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval(invoiceConfig.getProrationFixedDays());
 
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
@@ -242,7 +246,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddOverlapNode4() {
-        final DummyNodeInterval root = new DummyNodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval(invoiceConfig.getProrationFixedDays());
 
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
@@ -275,7 +279,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBuild() {
-        final DummyNodeInterval root = new DummyNodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval(invoiceConfig.getProrationFixedDays());
 
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
@@ -323,7 +327,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testWalkTree() {
-        final DummyNodeInterval root = new DummyNodeInterval();
+        final DummyNodeInterval root = new DummyNodeInterval(invoiceConfig.getProrationFixedDays());
 
         final DummyNodeInterval firstChildLevel0 = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(firstChildLevel0, CALLBACK);
@@ -397,7 +401,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
     }
 
     private DummyNodeInterval createNodeInterval(final LocalDate startDate, final LocalDate endDate) {
-        return new DummyNodeInterval(null, startDate, endDate);
+        return new DummyNodeInterval(null, startDate, endDate, invoiceConfig.getProrationFixedDays());
     }
 
     private DummyNodeInterval createNodeInterval(final String startDate, final String endDate) {

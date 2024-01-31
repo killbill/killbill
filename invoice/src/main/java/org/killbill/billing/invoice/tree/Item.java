@@ -63,6 +63,8 @@ public class Item {
     private BigDecimal currentRepairedAmount;
     private BigDecimal adjustedAmount;
 
+    private int prorationFixedDays;
+
     public Item(final Item item, final ItemAction action) {
         this.id = item.id;
         this.accountId = item.accountId;
@@ -87,6 +89,8 @@ public class Item {
         this.adjustedAmount = item.adjustedAmount;
 
         this.action = action;
+
+        this.prorationFixedDays = item.prorationFixedDays;
     }
 
     public Item(final Item item, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount) {
@@ -110,14 +114,16 @@ public class Item {
         this.createdDate = item.createdDate;
         this.currentRepairedAmount = item.currentRepairedAmount;
         this.adjustedAmount = item.adjustedAmount;
+        this.prorationFixedDays = item.prorationFixedDays;
     }
 
 
-    public Item(final InvoiceItem item, final UUID targetInvoiceId, final ItemAction action) {
-        this(item, item.getStartDate(), item.getEndDate(), targetInvoiceId, action);
+    public Item(final InvoiceItem item, final UUID targetInvoiceId, final ItemAction action, final int prorationFixedDays) {
+        this(item, item.getStartDate(), item.getEndDate(), targetInvoiceId, action, prorationFixedDays);
+
     }
 
-    public Item(final InvoiceItem item, final LocalDate startDate, final LocalDate endDate, final UUID targetInvoiceId, final ItemAction action) {
+    public Item(final InvoiceItem item, final LocalDate startDate, final LocalDate endDate, final UUID targetInvoiceId, final ItemAction action, final int prorationFixedDays) {
         this.id = item.getId();
         this.accountId = item.getAccountId();
         this.bundleId = item.getBundleId();
@@ -139,6 +145,8 @@ public class Item {
 
         this.currentRepairedAmount = BigDecimal.ZERO;
         this.adjustedAmount = BigDecimal.ZERO;
+
+        this.prorationFixedDays = prorationFixedDays;
     }
 
     public Item[] split(final LocalDate splitDate) {
@@ -151,7 +159,7 @@ public class Item {
 
         final Item[] result =  new Item[2];
 
-        final BigDecimal amount0 = InvoiceDateUtils.calculateProrationBetweenDates(startDate, splitDate, Days.daysBetween(startDate, endDate).getDays()).multiply(amount);
+        final BigDecimal amount0 = InvoiceDateUtils.calculateProrationBetweenDates(startDate, splitDate, Days.daysBetween(startDate, endDate).getDays(), prorationFixedDays).multiply(amount);
         final BigDecimal amount1 = amount.subtract(amount0);
 
         result[0] = new Item(this, this.startDate, splitDate, amount0);
@@ -173,11 +181,11 @@ public class Item {
 
     public InvoiceItem toProratedInvoiceItem(final LocalDate newStartDate, final LocalDate newEndDate) {
 
-        int nbTotalDays = Days.daysBetween(startDate, endDate).getDays();
+        final int nbTotalDays = prorationFixedDays == 0 ? Days.daysBetween(startDate, endDate).getDays() : prorationFixedDays;
         final boolean prorated = !(newStartDate.compareTo(startDate) == 0 && newEndDate.compareTo(endDate) == 0);
 
         // Pro-ration is built by using the startDate, endDate and amount of this item instead of using the rate and a potential full period.
-        final BigDecimal positiveAmount = prorated ? InvoiceDateUtils.calculateProrationBetweenDates(newStartDate, newEndDate, nbTotalDays)
+        final BigDecimal positiveAmount = prorated ? InvoiceDateUtils.calculateProrationBetweenDates(newStartDate, newEndDate, nbTotalDays, prorationFixedDays)
                                                                      .multiply(amount) : amount;
 
         if (action == ItemAction.ADD) {

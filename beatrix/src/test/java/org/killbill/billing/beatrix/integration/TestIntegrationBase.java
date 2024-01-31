@@ -1332,6 +1332,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             return defaultInvoiceConfig.getMaxInvoiceLimit(tenantContext);
         }
 
+        @Override
+        public int getProrationFixedDays() {
+            return defaultInvoiceConfig.getProrationFixedDays();
+        }
+
+        @Override
+        public int getProrationFixedDays(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getProrationFixedDays(tenantContext);
+        }
+
         public void setMaxInvoiceLimit(final Period value) {
             this.maxInvoiceLimit = value;
         }

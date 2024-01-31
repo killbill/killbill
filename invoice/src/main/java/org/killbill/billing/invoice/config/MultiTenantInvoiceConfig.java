@@ -142,6 +142,21 @@ public class MultiTenantInvoiceConfig extends MultiTenantLockAwareConfigBase imp
     }
 
     @Override
+    public int getProrationFixedDays() {
+        return staticConfig.getProrationFixedDays();
+    }
+
+    @Override
+    public int getProrationFixedDays(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getProrationFixedDays", tenantContext);
+        if (result != null) {
+            return Integer.parseInt(result);
+        }
+        return getProrationFixedDays();
+
+    }
+
+    @Override
     public int getMaxRawUsagePreviousPeriod() {
         return staticConfig.getMaxRawUsagePreviousPeriod();
     }
