@@ -76,7 +76,6 @@ public class InvoiceApiHelper {
                                                                     final boolean isDryRun,
                                                                     final WithAccountLock withAccountLock,
                                                                     final LinkedList<PluginProperty> inputProperties,
-                                                                    final boolean dispatchToPlugins,
                                                                     final CallContext contextMaybeWithoutAccountId) throws InvoiceApiException {
         // Invoked by User API call
         final LocalDate targetDate = null;
@@ -107,13 +106,10 @@ public class InvoiceApiHelper {
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
 
-                if (dispatchToPlugins) {
                     // Call plugin(s)
                     final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, targetDate, existingInvoices, isRescheduled, internalCallContext);
                     // Could be a bit weird for a plugin to keep updating properties for each invoice
                     pluginProperties = itemsResult.getPluginProperties();
-
-                }
                 // Transformation to InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
                 final List<InvoiceItem> invoiceItems = invoiceForPlugin.getInvoiceItems();

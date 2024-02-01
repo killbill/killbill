@@ -456,7 +456,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             originalProperties.forEach(properties::add);
         }
 
-        final Collection<InvoiceItem> dispatchedInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, false, context);
+        final Collection<InvoiceItem> dispatchedInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
 
         final Collection<InvoiceItem> adjustmentInvoiceItems = dispatchedInvoiceItems.stream()
                 .filter(invoiceItem -> InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType()))
@@ -664,7 +664,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, true, context);
+        return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
     }
 
     private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final InternalCallContext context) {
