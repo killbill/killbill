@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.InvoicePluginDispatcher.AdditionalInvoiceItemsResult;
 import org.killbill.billing.invoice.InvoicePluginDispatcher.PriorCallResult;
+import org.killbill.billing.invoice.dao.ExistingInvoiceMetadata;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -75,6 +76,7 @@ public class InvoiceApiHelper {
                                                                     final boolean isDryRun,
                                                                     final WithAccountLock withAccountLock,
                                                                     final LinkedList<PluginProperty> inputProperties,
+                                                                    final boolean dispatchToPlugins,
                                                                     final CallContext contextMaybeWithoutAccountId) throws InvoiceApiException {
         // Invoked by User API call
         final LocalDate targetDate = null;
@@ -104,11 +106,14 @@ public class InvoiceApiHelper {
 
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
-                // Call plugin(s)
-                final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, targetDate, existingInvoices, isRescheduled, internalCallContext);
-                // Could be a bit weird for a plugin to keep updating properties for each invoice
-                pluginProperties = itemsResult.getPluginProperties();
 
+                if (dispatchToPlugins) {
+                    // Call plugin(s)
+                    final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, targetDate, existingInvoices, isRescheduled, internalCallContext);
+                    // Could be a bit weird for a plugin to keep updating properties for each invoice
+                    pluginProperties = itemsResult.getPluginProperties();
+
+                }
                 // Transformation to InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
                 final List<InvoiceItem> invoiceItems = invoiceForPlugin.getInvoiceItems();
@@ -119,7 +124,20 @@ public class InvoiceApiHelper {
                 invoiceModelDaos.add(invoiceModelDao);
             }
 
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, null, true,  internalCallContext);
+            final List<Invoice> invoices = new LinkedList<>();
+            for (final Invoice invoice : invoicesForPlugins) {
+                try {
+                    final Invoice invoiceFromDB = new DefaultInvoice(dao.getById(invoice.getId(), internalCallContext));
+                    if (invoiceFromDB != null) {
+                        invoices.add(invoiceFromDB);
+                    }
+                } catch (final InvoiceApiException e) { //invoice not present in DB, do nothing
+                }
+            }
+
+            final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(invoices);
+
+            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, existingInvoiceMetadata, true, internalCallContext);
             success = true;
 
             return fromInvoiceItemModelDao(createdInvoiceItems);
