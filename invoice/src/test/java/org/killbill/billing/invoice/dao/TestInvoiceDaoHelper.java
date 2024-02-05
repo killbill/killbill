@@ -231,7 +231,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                invoiceDaoHelper.populateChildren(List.of(invoice), tags, entitySqlDaoWrapperFactory, internalAccountContext);
+                invoiceDaoHelper.populateChildren(List.of(invoice), tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
                 return null;
             }
         });
@@ -241,7 +241,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                invoiceDaoHelper.populateChildren(invoice, tags, entitySqlDaoWrapperFactory, internalAccountContext);
+                invoiceDaoHelper.populateChildren(invoice, tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
                 return null;
             }
         });

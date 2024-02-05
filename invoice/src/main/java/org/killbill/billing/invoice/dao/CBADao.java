@@ -132,7 +132,7 @@ public class CBADao {
         final List<InvoiceModelDao> invoices = new ArrayList<>();
         for (UUID id : invoiceIds) {
             final InvoiceModelDao invoice = transInvoiceDao.getById(id.toString(), context);
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+            invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, context); //TODO_1951 - should this be true?
             invoices.add(invoice);
         }
 
