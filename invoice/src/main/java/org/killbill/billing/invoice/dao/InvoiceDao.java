@@ -245,4 +245,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context);
 
+    public InvoiceModelDao getById(final UUID invoiceId, final boolean includeRepairStatus, final InternalTenantContext context) throws InvoiceApiException;
+
 }

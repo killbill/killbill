@@ -135,6 +135,13 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public InvoiceModelDao getById(final UUID id, final boolean includeRepairStatus, final InternalTenantContext context) {
+        synchronized (monitor) {
+            return invoices.get(id);
+        }
+    }
+
+    @Override
     public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) {
         synchronized (monitor) {
             for (final InvoiceModelDao invoice : invoices.values()) {

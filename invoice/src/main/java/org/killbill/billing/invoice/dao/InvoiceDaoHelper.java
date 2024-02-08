@@ -90,7 +90,7 @@ public class InvoiceDaoHelper {
         // Retrieve invoice before the Refund
         final InvoiceModelDao invoice = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getById(invoiceId, context);
         if (invoice != null) {
-            populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+            populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, context);
         } else {
             throw new IllegalStateException("Invoice shouldn't be null for id " + invoiceId);
         }
@@ -234,19 +234,21 @@ public class InvoiceDaoHelper {
                                         invoiceItemToBeAdjusted.getCatalogEffectiveDate(), effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
     }
 
-    public void populateChildren(final InvoiceModelDao invoice, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+    public void populateChildren(final InvoiceModelDao invoice, final List<Tag> invoicesTags, final boolean includeRepairStatus, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         // !!! Anything updated here needs to also be reflected in   void populateChildren(final Iterable<InvoiceModelDao> invoices,...)
         setInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setTrackingIdsFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setInvoiceWrittenOff(invoice, invoicesTags);
-        setInvoiceRepaired(invoice, entitySqlDaoWrapperFactory, context);
+        if(includeRepairStatus) {
+            setInvoiceRepaired(invoice, entitySqlDaoWrapperFactory, context);
+        }
         if (!invoice.isParentInvoice()) {
             setParentInvoice(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
     }
 
-    public void populateChildren(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+    public void populateChildren(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags, final boolean includeRepairStatus, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         // !!! Anything updated here needs to also be reflected in   void populateChildren(final InvoiceModelDao invoice,...)
         if (Iterables.isEmpty(invoices)) {
             return;
@@ -256,7 +258,9 @@ public class InvoiceDaoHelper {
         setInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setTrackingIdsFromTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setInvoicesWrittenOff(invoices, invoicesTags);
-        setInvoicesRepaired(invoices, entitySqlDaoWrapperFactory, context);
+        if (includeRepairStatus) {
+            setInvoicesRepaired(invoices, entitySqlDaoWrapperFactory, context);
+        }
 
         final Iterable<InvoiceModelDao> nonParentInvoices = Iterables.toStream(invoices)
                 .filter(invoice -> !invoice.isParentInvoice())
@@ -277,7 +281,7 @@ public class InvoiceDaoHelper {
                                                        .filter(invoice -> includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))
                                                        .collect(Collectors.toUnmodifiableList());
         if (includeInvoiceComponents) {
-            populateChildren(filtered, invoicesTags, entitySqlDaoWrapperFactory, context);
+            populateChildren(filtered, invoicesTags, false, entitySqlDaoWrapperFactory, context);
         }
         return invoices;
     }
@@ -458,7 +462,7 @@ public class InvoiceDaoHelper {
         final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(parentInvoice.getAccountId(), ObjectType.ACCOUNT, internalCallContextFactory.createTenantContext(childContext));
         final InternalTenantContext parentContext = internalCallContextFactory.createInternalTenantContext(childContext.getTenantRecordId(), parentAccountRecordId);
         // Note the misnomer here, populateChildren simply populates the content of these invoices (unrelated to HA)
-        populateChildren(parentInvoice, invoicesTags, entitySqlDaoWrapperFactory, parentContext);
+        populateChildren(parentInvoice, invoicesTags, false, entitySqlDaoWrapperFactory, parentContext);
         invoice.addParentInvoice(parentInvoice);
     }
 
@@ -505,7 +509,7 @@ public class InvoiceDaoHelper {
             final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(entry.getKey(), ObjectType.ACCOUNT, internalCallContextFactory.createTenantContext(childContext));
             final InternalTenantContext parentContext = internalCallContextFactory.createInternalTenantContext(childContext.getTenantRecordId(), parentAccountRecordId);
             // Note the misnomer here, populateChildren simply populates the content of these invoices (unrelated to HA)
-            populateChildren(parentInvoicesForOneParentAccountId, invoicesTags, entitySqlDaoWrapperFactory, parentContext);
+            populateChildren(parentInvoicesForOneParentAccountId, invoicesTags, false, entitySqlDaoWrapperFactory, parentContext);
         }
 
         for (final InvoiceModelDao invoice : childInvoices) {

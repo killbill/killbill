@@ -760,7 +760,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
         final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-        final InvoiceModelDao rawInvoice = dao.getById(invoiceId, internalCallContext);
+        final InvoiceModelDao rawInvoice = dao.getById(invoiceId, true, internalCallContext);
         if (rawInvoice.getStatus() == InvoiceStatus.COMMITTED) {
             checkInvoiceNotRepaired(rawInvoice);
             checkInvoiceDoesContainUsedGeneratedCredit(accountId, rawInvoice, context);
