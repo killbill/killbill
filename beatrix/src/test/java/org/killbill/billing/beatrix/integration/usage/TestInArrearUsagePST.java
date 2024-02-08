@@ -82,7 +82,7 @@ public class TestInArrearUsagePST extends TestIntegrationBase {
         // This looks like a bug to me
         final List<ExpectedInvoiceItemCheck> toBeChecked =
                 List.of(new ExpectedInvoiceItemCheck(new LocalDate(2024, 1, 31), new LocalDate(2024, 2, 29), InvoiceItemType.RECURRING, new BigDecimal("100")),
-                        new ExpectedInvoiceItemCheck(new LocalDate(2024, 2, 1), new LocalDate(2024, 2, 29), InvoiceItemType.USAGE, BigDecimal.ZERO));
+                        new ExpectedInvoiceItemCheck(new LocalDate(2024, 1, 31), new LocalDate(2024, 2, 29), InvoiceItemType.USAGE, BigDecimal.ZERO));
         invoiceChecker.checkInvoiceNoAudits(invoice, toBeChecked);
 
     }
