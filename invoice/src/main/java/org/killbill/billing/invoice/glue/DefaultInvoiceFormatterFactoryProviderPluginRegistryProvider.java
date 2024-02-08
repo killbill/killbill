@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,18 +20,18 @@ package org.killbill.billing.invoice.glue;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
-import org.killbill.billing.invoice.provider.DefaultInvoiceProviderPluginRegistry;
+import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import org.killbill.billing.invoice.provider.DefaultInvoiceFormatterFactoryProviderPluginRegistry;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 
-public class DefaultInvoiceProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<InvoicePluginApi>> {
+public class DefaultInvoiceFormatterFactoryProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<InvoiceFormatterFactory>> {
 
     @Inject
-    public DefaultInvoiceProviderPluginRegistryProvider() {
+    public DefaultInvoiceFormatterFactoryProviderPluginRegistryProvider() {
     }
 
     @Override
-    public OSGIServiceRegistration<InvoicePluginApi> get() {
-        return new DefaultInvoiceProviderPluginRegistry();
+    public OSGIServiceRegistration<InvoiceFormatterFactory> get() {
+        return new DefaultInvoiceFormatterFactoryProviderPluginRegistry();
     }
 }

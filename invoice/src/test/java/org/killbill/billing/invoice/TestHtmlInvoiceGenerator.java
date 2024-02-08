@@ -58,7 +58,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
         final InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();
-        g = new HtmlInvoiceGenerator(factory, templateEngine, config, null, resourceBundleFactory, null);
+        g = new HtmlInvoiceGenerator(factory, invoiceFormatterFactoryPluginRegistry, templateEngine, config, null, resourceBundleFactory, null);
     }
 
     @Test(groups = "fast")
