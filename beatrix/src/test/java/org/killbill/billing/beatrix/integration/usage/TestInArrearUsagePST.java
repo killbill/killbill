@@ -76,15 +76,9 @@ public class TestInArrearUsagePST extends TestIntegrationBase {
         assertNotNull(invoice.getInvoiceItems());
         assertEquals(invoice.getInvoiceItems().size(), 2);
 
-        //The recurring item has start date as 2024-01-31 (as per PST timezone)
-        // while the usage item has start date as 2024-02-01 (as per UTC timezone).
-        // So looks like the start date is not converted to PST for the usage invoice item.
-        // This looks like a bug to me
         final List<ExpectedInvoiceItemCheck> toBeChecked =
                 List.of(new ExpectedInvoiceItemCheck(new LocalDate(2024, 1, 31), new LocalDate(2024, 2, 29), InvoiceItemType.RECURRING, new BigDecimal("100")),
                         new ExpectedInvoiceItemCheck(new LocalDate(2024, 1, 31), new LocalDate(2024, 2, 29), InvoiceItemType.USAGE, BigDecimal.ZERO));
         invoiceChecker.checkInvoiceNoAudits(invoice, toBeChecked);
-
     }
-
 }
