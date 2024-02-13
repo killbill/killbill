@@ -26,18 +26,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.formatters.InvoiceItemFormatter;
-import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
-import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
-import org.killbill.billing.util.LocaleUtils;
-import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
 import org.killbill.billing.util.template.translation.Translator;
-import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.killbill.commons.utils.Strings;
 
 /**
  * Format invoice item fields
@@ -50,17 +45,16 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
 
-    public DefaultInvoiceItemFormatter(final TranslatorConfig config,
+    public DefaultInvoiceItemFormatter(final String defaultLocale,
+                                       final String catalogBundlePath,
                                        final InvoiceItem item,
                                        final DateTimeFormatter dateFormatter,
                                        final Locale locale,
-                                       final InternalTenantContext context,
-                                       final ResourceBundleFactory bundleFactory) {
+                                       final ResourceBundle bundle,
+                                       final ResourceBundle defaultBundle) {
         this.item = item;
         this.dateFormatter = dateFormatter;
         this.locale = locale;
-        final ResourceBundle bundle = bundleFactory.createBundle(locale, config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
-        final ResourceBundle defaultBundle = bundleFactory.createBundle(LocaleUtils.toLocale(config.getDefaultLocale()), config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
         this.translator = new DefaultCatalogTranslator(bundle, defaultBundle);
     }
 

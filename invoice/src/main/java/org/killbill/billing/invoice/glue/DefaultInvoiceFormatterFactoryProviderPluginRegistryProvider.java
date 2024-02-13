@@ -20,7 +20,7 @@ package org.killbill.billing.invoice.glue;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.provider.DefaultInvoiceFormatterFactoryProviderPluginRegistry;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 

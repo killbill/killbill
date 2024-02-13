@@ -32,17 +32,17 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
-import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
+import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.template.translator.DefaultInvoiceTranslator;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.LocaleUtils;
-import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.killbill.commons.utils.Strings;
 import org.killbill.commons.utils.io.IOUtils;
 import org.killbill.xmlloader.UriAccessor;
 
@@ -66,7 +66,8 @@ public class HtmlInvoiceGenerator {
                                 final ResourceBundleFactory bundleFactory,
                                 final TenantInternalApi tenantInternalApi) {
         this.builtInInvoiceFormatterFactory = builtInInvoiceFormatterFactory;
-        this.invoiceFormatterFactoryPluginRegistry = invoiceFormatterFactoryPluginRegistry;        this.config = config;
+        this.invoiceFormatterFactoryPluginRegistry = invoiceFormatterFactoryPluginRegistry;
+        this.config = config;
         this.currencyConversionApi = currencyConversionApi;
         this.templateEngine = templateEngine;
         this.bundleFactory = bundleFactory;
@@ -94,8 +95,10 @@ public class HtmlInvoiceGenerator {
         data.put("account", account);
 
         final String invoiceFormatterFactoryPluginName = config.getInvoiceFormatterFactoryPluginName();
-        final InvoiceFormatterFactory invoiceFormatterFactory = invoiceFormatterFactoryPluginName == null ? builtInInvoiceFormatterFactory :  invoiceFormatterFactoryPluginRegistry.getServiceForName(invoiceFormatterFactoryPluginName);
-        final InvoiceFormatter formattedInvoice = invoiceFormatterFactory.createInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context);
+        final InvoiceFormatterFactory invoiceFormatterFactory = invoiceFormatterFactoryPluginName == null ? builtInInvoiceFormatterFactory : invoiceFormatterFactoryPluginRegistry.getServiceForName(invoiceFormatterFactoryPluginName);
+        final ResourceBundle bundle = bundleFactory.createBundle(locale, config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
+        final ResourceBundle defaultBundle = bundleFactory.createBundle(LocaleUtils.toLocale(config.getDefaultLocale()), config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
+        final InvoiceFormatter formattedInvoice = invoiceFormatterFactory.createInvoiceFormatter(config.getDefaultLocale(), config.getCatalogBundlePath(), invoice, locale, currencyConversionApi, bundle, defaultBundle);
         data.put("invoice", formattedInvoice);
 
         invoiceData.setSubject(invoiceTranslator.getInvoiceEmailSubject());
