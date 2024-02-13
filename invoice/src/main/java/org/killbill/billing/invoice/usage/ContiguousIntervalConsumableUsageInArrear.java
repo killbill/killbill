@@ -100,14 +100,14 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                         final String itemDetails = toJson(toBeBilledUsageDetail);
                         final BigDecimal quantity = toBeBilledUsageDetail.getQuantity();
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, startDate.toLocalDate(), endDate.toLocalDate(), toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
+                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, usageClockUtil.toLocalDate(startDate, internalTenantContext), usageClockUtil.toLocalDate(endDate, internalTenantContext), toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
                         result.add(item);
                     }
                 } else {
                     final String itemDetails = toJson(toBeBilledUsageDetails);
 
                     final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), catalogEffectiveDate, startDate.toLocalDate(), endDate.toLocalDate(), amountToBill, null, getCurrency(), null, itemDetails);
+                                                                  getPhaseName(), usage.getName(), catalogEffectiveDate, usageClockUtil.toLocalDate(startDate, internalTenantContext), usageClockUtil.toLocalDate(endDate, internalTenantContext), amountToBill, null, getCurrency(), null, itemDetails);
                     result.add(item);
                 }
             }
