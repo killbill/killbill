@@ -51,6 +51,7 @@ import org.killbill.billing.invoice.optimizer.InvoiceOptimizerNoop;
 import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactory;
+import org.killbill.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -109,7 +110,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
         final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
-        bind(InvoiceFormatterFactory.class).to(config.getInvoiceFormatterFactoryClass()).asEagerSingleton();
+        bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
     }
 
     protected void installInvoiceDispatcher() {

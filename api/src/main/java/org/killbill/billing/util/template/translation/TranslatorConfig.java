@@ -54,11 +54,6 @@ public interface TranslatorConfig {
     @Description("Path to the invoice template for accounts with MANUAL_PAY tag")
     String getManualPayTemplateName();
 
-    @Config("org.killbill.template.invoiceFormatterFactoryClass")
-    @Default("org.killbill.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory")
-    @Description("Invoice formatter class")
-    Class<? extends InvoiceFormatterFactory> getInvoiceFormatterFactoryClass();
-
     @Config("org.killbill.template.invoiceFormatterFactoryPluginName")
     @DefaultNull
     @Description("Invoice formatter factory plugin name")
