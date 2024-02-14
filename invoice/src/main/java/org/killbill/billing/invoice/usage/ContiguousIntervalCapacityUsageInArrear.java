@@ -84,7 +84,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
             if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                 final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
                 final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                              getPhaseName(), usage.getName(), catalogEffectiveDate, startDate.toLocalDate(), endDate.toLocalDate(), amountToBill, null, getCurrency(), null, itemDetails);
+                                                              getPhaseName(), usage.getName(), catalogEffectiveDate, usageClockUtil.toLocalDate(startDate, internalTenantContext), usageClockUtil.toLocalDate(endDate, internalTenantContext), amountToBill, null, getCurrency(), null, itemDetails);
                 result.add(item);
             }
         }
