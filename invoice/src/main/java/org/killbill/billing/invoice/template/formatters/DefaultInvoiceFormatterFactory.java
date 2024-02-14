@@ -17,24 +17,20 @@
 package org.killbill.billing.invoice.template.formatters;
 
 import java.util.Locale;
+import java.util.ResourceBundle;
 
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
-import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
-import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
-import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 
 public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
 
     public DefaultInvoiceFormatterFactory() {
     }
 
-    @Override
-    public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi,
-                                                   final ResourceBundleFactory bundleFactory, final InternalTenantContext context) {
-        return new DefaultInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context);
+    public InvoiceFormatter createInvoiceFormatter(final String defaultLocale, final String catalogBundlePath, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi, final ResourceBundle bundle, final ResourceBundle defaultBundle) {
+        return new DefaultInvoiceFormatter(defaultLocale, catalogBundlePath, invoice, locale, currencyConversionApi, bundle, defaultBundle);
     }
 
 }

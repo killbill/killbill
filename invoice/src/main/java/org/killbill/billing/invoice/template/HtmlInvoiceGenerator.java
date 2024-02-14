@@ -32,22 +32,25 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
-import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
+import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.template.translator.DefaultInvoiceTranslator;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.LocaleUtils;
-import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.killbill.commons.utils.Strings;
 import org.killbill.commons.utils.io.IOUtils;
 import org.killbill.xmlloader.UriAccessor;
 
 public class HtmlInvoiceGenerator {
 
-    private final InvoiceFormatterFactory factory;
+    private final InvoiceFormatterFactory builtInInvoiceFormatterFactory;
+    private final OSGIServiceRegistration<InvoiceFormatterFactory> invoiceFormatterFactoryPluginRegistry;
+
     private final TranslatorConfig config;
     private final CurrencyConversionApi currencyConversionApi;
     private final TemplateEngine templateEngine;
@@ -55,13 +58,15 @@ public class HtmlInvoiceGenerator {
     private final ResourceBundleFactory bundleFactory;
 
     @Inject
-    public HtmlInvoiceGenerator(final InvoiceFormatterFactory factory,
+    public HtmlInvoiceGenerator(final InvoiceFormatterFactory builtInInvoiceFormatterFactory,
+                                final OSGIServiceRegistration<InvoiceFormatterFactory> invoiceFormatterFactoryPluginRegistry,
                                 final TemplateEngine templateEngine,
                                 final TranslatorConfig config,
                                 final CurrencyConversionApi currencyConversionApi,
                                 final ResourceBundleFactory bundleFactory,
                                 final TenantInternalApi tenantInternalApi) {
-        this.factory = factory;
+        this.builtInInvoiceFormatterFactory = builtInInvoiceFormatterFactory;
+        this.invoiceFormatterFactoryPluginRegistry = invoiceFormatterFactoryPluginRegistry;
         this.config = config;
         this.currencyConversionApi = currencyConversionApi;
         this.templateEngine = templateEngine;
@@ -89,7 +94,11 @@ public class HtmlInvoiceGenerator {
         data.put("text", invoiceTranslator);
         data.put("account", account);
 
-        final InvoiceFormatter formattedInvoice = factory.createInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context);
+        final String invoiceFormatterFactoryPluginName = config.getInvoiceFormatterFactoryPluginName();
+        final InvoiceFormatterFactory invoiceFormatterFactory = invoiceFormatterFactoryPluginName == null ? builtInInvoiceFormatterFactory : invoiceFormatterFactoryPluginRegistry.getServiceForName(invoiceFormatterFactoryPluginName);
+        final ResourceBundle bundle = bundleFactory.createBundle(locale, config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
+        final ResourceBundle defaultBundle = bundleFactory.createBundle(LocaleUtils.toLocale(config.getDefaultLocale()), config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
+        final InvoiceFormatter formattedInvoice = invoiceFormatterFactory.createInvoiceFormatter(config.getDefaultLocale(), config.getCatalogBundlePath(), invoice, locale, currencyConversionApi, bundle, defaultBundle);
         data.put("invoice", formattedInvoice);
 
         invoiceData.setSubject(invoiceTranslator.getInvoiceEmailSubject());

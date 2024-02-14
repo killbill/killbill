@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -29,6 +30,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
@@ -126,8 +128,9 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
 
     private void checkOutput(final InvoiceItem invoiceItem, final String template, final String expected, final Locale locale) {
         final Map<String, Object> data = new HashMap<String, Object>();
-        data.put("invoiceItem", new DefaultInvoiceItemFormatter(config, invoiceItem,  DateTimeFormat.mediumDate().withLocale(locale), locale, internalCallContext, resourceBundleFactory));
-
+        final ResourceBundle bundle = resourceBundleFactory.createBundle(locale, config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, internalCallContext);
+        final ResourceBundle defaultBundle = resourceBundleFactory.createBundle(LocaleUtils.toLocale(config.getDefaultLocale()), config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, internalCallContext);
+        data.put("invoiceItem", new DefaultInvoiceItemFormatter(config.getDefaultLocale(), config.getCatalogBundlePath(), invoiceItem, DateTimeFormat.mediumDate().withLocale(locale), locale, bundle, defaultBundle));
         final String formattedText = templateEngine.executeTemplateText(template, data);
         Assert.assertEquals(formattedText, expected);
     }

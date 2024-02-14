@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.UUID;
 
 import org.joda.money.CurrencyUnit;
@@ -34,7 +35,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.currency.api.CurrencyConversion;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
@@ -46,12 +46,10 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
-import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.commons.utils.Strings;
-import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,24 +60,31 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultInvoiceFormatter.class);
 
-    private final TranslatorConfig config;
+    private final String defaultLocale;
+
+    private final String catalogBundlePath;
+
     private final Invoice invoice;
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
     private final CurrencyConversionApi currencyConversionApi;
-    private final InternalTenantContext context;
-    private final ResourceBundleFactory bundleFactory;
 
-    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale,
-                                   final CurrencyConversionApi currencyConversionApi, final ResourceBundleFactory bundleFactory,
-                                   final InternalTenantContext context) {
-        this.config = config;
+    private final ResourceBundle bundle;
+
+    private final ResourceBundle defaultBundle;
+
+    public DefaultInvoiceFormatter(final String defaultLocale,
+                                   final String catalogBundlePath, final Invoice invoice, final Locale locale,
+                                   final CurrencyConversionApi currencyConversionApi, final ResourceBundle bundle,
+                                   final ResourceBundle defaultBundle) {
+        this.defaultLocale = defaultLocale;
+        this.catalogBundlePath = catalogBundlePath;
         this.invoice = invoice;
         this.dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
         this.locale = locale;
         this.currencyConversionApi = currencyConversionApi;
-        this.bundleFactory = bundleFactory;
-        this.context = context;
+        this.bundle = bundle;
+        this.defaultBundle = defaultBundle;
     }
 
     @Override
@@ -89,6 +94,15 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public List<InvoiceItem> getInvoiceItems() {
+        final List<InvoiceItem> formatters = new ArrayList<InvoiceItem>();
+        final List<InvoiceItem> invoiceItems = mergeCBAAndCreditAdjustmentItems();
+        for (final InvoiceItem item : invoiceItems) {
+            formatters.add(new DefaultInvoiceItemFormatter(defaultLocale, catalogBundlePath, item, dateFormatter, locale, bundle, defaultBundle));
+        }
+        return formatters;
+    }
+
+    protected List<InvoiceItem> mergeCBAAndCreditAdjustmentItems() {
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
 
         InvoiceItem mergedCBAItem = null;
@@ -113,11 +127,8 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
             invoiceItems.add(mergedInvoiceAdjustment);
         }
 
-        final List<InvoiceItem> formatters = new ArrayList<InvoiceItem>();
-        for (final InvoiceItem item : invoiceItems) {
-            formatters.add(new DefaultInvoiceItemFormatter(config, item, dateFormatter, locale, context, bundleFactory));
-        }
-        return formatters;
+        return invoiceItems;
+
     }
 
     @Override
@@ -369,11 +380,6 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     // Expose the fields for children classes. This is useful for further customization of the invoices
-
-    @SuppressWarnings("UnusedDeclaration")
-    protected TranslatorConfig getConfig() {
-        return config;
-    }
 
     @SuppressWarnings("UnusedDeclaration")
     protected DateTimeFormatter getDateFormatter() {
