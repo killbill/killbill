@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?><catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="CatalogSchema.xsd">
+<!--
+  ~ Copyright 2014 The Billing Project, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+    <effectiveDate>2024-01-30T15:44:40Z</effectiveDate>
+    <catalogName>DEFAULT</catalogName>
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+    <units/>
+
+    <products>
+        <product name="Prod_A" prettyName="Prod_A">
+            <category>BASE</category>
+            <included/>
+
+            <available/>
+
+            <limits/>
+
+        </product>
+        <product name="Prod_B" prettyName="Prod_B">
+            <category>BASE</category>
+            <included/>
+
+            <available/>
+
+            <limits/>
+        </product>        
+    </products>
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+            <priceListCase>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+        </priceList>
+    </rules>
+    <plans>
+        <plan name="Plan_A" prettyName="Plan_A">
+            <product>Prod_A</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases/>
+
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>10</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages/>
+
+            </finalPhase>
+            <plansAllowedInBundle>-1</plansAllowedInBundle>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT" prettyName="DEFAULT">
+            <plans>
+                <plan>Plan_A</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>
