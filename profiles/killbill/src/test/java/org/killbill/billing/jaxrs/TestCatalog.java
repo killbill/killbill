@@ -334,7 +334,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertNotNull(catalogValidation);
         errors = catalogValidation.getCatalogValidationErrors();
         Assert.assertNotNull(errors);
-        Assert.assertEquals(errors.size(), 1); // still 1, indicates that the catalog to be validated is validated only once
+        Assert.assertEquals(errors.size(), 1); //still 1, indicates that the catalog to be validated is validated only once
         Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
     }
 }
