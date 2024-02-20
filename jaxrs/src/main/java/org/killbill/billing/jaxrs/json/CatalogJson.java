@@ -314,23 +314,18 @@ public class CatalogJson {
         public String getType() {
             return type;
         }
-
         public String getName() {
             return name;
         }
-
         public String getPrettyName() {
             return prettyName;
         }
-
         public List<PlanJson> getPlans() {
             return plans;
         }
-
         public List<String> getIncluded() {
             return included;
         }
-
         public List<String> getAvailable() {
             return available;
         }
