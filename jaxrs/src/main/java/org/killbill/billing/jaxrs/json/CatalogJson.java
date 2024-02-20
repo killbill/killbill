@@ -28,8 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.killbill.billing.catalog.api.BillingMode;
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -65,7 +66,8 @@ public class CatalogJson {
     private final List<PriceListJson> priceLists;
 
     @JsonCreator
-    public CatalogJson(@JsonProperty("name") final String name, @JsonProperty("effectiveDate") final Date effectiveDate,
+    public CatalogJson(@JsonProperty("name") final String name,
+                       @JsonProperty("effectiveDate") final Date effectiveDate,
                        @JsonProperty("currencies") final List<Currency> currencies,
                        @JsonProperty("units") final List<UnitJson> units,
                        @JsonProperty("products") final List<ProductJson> products,
@@ -96,7 +98,6 @@ public class CatalogJson {
 
         final Collection<Plan> plans = catalog.getPlans();
         final Map<String, ProductJson> productMap = new HashMap<String, ProductJson>();
-
         for (final Plan plan : plans) {
 
             // Build the product associated with this plan
@@ -139,7 +140,8 @@ public class CatalogJson {
         Price[] prices = (internationalPrice != null) ? internationalPrice.getPrices() : null;
         if (prices != null && prices.length > 0) {
             for (int i = 0; i < prices.length; i++) {
-                pricesJson.add(new PriceJson(prices[i].getCurrency(), prices[i].getValue()));
+                pricesJson.add(new PriceJson(prices[i].getCurrency(),
+                                             prices[i].getValue()));
             }
         }
         return pricesJson;
@@ -232,7 +234,8 @@ public class CatalogJson {
         private final String prettyName;
 
         @JsonCreator
-        public UnitJson(@JsonProperty("name") final String name, @JsonProperty("prettyName") final String prettyName) {
+        public UnitJson(@JsonProperty("name") final String name,
+                        @JsonProperty("prettyName") final String prettyName) {
             this.name = name;
             this.prettyName = prettyName;
         }
@@ -291,8 +294,10 @@ public class CatalogJson {
         private final List<String> available;
 
         @JsonCreator
-        public ProductJson(@JsonProperty("type") final String type, @JsonProperty("name") final String name,
-                           @JsonProperty("prettyName") final String prettyName, @JsonProperty("plans") final List<PlanJson> plans,
+        public ProductJson(@JsonProperty("type") final String type,
+                           @JsonProperty("name") final String name,
+                           @JsonProperty("prettyName") final String prettyName,
+                           @JsonProperty("plans") final List<PlanJson> plans,
                            @JsonProperty("included") final List<String> included,
                            @JsonProperty("available") final List<String> available) {
             this.type = type;
@@ -418,7 +423,8 @@ public class CatalogJson {
         }
 
         @JsonCreator
-        public PlanJson(@JsonProperty("name") final String name, @JsonProperty("prettyName") final String prettyName,
+        public PlanJson(@JsonProperty("name") final String name,
+                        @JsonProperty("prettyName") final String prettyName,
                         @JsonProperty("recurringBillingMode") final BillingMode recurringBillingMode,
                         @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
                         @JsonProperty("phases") final List<PhaseJson> phases) {
@@ -475,8 +481,7 @@ public class CatalogJson {
             if (name != null ? !name.equals(planJson.name) : planJson.name != null) {
                 return false;
             }
-            if (recurringBillingMode != null ? !recurringBillingMode.equals(planJson.recurringBillingMode)
-                                             : planJson.recurringBillingMode != null) {
+            if (recurringBillingMode != null ? !recurringBillingMode.equals(planJson.recurringBillingMode) : planJson.recurringBillingMode != null) {
                 return false;
             }
             if (billingPeriod != null ? !billingPeriod.equals(planJson.billingPeriod)
@@ -508,8 +513,10 @@ public class CatalogJson {
         private final List<PriceJson> prices;
 
         @JsonCreator
-        public TieredBlockJson(@JsonProperty("unit") final String unit, @JsonProperty("size") final String size,
-                               @JsonProperty("max") final String max, @JsonProperty("prices") final List<PriceJson> prices) {
+        public TieredBlockJson(@JsonProperty("unit") final String unit,
+                               @JsonProperty("size") final String size,
+                               @JsonProperty("max") final String max,
+                               @JsonProperty("prices") final List<PriceJson> prices) {
             this.unit = unit;
             this.size = size;
             this.max = max;
@@ -588,7 +595,8 @@ public class CatalogJson {
         private final String min;
 
         @JsonCreator
-        public LimitJson(@JsonProperty("unit") final String unit, @JsonProperty("max") final String max,
+        public LimitJson(@JsonProperty("unit") final String unit,
+                         @JsonProperty("max") final String max,
                          @JsonProperty("min") final String min) {
             this.unit = unit;
             this.max = max;
@@ -716,8 +724,7 @@ public class CatalogJson {
             if (fixedPrice != null ? !fixedPrice.equals(tierJson.fixedPrice) : tierJson.fixedPrice != null) {
                 return false;
             }
-            if (recurringPrice != null ? !recurringPrice.equals(tierJson.recurringPrice)
-                                       : tierJson.recurringPrice != null) {
+            if (recurringPrice != null ? !recurringPrice.equals(tierJson.recurringPrice) : tierJson.recurringPrice != null) {
                 return false;
             }
 
@@ -775,8 +782,7 @@ public class CatalogJson {
 
             final UsageJson usageJson = (UsageJson) o;
 
-            if (billingPeriod != null ? !billingPeriod.equals(usageJson.billingPeriod)
-                                      : usageJson.billingPeriod != null) {
+            if (billingPeriod != null ? !billingPeriod.equals(usageJson.billingPeriod) : usageJson.billingPeriod != null) {
                 return false;
             }
             if (tiers != null ? !tiers.equals(usageJson.tiers) : usageJson.tiers != null) {
@@ -818,8 +824,7 @@ public class CatalogJson {
                 }
             }
 
-            final DurationJson durationJson = new DurationJson(phase.getDuration().getUnit(),
-                                                               phase.getDuration().getNumber());
+            final DurationJson durationJson = new DurationJson(phase.getDuration().getUnit(), phase.getDuration().getNumber());
             final List<UsageJson> usagesJson = buildUsagesJson(phase.getUsages());
 
             this.type = phase.getPhaseType().toString();
@@ -830,7 +835,8 @@ public class CatalogJson {
         }
 
         @JsonCreator
-        public PhaseJson(@JsonProperty("type") final String type, @JsonProperty("prices") final List<PriceJson> prices,
+        public PhaseJson(@JsonProperty("type") final String type,
+                         @JsonProperty("prices") final List<PriceJson> prices,
                          @JsonProperty("fixedPrices") final List<PriceJson> fixedPrices,
                          @JsonProperty("duration") final DurationJson duration,
                          @JsonProperty("usages") final List<UsageJson> usages) {
@@ -916,8 +922,7 @@ public class CatalogJson {
         private List<UsageJson> buildUsagesJson(final Usage[] usages) throws CurrencyValueNull {
             List<UsageJson> usagesJson = new ArrayList<UsageJson>();
             for (int i = 0; i < usages.length; i++) {
-                usagesJson
-                        .add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
+                usagesJson.add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
             }
             return usagesJson;
         }
@@ -927,7 +932,8 @@ public class CatalogJson {
             if (tiers != null && tiers.length > 0) {
                 for (int i = 0; i < tiers.length; i++) {
                     tiersJson.add(new TierJson(buildTieredBlocks(tiers[i].getTieredBlocks()),
-                                               buildLimits(tiers[i].getLimits()), buildPrices(tiers[i].getFixedPrice()),
+                                               buildLimits(tiers[i].getLimits()),
+                                               buildPrices(tiers[i].getFixedPrice()),
                                                buildPrices(tiers[i].getRecurringPrice())));
                 }
             }
@@ -950,7 +956,8 @@ public class CatalogJson {
             if (tieredBlocks != null && tieredBlocks.length > 0) {
                 for (int i = 0; i < tieredBlocks.length; i++) {
                     tieredBlocksJson.add(new TieredBlockJson(tieredBlocks[i].getUnit().getName(),
-                                                             tieredBlocks[i].getSize().toString(), tieredBlocks[i].getMax().toString(),
+                                                             tieredBlocks[i].getSize().toString(),
+                                                             tieredBlocks[i].getMax().toString(),
                                                              buildPrices(tieredBlocks[i].getPrice())));
                 }
             }
@@ -1028,7 +1035,8 @@ public class CatalogJson {
         private List<String> plans;
 
         @JsonCreator
-        public PriceListJson(@JsonProperty("name") final String name, @JsonProperty("plans") final List<String> plans) {
+        public PriceListJson(@JsonProperty("name") final String name,
+                             @JsonProperty("plans") final List<String> plans) {
             this.name = name;
             this.plans = plans;
         }
@@ -1093,7 +1101,8 @@ public class CatalogJson {
         private final int number;
 
         @JsonCreator
-        public DurationJson(@JsonProperty("unit") final TimeUnit unit, @JsonProperty("number") final int number) {
+        public DurationJson(@JsonProperty("unit") final TimeUnit unit,
+                            @JsonProperty("number") final int number) {
             this.unit = unit;
             this.number = number;
         }
