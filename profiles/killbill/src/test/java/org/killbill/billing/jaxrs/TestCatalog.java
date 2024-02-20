@@ -204,8 +204,7 @@ public class TestCatalog extends TestJaxrsBase {
         List<Catalog> catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 0);
 
-        catalogApi.addSimplePlan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD,
-                                                BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
+        catalogApi.addSimplePlan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
         catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().size(), 1);
@@ -215,9 +214,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().get(0), "foo-monthly");
 
-        catalogApi.addSimplePlan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD,
-                                                new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, Collections.emptyList()),
-                                 requestOptions);
+        catalogApi.addSimplePlan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
 
         catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
@@ -232,15 +229,13 @@ public class TestCatalog extends TestJaxrsBase {
     public void testAddBadSimplePlan() throws Exception {
         // Verify passing an invalid planId will throw an exception
         final String invalidPlanId = "43d3cde7-c06c-4713-8d0a-db1adfe163db";
-        catalogApi.addSimplePlan(new SimplePlan(invalidPlanId, "Foo", ProductCategory.BASE, Currency.USD,
-                                                BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
+        catalogApi.addSimplePlan(new SimplePlan(invalidPlanId, "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
     }
 
     @Test(groups = "slow")
     public void testCatalogDeletionInTestMode() throws Exception {
 
-        catalogApi.addSimplePlan(new SimplePlan("something-monthly", "Something", ProductCategory.BASE, Currency.USD,
-                                                BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
+        catalogApi.addSimplePlan(new SimplePlan("something-monthly", "Something", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
         List<Catalog> catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
 
@@ -296,8 +291,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.size(), 2);
     }
 
-    private VersionedCatalog catalogFromXML(final String catalogsXml)
-            throws SAXException, TransformerException, IOException, JAXBException {
+    private VersionedCatalog catalogFromXML(final String catalogsXml) throws SAXException, TransformerException, IOException, JAXBException {
         final InputStream stream = new ByteArrayInputStream(catalogsXml.getBytes());
         return XMLLoader.getObjectFromStreamNoValidation(stream, DefaultVersionedCatalog.class);
     }
@@ -307,19 +301,16 @@ public class TestCatalog extends TestJaxrsBase {
         uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.v3.xml", false);
         List<Catalog> catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
-        Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getPlans().get(0).getRecurringBillingMode(),
-                            BillingMode.IN_ADVANCE);
-        Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(1).getPlans().get(0).getRecurringBillingMode(),
-                               BillingMode.IN_ARREAR);
-        Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(2).getPlans().get(0).getRecurringBillingMode(),
-                               null);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getPlans().get(0).getRecurringBillingMode(), BillingMode.IN_ADVANCE);
+        Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(1).getPlans().get(0).getRecurringBillingMode(), BillingMode.IN_ARREAR);
+        Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(2).getPlans().get(0).getRecurringBillingMode(), null);
 
     }
 
     @Test(groups = "slow")
     public void testValidateCatalog() throws Exception {
 
-        // valid catalog
+        //valid catalog
         String body = getResourceBodyString("org/killbill/billing/server/SpyCarBasic.xml");
         CatalogValidation catalogValidation = catalogApi.validateCatalogXml(body, requestOptions);
         Assert.assertNotNull(catalogValidation);
@@ -327,7 +318,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertNotNull(errors);
         Assert.assertEquals(errors.size(), 0);
 
-        // valid catalog with existing catalog
+        //valid catalog with existing catalog
         uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", false);
         body = getResourceBodyString("org/killbill/billing/server/SpyCarBasic.xml");
 
@@ -336,18 +327,15 @@ public class TestCatalog extends TestJaxrsBase {
         errors = catalogValidation.getCatalogValidationErrors();
         Assert.assertNotNull(errors);
         Assert.assertEquals(errors.size(), 1);
-        Assert.assertEquals(errors.get(0).getErrorDescription(),
-                            "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
+        Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
 
-        // validate same catalog again to ensure that it is not added to the cache at
-        // the time of validation
+        // validate same catalog again to ensure that it is not added to the cache at the time of validation
         catalogValidation = catalogApi.validateCatalogXml(body, requestOptions);
         Assert.assertNotNull(catalogValidation);
         errors = catalogValidation.getCatalogValidationErrors();
         Assert.assertNotNull(errors);
         Assert.assertEquals(errors.size(), 1); // still 1, indicates that the catalog to be validated is validated only
         // once
-        Assert.assertEquals(errors.get(0).getErrorDescription(),
-                            "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
+        Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
     }
 }
