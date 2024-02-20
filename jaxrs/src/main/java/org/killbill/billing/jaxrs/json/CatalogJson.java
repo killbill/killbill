@@ -229,7 +229,6 @@ public class CatalogJson {
 
     @ApiModel(value="Unit")
     public static class UnitJson {
-
         private final String name;
         private final String prettyName;
 
@@ -279,7 +278,6 @@ public class CatalogJson {
 
     @ApiModel(value="Product")
     public static class ProductJson {
-
         private final String type;
         private final String name;
         private final String prettyName;
@@ -314,18 +312,23 @@ public class CatalogJson {
         public String getType() {
             return type;
         }
+
         public String getName() {
             return name;
         }
+
         public String getPrettyName() {
             return prettyName;
         }
+
         public List<PlanJson> getPlans() {
             return plans;
         }
+
         public List<String> getIncluded() {
             return included;
         }
+
         public List<String> getAvailable() {
             return available;
         }
@@ -390,7 +393,6 @@ public class CatalogJson {
 
     @ApiModel(value="Plan")
     public static class PlanJson {
-
         private final String name;
         private final String prettyName;
         private final BillingMode recurringBillingMode;
@@ -494,7 +496,6 @@ public class CatalogJson {
 
     @ApiModel(value="TieredBlock")
     public static class TieredBlockJson {
-
         private final String unit;
         private final String size;
         private final String max;
@@ -574,7 +575,6 @@ public class CatalogJson {
 
     @ApiModel(value="Limit")
     public static class LimitJson {
-
         private final String unit;
         private final String max;
         private final String min;
@@ -643,7 +643,6 @@ public class CatalogJson {
 
     @ApiModel(value="Tier")
     public static class TierJson {
-
         private final List<TieredBlockJson> blocks;
         private final List<LimitJson> limits;
         private final List<PriceJson> fixedPrice;
@@ -723,13 +722,11 @@ public class CatalogJson {
 
     @ApiModel(value="Usage")
     public static class UsageJson {
-
         private final String billingPeriod;
         private final List<TierJson> tiers;
 
         @JsonCreator
-        public UsageJson(@JsonProperty("billingPeriod") final String billingPeriod,
-                         @JsonProperty("tiers") final List<TierJson> tiers) {
+        public UsageJson(@JsonProperty("billingPeriod") final String billingPeriod,@JsonProperty("tiers") final List<TierJson> tiers) {
             this.billingPeriod = billingPeriod;
             this.tiers = tiers;
         }
@@ -782,7 +779,6 @@ public class CatalogJson {
 
     @ApiModel(value="Phase")
     public static class PhaseJson {
-
         private final String type;
         private final List<PriceJson> prices;
         private final List<PriceJson> fixedPrices;
@@ -944,7 +940,6 @@ public class CatalogJson {
 
     @ApiModel(value="Price")
     public static class PriceJson {
-
         private final Currency currency;
         private final BigDecimal value;
 
@@ -1007,7 +1002,6 @@ public class CatalogJson {
 
     @ApiModel(value="PriceList")
     public static class PriceListJson {
-
         private String name;
         private List<String> plans;
 
@@ -1073,7 +1067,6 @@ public class CatalogJson {
 
     @ApiModel(value="Duration")
     public static class DurationJson {
-
         private final TimeUnit unit;
         private final int number;
 
