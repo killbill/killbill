@@ -142,12 +142,11 @@ public class TestCatalog extends TestJaxrsBase {
                 Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getUnit(), "bullets");
                 Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getSize(), "100.0");
                 Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getCurrency(), "USD");
-                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getValue(),2.95);
+                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getValue(), 2.95);
             }
 
             // Retrieve available products (addons) for that base product
-            final List<PlanDetail> availableAddons = catalogApi.getAvailableAddons(productJson.getName(), null, null,
-                                                                                   requestOptions);
+            final List<PlanDetail> availableAddons = catalogApi.getAvailableAddons(productJson.getName(), null, null, requestOptions);
             final Set<String> availableAddonsNames = new HashSet<String>();
             for (final PlanDetail planDetailJson : availableAddons) {
                 availableAddonsNames.add(planDetailJson.getProduct());
@@ -166,18 +165,15 @@ public class TestCatalog extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Try to retrieve catalog with an effective date in the past")
     public void testCatalogWithEffectiveDateInThePast() throws Exception {
-        final List<Catalog> catalogsJson = catalogApi.getCatalogJson(DateTime.parse("2008-01-01"), null,
-                                                                     requestOptions);
-        // We expect to see our catalogTest.xml (date in the past returns the first
-        // version. See #760
+        final List<Catalog> catalogsJson = catalogApi.getCatalogJson(DateTime.parse("2008-01-01"), null, requestOptions);
+        // We expect to see our catalogTest.xml (date in the past returns the first version. See #760
         Assert.assertEquals(catalogsJson.size(), 1);
     }
 
     @Test(groups = "slow", description = "Can create a simple Plan into a per-tenant catalog")
     public void testAddSimplePlan() throws Exception {
 
-        catalogApi.addSimplePlan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD,
-                                                BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
+        catalogApi.addSimplePlan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
         List<Catalog> catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().size(), 1);
@@ -187,9 +183,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().get(0), "foo-monthly");
 
-        catalogApi.addSimplePlan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD,
-                                                new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, Collections.emptyList()),
-                                 requestOptions);
+        catalogApi.addSimplePlan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, Collections.emptyList()), requestOptions);
 
         catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
