@@ -70,7 +70,7 @@ public class TestCatalog extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", description = "Match the number of products in JSON and XML catalogs")
-    public void matchJsonXmlCatalogProductSize() throws Exception {
+    public void testMatchJsonXmlCatalogProductSize() throws Exception {
         uploadTenantCatalog("org/killbill/billing/server/ProductsWithoutPlan.xml", false);
         final Catalogs catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
         final String catalogsXml = catalogApi.getCatalogXml(DateTime.parse("2024-01-30T15:44:40Z"), null,
