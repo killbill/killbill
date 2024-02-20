@@ -55,7 +55,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value = "Catalog")
+@ApiModel(value="Catalog")
 public class CatalogJson {
 
     private final String name;
@@ -227,7 +227,7 @@ public class CatalogJson {
         return result;
     }
 
-    @ApiModel(value = "Unit")
+    @ApiModel(value="Unit")
     public static class UnitJson {
 
         private final String name;
@@ -283,7 +283,7 @@ public class CatalogJson {
 
     }
 
-    @ApiModel(value = "Product")
+    @ApiModel(value="Product")
     public static class ProductJson {
 
         private final String type;
@@ -399,7 +399,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "Plan")
+    @ApiModel(value="Plan")
     public static class PlanJson {
 
         private final String name;
@@ -504,7 +504,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "TieredBlock")
+    @ApiModel(value="TieredBlock")
     public static class TieredBlockJson {
 
         private final String unit;
@@ -587,7 +587,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "Limit")
+    @ApiModel(value="Limit")
     public static class LimitJson {
 
         private final String unit;
@@ -658,7 +658,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "Tier")
+    @ApiModel(value="Tier")
     public static class TierJson {
 
         private final List<TieredBlockJson> blocks;
@@ -741,7 +741,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "Usage")
+    @ApiModel(value="Usage")
     public static class UsageJson {
 
         private final String billingPeriod;
