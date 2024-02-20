@@ -785,7 +785,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "Phase")
+    @ApiModel(value="Phase")
     public static class PhaseJson {
 
         private final String type;
@@ -947,7 +947,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "Price")
+    @ApiModel(value="Price")
     public static class PriceJson {
 
         private final Currency currency;
@@ -1010,7 +1010,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value = "PriceList")
+    @ApiModel(value="PriceList")
     public static class PriceListJson {
 
         private String name;
@@ -1076,7 +1076,7 @@ public class CatalogJson {
 
     }
 
-    @ApiModel(value = "Duration")
+    @ApiModel(value="Duration")
     public static class DurationJson {
 
         private final TimeUnit unit;
