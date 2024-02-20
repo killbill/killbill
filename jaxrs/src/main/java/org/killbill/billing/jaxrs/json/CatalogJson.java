@@ -88,7 +88,6 @@ public class CatalogJson {
         priceLists = new ArrayList<PriceListJson>();
 
         final Collection<Product> XMLproducts = catalog.getProducts();
-
         List<UnitJson> units = new ArrayList<UnitJson>();
         for (final Unit unit : catalog.getUnits()) {
             final UnitJson unitJson = new UnitJson(unit.getName(), unit.getPrettyName());
@@ -99,7 +98,6 @@ public class CatalogJson {
         final Collection<Plan> plans = catalog.getPlans();
         final Map<String, ProductJson> productMap = new HashMap<String, ProductJson>();
         for (final Plan plan : plans) {
-
             // Build the product associated with this plan
             final Product product = plan.getProduct();
             if (product == null) {
@@ -128,6 +126,7 @@ public class CatalogJson {
         }
 
         products = List.copyOf(productMap.values());
+
         final PriceListSet priceLists = catalog.getPriceLists();
         for (PriceList childPriceList : priceLists.getAllPriceLists()) {
             this.priceLists.add(new PriceListJson(childPriceList));
@@ -229,6 +228,7 @@ public class CatalogJson {
 
     @ApiModel(value="Unit")
     public static class UnitJson {
+
         private final String name;
         private final String prettyName;
 
@@ -278,6 +278,7 @@ public class CatalogJson {
 
     @ApiModel(value="Product")
     public static class ProductJson {
+
         private final String type;
         private final String name;
         private final String prettyName;
@@ -393,6 +394,7 @@ public class CatalogJson {
 
     @ApiModel(value="Plan")
     public static class PlanJson {
+
         private final String name;
         private final String prettyName;
         private final BillingMode recurringBillingMode;
@@ -726,7 +728,8 @@ public class CatalogJson {
         private final List<TierJson> tiers;
 
         @JsonCreator
-        public UsageJson(@JsonProperty("billingPeriod") final String billingPeriod,@JsonProperty("tiers") final List<TierJson> tiers) {
+        public UsageJson(@JsonProperty("billingPeriod") final String billingPeriod,
+                         @JsonProperty("tiers") final List<TierJson> tiers) {
             this.billingPeriod = billingPeriod;
             this.tiers = tiers;
         }
@@ -734,7 +737,6 @@ public class CatalogJson {
         public String getBillingPeriod() {
             return billingPeriod;
         }
-
         public List<TierJson> getTiers() {
             return tiers;
         }
@@ -779,6 +781,7 @@ public class CatalogJson {
 
     @ApiModel(value="Phase")
     public static class PhaseJson {
+
         private final String type;
         private final List<PriceJson> prices;
         private final List<PriceJson> fixedPrices;
@@ -826,15 +829,19 @@ public class CatalogJson {
         public String getType() {
             return type;
         }
+
         public List<PriceJson> getPrices() {
             return prices;
         }
+
         public List<PriceJson> getFixedPrices() {
             return fixedPrices;
         }
+
         public DurationJson getDuration() {
             return duration;
         }
+
         public List<UsageJson> getUsages() {
             return usages;
         }
@@ -940,6 +947,7 @@ public class CatalogJson {
 
     @ApiModel(value="Price")
     public static class PriceJson {
+
         private final Currency currency;
         private final BigDecimal value;
 
@@ -1002,6 +1010,7 @@ public class CatalogJson {
 
     @ApiModel(value="PriceList")
     public static class PriceListJson {
+
         private String name;
         private List<String> plans;
 
@@ -1067,6 +1076,7 @@ public class CatalogJson {
 
     @ApiModel(value="Duration")
     public static class DurationJson {
+
         private final TimeUnit unit;
         private final int number;
 
