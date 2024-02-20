@@ -63,18 +63,16 @@ public class TestCatalog extends TestJaxrsBase {
         String catalog = uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", true);
         Assert.assertNotNull(catalog);
         //
-        // We can't deserialize the VersionedCatalog using our JAXB models because it
-        // contains several
-        // Standalone catalog and ids (JAXB name) are not unique across the various
-        // catalogs so deserialization would fail
+        // We can't deserialize the VersionedCatalog using our JAXB models because it contains several
+        // Standalone catalog and ids (JAXB name) are not unique across the various catalogs so deserialization would fail
+        //
     }
 
     @Test(groups = "slow", description = "Match the number of products in JSON and XML catalogs")
     public void testMatchJsonXmlCatalogProductSize() throws Exception {
         uploadTenantCatalog("org/killbill/billing/server/ProductsWithoutPlan.xml", false);
         final Catalogs catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
-        final String catalogsXml = catalogApi.getCatalogXml(DateTime.parse("2024-01-30T15:44:40Z"), null,
-                                                            requestOptions);
+        final String catalogsXml = catalogApi.getCatalogXml(DateTime.parse("2024-01-30T15:44:40Z"), null, requestOptions);
         final StaticCatalog xmlCatalog = (catalogFromXML(catalogsXml)).getCurrentVersion();
         final int sizeOfProductsInXmlCatalog = xmlCatalog.getProducts().size();
         final int sizeOfProductsInJsonCatalog = catalogsJson.get(0).getProducts().size();
@@ -99,8 +97,7 @@ public class TestCatalog extends TestJaxrsBase {
             Assert.assertTrue(e.getMessage().startsWith("Invalid catalog for tenant : "));
         }
 
-        // Try to upload another version with an invalid name (different than orignal
-        // name)
+        // Try to upload another version with an invalid name (different than original name)
         try {
             uploadTenantCatalog("org/killbill/billing/server/SpyCarBasicInvalidName.xml", false);
             Assert.fail("Uploading same version should fail");
@@ -144,10 +141,8 @@ public class TestCatalog extends TestJaxrsBase {
                 Assert.assertEquals(usages.get(0).getBillingPeriod(), "MONTHLY");
                 Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getUnit(), "bullets");
                 Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getSize(), "100.0");
-                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getCurrency(),
-                                    "USD");
-                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getValue(),
-                                    2.95);
+                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getCurrency(), "USD");
+                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getValue(),2.95);
             }
 
             // Retrieve available products (addons) for that base product
