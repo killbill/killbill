@@ -139,7 +139,7 @@ public class CatalogJson {
         List<PriceJson> pricesJson = new ArrayList<PriceJson>();
         Price[] prices = (internationalPrice != null) ? internationalPrice.getPrices() : null;
         if (prices != null && prices.length > 0) {
-            for (int i = 0; i < prices.length; i++) {
+            for (int i=0; i < prices.length; i++) {
                 pricesJson.add(new PriceJson(prices[i].getCurrency(),
                                              prices[i].getValue()));
             }
@@ -259,18 +259,12 @@ public class CatalogJson {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
             UnitJson unitJson = (UnitJson) o;
 
-            if (name != null ? !name.equals(unitJson.name) : unitJson.name != null) {
-                return false;
-            }
+            if (name != null ? !name.equals(unitJson.name) : unitJson.name != null) return false;
             return prettyName != null ? prettyName.equals(unitJson.prettyName) : unitJson.prettyName == null;
         }
 
@@ -484,8 +478,7 @@ public class CatalogJson {
             if (recurringBillingMode != null ? !recurringBillingMode.equals(planJson.recurringBillingMode) : planJson.recurringBillingMode != null) {
                 return false;
             }
-            if (billingPeriod != null ? !billingPeriod.equals(planJson.billingPeriod)
-                                      : planJson.billingPeriod != null) {
+            if (billingPeriod != null ? !billingPeriod.equals(planJson.billingPeriod) : planJson.billingPeriod != null) {
                 return false;
             }
             if (phases != null ? !phases.equals(planJson.phases) : planJson.phases != null) {
@@ -526,15 +519,12 @@ public class CatalogJson {
         public String getUnit() {
             return unit;
         }
-
         public String getSize() {
             return size;
         }
-
         public String getMax() {
             return max;
         }
-
         public List<PriceJson> getPrices() {
             return prices;
         }
@@ -606,11 +596,9 @@ public class CatalogJson {
         public String getUnit() {
             return unit;
         }
-
         public String getMax() {
             return max;
         }
-
         public String getMin() {
             return min;
         }
@@ -680,15 +668,12 @@ public class CatalogJson {
         public List<TieredBlockJson> getBlocks() {
             return blocks;
         }
-
         public List<LimitJson> getLimits() {
             return limits;
         }
-
         public List<PriceJson> getFixedPrice() {
             return fixedPrice;
         }
-
         public List<PriceJson> getRecurringPrice() {
             return recurringPrice;
         }
@@ -850,19 +835,15 @@ public class CatalogJson {
         public String getType() {
             return type;
         }
-
         public List<PriceJson> getPrices() {
             return prices;
         }
-
         public List<PriceJson> getFixedPrices() {
             return fixedPrices;
         }
-
         public DurationJson getDuration() {
             return duration;
         }
-
         public List<UsageJson> getUsages() {
             return usages;
         }
@@ -944,7 +925,8 @@ public class CatalogJson {
             List<LimitJson> limitsJson = new ArrayList<LimitJson>();
             if (limits != null && limits.length > 0) {
                 for (int i = 0; i < limits.length; i++) {
-                    limitsJson.add(new LimitJson(limits[i].getUnit().getName(), limits[i].getMax().toString(),
+                    limitsJson.add(new LimitJson(limits[i].getUnit().getName(),
+                                                 limits[i].getMax().toString(),
                                                  limits[i].getMin().toString()));
                 }
             }
