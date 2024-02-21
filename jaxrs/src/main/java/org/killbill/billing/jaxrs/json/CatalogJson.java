@@ -87,6 +87,7 @@ public class CatalogJson {
         currencies = Arrays.asList(catalog.getSupportedCurrencies());
         priceLists = new ArrayList<PriceListJson>();
 
+        final Collection<Product> XMLproducts = catalog.getProducts();
         List<UnitJson> units = new ArrayList<UnitJson>();
         for (final Unit unit : catalog.getUnits()) {
             final UnitJson unitJson = new UnitJson(unit.getName(), unit.getPrettyName());
@@ -111,6 +112,17 @@ public class CatalogJson {
 
             final PlanJson planJson = new PlanJson(plan);
             productJson.getPlans().add(planJson);
+        }
+        // Add products that are not part of any plan
+        for (final Product product : XMLproducts) {
+            final String productName = product.getName();
+            ProductJson productJson = productMap.get(product.getName());
+            if (!productMap.containsKey(productName)) {
+                if (productJson == null) {
+                    productJson = new ProductJson(product);
+                    productMap.put(product.getName(), productJson);
+                }
+            }
         }
 
         products = List.copyOf(productMap.values());
@@ -717,7 +729,7 @@ public class CatalogJson {
 
         @JsonCreator
         public UsageJson(@JsonProperty("billingPeriod") final String billingPeriod,
-                        @JsonProperty("tiers") final List<TierJson> tiers) {
+                         @JsonProperty("tiers") final List<TierJson> tiers) {
             this.billingPeriod = billingPeriod;
             this.tiers = tiers;
         }
@@ -932,7 +944,6 @@ public class CatalogJson {
             return tieredBlocksJson;
         }
     }
-
 
     @ApiModel(value="Price")
     public static class PriceJson {

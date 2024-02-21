@@ -34,10 +34,11 @@ import javax.xml.transform.TransformerException;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.client.KillBillClientException;
@@ -67,6 +68,17 @@ public class TestCatalog extends TestJaxrsBase {
         //
     }
 
+    @Test(groups = "slow", description = "Match the number of products in JSON and XML catalogs")
+    public void testMatchJsonXmlCatalogProductSize() throws Exception {
+        uploadTenantCatalog("org/killbill/billing/server/ProductsWithoutPlan.xml", false);
+        final Catalogs catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
+        final String catalogsXml = catalogApi.getCatalogXml(DateTime.parse("2024-01-30T15:44:40Z"), null, requestOptions);
+        final StaticCatalog xmlCatalog = (catalogFromXML(catalogsXml)).getCurrentVersion();
+        final int sizeOfProductsInXmlCatalog = xmlCatalog.getProducts().size();
+        final int sizeOfProductsInJsonCatalog = catalogsJson.get(0).getProducts().size();
+        Assert.assertEquals(sizeOfProductsInXmlCatalog, sizeOfProductsInJsonCatalog);
+    }
+
     @Test(groups = "slow")
     public void testUploadAndFetchUsageCatlog() throws Exception {
         String catalog = uploadTenantCatalog("org/killbill/billing/server/UsageExperimental.xml", true);
@@ -85,7 +97,7 @@ public class TestCatalog extends TestJaxrsBase {
             Assert.assertTrue(e.getMessage().startsWith("Invalid catalog for tenant : "));
         }
 
-        // Try to upload another version with an invalid name (different than orignal name)
+        // Try to upload another version with an invalid name (different than original name)
         try {
             uploadTenantCatalog("org/killbill/billing/server/SpyCarBasicInvalidName.xml", false);
             Assert.fail("Uploading same version should fail");
