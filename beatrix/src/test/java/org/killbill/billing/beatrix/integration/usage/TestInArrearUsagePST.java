@@ -140,8 +140,6 @@ public class TestInArrearUsagePST extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
-
-
     }
 
     @Test(groups = "slow")
@@ -176,37 +174,27 @@ public class TestInArrearUsagePST extends TestIntegrationBase {
 
         //cancel base at 6:40
         clock.setTime(today.plusMinutes(40));
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         //$0 invoice corresponding to usage item
-        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2024, 2, 20), new LocalDate(2024, 2, 20), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2024, 2, 20), new LocalDate(2024, 2, 20), InvoiceItemType.USAGE, new BigDecimal("2.95")));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1"), internalCallContext);
 
         //Trigger invoice dry run for next month
-        final LocalDate targetDate = new LocalDate(2024, 3, 21);
+        final LocalDate targetDate = new LocalDate(2024, 3, 20);
         final DryRunArguments dryRunArgs = new TestDryRunArguments(DryRunType.TARGET_DATE);
-        final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), targetDate, dryRunArgs, Collections.emptyList(), callContext);
-        assertNotNull(invoice);
-        assertNotNull(invoice.getInvoiceItems());
-        assertEquals(invoice.getInvoiceItems().size(), 1);
+        try {
+            final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), targetDate, dryRunArgs, Collections.emptyList(), callContext);
+        }
+        catch(InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+        }
 
-        //only usage item, no recurring item since subscription is cancelled on the same day
-        final List<ExpectedInvoiceItemCheck> toBeChecked =
-                List.of(new ExpectedInvoiceItemCheck(new LocalDate(2024, 2, 20), new LocalDate(2024, 2, 20), InvoiceItemType.USAGE, new BigDecimal("2.95")));
-        invoiceChecker.checkInvoiceNoAudits(invoice, toBeChecked);
-
-        //Move clock to 2024-03-16T6:40
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1);
-        assertListenerStatus();
-
-        //only usage item, no recurring item since subscription is cancelled on the same day
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, toBeChecked);
-
-        //Move clock to 2024-04-16T6:40 - No further invoice
+        //Move to next month - still no invoice
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
-    }
+     }
 }
