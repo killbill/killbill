@@ -178,7 +178,6 @@ public class TestInArrearUsagePST extends TestIntegrationBase {
         baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        //$0 invoice corresponding to usage item
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2024, 2, 20), new LocalDate(2024, 2, 20), InvoiceItemType.USAGE, new BigDecimal("2.95")));
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1"), internalCallContext);
 
