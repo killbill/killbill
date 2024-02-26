@@ -65,6 +65,7 @@ public class RawUsageOptimizer {
     private final InvoiceConfig config;
     private final InvoiceDao invoiceDao;
     private final Clock clock;
+    private final UsageClockUtil usageClockUtil;
 
     @Inject
     public RawUsageOptimizer(final InvoiceConfig config, final InvoiceDao invoiceDao, final InternalUserApi usageApi, final Clock clock) {
@@ -72,12 +73,15 @@ public class RawUsageOptimizer {
         this.config = config;
         this.invoiceDao = invoiceDao;
         this.clock = clock;
+        this.usageClockUtil = new UsageClockUtil(config);
     }
 
     public RawUsageOptimizerResult getInArrearUsage(final DateTime firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, @Nullable final DryRunInfo dryRunInfo, final Iterable<PluginProperty> inputProperties, final InternalCallContext internalCallContext) {
 
         // The idea is that if we need to come up with a DateTime we use the largest possible based on the provided LocalDate to return enough points and have the usage invoice code filter what is not relevant.
-        final DateTime targetDateMax = targetDate.plusDays(1).toDateTimeAtStartOfDay(DateTimeZone.UTC).minus(Period.millis(1));
+        // Since target date is within account#timezone, we compute a datetime at the end of the day in account#timezone and then convert to UTC
+        final DateTime targetDateMax = usageClockUtil.toDateTimeAtEndOfDay(targetDate, internalCallContext);
+
         final int configRawUsagePreviousPeriod = config.getMaxRawUsagePreviousPeriod(internalCallContext);
         final DateTime optimizedStartDate = configRawUsagePreviousPeriod >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
         log.debug("RawUsageOptimizerResult accountRecordId='{}', configRawUsagePreviousPeriod='{}', firstEventStartDate='{}', optimizedStartDate='{}',  targetDate='{}'",
