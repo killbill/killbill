@@ -257,7 +257,6 @@ public class PluginResource extends JaxRsResourceBase {
         }
         appendFormParametersToBody(out, data);
 
-        request.getInputStream().transferTo(out);
         return new ByteArrayInputStream(out.toByteArray());
     }
 
