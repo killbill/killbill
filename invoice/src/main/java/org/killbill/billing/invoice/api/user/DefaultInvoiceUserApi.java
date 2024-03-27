@@ -71,7 +71,6 @@ import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
@@ -79,13 +78,14 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -456,7 +456,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             originalProperties.forEach(properties::add);
         }
 
-        final Collection<InvoiceItem> dispatchedInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
+        final Collection<InvoiceItem> dispatchedInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, true, context);
 
         final Collection<InvoiceItem> adjustmentInvoiceItems = dispatchedInvoiceItems.stream()
                 .filter(invoiceItem -> InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType()))
@@ -664,7 +664,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
+        return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, true, context);
     }
 
     private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final InternalCallContext context) {
@@ -686,13 +686,25 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-        // Update invoice status first prior we update CTD as we typically don't update CTD for non committed invoices.
-        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
-        final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
-        dispatcher.setChargedThroughDates(invoice, internalCallContext);
-    }
+        final WithAccountLock withAccountLock = new WithAccountLock() {
+            @Override
+            public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
+                final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
+                // Update invoice status first prior we update CTD as we typically don't update CTD for non committed invoices.
+                dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
+                final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
+                dispatcher.setChargedThroughDates(invoice, internalCallContext);
+                return List.of(invoice);
+            }
+        };
 
+        final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
+
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        properties.add(new PluginProperty(INVOICE_OPERATION, "commit", false));
+
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, false, context);
+    }
     @Override
     public void transferChildCreditToParent(final UUID childAccountId, final CallContext context) throws InvoiceApiException {
 
@@ -759,19 +771,31 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public void voidInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
 
         final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-        final InvoiceModelDao rawInvoice = dao.getById(invoiceId, true, internalCallContext);
-        if (rawInvoice.getStatus() == InvoiceStatus.COMMITTED) {
-            checkInvoiceNotRepaired(rawInvoice);
-            checkInvoiceDoesContainUsedGeneratedCredit(accountId, rawInvoice, context);
-        }
+        final WithAccountLock withAccountLock = new WithAccountLock() {
+            @Override
+            public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
+                final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
+                final InvoiceModelDao rawInvoice = dao.getById(invoiceId, true, internalCallContext);
+                if (rawInvoice.getStatus() == InvoiceStatus.COMMITTED) {
+                    checkInvoiceNotRepaired(rawInvoice);
+                    checkInvoiceDoesContainUsedGeneratedCredit(accountId, rawInvoice, context);
+                }
 
-        final Invoice currentInvoice = new DefaultInvoice(rawInvoice, getCatalogSafelyForPrettyNames(internalCallContext));
-        checkInvoiceNotPaid(currentInvoice);
+                final Invoice currentInvoice = new DefaultInvoice(rawInvoice, getCatalogSafelyForPrettyNames(internalCallContext));
+                checkInvoiceNotPaid(currentInvoice);
 
-        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
+                dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
+
+                final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
+                return List.of(invoice);
+            }
+        };
+
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        properties.add(new PluginProperty(INVOICE_OPERATION, "void", false));
+
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, false, context);
     }
-
     @Override
     public List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final TenantContext tenantContext) {
         return dao.getInvoiceAuditLogsWithHistoryForId(invoiceId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, tenantContext));

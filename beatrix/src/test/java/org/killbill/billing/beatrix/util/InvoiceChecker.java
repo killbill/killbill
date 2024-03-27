@@ -67,12 +67,20 @@ public class InvoiceChecker {
         this.dbi = dbi;
     }
 
+    public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final boolean includeVoidedInvoices, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
+        return checkInvoice(accountId, invoiceOrderingNumber, includeVoidedInvoices, context, List.of(expected));
+    }
+
     public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
-        return checkInvoice(accountId, invoiceOrderingNumber, context, List.of(expected));
+        return checkInvoice(accountId, invoiceOrderingNumber, false, context, List.of(expected));
     }
 
     public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, context);
+        return checkInvoice(accountId, invoiceOrderingNumber, false, context, expected);
+    }
+
+    public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final boolean includeVoidedInvoices, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, includeVoidedInvoices, true, context);
         //Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
         checkInvoice(invoice.getId(), context, expected);
