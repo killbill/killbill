@@ -20,6 +20,3 @@ isItTimeForKombucha() ::= <<
 select count(*) = 0 as is_time from kombucha;
 >>
 
-searchQuery(prefix) ::= <<
-  <prefix>tea = :searchKey
->>

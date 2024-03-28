@@ -185,15 +185,18 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
                                                          final Long offset,
                                                          final Long limit,
                                                          final Long simplePaginationThreshold) {
+        final SearchQuery searchQuery = new SearchQuery(SqlOperator.OR);
+        searchQuery.addSearchClause("tea", SqlOperator.EQ, searchKey);
+
         final PaginationIteratorBuilder<KombuchaModelDao, Kombucha, EntitySqlDao<KombuchaModelDao, Kombucha>> searchBestKombuchas = new PaginationIteratorBuilder<KombuchaModelDao, Kombucha, EntitySqlDao<KombuchaModelDao, Kombucha>>() {
             @Override
             public Long getCount(final EntitySqlDao<KombuchaModelDao, Kombucha> sqlDao, final InternalTenantContext context) {
-                return sqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                return sqlDao.getSearchCount(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), context);
             }
 
             @Override
             public Iterator<KombuchaModelDao> build(final EntitySqlDao<KombuchaModelDao, Kombucha> sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                return sqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
+                return sqlDao.search(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), offset, limit, ordering.toString(), context);
             }
         };
 

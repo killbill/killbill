@@ -1,8 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2020-2021 Equinix, Inc
- * Copyright 2014-2021 The Billing Project, LLC
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -88,6 +88,8 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.entity.dao.SearchQuery;
+import org.killbill.billing.util.entity.dao.SqlOperator;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.BusEvent;
@@ -101,6 +103,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.killbill.billing.util.entity.dao.SearchQuery.SEARCH_QUERY_MARKER;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
@@ -546,6 +549,31 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
         final boolean isSearchKeyCurrency = isSearchKeyCurrency(searchKey);
 
+        final SearchQuery searchQuery;
+        if (isSearchKeyCurrency) {
+            searchQuery = new SearchQuery(SqlOperator.OR);
+            searchQuery.addSearchClause("currency", SqlOperator.EQ, searchKey);
+        } else if (searchKey.startsWith(SEARCH_QUERY_MARKER)) {
+            searchQuery = new SearchQuery(searchKey,
+                                          Set.of("id",
+                                                 "account_id",
+                                                 "invoice_date",
+                                                 "target_date",
+                                                 "currency",
+                                                 "status",
+                                                 "migrated",
+                                                 "parent_invoice",
+                                                 "grp_id",
+                                                 "created_by",
+                                                 "created_date",
+                                                 "updated_by",
+                                                 "updated_date"));
+        } else {
+            searchQuery = new SearchQuery(SqlOperator.OR);
+            searchQuery.addSearchClause("id", SqlOperator.EQ, searchKey);
+            searchQuery.addSearchClause("account_id", SqlOperator.EQ, searchKey);
+        }
+
         return paginationHelper.getPagination(InvoiceSqlDao.class,
                                               new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
                                                   @Override
@@ -553,10 +581,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                       if (invoiceNumber != null) {
                                                           return (Long) 1L;
                                                       }
-                                                      if (isSearchKeyCurrency) {
-                                                          return invoiceSqlDao.getSearchByCurrencyCount(searchKey, context);
-                                                      }
-                                                      return invoiceSqlDao.getSearchByAccountOrInvoiceIdCount(searchKey, context);
+
+                                                      return invoiceSqlDao.getSearchCount(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), context);
                                                   }
 
                                                   @Override
@@ -565,10 +591,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                           if (invoiceNumber != null) {
                                                               return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, false, context)).iterator();
                                                           }
-                                                          if (isSearchKeyCurrency) {
-                                                              return invoiceSqlDao.searchByCurrency(searchKey, offset, limit, ordering.toString(), context);
-                                                          }
-                                                          return invoiceSqlDao.searchByAccountOrInvoiceId(searchKey, offset, limit, ordering.toString(), context);
+                                                          return invoiceSqlDao.search(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), offset, limit, ordering.toString(), context);
                                                       } catch (final InvoiceApiException ignored) {
                                                           return Collections.emptyIterator();
                                                       }

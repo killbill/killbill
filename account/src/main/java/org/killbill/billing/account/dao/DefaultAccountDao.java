@@ -1,8 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2020-2021 Equinix, Inc
- * Copyright 2014-2021 The Billing Project, LLC
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ package org.killbill.billing.account.dao;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -58,6 +59,8 @@ import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Pagina
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.entity.dao.SearchQuery;
+import org.killbill.billing.util.entity.dao.SqlOperator;
 import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -67,6 +70,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
+import static org.killbill.billing.util.entity.dao.SearchQuery.SEARCH_QUERY_MARKER;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
@@ -167,18 +171,59 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                           accountModelDao == null ? Collections.emptyIterator() : List.of(accountModelDao).iterator());
         }
 
+        final SearchQuery searchQuery;
+        if (searchKey.startsWith(SEARCH_QUERY_MARKER)) {
+            searchQuery = new SearchQuery(searchKey,
+                                          Set.of("id",
+                                                 "external_key",
+                                                 "email",
+                                                 "name",
+                                                 "first_name_length",
+                                                 "currency",
+                                                 "billing_cycle_day_local",
+                                                 "parent_account_id",
+                                                 "is_payment_delegated_to_parent",
+                                                 "payment_method_id",
+                                                 "reference_time",
+                                                 "time_zone",
+                                                 "locale",
+                                                 "address1",
+                                                 "address2",
+                                                 "company_name",
+                                                 "city",
+                                                 "state_or_province",
+                                                 "country",
+                                                 "postal_code",
+                                                 "phone",
+                                                 "notes",
+                                                 "migrated",
+                                                 "created_by",
+                                                 "created_date",
+                                                 "updated_by",
+                                                 "updated_date"));
+        } else {
+            searchQuery = new SearchQuery(SqlOperator.OR);
+
+            final String likeSearchKey = String.format("%%%s%%", searchKey);
+            searchQuery.addSearchClause("id", SqlOperator.EQ, searchKey);
+            searchQuery.addSearchClause("name", SqlOperator.LIKE, likeSearchKey);
+            searchQuery.addSearchClause("email", SqlOperator.LIKE, likeSearchKey);
+            searchQuery.addSearchClause("external_key", SqlOperator.LIKE, likeSearchKey);
+            searchQuery.addSearchClause("company_name", SqlOperator.LIKE, likeSearchKey);
+        }
+
         // Otherwise, we pretty much need to do a full table scan (leading % in the like clause).
         // Note: forcing MySQL to search indexes (like luckySearch above) doesn't always seem to help on large tables, especially with large offsets
         return paginationHelper.getPagination(AccountSqlDao.class,
                                               new PaginationIteratorBuilder<AccountModelDao, Account, AccountSqlDao>() {
                                                   @Override
                                                   public Long getCount(final AccountSqlDao accountSqlDao, final InternalTenantContext context) {
-                                                      return accountSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                      return accountSqlDao.getSearchCount(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), context);
                                                   }
 
                                                   @Override
                                                   public Iterator<AccountModelDao> build(final AccountSqlDao accountSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                                                      return accountSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
+                                                      return accountSqlDao.search(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), offset, limit, ordering.toString(), context);
                                                   }
                                               },
                                               offset,

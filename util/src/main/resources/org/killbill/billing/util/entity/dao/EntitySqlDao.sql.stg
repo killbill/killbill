@@ -332,15 +332,16 @@ where <targetRecordIdField("t.")> = :targetRecordId
 ;
 >>
 
-searchQuery(prefix) ::= <<
-1 = 1
+/** The extra space between "|  (:" matters below */
+searchQuery(prefix, searchAttributes, logicalOperator) ::= <<
+<searchAttributes:{ x |  (:<x.bindingKey> IS NULL OR <prefix><x.column> <x.operator> :<x.bindingKey>) }; separator=logicalOperator>
 >>
 
-search(ordering) ::= <<
+search(ordering, searchAttributes, logicalOperator) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where (<searchQuery("t.")>)
+where (<searchQuery("t.", searchAttributes, logicalOperator)>)
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> <ordering>
@@ -348,11 +349,11 @@ limit :rowCount offset :offset
 ;
 >>
 
-getSearchCount() ::= <<
+getSearchCount(searchAttributes, logicalOperator) ::= <<
 select
   count(1) as count
 from <tableName()> t
-where (<searchQuery("t.")>)
+where (<searchQuery("t.", searchAttributes, logicalOperator)>)
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
