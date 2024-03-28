@@ -101,6 +101,8 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     private TestInvoicePluginApi testInvoicePluginApi;
 
+    private boolean isCommitVoidTest;
+
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         if (hasFailed()) {
@@ -182,11 +184,16 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.taxItems = NoTaxItems;
         testInvoicePluginApi.grpResult = NullInvoiceGroupingResult;
         testInvoicePluginApi.checkPluginProperties = NoCheckPluginProperties;
+        testInvoicePluginApi.commit = false;
+        testInvoicePluginApi.voided = false;
+        isCommitVoidTest = false;
 
     }
 
     @Test(groups = "slow")
     public void testCommitInvoice() throws Exception {
+
+        isCommitVoidTest = true;
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
@@ -216,11 +223,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.EXTERNAL_CHARGE, new BigDecimal("33.80")));
 
-        testInvoicePluginApi.resetCommitVoidFlags();
     }
 
     @Test(groups = "slow")
     public void testVoidInvoice() throws Exception {
+
+        isCommitVoidTest = true;
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
@@ -250,7 +258,6 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, true, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.EXTERNAL_CHARGE, new BigDecimal("33.80")));
 
-        testInvoicePluginApi.resetCommitVoidFlags();
     }
 
     @Test(groups = "slow")
@@ -1233,7 +1240,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             }
 
             assertNotNull(invoiceContext.getInvoice());
-            //assertNotNull(invoiceContext.getExistingInvoices()); TODO_1989 - commenting this as this causes the commit/void tests to fail
+            if (!isCommitVoidTest) {
+                assertNotNull(invoiceContext.getExistingInvoices());
+            }
 
             return new AdditionalItemsResult() {
                 @Override
@@ -1280,10 +1289,6 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             return null;
         }
 
-        void resetCommitVoidFlags() {
-            commit = false;
-            voided = false;
-        }
     }
 
 }
