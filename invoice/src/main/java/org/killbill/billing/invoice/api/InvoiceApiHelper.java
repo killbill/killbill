@@ -76,6 +76,7 @@ public class InvoiceApiHelper {
                                                                     final boolean isDryRun,
                                                                     final WithAccountLock withAccountLock,
                                                                     final LinkedList<PluginProperty> inputProperties,
+                                                                    final boolean insertItems,
                                                                     final CallContext contextMaybeWithoutAccountId) throws InvoiceApiException {
         // Invoked by User API call
         final LocalDate targetDate = null;
@@ -103,40 +104,45 @@ public class InvoiceApiHelper {
 
             invoicesForPlugins = withAccountLock.prepareInvoices();
 
-            final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
-            for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
+            if (insertItems) {
+                final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
+                for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
 
                     // Call plugin(s)
                     final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, targetDate, existingInvoices, isRescheduled, internalCallContext);
                     // Could be a bit weird for a plugin to keep updating properties for each invoice
                     pluginProperties = itemsResult.getPluginProperties();
-                // Transformation to InvoiceModelDao
-                final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
-                final List<InvoiceItem> invoiceItems = invoiceForPlugin.getInvoiceItems();
-                final List<InvoiceItemModelDao> invoiceItemModelDaos = toInvoiceItemModelDao(invoiceItems);
-                invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
+                    // Transformation to InvoiceModelDao
+                    final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
+                    final List<InvoiceItem> invoiceItems = invoiceForPlugin.getInvoiceItems();
+                    final List<InvoiceItemModelDao> invoiceItemModelDaos = toInvoiceItemModelDao(invoiceItems);
+                    invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
 
-                // Keep track of modified invoices
-                invoiceModelDaos.add(invoiceModelDao);
-            }
-
-            final List<Invoice> invoices = new LinkedList<>();
-            for (final Invoice invoice : invoicesForPlugins) {
-                try {
-                    final Invoice invoiceFromDB = new DefaultInvoice(dao.getById(invoice.getId(), internalCallContext));
-                    if (invoiceFromDB != null) {
-                        invoices.add(invoiceFromDB);
-                    }
-                } catch (final InvoiceApiException e) { //invoice not present in DB, do nothing
+                    // Keep track of modified invoices
+                    invoiceModelDaos.add(invoiceModelDao);
                 }
+
+                final List<Invoice> invoices = new LinkedList<>();
+                for (final Invoice invoice : invoicesForPlugins) {
+                    try {
+                        final Invoice invoiceFromDB = new DefaultInvoice(dao.getById(invoice.getId(), internalCallContext));
+                        if (invoiceFromDB != null) {
+                            invoices.add(invoiceFromDB);
+                        }
+                    } catch (final InvoiceApiException e) { //invoice not present in DB, do nothing
+                    }
+                }
+
+                final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(invoices);
+
+                final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, existingInvoiceMetadata, true, internalCallContext);
+                success = true;
+
+                return fromInvoiceItemModelDao(createdInvoiceItems);
+            } else {
+                success = true;
+                return Collections.emptyList();
             }
-
-            final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(invoices);
-
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, existingInvoiceMetadata, true, internalCallContext);
-            success = true;
-
-            return fromInvoiceItemModelDao(createdInvoiceItems);
         } catch (final LockFailedException e) {
             throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to process invoice items: failed to acquire lock");
         } finally {

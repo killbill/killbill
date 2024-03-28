@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.awaitility.Awaitility;
@@ -75,7 +76,6 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -89,6 +89,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -99,6 +100,8 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
     private OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
 
     private TestInvoicePluginApi testInvoicePluginApi;
+
+    private boolean isCommitVoidTest;
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
@@ -181,6 +184,79 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.taxItems = NoTaxItems;
         testInvoicePluginApi.grpResult = NullInvoiceGroupingResult;
         testInvoicePluginApi.checkPluginProperties = NoCheckPluginProperties;
+        testInvoicePluginApi.commit = false;
+        testInvoicePluginApi.voided = false;
+        isCommitVoidTest = false;
+
+    }
+
+    @Test(groups = "slow")
+    public void testCommitInvoice() throws Exception {
+
+        isCommitVoidTest = true;
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        //insert external charge, autoCommit=false, so invoice in DRAFT status
+        final List<InvoiceItem> externalChargeItems = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), List.of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"),
+                                                                                                                                                                                   account.getCurrency(), null)), false, null, callContext);
+
+        testInvoicePluginApi.additionalInvoiceItem = new TaxInvoiceItem(null, account.getId(), null, UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, account.getCurrency());
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(externalChargeItems.get(0).getInvoiceId(), callContext);
+        assertListenerStatus();
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
+        final InvoiceContext invoiceContext = new DefaultInvoiceContext(null, invoices.get(0), invoices, false, false, callContext);
+        final AdditionalItemsResult res = testInvoicePluginApi.getAdditionalInvoiceItems(invoices.get(0), false, null, invoiceContext);
+        assertEquals(res.getAdditionalItems().size(), 1);
+
+        assertTrue(testInvoicePluginApi.commit);
+        assertFalse(testInvoicePluginApi.voided);
+
+        //no additional invoice items
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.EXTERNAL_CHARGE, new BigDecimal("33.80")));
+
+    }
+
+    @Test(groups = "slow")
+    public void testVoidInvoice() throws Exception {
+
+        isCommitVoidTest = true;
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        //insert external charge, autoCommit=false, so invoice in DRAFT status
+        final List<InvoiceItem> externalChargeItems = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), List.of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"),
+                                                                                                                                                                                   account.getCurrency(), null)), false, null, callContext);
+
+        testInvoicePluginApi.additionalInvoiceItem = new TaxInvoiceItem(null, account.getId(), null, UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, account.getCurrency());
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.voidInvoice(externalChargeItems.get(0).getInvoiceId(), callContext);
+        assertListenerStatus();
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, true, callContext);
+        final InvoiceContext invoiceContext = new DefaultInvoiceContext(null, invoices.get(0), invoices, false, false, callContext);
+        final AdditionalItemsResult res = testInvoicePluginApi.getAdditionalInvoiceItems(invoices.get(0), false, null, invoiceContext);
+        assertEquals(res.getAdditionalItems().size(), 1);
+
+        assertTrue(testInvoicePluginApi.voided);
+        assertFalse(testInvoicePluginApi.commit);
+
+        //no additional invoice items
+        invoiceChecker.checkInvoice(account.getId(), 1, true, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.EXTERNAL_CHARGE, new BigDecimal("33.80")));
 
     }
 
@@ -1085,6 +1161,14 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         return Iterables.toUnmodifiableList(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
     }
 
+    private String findPluginPropertyValue(final String pluginPropertyName, @Nullable final Iterable<PluginProperty> properties) {
+        if (properties == null || StreamSupport.stream(properties.spliterator(), false).count() == 0L) {
+            return null;
+        }
+        final PluginProperty matchingProperty = StreamSupport.stream(properties.spliterator(), false).filter(property -> property.getKey().equals(pluginPropertyName)).findFirst().orElse(null);
+        return matchingProperty != null ? matchingProperty.getValue().toString() : null;
+    }
+
     public class TestInvoicePluginApi implements InvoicePluginApi {
 
         boolean shouldThrowException = false;
@@ -1095,6 +1179,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         boolean wasRescheduled = false;
         int priorCallInvocationCalls = 0;
         int onSuccessInvocationCalls = 0;
+
+        boolean commit = false;
+
+        boolean voided = false;
 
         Function<Invoice, List<InvoiceItem>> taxItems = NoTaxItems;
         Function<Invoice, InvoiceGroupingResult> grpResult = NullInvoiceGroupingResult;
@@ -1152,7 +1240,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             }
 
             assertNotNull(invoiceContext.getInvoice());
-            assertNotNull(invoiceContext.getExistingInvoices());
+            if (!isCommitVoidTest) {
+                assertNotNull(invoiceContext.getExistingInvoices());
+            }
 
             return new AdditionalItemsResult() {
                 @Override
@@ -1182,6 +1272,13 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             onSuccessInvocationCalls++;
             assertTrue(checkPluginProperties.apply(pluginProperties));
 
+            final String invoiceOperation = findPluginPropertyValue("INVOICE_OPERATION", pluginProperties);
+            if (invoiceOperation != null && "commit".equals(invoiceOperation)) {
+                commit = true;
+            }
+            if (invoiceOperation != null && "void".equals(invoiceOperation)) {
+                voided = true;
+            }
             return null;
         }
 
@@ -1191,5 +1288,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
             return null;
         }
+
     }
+
 }
