@@ -28,7 +28,7 @@ import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
-import org.killbill.billing.invoice.dao.InvoiceDao;
+import org.killbill.billing.invoice.dao.DefaultInvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceDaoHelper;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
@@ -80,7 +80,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected BusService busService;
     @Inject
-    protected InvoiceDao invoiceDao;
+    protected DefaultInvoiceDao invoiceDao;
     @Inject
     protected InvoiceDaoHelper invoiceDaoHelper;
     @Inject

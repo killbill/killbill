@@ -88,3 +88,79 @@ getInvoiceByAccountRecordIdAfter() ::= <<
    <AND_CHECK_TENANT("")>
    <defaultOrderBy("")>
 >>
+
+invoiceBalanceQuery() ::= <<
+SELECT
+      x.invoice_id
+    , x.tenant_record_id
+    , SUM(x.amount) as balance
+FROM (
+    SELECT
+          i.id as invoice_id
+        , i.tenant_record_id
+        , 0 as amount
+    FROM invoices i
+    WHERE
+        <CHECK_TENANT("i.")>
+
+    UNION ALL
+
+    SELECT
+          ii.invoice_id
+        , ii.tenant_record_id
+        , SUM(ii.amount) as amount
+    FROM invoice_items ii
+    WHERE
+        ii.type in ('TAX', 'EXTERNAL_CHARGE', 'FIXED', 'USAGE', 'RECURRING', 'ITEM_ADJ', 'REPAIR_ADJ', 'PARENT_SUMMARY', 'CBA_ADJ', 'CREDIT_ADJ')
+        <AND_CHECK_TENANT("ii.")>
+    GROUP BY
+          ii.invoice_id
+        , ii.tenant_record_id
+
+    UNION ALL
+
+    SELECT
+          invoice_id
+        , tenant_record_id
+        , -payments_and_refunds.amount_paid - payments_and_refunds.amount_refunded as amount
+    FROM (
+        SELECT
+              ip.invoice_id
+            , ip.tenant_record_id
+            , SUM(CASE WHEN ip.type = 'ATTEMPT' THEN ip.amount ELSE 0 END) AS amount_paid
+            , SUM(CASE WHEN ip.type IN ('REFUND', 'CHARGED_BACK') THEN ip.amount ELSE 0 END) AS amount_refunded
+        FROM
+            invoice_payments ip
+        WHERE
+            ip.status = 'SUCCESS'
+            <AND_CHECK_TENANT("ip.")>
+        GROUP BY
+              ip.invoice_id
+            , ip.tenant_record_id
+    ) AS payments_and_refunds
+) x
+GROUP BY
+      x.invoice_id
+    , x.tenant_record_id
+>>
+
+searchInvoicesByBalance(ordering, comparisonOperator) ::= <<
+select
+  <allTableFields("i.")>
+from (<invoiceBalanceQuery()>) t
+join invoices i ON i.id = t.invoice_id
+where t.balance <comparisonOperator> :balance
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("i.")> <ordering>
+limit :rowCount offset :offset
+;
+>>
+
+getSearchInvoicesByBalanceCount(comparisonOperator) ::= <<
+select
+  count(1) as count
+from (<invoiceBalanceQuery()>) t
+where t.balance <comparisonOperator> :balance
+<AND_CHECK_TENANT("t.")>
+;
+>>

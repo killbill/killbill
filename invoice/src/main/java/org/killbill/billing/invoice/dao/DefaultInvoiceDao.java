@@ -29,10 +29,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -120,6 +123,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                              InvoiceItemType.TAX,
                                                                                              InvoiceItemType.USAGE,
                                                                                              InvoiceItemType.PARENT_SUMMARY);
+
+    private static final Pattern BALANCE_QUERY_PATTERN = Pattern.compile(SEARCH_QUERY_MARKER + "balance\\[(?<comparator>eq|gte|gt|lte|lt|neq)\\]=(?<balance>\\w+)");
 
     private final NextBillingDatePoster nextBillingDatePoster;
     private final BusOptimizer eventBus;
@@ -554,6 +559,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             searchQuery = new SearchQuery(SqlOperator.OR);
             searchQuery.addSearchClause("currency", SqlOperator.EQ, searchKey);
         } else if (searchKey.startsWith(SEARCH_QUERY_MARKER)) {
+            final Matcher matcher = BALANCE_QUERY_PATTERN.matcher(searchKey);
+            if (matcher.matches()) {
+                final BigDecimal balance = new BigDecimal(matcher.group("balance"));
+                final SqlOperator comparisonOperator = SqlOperator.valueOf(matcher.group("comparator").toUpperCase(Locale.ROOT));
+                return searchInvoicesByBalance(balance, comparisonOperator, offset, limit, context);
+            }
+
             searchQuery = new SearchQuery(searchKey,
                                           Set.of("id",
                                                  "account_id",
@@ -601,6 +613,24 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                               limit,
                                               context);
 
+    }
+
+    Pagination<InvoiceModelDao> searchInvoicesByBalance(final BigDecimal balance, final SqlOperator comparisonOperator, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(InvoiceSqlDao.class,
+                                              new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
+                                                      return invoiceSqlDao.getSearchInvoicesByBalanceCount(balance, comparisonOperator, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering, final InternalTenantContext context) {
+                                                      return invoiceSqlDao.searchInvoicesByBalance(balance, comparisonOperator, offset, limit, ordering.toString(), context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
     }
 
     @Override
@@ -1562,14 +1592,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         return itemShouldBeUpdated;
     }
 
-    private boolean isSearchKeyCurrency(String searchKey) {
-
-        for (Currency cur : Currency.values()) {
+    private static boolean isSearchKeyCurrency(final String searchKey) {
+        for (final Currency cur : Currency.values()) {
             if (cur.toString().equalsIgnoreCase(searchKey)) {
                 return true;
             }
         }
         return false;
     }
-
 }

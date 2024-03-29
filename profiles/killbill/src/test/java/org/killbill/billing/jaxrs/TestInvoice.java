@@ -19,6 +19,8 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -666,6 +668,9 @@ public class TestInvoice extends TestJaxrsBase {
             clock.addMonths(1);
             callbackServlet.assertListenerStatus();
         }
+
+        Assert.assertEquals(invoiceApi.searchInvoices(URLEncoder.encode("_q=1&balance[gte]=0", StandardCharsets.UTF_8), requestOptions).size(), 5);
+        Assert.assertEquals(invoiceApi.searchInvoices(URLEncoder.encode("_q=1&balance[neq]=0", StandardCharsets.UTF_8), requestOptions).size(), 0);
 
         final Invoices allInvoices = invoiceApi.getInvoices(requestOptions);
         Assert.assertEquals(allInvoices.size(), 5);
