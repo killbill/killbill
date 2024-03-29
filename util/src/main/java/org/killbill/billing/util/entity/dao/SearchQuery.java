@@ -23,6 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 public class SearchQuery {
 
@@ -59,7 +62,28 @@ public class SearchQuery {
 
             final String operator = columnParts.length > 1 ? columnParts[1] : null;
             final String value = parts.length > 1 ? parts[1] : null;
-            addSearchClause(column, operator == null ? SqlOperator.EQ : SqlOperator.valueOf(operator.toUpperCase(Locale.ROOT)), value);
+            // Duck typing... This might not always work. To do better, we'd need to have the caller add the type in the allowList (Map column name -> type)
+            final Object valueTyped = Objects.requireNonNullElse(convertToNumber(value), value);
+            addSearchClause(column, operator == null ? SqlOperator.EQ : SqlOperator.valueOf(operator.toUpperCase(Locale.ROOT)), valueTyped);
+        }
+    }
+
+    private static Number convertToNumber(@Nullable final String str) {
+        if (str == null) {
+            return null;
+        }
+
+        try {
+            // Try parsing the string as an integer
+            return Integer.parseInt(str);
+        } catch (final NumberFormatException e1) {
+            try {
+                // Try parsing the string as a double
+                return Double.parseDouble(str);
+            } catch (final NumberFormatException e2) {
+                // String cannot be parsed as a number
+                return null;
+            }
         }
     }
 
