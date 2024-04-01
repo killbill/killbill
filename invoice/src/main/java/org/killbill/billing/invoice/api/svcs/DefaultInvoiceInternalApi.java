@@ -133,6 +133,19 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         }
 
         final InvoicePaymentModelDao refund = dao.createRefund(paymentId, paymentAttemptId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, transactionExternalKey, status, context);
+        // See https://github.com/killbill/killbill/issues/265
+        final CallContext callContext = internalCallContextFactory.createCallContext(context);
+        final DefaultInvoice invoice = getInvoiceByIdInternal(refund.getInvoiceId(), context);
+        final UUID accountId = invoice.getAccountId();
+        final WithAccountLock withAccountLock = new WithAccountLock() {
+            @Override
+            public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
+                return List.of(invoice);
+            }
+        };
+
+        final LinkedList<PluginProperty> pluginProperties = new LinkedList<PluginProperty>();
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, pluginProperties, true, callContext);
         return new DefaultInvoicePayment(refund);
     }
 
