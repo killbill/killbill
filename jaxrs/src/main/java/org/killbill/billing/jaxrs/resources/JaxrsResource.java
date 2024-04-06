@@ -195,6 +195,9 @@ public interface JaxrsResource {
 
     String CHARGES = "charges";
     String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
+    
+    String CHARGE_TRANSACTIONS = "chargeTransactions";
+    String CHARGE_TRANSACTIONS_PATH = PREFIX + "/" + CHARGE_TRANSACTIONS;
 
     String TAXES = "taxes";
 
