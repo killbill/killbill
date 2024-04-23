@@ -388,7 +388,6 @@ public class InvoicePluginDispatcher {
         final UUID invoiceId = Objects.requireNonNullElse(
                 mutableField("invoiceId", (existingItem != null ? existingItem.getInvoiceId() : null), additionalInvoiceItem.getInvoiceId(), invoicePlugin),
                 originalInvoiceId);
-
         final UUID additionalInvoiceId = Objects.requireNonNullElse(additionalInvoiceItem.getId(), UUIDs.randomUUID());
         final InvoiceItemCatalogBase tmp = new InvoiceItemCatalogBase(additionalInvoiceId,
                                                                       mutableField("createdDate", existingItem != null ? existingItem.getCreatedDate() : null, additionalInvoiceItem.getCreatedDate(), invoicePlugin),
@@ -409,10 +408,10 @@ public class InvoicePluginDispatcher {
                                                                       immutableField("startDate", existingItem, existingItem != null ? existingItem.getStartDate() : null, additionalInvoiceItem.getStartDate(), invoicePlugin),
                                                                       immutableField("endDate", existingItem, existingItem != null ? existingItem.getEndDate() : null, additionalInvoiceItem.getEndDate(), invoicePlugin),
                                                                       mutableField("amount", existingItem != null ? existingItem.getAmount() : null, additionalInvoiceItem.getAmount(), invoicePlugin),
-                                                                      immutableField("rate", existingItem, existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
+                                                                      mutableField("rate", existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
                                                                       immutableField("currency", existingItem, existingItem != null ? existingItem.getCurrency() : null, additionalInvoiceItem.getCurrency(), invoicePlugin),
                                                                       immutableField("linkedItemId", existingItem, existingItem != null ? existingItem.getLinkedItemId() : null, additionalInvoiceItem.getLinkedItemId(), invoicePlugin),
-                                                                      immutableField("quantity", existingItem, (existingItem == null ? null : existingItem.getQuantity()), additionalInvoiceItem.getQuantity() == null ? null : additionalInvoiceItem.getQuantity(), invoicePlugin),
+                                                                      mutableField("quantity", existingItem != null ? existingItem.getQuantity() : null, additionalInvoiceItem.getQuantity(), invoicePlugin),
                                                                       mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
                                                                       immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
         switch (tmp.getInvoiceItemType()) {
