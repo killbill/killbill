@@ -55,7 +55,9 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     @Audited(ChangeType.UPDATE)
     void updateItemFields(@Bind("id") String invoiceItemId,
                           @Bind("amount") BigDecimal amount,
+                          @Bind("rate") BigDecimal rate,
                           @Bind("description") String description,
+                          @Bind("quantity") BigDecimal quantity,
                           @Bind("itemDetails") String itemDetails,
                           @SmartBindBean final InternalCallContext context);
 

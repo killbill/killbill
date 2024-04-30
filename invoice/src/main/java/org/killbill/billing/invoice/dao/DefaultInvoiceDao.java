@@ -450,7 +450,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                    // items would not be re-written
                                    (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
                             if (checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao)) {
-                                transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), invoiceItemModelDao.getDescription(), invoiceItemModelDao.getItemDetails(), context);
+                                transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), invoiceItemModelDao.getRate(), invoiceItemModelDao.getDescription(), invoiceItemModelDao.getQuantity(), invoiceItemModelDao.getItemDetails(), context);
                             }
                         }
                     }
@@ -1005,7 +1005,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             final BigDecimal positiveCbaAmount = cbaItem.getAmount().negate();
             final BigDecimal adjustedAmount = leftToReclaim.compareTo(positiveCbaAmount) >= 0 ? positiveCbaAmount : leftToReclaim;
             final BigDecimal itemAmount = positiveCbaAmount.subtract(adjustedAmount);
-            transactional.updateItemFields(cbaItem.getId().toString(), itemAmount.negate(), "Reclaim used credit", null, context);
+            transactional.updateItemFields(cbaItem.getId().toString(), itemAmount.negate(), null,"Reclaim used credit", null, null, context);
 
             invoiceIds.add(cbaItem.getInvoiceId());
             leftToReclaim = leftToReclaim.subtract(adjustedAmount);
@@ -1044,7 +1044,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
             if (cbaItem.getAmount().compareTo(BigDecimal.ZERO) < 0) { /* Credit consumption */
 
-                invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, "Delete used credit", null, context);
+                invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, null,"Delete used credit", null, null, context);
                 invoiceIds.add(invoice.getId());
             } else if (cbaItem.getAmount().compareTo(BigDecimal.ZERO) > 0) {  /* Credit generation */
                 final InvoiceItemModelDao creditItem = invoice.getInvoiceItems().stream()
@@ -1064,9 +1064,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                  String.format("Unexpected state, reclaimed used credit [%s/%s]", reclaimed, amountToReclaim));
                     }
 
-                    invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, "Delete gen credit", null, context);
+                    invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, null, "Delete gen credit", null, null, context);
                     final BigDecimal adjustedCreditAmount = creditItem.getAmount().add(cbaItem.getAmount());
-                    invoiceItemSqlDao.updateItemFields(creditItem.getId().toString(), adjustedCreditAmount, "Delete gen credit", null, context);
+                    invoiceItemSqlDao.updateItemFields(creditItem.getId().toString(), adjustedCreditAmount, null,null,null, "Delete gen credit", context);
                     invoiceIds.add(invoice.getId());
                 } else /* System generated credit, e.g Repair invoice */ {
                     throw new InvoiceApiException(ErrorCode.INVOICE_CBA_DELETED, cbaItem.getId());
@@ -1334,7 +1334,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
             }
 
-            transactional.updateItemFields(invoiceItemId.toString(), amount, null, null, context);
+            transactional.updateItemFields(invoiceItemId.toString(), amount, null,null, null,null, context);
             return null;
         });
     }
@@ -1531,6 +1531,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         boolean itemShouldBeUpdated = false;
         if (inputInvoiceItem.getAmount() != null) {
             itemShouldBeUpdated = existingInvoiceItem.getAmount() == null /* unlikely */ || inputInvoiceItem.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0;
+        } else if (inputInvoiceItem.getRate() != null) {
+            itemShouldBeUpdated = existingInvoiceItem.getRate() == null || inputInvoiceItem.getRate().compareTo(existingInvoiceItem.getRate()) != 0;
+        } else if (inputInvoiceItem.getQuantity() != null) {
+            itemShouldBeUpdated = existingInvoiceItem.getQuantity() == null || inputInvoiceItem.getQuantity().compareTo(existingInvoiceItem.getQuantity()) != 0;
         } else if (inputInvoiceItem.getDescription() != null) {
             itemShouldBeUpdated = existingInvoiceItem.getDescription() == null || inputInvoiceItem.getDescription().compareTo(existingInvoiceItem.getDescription()) != 0;
         } else if (inputInvoiceItem.getItemDetails() != null) {
