@@ -256,7 +256,8 @@ public class PluginResource extends JaxRsResourceBase {
             data.put(key, form.getFirst(key));
         }
         appendFormParametersToBody(out, data);
-    // changes related https://github.com/killbill/killbill/issues/1975
+        // changes related https://github.com/killbill/killbill/issues/1975
+        // request.getInputStream().transferTo(out);
         return new ByteArrayInputStream(out.toByteArray());
     }
 
