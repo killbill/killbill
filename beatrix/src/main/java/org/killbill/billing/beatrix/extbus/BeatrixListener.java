@@ -176,7 +176,8 @@ public class BeatrixListener {
                 }
 
                 SubscriptionMetadata.ActionType actionType = (event instanceof EffectiveSubscriptionInternalEvent) ? ActionType.EFFECTIVE : ActionType.REQUESTED;
-                final SubscriptionMetadata subscriptionMetadataObj = new SubscriptionMetadata(actionType, realEventST.getBundleExternalKey());
+                final boolean isSubscriptionUndo = realEventST.getTransitionType() == SubscriptionBaseTransitionType.UNDO_CHANGE ? true : false;
+                final SubscriptionMetadata subscriptionMetadataObj = new SubscriptionMetadata(actionType, realEventST.getBundleExternalKey(), isSubscriptionUndo);
                 metaData = objectMapper.writeValueAsString(subscriptionMetadataObj);
                 break;
 
