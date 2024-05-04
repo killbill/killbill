@@ -340,10 +340,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                                                                    clock.getUTCToday(),
                                                                                    null,
                                                                                    BigDecimal.ONE,
-                                                                                   null,
+                                                                                   BigDecimal.ONE,
                                                                                    Currency.USD,
                                                                                    pluginLinkedItemId,
-                                                                                   null);
+                                                                                   BigDecimal.TEN,
+                                                                                   "updated item details");
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addDays(30);
@@ -359,7 +360,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertNotNull(externalCharge2);
 
         assertEquals(externalCharge2.getAmount().compareTo(BigDecimal.ONE), 0);
-        
+        assertEquals(externalCharge2.getRate().compareTo(BigDecimal.ONE), 0);
+        assertEquals(externalCharge2.getRate().compareTo(BigDecimal.ONE), 0);
+        assertEquals(externalCharge2.getItemDetails().compareTo("updated item details"), 0);
+
         invoiceContext = new DefaultInvoiceContext(null, invoices2.get(0), invoices, false, false, callContext);
         res = testInvoicePluginApi.getAdditionalInvoiceItems(invoices2.get(0), false, null, invoiceContext);
         assertEquals(res.getAdditionalItems().size(), 1);          
