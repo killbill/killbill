@@ -76,6 +76,7 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.SqlOperator;
@@ -2147,6 +2148,18 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         //search based on invoice number
         page = invoiceDao.searchInvoices(all.get(0).getInvoiceNumber().toString(), 0L, 10L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
+        //search based on query marker
+        page = invoiceDao.searchInvoices("_q=1&account_id="+account.getId(), 0L, 1L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
+        //search based on balance
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 1L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);

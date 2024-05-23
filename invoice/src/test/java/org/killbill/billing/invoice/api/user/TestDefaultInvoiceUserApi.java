@@ -48,6 +48,7 @@ import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.commons.utils.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -738,4 +739,24 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoices2.getCurrentOffset(), (Long) 0L);
         Assert.assertNull(invoices2.getNextOffset());
     }
+
+    @Test(groups = "slow")
+    public void testSearchInvoices() throws Exception {
+
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+
+        // Create invoice1
+        final InvoiceItem externalCharge1 = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(300), accountCurrency, null);
+        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge1), true, null, callContext);
+
+        Pagination<Invoice> invoices = invoiceUserApi.searchInvoices("_q=1&balance[gte]=0", 0L, 1L, callContext);
+        Assert.assertNotNull(invoices);
+        List<Invoice> invoicesList = Iterables.toUnmodifiableList(invoices);
+        Assert.assertEquals(invoicesList.size(), 1);
+        Invoice beforeRefresh = invoicesList.get(0);
+        Invoice afterRefresh = invoiceUserApi.getInvoice(beforeRefresh.getId(), callContext);
+        Assert.assertEquals(afterRefresh.getBalance().compareTo(new BigDecimal("300")), 0);
+    }
+
 }
