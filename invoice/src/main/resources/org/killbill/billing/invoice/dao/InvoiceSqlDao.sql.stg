@@ -108,21 +108,25 @@ FROM (
     SELECT
           ii.invoice_id
         , ii.tenant_record_id
-        , SUM(ii.amount) as amount
-    FROM invoice_items ii
+        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = '1' OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE SUM(ii.amount) END as amount
+ FROM invoice_items ii
+    JOIN invoices inv ON ii.invoice_id = inv.id
+    LEFT OUTER JOIN tags tg ON ii.invoice_id = tg.object_id
     WHERE
         ii.type in ('TAX', 'EXTERNAL_CHARGE', 'FIXED', 'USAGE', 'RECURRING', 'ITEM_ADJ', 'REPAIR_ADJ', 'PARENT_SUMMARY', 'CBA_ADJ', 'CREDIT_ADJ')
         <AND_CHECK_TENANT("ii.")>
+
     GROUP BY
           ii.invoice_id
         , ii.tenant_record_id
+        , tg.tag_definition_id
 
     UNION ALL
 
     SELECT
           invoice_id
-        , tenant_record_id
-        , -payments_and_refunds.amount_paid - payments_and_refunds.amount_refunded as amount
+        , payments_and_refunds.tenant_record_id
+        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = '1' OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE -payments_and_refunds.amount_paid - payments_and_refunds.amount_refunded END as amount
     FROM (
         SELECT
               ip.invoice_id
@@ -138,6 +142,8 @@ FROM (
               ip.invoice_id
             , ip.tenant_record_id
     ) AS payments_and_refunds
+    JOIN invoices inv ON payments_and_refunds.invoice_id = inv.id
+    LEFT OUTER JOIN tags tg ON payments_and_refunds.invoice_id = tg.object_id
 ) x
 GROUP BY
       x.invoice_id

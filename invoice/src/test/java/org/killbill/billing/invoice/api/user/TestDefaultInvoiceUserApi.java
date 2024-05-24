@@ -759,4 +759,32 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(afterRefresh.getBalance().compareTo(new BigDecimal("300")), 0);
     }
 
+    @Test(groups = "slow")
+    public void testSearchInvoicesWrittenOffInvoice() throws Exception {
+
+
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+
+        // Create invoice
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(300), accountCurrency, null);
+        List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge), true, null, callContext);
+
+        Pagination<Invoice> invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
+        Assert.assertNotNull(invoices);
+        List<Invoice> invoicesList = Iterables.toUnmodifiableList(invoices);
+        Assert.assertEquals(invoicesList.size(), 1);
+        Invoice beforeRefresh = invoicesList.get(0);
+        Invoice afterRefresh = invoiceUserApi.getInvoice(beforeRefresh.getId(), callContext);
+        Assert.assertEquals(afterRefresh.getBalance().compareTo(new BigDecimal("300")), 0);
+
+        invoiceUserApi.tagInvoiceAsWrittenOff(items.get(0).getInvoiceId(), callContext);
+        invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
+        Assert.assertNotNull(invoices);
+        invoicesList = Iterables.toUnmodifiableList(invoices);
+        Assert.assertEquals(invoicesList.size(), 0);
+
+
+    }
+
 }
