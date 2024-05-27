@@ -108,7 +108,7 @@ FROM (
     SELECT
           ii.invoice_id
         , ii.tenant_record_id
-        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = '1' OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE SUM(ii.amount) END as amount
+        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = true OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE SUM(ii.amount) END as amount
  FROM invoice_items ii
     JOIN invoices inv ON ii.invoice_id = inv.id
     LEFT OUTER JOIN tags tg ON ii.invoice_id = tg.object_id
@@ -126,7 +126,7 @@ FROM (
     SELECT
           invoice_id
         , payments_and_refunds.tenant_record_id
-        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = '1' OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE -payments_and_refunds.amount_paid - payments_and_refunds.amount_refunded END as amount
+        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = true OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE -payments_and_refunds.amount_paid - payments_and_refunds.amount_refunded END as amount
     FROM (
         SELECT
               ip.invoice_id
