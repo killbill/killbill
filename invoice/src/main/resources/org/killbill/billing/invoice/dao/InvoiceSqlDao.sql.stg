@@ -119,6 +119,8 @@ FROM (
     GROUP BY
           ii.invoice_id
         , ii.tenant_record_id
+        , inv.status
+        , inv.migrated
         , tg.tag_definition_id
 
     UNION ALL
