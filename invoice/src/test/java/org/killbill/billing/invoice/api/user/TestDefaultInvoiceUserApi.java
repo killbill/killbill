@@ -741,50 +741,60 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testSearchInvoices() throws Exception {
-
-        final Account account = invoiceUtil.createAccount(callContext);
-        final UUID accountId = account.getId();
-
-        // Create invoice1
-        final InvoiceItem externalCharge1 = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(300), accountCurrency, null);
-        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge1), true, null, callContext);
-
-        Pagination<Invoice> invoices = invoiceUserApi.searchInvoices("_q=1&balance[gte]=0", 0L, 1L, callContext);
-        Assert.assertNotNull(invoices);
-        List<Invoice> invoicesList = Iterables.toUnmodifiableList(invoices);
-        Assert.assertEquals(invoicesList.size(), 1);
-        Invoice beforeRefresh = invoicesList.get(0);
-        Invoice afterRefresh = invoiceUserApi.getInvoice(beforeRefresh.getId(), callContext);
-        Assert.assertEquals(afterRefresh.getBalance().compareTo(new BigDecimal("300")), 0);
-    }
-
-    @Test(groups = "slow")
-    public void testSearchInvoicesWrittenOffInvoice() throws Exception {
+    public void testSearchInvoicesOnBalance() throws Exception {
 
 
         final Account account = invoiceUtil.createAccount(callContext);
         final UUID accountId = account.getId();
 
-        // Create invoice
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(300), accountCurrency, null);
+        //Create 0 amount charge
+        InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, BigDecimal.ZERO, accountCurrency, null);
         List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge), true, null, callContext);
-
         Pagination<Invoice> invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
         Assert.assertNotNull(invoices);
         List<Invoice> invoicesList = Iterables.toUnmodifiableList(invoices);
-        Assert.assertEquals(invoicesList.size(), 1);
-        Invoice beforeRefresh = invoicesList.get(0);
-        Invoice afterRefresh = invoiceUserApi.getInvoice(beforeRefresh.getId(), callContext);
-        Assert.assertEquals(afterRefresh.getBalance().compareTo(new BigDecimal("300")), 0);
+        Assert.assertEquals(invoicesList.size(), 0);
 
+        //DRAFT invoice
+        externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, BigDecimal.TEN, accountCurrency, null);
+        items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge), false, null, callContext);
+        invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
+        Assert.assertNotNull(invoices);
+        invoicesList = Iterables.toUnmodifiableList(invoices);
+        Assert.assertEquals(invoicesList.size(), 0);
+
+        //VOID invoice
+        externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, BigDecimal.TEN, accountCurrency, null);
+        items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge), true, null, callContext);
+        invoiceUserApi.voidInvoice(items.get(0).getInvoiceId(), callContext);
+        invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
+        Assert.assertNotNull(invoices);
+        invoicesList = Iterables.toUnmodifiableList(invoices);
+        Assert.assertEquals(invoicesList.size(), 0);
+
+        //migration invoice
+        externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, BigDecimal.TEN, accountCurrency, null);
+        UUID invoiceId = invoiceUserApi.createMigrationInvoice(accountId, clock.getUTCToday(), List.of(externalCharge), callContext);
+        invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
+        Assert.assertNotNull(invoices);
+        invoicesList = Iterables.toUnmodifiableList(invoices);
+        Assert.assertEquals(invoicesList.size(), 0);
+
+        //WRITTEN_OFF invoice
+        externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, BigDecimal.TEN, accountCurrency, null);
+        items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge), true, null, callContext);
         invoiceUserApi.tagInvoiceAsWrittenOff(items.get(0).getInvoiceId(), callContext);
         invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
         Assert.assertNotNull(invoices);
         invoicesList = Iterables.toUnmodifiableList(invoices);
         Assert.assertEquals(invoicesList.size(), 0);
 
-
+        //invoice with non-zero balance
+        externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, BigDecimal.TEN, accountCurrency, null);
+        items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge), true, null, callContext);
+        invoices = invoiceUserApi.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, callContext);
+        Assert.assertNotNull(invoices);
+        invoicesList = Iterables.toUnmodifiableList(invoices);
+        Assert.assertEquals(invoicesList.size(), 1);
     }
-
 }
