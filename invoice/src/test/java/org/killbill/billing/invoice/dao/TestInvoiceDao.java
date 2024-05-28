@@ -76,6 +76,7 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.SqlOperator;
@@ -2150,5 +2151,79 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+
+        //search based on query marker
+        page = invoiceDao.searchInvoices("_q=1&account_id="+account.getId(), 0L, 1L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
+        //search based on balance
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 1L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+    }
+
+    @Test(groups = "slow")
+    public void testSearchOnBalance() throws EntityPersistenceException {
+        Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        invoiceUtil.createInvoice(invoice, context);
+
+        //invoice  with 0 balance
+        Pagination<InvoiceModelDao> page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        List<InvoiceModelDao> all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
+        //DRAFT invoice
+        final BigDecimal amount = BigDecimal.TEN;
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.DRAFT);
+        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                                             amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 2);
+
+        //VOID invoice
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.VOID);
+        recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                 amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 3);
+
+        //migration invoice
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, true, InvoiceStatus.COMMITTED);
+        recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                 amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 4);
+
+        //invoice  with non-zero balance
+        invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                 amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+
     }
 }
