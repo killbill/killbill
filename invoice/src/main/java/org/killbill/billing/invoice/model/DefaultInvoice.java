@@ -271,8 +271,7 @@ public final class DefaultInvoice extends EntityBase implements Invoice, Cloneab
         if (isWrittenOff() ||
             isMigrationInvoice() ||
             getStatus() == InvoiceStatus.DRAFT ||
-            getStatus() == InvoiceStatus.VOID ||
-            hasZeroParentBalance()) {
+            getStatus() == InvoiceStatus.VOID) {
             return BigDecimal.ZERO;
         } else {
             return InvoiceCalculatorUtils.computeRawInvoiceBalance(currency, invoiceItems, payments);
