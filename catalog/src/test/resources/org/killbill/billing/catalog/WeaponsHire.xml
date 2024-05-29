@@ -49,9 +49,11 @@ Use Cases to do:
         <currency>EUR</currency>
         <currency>GBP</currency>
     </currencies>
-
+    <units>
+        <unit name="hours" prettyName="Hours Logged"/>
+    </units>
     <products>
-        <product name="Pistol">
+        <product name="Pistol" prettyName="Pistol For Hire">
             <category>BASE</category>
         </product>
         <product name="Shotgun">
@@ -174,10 +176,10 @@ Use Cases to do:
     </rules>
 
     <plans>
-        <plan name="pistol-monthly">
+        <plan name="pistol-monthly" prettyName="Pistol Monthly Plan">
             <product>Pistol</product>
             <initialPhases>
-                <phase type="TRIAL">
+                <phase type="TRIAL" prettyName="Pistol Monthly Plan Trial Phase">
                     <duration>
                         <unit>DAYS</unit>
                         <number>30</number>
@@ -188,7 +190,7 @@ Use Cases to do:
                     </fixed>
                 </phase>
             </initialPhases>
-            <finalPhase type="EVERGREEN">
+            <finalPhase type="EVERGREEN" prettyName="Pistol Monthly Plan Evergreen Phase">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
@@ -209,6 +211,36 @@ Use Cases to do:
                         </price>
                     </recurringPrice>
                 </recurring>
+                <usages>
+                    <usage name="training-in-arrear-usage" prettyName="Pistol Monthly Plan Training Usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>hours</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>100</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>100</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>100</value>
+                                            </price>
+                                        </prices>
+                                        <max>-1</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
             </finalPhase>
         </plan>
         <plan name="shotgun-monthly">

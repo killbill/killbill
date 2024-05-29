@@ -365,6 +365,9 @@ public class StandaloneCatalogMapper {
         result.setFixed(toDefaultFixed(input.getFixed()));
         result.setPhaseType(input.getPhaseType());
         result.setRecurring(toDefaultRecurring(input.getRecurring()));
+        if (input.getPrettyName() != null) {
+            result.setPrettyName(input.getPrettyName());
+        }
         if (input.getUsages() != null && input.getUsages().length > 0) {
             result.setUsages(toDefaultUsages(Arrays.asList(input.getUsages())));
         }
@@ -429,6 +432,9 @@ public class StandaloneCatalogMapper {
         result.setBillingPeriod(input.getBillingPeriod());
         result.setUsageType(input.getUsageType());
         result.setTierBlockPolicy(input.getTierBlockPolicy());
+        if (input.getPrettyName() != null) {
+            result.setPrettyName(input.getPrettyName());
+        }
         if (input.getLimits() != null && input.getLimits().length > 0) {
             result.setLimits(toDefaultLimits(Arrays.asList(input.getLimits())));
         }
