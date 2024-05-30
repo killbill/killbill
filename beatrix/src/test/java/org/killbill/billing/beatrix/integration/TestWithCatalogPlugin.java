@@ -44,6 +44,8 @@ import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.catalog.plugin.api.StandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
@@ -176,6 +178,75 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 10);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
 
+    }
+
+    @Test(groups = "slow")
+    public void testPrettyNamesWithCatalogPlugin() throws Exception {
+
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/WeaponsHire.xml");
+
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create subscription
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        //trial phase
+        Invoice invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(0);
+        Assert.assertEquals(invoice.getInvoiceItems().size(),1);
+        InvoiceItem invoiceItem = invoice.getInvoiceItems().get(0);
+        Assert.assertNotNull(invoiceItem);
+        Assert.assertEquals(invoiceItem.getPrettyProductName(),"Pistol For Hire");
+        Assert.assertEquals(invoiceItem.getPrettyPlanName(),"Pistol Monthly Plan");
+        Assert.assertEquals(invoiceItem.getPrettyPhaseName(),"Pistol Monthly Plan Trial Phase");
+        Assert.assertNull(invoiceItem.getPrettyUsageName());
+
+        //Move out of trial phase
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(1);
+        Assert.assertEquals(invoice.getInvoiceItems().size(),1);
+        invoiceItem = invoice.getInvoiceItems().get(0);
+        Assert.assertNotNull(invoiceItem);
+        Assert.assertEquals(invoiceItem.getPrettyProductName(),"Pistol For Hire");
+        Assert.assertEquals(invoiceItem.getPrettyPlanName(),"Pistol Monthly Plan");
+        Assert.assertEquals(invoiceItem.getPrettyPhaseName(),"Pistol Monthly Plan Evergreen Phase");
+        Assert.assertNull(invoiceItem.getPrettyUsageName());
+
+        //record usage and move clock by a month
+        recordUsageData(bpSubscription.getBaseEntitlementId(), "t1", "hours", clock.getUTCToday().plusDays(1), new BigDecimal(2), callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(2);
+        Assert.assertEquals(invoice.getInvoiceItems().size(),2);
+
+        //retrieve recurring item
+        invoiceItem = invoice.getInvoiceItems().stream().filter(item -> item.getInvoiceItemType() == InvoiceItemType.RECURRING).findFirst().get();
+        Assert.assertNotNull(invoiceItem);
+        Assert.assertEquals(invoiceItem.getPrettyProductName(),"Pistol For Hire");
+        Assert.assertEquals(invoiceItem.getPrettyPlanName(),"Pistol Monthly Plan");
+        Assert.assertEquals(invoiceItem.getPrettyPhaseName(),"Pistol Monthly Plan Evergreen Phase");
+        Assert.assertNull(invoiceItem.getPrettyUsageName());
+
+        //retrieve usage item
+        invoiceItem = invoice.getInvoiceItems().stream().filter(item -> item.getInvoiceItemType() == InvoiceItemType.USAGE).findFirst().get();
+        Assert.assertNotNull(invoiceItem);
+        Assert.assertEquals(invoiceItem.getPrettyProductName(),"Pistol For Hire");
+        Assert.assertEquals(invoiceItem.getPrettyPlanName(),"Pistol Monthly Plan");
+        Assert.assertEquals(invoiceItem.getPrettyPhaseName(),"Pistol Monthly Plan Evergreen Phase");
+        Assert.assertEquals(invoiceItem.getPrettyUsageName(),"Pistol Monthly Plan Training Usage");
     }
 
 

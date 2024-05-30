@@ -306,6 +306,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         return this;
     }
 
+    public DefaultUsage setPrettyName(final String prettyName) {
+        this.prettyName = prettyName;
+        return this;
+    }
+
     protected Limit findLimit(String unit) {
         for (Limit limit : limits) {
             if (limit.getUnit().getName().equals(unit)) {
