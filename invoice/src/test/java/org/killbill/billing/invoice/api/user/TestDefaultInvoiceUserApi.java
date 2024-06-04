@@ -796,5 +796,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(invoices);
         invoicesList = Iterables.toUnmodifiableList(invoices);
         Assert.assertEquals(invoicesList.size(), 1);
+        Assert.assertNotNull(invoicesList.get(0).getBalance());
+        Assert.assertEquals(invoicesList.get(0).getBalance().compareTo(BigDecimal.TEN), 0);
     }
 }
