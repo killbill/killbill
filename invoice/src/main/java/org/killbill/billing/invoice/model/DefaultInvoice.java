@@ -102,12 +102,12 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this(invoiceId, null, accountId, null, invoiceDate, null, currency, currency, false, false, InvoiceStatus.DRAFT, true, null, invoiceId);
     }
 
-    DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
-                   @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                   @Nullable final LocalDate targetDate, final Currency currency, final Currency processedCurrency,
-                   final boolean isMigrationInvoice, final boolean isWrittenOff,
-                   final InvoiceStatus status, final boolean isParentInvoice, final InvoiceModelDao parentInvoice,
-                   final UUID grpId) {
+    private DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
+                           @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
+                           @Nullable final LocalDate targetDate, final Currency currency, final Currency processedCurrency,
+                           final boolean isMigrationInvoice, final boolean isWrittenOff,
+                           final InvoiceStatus status, final boolean isParentInvoice, final InvoiceModelDao parentInvoice,
+                           final UUID grpId) {
         super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;

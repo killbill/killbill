@@ -26,11 +26,7 @@ public class SearchInvoice extends DefaultInvoice {
     private final BigDecimal balance;
 
     public SearchInvoice(final InvoiceModelDao invoiceModelDao) {
-        super(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
-              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
-              invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(),
-              invoiceModelDao.isWrittenOff(), invoiceModelDao.getStatus(), invoiceModelDao.isParentInvoice(),
-              invoiceModelDao.getParentInvoice(), invoiceModelDao.getGrpId());
+        super(invoiceModelDao);
         this.balance = invoiceModelDao.getBalance();
     }
 
