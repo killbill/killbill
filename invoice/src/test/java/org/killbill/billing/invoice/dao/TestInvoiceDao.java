@@ -2081,5 +2081,59 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     }
 
+    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1952")
+    public void testRetrieveInvoicesAndVerifyTrackingIds() throws EntityPersistenceException, InvoiceApiException {
+        final Invoice inputInvoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase", null,
+                                                                 clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
+
+        inputInvoice.addInvoiceItem(invoiceItem);
+        invoiceUtil.createInvoice(inputInvoice, context);
+
+        final InvoiceTrackingSqlDao trackingSqlDao = dbi.onDemand(InvoiceTrackingSqlDao.class);
+        trackingSqlDao.create(List.of(new InvoiceTrackingModelDao("12345", inputInvoice.getId(), UUID.randomUUID(), "foo", clock.getUTCToday())), context);
+
+        InvoiceModelDao invoiceFromDB = invoiceDao.getById(inputInvoice.getId(), context);
+        assertNotNull(invoiceFromDB.getTrackingIds());
+        assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
+
+        invoiceFromDB = invoiceDao.getByNumber(invoiceFromDB.getInvoiceNumber(), true, context);
+        assertNotNull(invoiceFromDB.getTrackingIds());
+        assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
+
+        invoiceFromDB = invoiceDao.getByInvoiceItem(invoiceItem.getId(), context);
+        assertNotNull(invoiceFromDB.getTrackingIds());
+        assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
+
+        List<InvoiceModelDao> invoicesFromDB = invoiceDao.getAllInvoicesByAccount(true, true, context);
+        assertNotNull(invoicesFromDB);
+        assertEquals(invoicesFromDB.size(), 1);
+        invoiceFromDB = invoicesFromDB.get(0);
+        assertNotNull(invoiceFromDB.getTrackingIds());
+        assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
+
+        invoicesFromDB = invoiceDao.getInvoicesByAccount(true, true, context);
+        assertNotNull(invoicesFromDB);
+        assertEquals(invoicesFromDB.size(), 1);
+        invoiceFromDB = invoicesFromDB.get(0);
+        assertNotNull(invoiceFromDB.getTrackingIds());
+        assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
+
+        invoicesFromDB = invoiceDao.getInvoicesByAccount(true, null, null, true, context);
+        assertNotNull(invoicesFromDB);
+        assertEquals(invoicesFromDB.size(), 1);
+        invoiceFromDB = invoicesFromDB.get(0);
+        assertNotNull(invoiceFromDB.getTrackingIds());
+        assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
+
+        invoicesFromDB = invoiceDao.getInvoicesByGroup(invoiceFromDB.getGrpId(), context);
+        assertNotNull(invoicesFromDB);
+        assertEquals(invoicesFromDB.size(), 1);
+        invoiceFromDB = invoicesFromDB.get(0);
+        assertNotNull(invoiceFromDB.getTrackingIds());
+        assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
+
+    }
+
 
 }

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -39,6 +40,7 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
+import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.junction.DefaultBlockingState;
@@ -50,6 +52,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestUsageInArrear extends TestIntegrationBase {
 
@@ -779,5 +782,39 @@ public class TestUsageInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 21), new LocalDate(2012, 5, 21), InvoiceItemType.CBA_ADJ, new BigDecimal("2399.95")));
 
+    }
+
+    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1952")
+    public void testRecordUsageAndRetrieveInvoice() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        LocalDate today = new LocalDate(2012, 4, 1);
+        clock.setDay(today);
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("training-usage-in-arrear");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        assertNotNull(entitlementId);
+        assertListenerStatus();
+
+        recordUsageData(entitlementId, "tracking-1", "hours", today.plusDays(1), new BigDecimal(2), callContext);
+        recordUsageData(entitlementId, "tracking-2", "hours", today.plusDays(2), new BigDecimal(5), callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), true, true, true, callContext);
+        assertNotNull(invoices);
+        assertEquals(invoices.size(), 1);
+
+        final Invoice invoice = invoices.get(0);
+        assertNotNull(invoice.getTrackingIds());
+        assertEquals(invoice.getTrackingIds().size(), 2);
     }
 }
