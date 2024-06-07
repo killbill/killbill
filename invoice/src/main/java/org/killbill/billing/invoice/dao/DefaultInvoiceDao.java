@@ -521,20 +521,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) { //TODO_1952 - This method is used only by tests, so passing includeTrackingIds=false. Can we delete this method?
-        final List<Tag> invoicesTags = getInvoicesTags(context);
-
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
-            final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-
-            final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesBySubscription(subscriptionId.toString(), context);
-            invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, false, entitySqlDaoWrapperFactory, context);
-
-            return invoices;
-        });
-    }
-
-    @Override
     public Pagination<InvoiceModelDao> searchInvoices(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         Integer invoiceNumberParsed = null;
         try {
@@ -1316,7 +1302,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final InvoiceModelDao invoice = invoiceSqlDao.getParentDraftInvoice(parentAccountId.toString(), context);
             if (invoice != null) {
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, false, entitySqlDaoWrapperFactory, context); //TODO_1952 - Passing includeTrackingIds=false, revisit to confirm if this is correct
+                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, false, entitySqlDaoWrapperFactory, context);
             }
             return invoice;
         });

@@ -210,23 +210,6 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) {
-        final List<InvoiceModelDao> result = new ArrayList<>();
-
-        synchronized (monitor) {
-            for (final InvoiceModelDao invoice : invoices.values()) {
-                for (final InvoiceItemModelDao item : invoice.getInvoiceItems()) {
-                    if (subscriptionId.equals(item.getSubscriptionId()) && !invoice.isMigrated()) {
-                        result.add(invoice);
-                        break;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    @Override
     public Pagination<InvoiceModelDao> searchInvoices(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         final List<InvoiceModelDao> results = new LinkedList<>();
         int maxNbRecords = 0;
