@@ -129,6 +129,11 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
     public Object clone() {
+        try {
+            super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
         final InvoiceModelDao parentInvoiceModelDao = (parentInvoice != null) ? new InvoiceModelDao(parentInvoice) : null;
         final Invoice clonedInvoice = new DefaultInvoice(getId(), getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus(), isParentInvoice(), parentInvoiceModelDao, grpId);
         clonedInvoice.getInvoiceItems().addAll(getInvoiceItems());
