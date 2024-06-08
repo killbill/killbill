@@ -2127,42 +2127,50 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         List<InvoiceModelDao> all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on id
 
         //search based on account id with limit=2
         page = invoiceDao.searchInvoices(invoice.getAccountId().toString(), 0L, 2L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 2);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on account id
 
         // search based on currency
         page = invoiceDao.searchInvoices("USD", 0L, 10L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 2);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on currency
 
         // search based on currency with limit=1
         page = invoiceDao.searchInvoices("USD", 0L, 1L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on currency
 
         //search based on invoice number
         page = invoiceDao.searchInvoices(all.get(0).getInvoiceNumber().toString(), 0L, 10L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on invoice number
 
         //search based on query marker
         page = invoiceDao.searchInvoices("_q=1&account_id="+account.getId(), 0L, 1L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on query marker
 
         //search based on balance
         page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 1L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNotNull(all.get(0).getBalance()); //balance is returned as search is based on balance
+        Assert.assertEquals(all.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
     }
 
     @Test(groups = "slow")
@@ -2175,12 +2183,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         List<InvoiceModelDao> all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        assertNotNull(all.get(0).getBalance()); //balance is returned as search is based on balance
+        Assert.assertEquals(all.get(0).getBalance().stripTrailingZeros().compareTo(BigDecimal.ZERO), 0);
 
         //DRAFT invoice
         final BigDecimal amount = BigDecimal.TEN;
         invoice = new DefaultInvoice(UUIDs.randomUUID(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.DRAFT);
         RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
-                                                                             amount, BigDecimal.ONE, Currency.USD);
+                                                                      amount, BigDecimal.ONE, Currency.USD);
         invoice.addInvoiceItem(recurringItem);
         invoiceUtil.createInvoice(invoice, context);
 
@@ -2224,6 +2234,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
-
+        Assert.assertNotNull(all.get(0).getBalance()); //balance is returned as search is based on balance
+        Assert.assertEquals(all.get(0).getBalance().stripTrailingZeros().compareTo(amount), 0);
     }
 }

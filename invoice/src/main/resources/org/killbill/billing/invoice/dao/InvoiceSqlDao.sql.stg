@@ -154,7 +154,7 @@ GROUP BY
 
 searchInvoicesByBalance(ordering, comparisonOperator) ::= <<
 select
-  <allTableFields("i.")>
+  <allTableFields("i.")>, t.balance
 from (<invoiceBalanceQuery()>) t
 join invoices i ON i.id = t.invoice_id
 where t.balance <comparisonOperator> :balance

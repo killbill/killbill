@@ -41,7 +41,7 @@ import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 
-public final class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
+public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     private final List<InvoiceItem> invoiceItems;
     private final List<InvoicePayment> payments;
@@ -60,7 +60,6 @@ public final class DefaultInvoice extends EntityBase implements Invoice, Cloneab
     private final boolean isParentInvoice;
     private final Invoice parentInvoice;
     private final UUID grpId;
-
 
     // Used to create a new invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final InvoiceStatus status) {
@@ -130,8 +129,13 @@ public final class DefaultInvoice extends EntityBase implements Invoice, Cloneab
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
     public Object clone() {
+        try {
+            super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
         final InvoiceModelDao parentInvoiceModelDao = (parentInvoice != null) ? new InvoiceModelDao(parentInvoice) : null;
-        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus(), isParentInvoice(), parentInvoiceModelDao, grpId);
+        final Invoice clonedInvoice = new DefaultInvoice(getId(), getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus(), isParentInvoice(), parentInvoiceModelDao, grpId);
         clonedInvoice.getInvoiceItems().addAll(getInvoiceItems());
         clonedInvoice.getPayments().addAll(getPayments());
         return clonedInvoice;
