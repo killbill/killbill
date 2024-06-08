@@ -71,8 +71,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, LocalDate fromDate, LocalDate upToDate, final Boolean includeInvoiceComponents, InternalTenantContext context);
 
-    List<InvoiceModelDao> getInvoicesBySubscription(UUID subscriptionId, InternalTenantContext context);
-
     Pagination<InvoiceModelDao> searchInvoices(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     UUID getInvoiceIdByPaymentId(UUID paymentId, InternalTenantContext context);

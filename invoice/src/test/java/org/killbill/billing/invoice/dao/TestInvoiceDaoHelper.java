@@ -159,6 +159,32 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoice1, invoice2);
     }
 
+    @Test(groups = "slow")
+    public void testPopulateChildrenWithoutTrackingIds() throws Exception {
+        final UUID accountId = account.getId();
+        final Invoice inputInvoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase", null,
+                                                                 today, today, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
+
+        inputInvoice.addInvoiceItem(invoiceItem);
+        invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
+
+        final InvoiceTrackingSqlDao trackingSqlDao = dbi.onDemand(InvoiceTrackingSqlDao.class);
+        trackingSqlDao.create(List.of(new InvoiceTrackingModelDao("12345", inputInvoice.getId(), UUID.randomUUID(), "foo", today)), internalAccountContext);
+
+
+        final List<Tag> tags = Collections.emptyList();
+        final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
+        populateChildrenByInvoiceId(invoice1, tags, false);
+
+        final InvoiceModelDao invoice2 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
+        populateChildrenByAccountRecordId(invoice2, tags, false);
+
+        Assert.assertEquals(new DefaultInvoice(invoice1).getTrackingIds().size(), 0);
+        Assert.assertEquals(new DefaultInvoice(invoice2).getTrackingIds().size(), 0);
+
+        Assert.assertEquals(invoice1, invoice2);
+    }
 
 
     @Test(groups = "slow")
@@ -228,22 +254,31 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     private void populateChildrenByAccountRecordId(final InvoiceModelDao invoice, final List<Tag> tags) {
+        populateChildrenByAccountRecordId(invoice, tags, true);
+    }
+
+    private void populateChildrenByAccountRecordId(final InvoiceModelDao invoice, final List<Tag> tags, final boolean includeTrackngIds) {
         transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                invoiceDaoHelper.populateChildren(List.of(invoice), tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
+                invoiceDaoHelper.populateChildren(List.of(invoice), tags, false, includeTrackngIds, entitySqlDaoWrapperFactory, internalAccountContext);
                 return null;
             }
         });
     }
 
     private void populateChildrenByInvoiceId(final InvoiceModelDao invoice, final List<Tag> tags) {
+        populateChildrenByInvoiceId(invoice, tags, true);
+    }
+
+    private void populateChildrenByInvoiceId(final InvoiceModelDao invoice, final List<Tag> tags, final boolean includeTrackingIds) {
         transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                invoiceDaoHelper.populateChildren(invoice, tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
+                invoiceDaoHelper.populateChildren(invoice, tags, false, includeTrackingIds, entitySqlDaoWrapperFactory, internalAccountContext);
                 return null;
             }
         });
     }
+
 }
