@@ -247,7 +247,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final Boolean includeTrackingIds, final InternalTenantContext context) throws InvoiceApiException {
         if (number == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_NUMBER, "(null)");
         }
@@ -266,14 +266,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // The context may not contain the account record id at this point - we couldn't do it in the API above
                 // as we couldn't get access to the invoice object until now.
                 final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, true, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             }
             return invoice;
         });
     }
 
     @Override
-    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, Boolean includeTrackingIds, final InternalTenantContext context) throws InvoiceApiException {
 
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
@@ -285,13 +285,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
 
             final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, true, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+            invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             return invoice;
         });
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final Boolean includeTrackingIds, final InternalTenantContext context) {
         // TODO_1658 Do we want a special query along with a new index on grpId or is the cardinality small enough that we
         // fetch by accountRecordId. Note that we only 'populate' on the filtered list.
         final List<Tag> invoicesTags = getInvoicesTags(context);
@@ -304,7 +304,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                   .filter(invoice -> invoice.getGrpId().equals(groupId))
                                                                   .sorted(INVOICE_MODEL_DAO_COMPARATOR)
                                                                   .collect(Collectors.toUnmodifiableList());
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, true, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, context);
                 return invoices;
             }
         });
@@ -549,7 +549,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                   public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering, final InternalTenantContext context) {
                                                       try {
                                                           if (invoiceNumber != null) {
-                                                              return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, false, context)).iterator();
+                                                              return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, false, false, context)).iterator();
                                                           }
                                                           if (isSearchKeyCurrency) {
                                                               return invoiceSqlDao.searchByCurrency(searchKey, offset, limit, ordering.toString(), context);

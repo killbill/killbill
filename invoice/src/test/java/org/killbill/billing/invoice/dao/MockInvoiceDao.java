@@ -142,7 +142,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) {
+    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final Boolean includeTrackingIds, final InternalTenantContext context) {
         synchronized (monitor) {
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (invoice.getInvoiceNumber().equals(number)) {
@@ -155,13 +155,13 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final Boolean includeTrackingIds, final InternalTenantContext context) throws InvoiceApiException {
         final InvoiceItemModelDao item = items.get(invoiceItemId);
         return (item != null) ? invoices.get(item.getInvoiceId()) : null;
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final Boolean includeTrackingIds, final InternalTenantContext context) {
         return null;
     }
 

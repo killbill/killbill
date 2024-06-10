@@ -182,7 +182,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public List<Invoice> getInvoicesByGroup(final UUID accountId, final UUID groupId, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByGroup(groupId, internalTenantContext);
+        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByGroup(groupId, true, internalTenantContext);
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
@@ -251,7 +251,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
         // The account record id will be populated in the DAO
         final InternalTenantContext internalTenantContextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
-        final InvoiceModelDao invoice = dao.getByNumber(number, true, internalTenantContextWithoutAccountRecordId);
+        final InvoiceModelDao invoice = dao.getByNumber(number, true, true, internalTenantContextWithoutAccountRecordId);
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
         return new DefaultInvoice(invoice, getCatalogSafelyForPrettyNames(internalTenantContext));
@@ -260,7 +260,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public Invoice getInvoiceByInvoiceItem(final UUID invoiceItemId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
-        final InvoiceModelDao invoice = dao.getByInvoiceItem(invoiceItemId, internalTenantContextWithoutAccountRecordId);
+        final InvoiceModelDao invoice = dao.getByInvoiceItem(invoiceItemId, true, internalTenantContextWithoutAccountRecordId);
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
         return new DefaultInvoice(invoice, getCatalogSafelyForPrettyNames(internalTenantContext));

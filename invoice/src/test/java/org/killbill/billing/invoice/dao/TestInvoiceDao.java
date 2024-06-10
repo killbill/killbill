@@ -114,7 +114,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final InvoiceModelDao retrievedInvoice = invoiceDao.getById(invoice.getId(), context);
         invoiceUtil.checkInvoicesEqual(retrievedInvoice, invoice);
-        invoiceUtil.checkInvoicesEqual(invoiceDao.getByNumber(retrievedInvoice.getInvoiceNumber(), true, context), invoice);
+        invoiceUtil.checkInvoicesEqual(invoiceDao.getByNumber(retrievedInvoice.getInvoiceNumber(), true, true, context), invoice);
     }
 
     @Test(groups = "slow")
@@ -318,14 +318,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         }
 
         try {
-            invoiceDao.getByNumber(null, true, context);
+            invoiceDao.getByNumber(null, true, true, context);
             Assert.fail();
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_INVALID_NUMBER.getCode());
         }
 
         try {
-            invoiceDao.getByNumber(Integer.MIN_VALUE, true, context);
+            invoiceDao.getByNumber(Integer.MIN_VALUE, true, true, context);
             Assert.fail();
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NUMBER_NOT_FOUND.getCode());
@@ -1777,7 +1777,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                              BigDecimal.ONE, BigDecimal.ONE, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem1, context);
 
-        final InvoiceModelDao targetInvoice = invoiceDao.getByInvoiceItem(recurringItem1.getId(), internalCallContext);
+        final InvoiceModelDao targetInvoice = invoiceDao.getByInvoiceItem(recurringItem1.getId(), true, internalCallContext);
         assertNotNull(targetInvoice);
         assertEquals(targetInvoice.getId(), invoiceId1);
         assertEquals(targetInvoice.getInvoiceItems().size(), 1);
@@ -1843,11 +1843,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertNotNull(invoiceFromDB.getTrackingIds());
         assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
 
-        invoiceFromDB = invoiceDao.getByNumber(invoiceFromDB.getInvoiceNumber(), true, context);
+        invoiceFromDB = invoiceDao.getByNumber(invoiceFromDB.getInvoiceNumber(), true, true, context);
         assertNotNull(invoiceFromDB.getTrackingIds());
         assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
 
-        invoiceFromDB = invoiceDao.getByInvoiceItem(invoiceItem.getId(), context);
+        invoiceFromDB = invoiceDao.getByInvoiceItem(invoiceItem.getId(), true, context);
         assertNotNull(invoiceFromDB.getTrackingIds());
         assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
 
@@ -1872,7 +1872,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertNotNull(invoiceFromDB.getTrackingIds());
         assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
 
-        invoicesFromDB = invoiceDao.getInvoicesByGroup(invoiceFromDB.getGrpId(), context);
+        invoicesFromDB = invoiceDao.getInvoicesByGroup(invoiceFromDB.getGrpId(), true, context);
         assertNotNull(invoicesFromDB);
         assertEquals(invoicesFromDB.size(), 1);
         invoiceFromDB = invoicesFromDB.get(0);
