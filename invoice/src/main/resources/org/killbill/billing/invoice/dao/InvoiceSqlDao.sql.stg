@@ -113,8 +113,7 @@ FROM (
     JOIN invoices inv ON ii.invoice_id = inv.id
     LEFT OUTER JOIN tags tg ON ii.invoice_id = tg.object_id
     WHERE
-        ii.type in ('TAX', 'EXTERNAL_CHARGE', 'FIXED', 'USAGE', 'RECURRING', 'ITEM_ADJ', 'REPAIR_ADJ', 'PARENT_SUMMARY', 'CBA_ADJ', 'CREDIT_ADJ')
-        <AND_CHECK_TENANT("ii.")>
+        <CHECK_TENANT("ii.")>
 
     GROUP BY
           ii.invoice_id
