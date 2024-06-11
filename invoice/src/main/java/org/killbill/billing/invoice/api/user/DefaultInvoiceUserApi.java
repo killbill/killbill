@@ -150,7 +150,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
-                                                        dao.getAllInvoicesByAccount(includeVoidedInvoices, includeInvoiceComponents, internalTenantContext) :
+                                                        dao.getAllInvoicesByAccount(includeVoidedInvoices, includeInvoiceComponents, true, internalTenantContext) :
                                                         dao.getInvoicesByAccount(includeVoidedInvoices, includeInvoiceComponents, true, internalTenantContext);
 
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
@@ -269,7 +269,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate startDate, final LocalDate upToDate, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, startDate, upToDate, internalTenantContext);
+        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, startDate, upToDate, true, internalTenantContext);
         return fromInvoiceModelDao(unpaidInvoicesByAccountId, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 

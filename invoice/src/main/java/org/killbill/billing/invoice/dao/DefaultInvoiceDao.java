@@ -188,9 +188,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, invoicesTags, entitySqlDaoWrapperFactory, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, includeTrackingIds, invoicesTags, entitySqlDaoWrapperFactory, context));
     }
 
     @Override
@@ -574,7 +574,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             BigDecimal cba = BigDecimal.ZERO;
 
             BigDecimal accountBalance = BigDecimal.ZERO;
-            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, invoicesTags, entitySqlDaoWrapperFactory, context);
+            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, false, invoicesTags, entitySqlDaoWrapperFactory, context); //TODO_1952 - non API call, so passing includeTrackingIds=false. Revisit
             for (final InvoiceModelDao cur : invoices) {
 
                 // Skip DRAFT OR VOID invoices
@@ -604,10 +604,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate startDate, @Nullable final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate startDate, @Nullable final LocalDate upToDate, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
-        return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(accountId, invoicesTags, entityWrapperFactory, startDate, upToDate, context));
+        return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(accountId, invoicesTags, entityWrapperFactory, startDate, upToDate, includeTrackingIds, context));
     }
 
     @Override

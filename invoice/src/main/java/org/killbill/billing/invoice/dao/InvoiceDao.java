@@ -89,10 +89,10 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
 
-    List<InvoiceModelDao> getUnpaidInvoicesByAccountId(UUID accountId, @Nullable LocalDate startDate, @Nullable LocalDate upToDate, InternalTenantContext context);
+    List<InvoiceModelDao> getUnpaidInvoicesByAccountId(UUID accountId, @Nullable LocalDate startDate, @Nullable LocalDate upToDate, Boolean includeTrackingIds, InternalTenantContext context);
 
     // Include migrated invoices
-    List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, InternalTenantContext context);
+    List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, InternalTenantContext context);
 
     InvoicePaymentModelDao postChargeback(UUID paymentId, final UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
