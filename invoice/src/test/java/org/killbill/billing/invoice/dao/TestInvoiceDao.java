@@ -196,7 +196,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal amount = BigDecimal.TEN;
         final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), amount);
 
-        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, true, context);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, true, true, context);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 1);
         InvoiceModelDao thisInvoice = invoices.get(0);
@@ -207,7 +207,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(amount), 0);
 
         //without invoice components
-        invoices = invoiceDao.getInvoicesByAccount(false, false, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, false, true, context);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 1);
         thisInvoice = invoices.get(0);
@@ -255,7 +255,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // although labeled "invoice5", the clock use "minusDays(3)", so in assertion, this should be in 2nd element.
         final Invoice invoice5 = createAndGetInvoice(clock.getUTCToday().minusDays(3), clock.getUTCToday().minusDays(3));
 
-        final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, true, context);
+        final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, true, true, context);
 
         assertNotNull(invoices);
         assertEquals(invoices.size(), 5);
@@ -375,19 +375,19 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice2, context);
 
         List<InvoiceModelDao> invoices;
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, true, true, context);
         assertEquals(invoices.size(), 2);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 6), null, true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 6), null, true, true, context);
         assertEquals(invoices.size(), 2);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 11), null, true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 11), null, true, true, context);
         assertEquals(invoices.size(), 1);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 12, 6), null, true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 12, 6), null, true, true, context);
         assertEquals(invoices.size(), 1);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2012, 1, 1), null, true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2012, 1, 1), null, true, true, context);
         assertEquals(invoices.size(), 0);
     }
 
@@ -403,13 +403,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice2, context);
 
         List<InvoiceModelDao> invoices;
-        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 12, 7), true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 12, 7), true, true, context);
         assertEquals(invoices.size(), 2);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 12, 5), true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 12, 5), true, true, context);
         assertEquals(invoices.size(), 1);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 10, 5), true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 10, 5), true, true, context);
         assertEquals(invoices.size(), 0);
 
     }
@@ -1077,13 +1077,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 1);
 
-        List<InvoiceModelDao> allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, true, context);
+        List<InvoiceModelDao> allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, true, true, context);
         assertEquals(allInvoicesByAccount.size(), 1);
 
         // insert DRAFT invoice
         createCredit(accountId, new LocalDate(2011, 12, 31), BigDecimal.TEN, true);
 
-        allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, true, context);
+        allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, true, true, context);
         assertEquals(allInvoicesByAccount.size(), 2);
         assertEquals(allInvoicesByAccount.get(0).getStatus(), InvoiceStatus.COMMITTED);
         assertEquals(allInvoicesByAccount.get(1).getStatus(), InvoiceStatus.DRAFT);
@@ -1858,14 +1858,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertNotNull(invoiceFromDB.getTrackingIds());
         assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
 
-        invoicesFromDB = invoiceDao.getInvoicesByAccount(true, true, context);
+        invoicesFromDB = invoiceDao.getInvoicesByAccount(true, true, true, context);
         assertNotNull(invoicesFromDB);
         assertEquals(invoicesFromDB.size(), 1);
         invoiceFromDB = invoicesFromDB.get(0);
         assertNotNull(invoiceFromDB.getTrackingIds());
         assertEquals(invoiceFromDB.getTrackingIds().size(), 1);
 
-        invoicesFromDB = invoiceDao.getInvoicesByAccount(true, null, null, true, context);
+        invoicesFromDB = invoiceDao.getInvoicesByAccount(true, null, null, true, true, context);
         assertNotNull(invoicesFromDB);
         assertEquals(invoicesFromDB.size(), 1);
         invoiceFromDB = invoicesFromDB.get(0);

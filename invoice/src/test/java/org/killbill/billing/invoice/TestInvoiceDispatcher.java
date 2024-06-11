@@ -111,19 +111,19 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         Invoice invoice = processAccountFromNotificationOrBusEventAndAssertResult(accountId, target, new DryRunFutureDateArguments(), false, context);
 
-        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, true, context);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, true, true, context);
         Assert.assertEquals(invoices.size(), 0);
 
         // Try it again to double check
         invoice = processAccountFromNotificationOrBusEventAndAssertResult(accountId, target, new DryRunFutureDateArguments(), false, context);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, true, true, context);
         Assert.assertEquals(invoices.size(), 0);
 
         // This time no dry run
         invoice = processAccountFromNotificationOrBusEventAndAssertResult(accountId, target, null, false, context);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, true, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, true, true, context);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -207,7 +207,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
             Assert.assertTrue(e.getCause().getMessage().startsWith("Double billing detected"));
         }
         // Dry-run: no side effect on disk
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, context).size(), 1);
+        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, true,context).size(), 1);
         Assert.assertTrue(tagUserApi.getTagsForAccount(accountId, true, callContext).isEmpty());
 
         try {
@@ -217,7 +217,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
             Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
             Assert.assertTrue(e.getCause().getMessage().startsWith("Double billing detected"));
         }
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, context).size(), 1);
+        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, true,context).size(), 1);
         // No dry-run: account is parked
         final List<Tag> tags = tagUserApi.getTagsForAccount(accountId, false, callContext);
         Assert.assertEquals(tags.size(), 1);
@@ -236,7 +236,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
             Assert.assertTrue(e.getCause().getMessage().startsWith("Double billing detected"));
         }
         // Idempotency
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, context).size(), 1);
+        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, true, context).size(), 1);
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, false, callContext), tags);
 
         // Fix state
@@ -256,14 +256,14 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         // Dry-run and isApiCall=true: call goes through
         final List<Invoice> invoices1 = dispatcher.processAccount(true, accountId, target, new DryRunFutureDateArguments(), false, false, Collections.emptyList(), context);
         Assert.assertFalse(invoices1.isEmpty());
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, context).size(), 0);
+        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, true, context).size(), 0);
         // Dry-run: still parked
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, false, callContext).size(), 1);
 
         // No dry-run and isApiCall=true: call goes through
         final List<Invoice> invoice2s = dispatcher.processAccount(true, accountId, target, null, false, false, Collections.emptyList(), context);
         Assert.assertFalse(invoice2s.isEmpty());
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, context).size(), 1);
+        Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, true, context).size(), 1);
         // No dry-run: now unparked
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, false, callContext).size(), 0);
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, true, callContext).size(), 1);

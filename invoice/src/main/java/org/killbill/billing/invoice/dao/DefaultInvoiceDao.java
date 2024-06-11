@@ -167,7 +167,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
@@ -180,7 +180,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                             .collect(Collectors.toUnmodifiableList());
 
             if (includeInvoiceComponents) {
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, true, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, context);
             }
 
             return invoices;
@@ -194,14 +194,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(includeVoidedInvoices, invoiceDao, fromDate, upToDate, context);
             if (includeInvoiceComponents) {
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, true, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, context);
             }
 
             return invoices;

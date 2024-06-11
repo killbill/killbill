@@ -173,7 +173,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
@@ -191,7 +191,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoicesForAccount = new ArrayList<>();
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
