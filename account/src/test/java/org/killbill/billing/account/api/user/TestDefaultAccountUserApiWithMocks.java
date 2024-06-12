@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -53,6 +54,10 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         accountDao = new MockAccountDao(Mockito.mock(PersistentBus.class), clock);
         accountUserApi = new DefaultAccountUserApi(immutableAccountInternalApi, accountDao, nonEntityDao, controllerDispatcher, internalFactory);
     }

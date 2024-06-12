@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,6 +21,8 @@ package org.killbill.billing.util.customfield.dao;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -52,6 +55,9 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.entity.dao.SearchAttribute;
+import org.killbill.billing.util.entity.dao.SearchQuery;
+import org.killbill.billing.util.entity.dao.SqlOperator;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
@@ -59,6 +65,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.killbill.billing.util.entity.dao.SearchQuery.SEARCH_QUERY_MARKER;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, CustomField, CustomFieldApiException> implements CustomFieldDao {
@@ -200,60 +207,65 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     @Override
     public Pagination<CustomFieldModelDao> searchCustomFields(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
-        return paginationHelper.getPagination(CustomFieldSqlDao.class,
-                                              new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
-                                                  @Override
-                                                  public Long getCount(final CustomFieldSqlDao customFieldSqlDao, final InternalTenantContext context) {
-                                                      return customFieldSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
-                                                  }
+        final SearchQuery searchQuery;
+        if (searchKey.startsWith(SEARCH_QUERY_MARKER)) {
+            searchQuery = new SearchQuery(searchKey,
+                                          Set.of("id",
+                                                 "object_id",
+                                                 "object_type",
+                                                 "is_active",
+                                                 "field_name",
+                                                 "field_value",
+                                                 "created_by",
+                                                 "created_date",
+                                                 "updated_by",
+                                                 "updated_date"));
+        } else {
+            searchQuery = new SearchQuery(SqlOperator.OR);
 
-                                                  @Override
-                                                  public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                                                      return customFieldSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
-                                                  }
-                                              },
-                                              offset,
-                                              limit,
-                                              context);
+            final String likeSearchKey = String.format("%%%s%%", searchKey);
+            searchQuery.addSearchClause("id", SqlOperator.EQ, searchKey);
+            searchQuery.addSearchClause("object_type", SqlOperator.LIKE, likeSearchKey);
+            searchQuery.addSearchClause("object_id", SqlOperator.LIKE, likeSearchKey);
+            searchQuery.addSearchClause("field_name", SqlOperator.LIKE, likeSearchKey);
+            searchQuery.addSearchClause("field_value", SqlOperator.LIKE, likeSearchKey);
+        }
+
+        return searchCustomFields(searchQuery, offset, limit, context);
     }
 
     @Override
     public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, final ObjectType objectType, final Long offset, final Long limit, final InternalTenantContext context) {
-        return paginationHelper.getPagination(CustomFieldSqlDao.class,
-                                              new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
-                                                  @Override
-                                                  public Long getCount(final CustomFieldSqlDao customFieldSqlDao, final InternalTenantContext context) {
-                                                      return customFieldSqlDao.getSearchCountByObjectTypeAndFieldName(fieldName, objectType, context);
-                                                  }
-
-                                                  @Override
-                                                  public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                                                      return customFieldSqlDao.searchByObjectTypeAndFieldName(fieldName, objectType, offset, limit, ordering.toString(), context);
-                                                  }
-                                              },
-                                              offset,
-                                              limit,
-                                              context);
+        final SearchQuery searchQuery = new SearchQuery(SqlOperator.AND);
+        searchQuery.addSearchClause("object_type", SqlOperator.EQ, objectType);
+        searchQuery.addSearchClause("field_name", SqlOperator.EQ, fieldName);
+        return searchCustomFields(searchQuery, offset, limit, context);
     }
 
     @Override
     public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, @Nullable final String fieldValue, final ObjectType objectType, final Long offset, final Long limit, final InternalTenantContext context) {
+        final SearchQuery searchQuery = new SearchQuery(SqlOperator.AND);
+        searchQuery.addSearchClause("object_type", SqlOperator.EQ, objectType);
+        searchQuery.addSearchClause("field_name", SqlOperator.EQ, fieldName);
+        searchQuery.addSearchClause("field_value", SqlOperator.EQ, fieldValue);
+        return searchCustomFields(searchQuery, offset, limit, context);
+    }
+
+    private Pagination<CustomFieldModelDao> searchCustomFields(final SearchQuery searchQuery, final Long offset, final Long limit, final InternalTenantContext context) {
         return paginationHelper.getPagination(CustomFieldSqlDao.class,
                                               new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
                                                   @Override
                                                   public Long getCount(final CustomFieldSqlDao customFieldSqlDao, final InternalTenantContext context) {
-                                                      return customFieldSqlDao.getSearchCountByObjectTypeAndFieldNameValue(fieldName, fieldValue, objectType, context);
+                                                      return customFieldSqlDao.getSearchCount(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), context);
                                                   }
 
                                                   @Override
                                                   public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                                                      return customFieldSqlDao.searchByObjectTypeAndFieldNameValue(fieldName, fieldValue, objectType, offset, limit, ordering.toString(), context);
+                                                      return customFieldSqlDao.search(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), offset, limit, ordering.toString(), context);
                                                   }
                                               },
                                               offset,
                                               limit,
                                               context);
     }
-
-
 }

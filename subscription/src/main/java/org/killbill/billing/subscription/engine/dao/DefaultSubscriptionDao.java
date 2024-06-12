@@ -89,6 +89,8 @@ import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.entity.dao.SearchQuery;
+import org.killbill.billing.util.entity.dao.SqlOperator;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
@@ -119,6 +121,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.killbill.billing.util.entity.dao.SearchQuery.SEARCH_QUERY_MARKER;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
@@ -190,16 +193,34 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     @Override
     public Pagination<SubscriptionBundleModelDao> searchSubscriptionBundles(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        final SearchQuery searchQuery;
+        if (searchKey.startsWith(SEARCH_QUERY_MARKER)) {
+            searchQuery = new SearchQuery(searchKey,
+                                          Set.of("id",
+                                                 "external_key",
+                                                 "account_id",
+                                                 "last_sys_update_date",
+                                                 "original_created_date",
+                                                 "created_by",
+                                                 "created_date",
+                                                 "updated_by",
+                                                 "updated_date"));
+        } else {
+            searchQuery = new SearchQuery(SqlOperator.OR);
+            searchQuery.addSearchClause("id", SqlOperator.EQ, searchKey);
+            searchQuery.addSearchClause("account_id", SqlOperator.EQ, searchKey);
+            searchQuery.addSearchClause("external_key", SqlOperator.EQ, searchKey);
+        }
         return paginationHelper.getPagination(BundleSqlDao.class,
                                               new PaginationIteratorBuilder<SubscriptionBundleModelDao, SubscriptionBaseBundle, BundleSqlDao>() {
                                                   @Override
                                                   public Long getCount(final BundleSqlDao bundleSqlDao, final InternalTenantContext context) {
-                                                      return bundleSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                      return bundleSqlDao.getSearchCount(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), context);
                                                   }
 
                                                   @Override
                                                   public Iterator<SubscriptionBundleModelDao> build(final BundleSqlDao bundleSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                                                      return bundleSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
+                                                      return bundleSqlDao.search(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), offset, limit, ordering.toString(), context);
                                                   }
                                               },
                                               offset,

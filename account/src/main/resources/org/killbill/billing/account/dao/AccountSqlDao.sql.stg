@@ -115,14 +115,6 @@ getBCD() ::= <<
     where id = :id <AND_CHECK_TENANT("")>;
 >>
 
-searchQuery(prefix) ::= <<
-     <idField(prefix)> = :searchKey
-  or <prefix>name like :likeSearchKey
-  or <prefix>email like :likeSearchKey
-  or <prefix>external_key like :likeSearchKey
-  or <prefix>company_name like :likeSearchKey
->>
-
 /** Unfortunately, we need to force MySQL to use the individual indexes */
 luckySearch() ::= <<
 select

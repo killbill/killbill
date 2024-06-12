@@ -43,12 +43,6 @@ getInvoicesBySubscription() ::= <<
   ;
 >>
 
-searchQuery(prefix) ::= <<
-     <idField(prefix)> = :searchKey
-  or <prefix>account_id = :searchKey
-  or <prefix>currency = :searchKey
->>
-
 getInvoiceIdByPaymentId() ::= <<
   SELECT i.id
     FROM <tableName()> i, invoice_payments ip
@@ -95,61 +89,85 @@ getInvoiceByAccountRecordIdAfter() ::= <<
    <defaultOrderBy("")>
 >>
 
-searchByAccountOrInvoiceId(ordering) ::= <<
-(select
-<allTableFields("t.")>
-from <tableName()> t
-where (<idField("t.")> = :searchKey)
-<andCheckSoftDeletionWithComma("t.")>
-<AND_CHECK_TENANT("t.")>)
-UNION
-(select
-<allTableFields("t.")>
-from <tableName()> t
-where (t.account_id = :searchKey)
-<andCheckSoftDeletionWithComma("t.")>
-<AND_CHECK_TENANT("t.")>)
-order by <recordIdField("")> <ordering>
-limit :rowCount offset :offset
-;
+invoiceBalanceQuery() ::= <<
+SELECT
+      x.invoice_id
+    , x.tenant_record_id
+    , SUM(x.amount) as balance
+FROM (
+    SELECT
+          i.id as invoice_id
+        , i.tenant_record_id
+        , 0 as amount
+    FROM invoices i
+    WHERE
+        <CHECK_TENANT("i.")>
+
+    UNION ALL
+
+    SELECT
+          ii.invoice_id
+        , ii.tenant_record_id
+        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = true OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE SUM(ii.amount) END as amount
+ FROM invoice_items ii
+    JOIN invoices inv ON ii.invoice_id = inv.id
+    LEFT OUTER JOIN tags tg ON ii.invoice_id = tg.object_id
+    WHERE
+        <CHECK_TENANT("ii.")>
+
+    GROUP BY
+          ii.invoice_id
+        , ii.tenant_record_id
+        , inv.status
+        , inv.migrated
+        , tg.tag_definition_id
+
+    UNION ALL
+
+    SELECT
+          invoice_id
+        , payments_and_refunds.tenant_record_id
+        , CASE WHEN inv.status in ('DRAFT', 'VOID') OR inv.migrated = true OR tg.tag_definition_id = '00000000-0000-0000-0000-000000000004' THEN 0 ELSE -payments_and_refunds.amount_paid - payments_and_refunds.amount_refunded END as amount
+    FROM (
+        SELECT
+              ip.invoice_id
+            , ip.tenant_record_id
+            , SUM(CASE WHEN ip.type = 'ATTEMPT' THEN ip.amount ELSE 0 END) AS amount_paid
+            , SUM(CASE WHEN ip.type IN ('REFUND', 'CHARGED_BACK') THEN ip.amount ELSE 0 END) AS amount_refunded
+        FROM
+            invoice_payments ip
+        WHERE
+            ip.status = 'SUCCESS'
+            <AND_CHECK_TENANT("ip.")>
+        GROUP BY
+              ip.invoice_id
+            , ip.tenant_record_id
+    ) AS payments_and_refunds
+    JOIN invoices inv ON payments_and_refunds.invoice_id = inv.id
+    LEFT OUTER JOIN tags tg ON payments_and_refunds.invoice_id = tg.object_id
+) x
+GROUP BY
+      x.invoice_id
+    , x.tenant_record_id
 >>
 
-getSearchByAccountOrInvoiceIdCount() ::= <<
-select count(*) from
-((select
-<allTableFields("t.")>
-from <tableName()> t
-where (<idField("t.")> = :searchKey)
-<andCheckSoftDeletionWithComma("t.")>
-<AND_CHECK_TENANT("t.")>)
-UNION
-(select
-<allTableFields("t.")>
-from <tableName()> t
-where (t.account_id = :searchKey)
-<andCheckSoftDeletionWithComma("t.")>
-<AND_CHECK_TENANT("t.")>)) as count
-;
->>
-
-searchByCurrency(ordering) ::= <<
+searchInvoicesByBalance(ordering, comparisonOperator) ::= <<
 select
-<allTableFields("t.")>
-from <tableName()> t
-where (t.currency = :searchKey)
-<andCheckSoftDeletionWithComma("t.")>
+  <allTableFields("i.")>, t.balance
+from (<invoiceBalanceQuery()>) t
+join invoices i ON i.id = t.invoice_id
+where t.balance <comparisonOperator> :balance
 <AND_CHECK_TENANT("t.")>
-order by <recordIdField("")> <ordering>
+order by <recordIdField("i.")> <ordering>
 limit :rowCount offset :offset
 ;
 >>
 
-getSearchByCurrencyCount() ::= <<
+getSearchInvoicesByBalanceCount(comparisonOperator) ::= <<
 select
-count(*)
-from <tableName()> t
-where (t.currency = :searchKey)
-<andCheckSoftDeletionWithComma("t.")>
+  count(1) as count
+from (<invoiceBalanceQuery()>) t
+where t.balance <comparisonOperator> :balance
 <AND_CHECK_TENANT("t.")>
 ;
 >>

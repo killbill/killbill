@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +20,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -176,6 +178,24 @@ public class TestAccount extends TestJaxrsBase {
 
         // Try search endpoint
         searchAccount(input, null);
+    }
+
+    @Test(groups = "slow", description = "Can use advanced queries to search accounts")
+    public void testAccountAdvancedSearch() throws Exception {
+        final Account input = createAccount();
+
+        final List<Account> accounts1 = accountApi.searchAccounts("_q=1&address2=Poitier&currency=USD", requestOptions);
+        Assert.assertEquals(accounts1.size(), 1);
+        Assert.assertEquals(accounts1.get(0).getAccountId(), input.getAccountId());
+        Assert.assertEquals(accounts1.get(0).getExternalKey(), input.getExternalKey());
+
+        final List<Account> accounts2 = accountApi.searchAccounts(URLEncoder.encode("_q=1&address2=Poitier&currency[neq]=MXN", StandardCharsets.UTF_8), requestOptions);
+        Assert.assertEquals(accounts2.size(), 1);
+        Assert.assertEquals(accounts2.get(0).getAccountId(), input.getAccountId());
+        Assert.assertEquals(accounts2.get(0).getExternalKey(), input.getExternalKey());
+
+        Assert.assertEquals(accountApi.searchAccounts("_q=1&address2=Poitier&currency=MXN", requestOptions).size(), 0);
+        Assert.assertEquals(accountApi.searchAccounts("_q=1&address2=Tours", requestOptions).size(), 0);
     }
 
     @Test(groups = "slow", description = "Can reset account notes using flag treatNullAsReset")

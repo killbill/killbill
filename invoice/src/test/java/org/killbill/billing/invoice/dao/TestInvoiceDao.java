@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +19,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,8 +76,10 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.util.entity.dao.SqlOperator;
 import org.killbill.clock.ClockMock;
 import org.killbill.commons.utils.collect.Iterables;
 import org.mockito.Mockito;
@@ -665,17 +669,27 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 10, 5), true, context);
         assertEquals(invoices.size(), 0);
-
     }
 
-
     @Test(groups = "slow")
-    public void testAccountBalance() throws EntityPersistenceException {
+    public void testAccountBalance() throws EntityPersistenceException, IOException {
+        Pagination<InvoiceModelDao> searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 0L);
+        searchResult.close();
+
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
         invoiceUtil.createInvoice(invoice1, context);
+
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.GT, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 0L);
+        searchResult.close();
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -691,16 +705,36 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                     endDate, rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
 
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.GT, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
+        searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("59.0"), SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
         final BigDecimal payment1 = new BigDecimal("48.0");
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, InvoicePaymentStatus.SUCCESS);
         invoiceUtil.createPayment(payment, context);
+
+        searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("59.0"), SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 0L);
+        searchResult.close();
+
+        searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("59.0"), SqlOperator.LT, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
+        searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("11.0"), SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(rate1.add(rate2).subtract(payment1)), 0);
     }
 
     @Test(groups = "slow")
-    public void testAccountBalanceWithCredit() throws EntityPersistenceException {
+    public void testAccountBalanceWithCredit() throws EntityPersistenceException, IOException {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
@@ -716,8 +750,16 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                     endDate, rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
+        Pagination<InvoiceModelDao> searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("17.0"), SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
         final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), null, rate1.negate(), Currency.USD, null);
         invoiceUtil.createInvoiceItem(creditItem, context);
+
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
@@ -765,11 +807,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testAccountBalanceWithRefundNoAdj() throws InvoiceApiException, EntityPersistenceException {
+    public void testAccountBalanceWithRefundNoAdj() throws InvoiceApiException, EntityPersistenceException, IOException {
         testAccountBalanceWithRefundInternal(false);
     }
 
-    private void testAccountBalanceWithRefundInternal(final boolean withAdjustment) throws InvoiceApiException, EntityPersistenceException {
+    private void testAccountBalanceWithRefundInternal(final boolean withAdjustment) throws InvoiceApiException, EntityPersistenceException, IOException {
 
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
@@ -790,6 +832,10 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("20.00")), 0);
 
+        Pagination<InvoiceModelDao> searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("20.00"), SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
         // Pay the whole thing
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = rate1;
@@ -798,28 +844,38 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
         invoiceDao.createRefund(paymentId, UUID.randomUUID(), refund1, withAdjustment, Collections.emptyMap(), UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         if (withAdjustment) {
             assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
+            searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+            assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+            searchResult.close();
         } else {
             assertEquals(balance.compareTo(new BigDecimal("7.00")), 0);
+            searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("7.00"), SqlOperator.EQ, 0L, 5L, context);
+            assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+            searchResult.close();
         }
     }
 
     @Test(groups = "slow")
-    public void testFullRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException, EntityPersistenceException {
+    public void testFullRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException, EntityPersistenceException, IOException {
         final BigDecimal refundAmount = new BigDecimal("20.00");
         testRefundWithRepairAndInvoiceItemAdjustmentInternal(refundAmount);
     }
 
     @Test(groups = "slow")
-    public void testPartialRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException, EntityPersistenceException {
+    public void testPartialRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException, EntityPersistenceException, IOException {
         final BigDecimal refundAmount = new BigDecimal("7.00");
         testRefundWithRepairAndInvoiceItemAdjustmentInternal(refundAmount);
     }
 
-    private void testRefundWithRepairAndInvoiceItemAdjustmentInternal(final BigDecimal refundAmount) throws InvoiceApiException, EntityPersistenceException {
+    private void testRefundWithRepairAndInvoiceItemAdjustmentInternal(final BigDecimal refundAmount) throws InvoiceApiException, EntityPersistenceException, IOException {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
@@ -839,6 +895,10 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         BigDecimal accountBalance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(accountBalance.compareTo(new BigDecimal("20.00")), 0);
 
+        Pagination<InvoiceModelDao> searchResult = invoiceDao.searchInvoicesByBalance(new BigDecimal("20.00"), SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
         // Pay the whole thing
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount;
@@ -847,6 +907,10 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         accountBalance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(accountBalance.compareTo(new BigDecimal("0.00")), 0);
 
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
         // Repair the item (And add CBA item that should be generated)
         final InvoiceItem repairItem = new RepairAdjInvoiceItem(invoice.getId(), accountId, startDate, endDate, amount.negate(), Currency.USD, item2.getId());
         invoiceUtil.createInvoiceItem(repairItem, context);
@@ -854,12 +918,21 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), accountId, startDate, amount, Currency.USD);
         invoiceUtil.createInvoiceItem(cbaItem, context);
 
+        // Here, the balance is paid and the account has a credit (account balance: -20)
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
+
         final Map<UUID, BigDecimal> itemAdjustment = new HashMap<UUID, BigDecimal>();
         // PAss a null value to let invoice calculate the amount to adjust
         itemAdjustment.put(item2.getId(), null);
 
         invoiceDao.createRefund(paymentId, UUID.randomUUID(), refundAmount, true, itemAdjustment, UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
         accountBalance = invoiceDao.getAccountBalance(accountId, context);
+
+        searchResult = invoiceDao.searchInvoicesByBalance(BigDecimal.ZERO, SqlOperator.EQ, 0L, 5L, context);
+        assertEquals(searchResult.getTotalNbRecords(), (Long) 1L);
+        searchResult.close();
 
         final boolean partialRefund = refundAmount.compareTo(amount) < 0;
         final BigDecimal cba = invoiceDao.getAccountCBA(accountId, context);
@@ -2039,7 +2112,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testSearch() throws EntityPersistenceException, InvoiceApiException {
+    public void testSearch() throws EntityPersistenceException {
         Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
         invoiceUtil.createInvoice(invoice, context);
 
@@ -2054,32 +2127,114 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         List<InvoiceModelDao> all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on id
 
         //search based on account id with limit=2
         page = invoiceDao.searchInvoices(invoice.getAccountId().toString(), 0L, 2L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 2);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on account id
 
         // search based on currency
         page = invoiceDao.searchInvoices("USD", 0L, 10L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 2);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on currency
 
         // search based on currency with limit=1
         page = invoiceDao.searchInvoices("USD", 0L, 1L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on currency
 
         //search based on invoice number
         page = invoiceDao.searchInvoices(all.get(0).getInvoiceNumber().toString(), 0L, 10L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on invoice number
 
+        //search based on query marker
+        page = invoiceDao.searchInvoices("_q=1&account_id="+account.getId(), 0L, 1L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+        Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on query marker
+
+        //search based on balance
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 1L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+        Assert.assertNotNull(all.get(0).getBalance()); //balance is returned as search is based on balance
+        Assert.assertEquals(all.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
     }
 
+    @Test(groups = "slow")
+    public void testSearchOnBalance() throws EntityPersistenceException {
+        Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        invoiceUtil.createInvoice(invoice, context);
 
+        //invoice  with 0 balance
+        Pagination<InvoiceModelDao> page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        List<InvoiceModelDao> all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+        assertNotNull(all.get(0).getBalance()); //balance is returned as search is based on balance
+        Assert.assertEquals(all.get(0).getBalance().stripTrailingZeros().compareTo(BigDecimal.ZERO), 0);
+
+        //DRAFT invoice
+        final BigDecimal amount = BigDecimal.TEN;
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.DRAFT);
+        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                                      amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 2);
+
+        //VOID invoice
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.VOID);
+        recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                 amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 3);
+
+        //migration invoice
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, true, InvoiceStatus.COMMITTED);
+        recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                 amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 4);
+
+        //invoice  with non-zero balance
+        invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        recurringItem = new RecurringInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", null, LocalDate.now(), LocalDate.now(),
+                                                 amount, BigDecimal.ONE, Currency.USD);
+        invoice.addInvoiceItem(recurringItem);
+        invoiceUtil.createInvoice(invoice, context);
+
+        page = invoiceDao.searchInvoices("_q=1&balance[gt]=0", 0L, 5L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+        Assert.assertNotNull(all.get(0).getBalance()); //balance is returned as search is based on balance
+        Assert.assertEquals(all.get(0).getBalance().stripTrailingZeros().compareTo(amount), 0);
+    }
 }

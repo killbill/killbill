@@ -18,6 +18,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,7 +49,6 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private boolean isParentInvoice;
     private UUID grpId;
 
-
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
@@ -59,6 +59,8 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     private boolean isWrittenOff;
     private boolean isRepaired;
+
+    private BigDecimal balance;
 
     public InvoiceModelDao() { /* For the DAO mapper */ }
 
@@ -247,6 +249,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.grpId = grpId;
     }
 
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public void setBalance(final BigDecimal balance) {
+        this.balance = balance;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("InvoiceModelDao{");
@@ -264,6 +274,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", isParentInvoice=").append(isParentInvoice);
         sb.append(", parentInvoice=").append(parentInvoice);
         sb.append(", grpId=").append(grpId);
+        sb.append(", balance=").append(balance);
         sb.append('}');
         return sb.toString();
     }
@@ -321,6 +332,9 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         if (grpId != null ? !grpId.equals(that.grpId) : that.grpId != null) {
             return false;
         }
+        if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
+            return false;
+        }
         return processedCurrency == that.processedCurrency;
     }
 
@@ -341,6 +355,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (isParentInvoice ? 1 : 0);
         result = 31 * result + (parentInvoice != null ? parentInvoice.hashCode() : 0);
         result = 31 * result + (grpId != null ? grpId.hashCode() : 0);
+        result = 31 * result + (balance != null ? balance.hashCode() : 0);
         return result;
     }
 

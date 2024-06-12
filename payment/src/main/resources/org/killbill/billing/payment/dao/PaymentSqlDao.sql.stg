@@ -75,13 +75,6 @@ where external_key = :externalKey
 ;
 >>
 
-searchQuery(prefix) ::= <<
-     <idField(prefix)> = :searchKey
-  or <prefix>account_id = :searchKey
-  or <prefix>payment_method_id = :searchKey
-  or <prefix>external_key like :likeSearchKey
->>
-
 searchByState(states, ordering) ::= <<
 select
 <allTableFields("t.")>

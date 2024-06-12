@@ -92,13 +92,6 @@ where <accountRecordIdField("")> = :accountRecordId
 ;
 >>
 
-searchQuery(prefix) ::= <<
-     <idField(prefix)> = :searchKey
-  or <prefix>external_key like :likeSearchKey
-  or <prefix>account_id = :searchKey
-  or <prefix>plugin_name like :likeSearchKey
->>
-
 getByPluginName(ordering) ::= <<
 select
 <allTableFields("t.")>

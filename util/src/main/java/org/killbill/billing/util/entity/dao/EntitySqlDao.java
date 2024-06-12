@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2024 Equinix, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +22,7 @@ package org.killbill.billing.util.entity.dao;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -32,6 +34,7 @@ import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.statement.SmartFetchSize;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindMap;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -96,16 +99,18 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
-    public Iterator<M> search(@Bind("searchKey") final String searchKey,
-                              @Bind("likeSearchKey") final String likeSearchKey,
+    public Iterator<M> search(@BindMap final Map<String, Object> searchKeysBindMap,
+                              @Define("searchAttributes") final List<SearchAttribute> searchAttributes,
+                              @Define("logicalOperator") final SqlOperator logicalOperator,
                               @Bind("offset") final Long offset,
                               @Bind("rowCount") final Long rowCount,
                               @Define("ordering") final String ordering,
                               @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getSearchCount(@Bind("searchKey") final String searchKey,
-                               @Bind("likeSearchKey") final String likeSearchKey,
+    public Long getSearchCount(@BindMap final Map<String, Object> searchKeysBindMap,
+                               @Define("searchAttributes") final List<SearchAttribute> searchAttributes,
+                               @Define("logicalOperator") final SqlOperator logicalOperator,
                                @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
