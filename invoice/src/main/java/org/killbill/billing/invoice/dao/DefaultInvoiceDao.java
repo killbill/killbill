@@ -574,7 +574,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             BigDecimal cba = BigDecimal.ZERO;
 
             BigDecimal accountBalance = BigDecimal.ZERO;
-            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, false, invoicesTags, entitySqlDaoWrapperFactory, context); //TODO_1952 - non API call, so passing includeTrackingIds=false. Revisit
+            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, false, invoicesTags, entitySqlDaoWrapperFactory, context);
             for (final InvoiceModelDao cur : invoices) {
 
                 // Skip DRAFT OR VOID invoices
