@@ -92,13 +92,13 @@
                 </fixed>				
             </finalPhase>
         </plan>			
-  <plan name="p1-fixedterm-and-evergreen">
+  <plan name="p1-fixedterm-no-recurring-and-evergreen">
             <product>p1</product>
            <initialPhases>
                 <phase type="FIXEDTERM">
                     <duration>
                         <unit>MONTHS</unit>
-                        <number>6</number>
+                        <number>12</number>
                     </duration>
 				<fixed>
                     <fixedPrice>
@@ -153,7 +153,7 @@
                 <plan>p1-fixedterm-with-recurring</plan>
 				<plan>p1-fixedterm-one-time-and-recurring</plan>
 				<plan>p1-fixedterm-one-time-no-recurring</plan>
-				<plan>p1-fixedterm-and-evergreen</plan>
+				<plan>p1-fixedterm-no-recurring-and-evergreen</plan>
 				<plan>p1-evergreen</plan>
             </plans>
         </defaultPriceList>

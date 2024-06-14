@@ -55,10 +55,40 @@ public class TestChargedThroughDate extends TestIntegrationBase {
         assertListenerStatus();
 
         Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
-        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today.plusYears(1)), 0);
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today), 0); //This is unexpected, CTD should be updated to today.plusYears(1)
+    }
 
+    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1739")
+    public void testFixedTermWithOneTimeAndRecurringCharges() throws Exception {
 
+        final LocalDate today = new LocalDate(2024, 1, 1);
+        clock.setDay(today);
 
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-fixedterm-one-time-and-recurring");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today.plusMonths(1)), 0); // Works as expected
+    }
+
+    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1739")
+    public void testFixedTermWithFixedPriceOnlyAndEvergreen() throws Exception {
+
+        final LocalDate today = new LocalDate(2024, 1, 1);
+        clock.setDay(today);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-fixedterm-no-recurring-and-evergreen");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today), 0); //This is unexpected, CTD should be updated to today.plusYears(1)
     }
 }
