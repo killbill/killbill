@@ -175,8 +175,9 @@ public class InvoiceDaoHelper {
                                                                            final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                            @Nullable final LocalDate startDate,
                                                                            final LocalDate upToDate,
+                                                                           final Boolean includeTrackingIds,
                                                                            final InternalTenantContext context) {
-        final List<InvoiceModelDao> invoices = getAllInvoicesByAccountFromTransaction(false, true, invoicesTags, entitySqlDaoWrapperFactory, context);
+        final List<InvoiceModelDao> invoices = getAllInvoicesByAccountFromTransaction(false, true, includeTrackingIds, invoicesTags, entitySqlDaoWrapperFactory, context);
         log.debug("Found invoices={} for accountId={}", invoices, accountId);
         return getUnpaidInvoicesByAccountFromTransaction(invoices, startDate, upToDate);
     }
@@ -276,7 +277,8 @@ public class InvoiceDaoHelper {
     }
 
     public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final Boolean includeVoidedInvoices,
-    																	final Boolean includeInvoiceComponents, 
+    																	final Boolean includeInvoiceComponents,
+                                                                        final Boolean includeTrackingIds,
                                                                         final List<Tag> invoicesTags,
                                                                         final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                         final InternalTenantContext context) {
@@ -285,7 +287,7 @@ public class InvoiceDaoHelper {
                                                        .filter(invoice -> includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))
                                                        .collect(Collectors.toUnmodifiableList());
         if (includeInvoiceComponents) {
-            populateChildren(filtered, invoicesTags, false, true, entitySqlDaoWrapperFactory, context);
+            populateChildren(filtered, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, context);
         }
         return invoices;
     }

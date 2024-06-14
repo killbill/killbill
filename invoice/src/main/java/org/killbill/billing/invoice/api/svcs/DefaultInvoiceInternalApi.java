@@ -90,7 +90,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public Collection<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final InternalTenantContext context) {
-        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
+        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, false, context);
         final Collection<Invoice> invoices = new LinkedList<>();
         for (final InvoiceModelDao invoiceModelDao : unpaidInvoicesByAccountId) {
             invoices.add(new DefaultInvoice(invoiceModelDao));

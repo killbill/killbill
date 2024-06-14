@@ -142,7 +142,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) {
+    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final Boolean includeTrackingIds, final InternalTenantContext context) {
         synchronized (monitor) {
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (invoice.getInvoiceNumber().equals(number)) {
@@ -155,13 +155,13 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final Boolean includeTrackingIds, final InternalTenantContext context) throws InvoiceApiException {
         final InvoiceItemModelDao item = items.get(invoiceItemId);
         return (item != null) ? invoices.get(item.getInvoiceId()) : null;
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final Boolean includeTrackingIds, final InternalTenantContext context) {
         return null;
     }
 
@@ -173,7 +173,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
@@ -191,7 +191,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoicesForAccount = new ArrayList<>();
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
@@ -320,7 +320,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate startDate, final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate startDate, final LocalDate upToDate, Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<InvoiceModelDao> unpaidInvoices = new ArrayList<>();
 
         for (final InvoiceModelDao invoice : getAll(context)) {
@@ -333,7 +333,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<>();
 
         synchronized (monitor) {

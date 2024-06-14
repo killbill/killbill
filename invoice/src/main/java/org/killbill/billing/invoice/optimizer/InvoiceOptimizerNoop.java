@@ -53,7 +53,7 @@ public class InvoiceOptimizerNoop extends InvoiceOptimizerBase {
 
         logDisabledFeatureIfNeeded(callContext);
         final List<Invoice> existingInvoices = new LinkedList<Invoice>();
-        final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, true, callContext);
+        final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, true, false, callContext);
         for (final InvoiceModelDao invoiceModelDao : invoicesByAccount) {
             existingInvoices.add(new DefaultInvoice(invoiceModelDao));
         }

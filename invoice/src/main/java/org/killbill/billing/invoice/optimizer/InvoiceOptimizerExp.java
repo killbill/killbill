@@ -80,7 +80,7 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
         //
         final LocalDate beCutoffDt = isMaxInvoiceLimitSet ? cutoffDt.minus(maxInvoiceLimit) : null;
         final List<Invoice> existingInvoices = new LinkedList<Invoice>();
-        final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, cutoffDt, null, true, callContext);
+        final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, cutoffDt, null, true, false, callContext);
         for (final InvoiceModelDao invoiceModelDao : invoicesByAccount) {
             existingInvoices.add(new DefaultInvoice(invoiceModelDao));
         }

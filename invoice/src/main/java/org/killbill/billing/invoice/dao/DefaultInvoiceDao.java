@@ -167,7 +167,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
@@ -180,7 +180,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                             .collect(Collectors.toUnmodifiableList());
 
             if (includeInvoiceComponents) {
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, true, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, context);
             }
 
             return invoices;
@@ -188,20 +188,20 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, invoicesTags, entitySqlDaoWrapperFactory, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, includeTrackingIds, invoicesTags, entitySqlDaoWrapperFactory, context));
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(includeVoidedInvoices, invoiceDao, fromDate, upToDate, context);
             if (includeInvoiceComponents) {
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, true, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, context);
             }
 
             return invoices;
@@ -247,7 +247,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByNumber(final Integer number, final Boolean includeInvoiceChildren, final Boolean includeTrackingIds, final InternalTenantContext context) throws InvoiceApiException {
         if (number == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_NUMBER, "(null)");
         }
@@ -266,14 +266,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // The context may not contain the account record id at this point - we couldn't do it in the API above
                 // as we couldn't get access to the invoice object until now.
                 final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, true, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             }
             return invoice;
         });
     }
 
     @Override
-    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
+    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, Boolean includeTrackingIds, final InternalTenantContext context) throws InvoiceApiException {
 
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
@@ -285,13 +285,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
 
             final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, true, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+            invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             return invoice;
         });
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final Boolean includeTrackingIds, final InternalTenantContext context) {
         // TODO_1658 Do we want a special query along with a new index on grpId or is the cardinality small enough that we
         // fetch by accountRecordId. Note that we only 'populate' on the filtered list.
         final List<Tag> invoicesTags = getInvoicesTags(context);
@@ -304,7 +304,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                   .filter(invoice -> invoice.getGrpId().equals(groupId))
                                                                   .sorted(INVOICE_MODEL_DAO_COMPARATOR)
                                                                   .collect(Collectors.toUnmodifiableList());
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, true, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, includeTrackingIds, entitySqlDaoWrapperFactory, context);
                 return invoices;
             }
         });
@@ -549,7 +549,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                   public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering, final InternalTenantContext context) {
                                                       try {
                                                           if (invoiceNumber != null) {
-                                                              return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, false, context)).iterator();
+                                                              return List.<InvoiceModelDao>of(getByNumber(invoiceNumber, false, false, context)).iterator();
                                                           }
                                                           if (isSearchKeyCurrency) {
                                                               return invoiceSqlDao.searchByCurrency(searchKey, offset, limit, ordering.toString(), context);
@@ -574,7 +574,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             BigDecimal cba = BigDecimal.ZERO;
 
             BigDecimal accountBalance = BigDecimal.ZERO;
-            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, invoicesTags, entitySqlDaoWrapperFactory, context);
+            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, false, invoicesTags, entitySqlDaoWrapperFactory, context);
             for (final InvoiceModelDao cur : invoices) {
 
                 // Skip DRAFT OR VOID invoices
@@ -604,10 +604,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate startDate, @Nullable final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate startDate, @Nullable final LocalDate upToDate, final Boolean includeTrackingIds, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
-        return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(accountId, invoicesTags, entityWrapperFactory, startDate, upToDate, context));
+        return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(accountId, invoicesTags, entityWrapperFactory, startDate, upToDate, includeTrackingIds, context));
     }
 
     @Override

@@ -61,15 +61,15 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     void rescheduleInvoiceNotification(final UUID accountId, final DateTime nextRescheduleDt, final InternalCallContext context);
 
-    InvoiceModelDao getByNumber(Integer number, Boolean includeInvoiceComponents, InternalTenantContext context) throws InvoiceApiException;
+    InvoiceModelDao getByNumber(Integer number, Boolean includeInvoiceComponents, Boolean includeTrackingIds, InternalTenantContext context) throws InvoiceApiException;
 
-    InvoiceModelDao getByInvoiceItem(final UUID uuid, final InternalTenantContext context) throws InvoiceApiException;
+    InvoiceModelDao getByInvoiceItem(final UUID uuid, Boolean includeTrackingIds, final InternalTenantContext context) throws InvoiceApiException;
 
-    public List<InvoiceModelDao> getInvoicesByGroup(UUID groupId, InternalTenantContext context);
+    public List<InvoiceModelDao> getInvoicesByGroup(UUID groupId, Boolean includeTrackingIds, InternalTenantContext context);
 
-    List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, InternalTenantContext context);
+    List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, InternalTenantContext context);
 
-    List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, LocalDate fromDate, LocalDate upToDate, final Boolean includeInvoiceComponents, InternalTenantContext context);
+    List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, LocalDate fromDate, LocalDate upToDate, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, InternalTenantContext context);
 
     Pagination<InvoiceModelDao> searchInvoices(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
@@ -89,10 +89,10 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
 
-    List<InvoiceModelDao> getUnpaidInvoicesByAccountId(UUID accountId, @Nullable LocalDate startDate, @Nullable LocalDate upToDate, InternalTenantContext context);
+    List<InvoiceModelDao> getUnpaidInvoicesByAccountId(UUID accountId, @Nullable LocalDate startDate, @Nullable LocalDate upToDate, Boolean includeTrackingIds, InternalTenantContext context);
 
     // Include migrated invoices
-    List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, InternalTenantContext context);
+    List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Boolean includeTrackingIds, InternalTenantContext context);
 
     InvoicePaymentModelDao postChargeback(UUID paymentId, final UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
