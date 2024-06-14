@@ -55,7 +55,8 @@ public class TestChargedThroughDate extends TestIntegrationBase {
         assertListenerStatus();
 
         Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
-        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today), 0); //This is unexpected, CTD should be updated to today.plusYears(1)
+        //Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today), 0); //This is unexpected, CTD should be updated to today.plusYears(1)
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today.plusYears(1)), 0);
     }
 
     @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1739")
@@ -89,6 +90,7 @@ public class TestChargedThroughDate extends TestIntegrationBase {
         assertListenerStatus();
 
         Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
-        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today), 0); //This is unexpected, CTD should be updated to today.plusYears(1)
+        //Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today), 0); //This is unexpected, CTD should be updated to today.plusYears(1)
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(today.plusYears(1)), 0);
     }
 }

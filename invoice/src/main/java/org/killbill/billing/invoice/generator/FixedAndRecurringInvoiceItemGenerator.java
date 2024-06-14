@@ -41,7 +41,9 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.Invoice;
@@ -59,13 +61,13 @@ import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.clock.Clock;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.MultiValueHashMap;
 import org.killbill.commons.utils.collect.MultiValueMap;
-import org.killbill.billing.util.config.definition.InvoiceConfig;
-import org.killbill.billing.util.currency.KillBillMoney;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -430,11 +432,19 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                 Preconditions.checkNotNull(currentPlan, String.format("Unexpected null Plan name event = %s", thisEvent));
 
                 final DateTime catalogEffectiveDate = thisEvent.getCatalogEffectiveDate() != null ? thisEvent.getCatalogEffectiveDate() : null;
+                LocalDate invoiceItemEndDate = null;
+                if (thisEvent.getRecurringPrice() == null && thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+                    try {
+                        invoiceItemEndDate = thisEvent.getPlanPhase().getDuration().addToLocalDate(roundedStartDate);
+                    } catch (final CatalogApiException e) {
+                        log.warn("Error while computing invoice item end date");
+                    }
+                }
                 final FixedPriceInvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getBundleId(),
                                                                                               thisEvent.getSubscriptionId(),
                                                                                               currentPlan.getProduct().getName(), currentPlan.getName(), thisEvent.getPlanPhase().getName(),
                                                                                               catalogEffectiveDate,
-                                                                                              roundedStartDate, fixedPriceXQuantity, currency);
+                                                                                              roundedStartDate, invoiceItemEndDate, fixedPriceXQuantity, currency);
 
                 // For debugging purposes
                 invoiceItemGeneratorLogger.append(thisEvent, fixedPriceInvoiceItem);
