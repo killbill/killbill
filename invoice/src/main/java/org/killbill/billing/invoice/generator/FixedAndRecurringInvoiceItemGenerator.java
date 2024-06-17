@@ -433,7 +433,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
                 final DateTime catalogEffectiveDate = thisEvent.getCatalogEffectiveDate() != null ? thisEvent.getCatalogEffectiveDate() : null;
                 LocalDate invoiceItemEndDate = null;
-                if (thisEvent.getRecurringPrice() == null && thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+                if (thisEvent.getRecurringPrice() == null && thisEvent.getPlanPhase().getPhaseType() != PhaseType.EVERGREEN) {
                     try {
                         invoiceItemEndDate = thisEvent.getPlanPhase().getDuration().addToLocalDate(roundedStartDate);
                     } catch (final CatalogApiException e) {

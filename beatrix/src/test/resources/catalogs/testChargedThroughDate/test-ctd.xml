@@ -89,14 +89,14 @@
                 </recurring>
             </finalPhase>
         </plan>
-<plan name="p1-fixedterm-one-time-no-recurring">
+    <plan name="p1-fixedterm-one-time-no-recurring">
             <product>p1</product>
             <initialPhases>
             </initialPhases>
             <finalPhase type="FIXEDTERM">
                 <duration>
                     <unit>MONTHS</unit>
-                    <number>12</number>
+                    <number>3</number>
                 </duration>
 				<fixed>
                     <fixedPrice>
@@ -107,8 +107,8 @@
                     </fixedPrice>
                 </fixed>				
             </finalPhase>
-        </plan>			
-  <plan name="p1-fixedterm-no-recurring-and-evergreen">
+        </plan>
+        <plan name="p1-fixedterm-no-recurring-and-evergreen">
             <product>p1</product>
            <initialPhases>
                 <phase type="FIXEDTERM">
@@ -141,8 +141,109 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-        </plan>		
- <plan name="p1-evergreen">
+        </plan>
+        <plan name="p1-trial-and-evergreen">
+            <product>p1</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>10</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>10</value>
+                            </price>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>30</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="p1-trial-and-fixedterm-with-recurring-price">
+            <product>p1</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>10</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>10</value>
+                            </price>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>3</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>30</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="p1-discount-and-fixedterm-with-fixed-price">
+            <product>p1</product>
+            <initialPhases>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>10</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>10</value>
+                            </price>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>3</number>
+                </duration>
+                <fixed>
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+            </finalPhase>
+        </plan>
+        <plan name="p1-evergreen">
             <product>p1</product>
             <initialPhases>
             </initialPhases>
@@ -171,6 +272,9 @@
 				<plan>p1-fixedterm-one-time-no-recurring</plan>
 				<plan>p1-fixedterm-no-recurring-and-evergreen</plan>
 				<plan>p1-evergreen</plan>
+                <plan>p1-trial-and-evergreen</plan>
+                <plan>p1-trial-and-fixedterm-with-recurring-price</plan>
+                <plan>p1-discount-and-fixedterm-with-fixed-price</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
