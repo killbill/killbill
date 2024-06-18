@@ -57,6 +57,14 @@ public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
               null, date, null, amount, null, currency, null, quantity, itemDetails, InvoiceItemType.FIXED);
     }
 
+    public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
+                                 final UUID subscriptionId, final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
+                                 final String prettyProductName, final String prettyPlanName, final String prettyPhaseName,
+                                 @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final BigDecimal quantity, @Nullable final String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPhaseName,
+              null, startDate, endDate, amount, null, currency, null, quantity, itemDetails, InvoiceItemType.FIXED);
+    }
+
 
     public FixedPriceInvoiceItem(final InvoiceItemCatalogBase i) {
         super(i.getId(),
