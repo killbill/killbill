@@ -143,7 +143,7 @@ public class TenantResource extends JaxRsResourceBase {
 
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        if (!useGlobalDefault) {
+        if (useGlobalDefault) {
             final CallContext callContext = new DefaultCallContext(null, tenant.getId(), createdBy, CallOrigin.EXTERNAL,
                                                                    UserType.CUSTOMER, Context.getOrCreateUserToken(), clock);
 
