@@ -142,7 +142,7 @@
                 </recurring>
             </finalPhase>
         </plan>
-        <plan name="p1-trial-and-evergreen">
+        <plan name="p1-trial-with-fixed-price-only-and-evergreen">
             <product>p1</product>
             <initialPhases>
                 <phase type="TRIAL">
@@ -262,7 +262,7 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-        </plan>		
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -272,7 +272,7 @@
 				<plan>p1-fixedterm-one-time-no-recurring</plan>
 				<plan>p1-fixedterm-no-recurring-and-evergreen</plan>
 				<plan>p1-evergreen</plan>
-                <plan>p1-trial-and-evergreen</plan>
+                <plan>p1-trial-with-fixed-price-only-and-evergreen</plan>
                 <plan>p1-trial-and-fixedterm-with-recurring-price</plan>
                 <plan>p1-discount-and-fixedterm-with-fixed-price</plan>
             </plans>

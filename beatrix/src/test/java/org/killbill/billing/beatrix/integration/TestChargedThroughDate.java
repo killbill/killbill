@@ -97,7 +97,7 @@ public class TestChargedThroughDate extends TestIntegrationBase {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
-        //FIXEDTERM phase of 12 MONTHS with fixed price followed by EVERGREEN phase
+        //FIXEDTERM phase of 12 MONTHS with fixed price only (no recurring price) followed by EVERGREEN phase
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-fixedterm-no-recurring-and-evergreen");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
@@ -118,15 +118,15 @@ public class TestChargedThroughDate extends TestIntegrationBase {
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1739")
-    public void testTrialAndEvergreen() throws Exception {
+    public void testTrialWithFixedPriceOnlyAndEvergreen() throws Exception {
 
         final LocalDate today = new LocalDate(2024, 1, 1);
         clock.setDay(today);
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(11));
 
-        //10 DAY TRIAL phase followed by EVERGREEN phase
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-trial-and-evergreen");
+        //10 DAY TRIAL phase with fixed price only (no recurring price) followed by EVERGREEN phase
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-trial-with-fixed-price-only-and-evergreen");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -162,7 +162,7 @@ public class TestChargedThroughDate extends TestIntegrationBase {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(11));
 
-        //10 DAY TRIAL phase followed by a 3-MONTH FIXEDTERM phase with a MONTHLY recurring price
+        //10 DAY TRIAL phase with fixed price only (no recurring price) followed by a 3-MONTH FIXEDTERM phase with no fixed price and a MONTHLY recurring price
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-trial-and-fixedterm-with-recurring-price");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
@@ -177,7 +177,7 @@ public class TestChargedThroughDate extends TestIntegrationBase {
         clock.addDays(10);
         assertListenerStatus();
 
-        //CTD set to 2024-02-11 (as per recurring price)
+        //CTD set to 2024-02-11 (as per recurring price of FIXEDTERM phase)
         subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
         Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2024, 2, 11)), 0);
 
@@ -186,7 +186,7 @@ public class TestChargedThroughDate extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        //CTD set to 2024-03-11 (as per recurring price)
+        //CTD set to 2024-03-11 (as per recurring price of FIXEDTERM phase)
         subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
         Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2024, 3, 11)), 0);
     }
@@ -199,13 +199,13 @@ public class TestChargedThroughDate extends TestIntegrationBase {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(11));
 
-        //10 DAY TRIAL phase followed by a 3-MONTH DISCOUNT phase with a fixed price
+        //10 DAY DISCOUNT phase with fixed price only (no recurring price) followed by a 3-MONTH FIXEDTERM phase with a fixed price only (no recurring price)
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-discount-and-fixedterm-with-fixed-price");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        //CTD set to 2024-01-11 (end of TRIAL phase)
+        //CTD set to 2024-01-11 (end of DISCOUNT phase)
         Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
         Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2024, 1, 11)), 0);
 
@@ -214,7 +214,7 @@ public class TestChargedThroughDate extends TestIntegrationBase {
         clock.addDays(10);
         assertListenerStatus();
 
-        //CTD set to 2024-04-11 (end of DISCOUNT phase)
+        //CTD set to 2024-04-11 (end of FIXEDTERM phase)
         subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
         Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2024, 4, 11)), 0);
     }
