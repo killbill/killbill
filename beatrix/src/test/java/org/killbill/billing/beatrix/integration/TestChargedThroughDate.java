@@ -155,6 +155,44 @@ public class TestChargedThroughDate extends TestIntegrationBase {
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1739")
+    public void testTrialWithNoFixedAndRecurringPriceAndEvergreen() throws Exception {
+
+        final LocalDate today = new LocalDate(2024, 1, 1);
+        clock.setDay(today);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(11));
+
+        //10 DAY TRIAL phase with no fixed/recurring price followed by EVERGREEN phase
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-trial-with-no-fixed-and-recurring-price-and-evergreen");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //CTD set to 2024-01-11 (end of TRIAL phase)
+        Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2024, 1, 11)), 0);
+
+        //Move clock by 10 days
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(10);
+        assertListenerStatus();
+
+        //CTD set to 2024-02-11 (as per recurring phase)
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2024, 2, 11)), 0);
+
+        //move clock by a month
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        //CTD set to 2024-03-11 (as per recurring phase)
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2024, 3, 11)), 0);
+    }
+
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1739")
     public void testTrialAndFixedTermWithRecurringPrice() throws Exception {
 
         final LocalDate today = new LocalDate(2024, 1, 1);
