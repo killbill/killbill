@@ -185,7 +185,7 @@ public class TestIntegration extends TestIntegrationBase { //TODO_1739 - This te
         checkNoMoreInvoiceToGenerate(account);
     }
 
-    @Test(groups = "slow", enabled = false) //TODO_1739 - Test disabled due to behavior change, revisit
+    @Test(groups = "slow")
     public void testCancelBPWithAOTheSameDay() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -204,7 +204,7 @@ public class TestIntegration extends TestIntegrationBase { //TODO_1739 - This te
         TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                              SubscriptionEventType.START_BILLING, null, null, null, null);
         Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, Collections.emptyList(), callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
@@ -229,23 +229,15 @@ public class TestIntegration extends TestIntegrationBase { //TODO_1739 - This te
         expectedInvoices.clear();
 
         //
-        // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
-        // There is no invoice created as we only adjust the previous invoice.
+        // CANCEL BP ON THE SAME DAY
         //
-        dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
-                                         bpSubscription.getBundleId(), null, null);
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, Collections.emptyList(), callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")));
-        // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95"),
-                                                          false /* Avoid checking dates for CBA because code is using context and context createdDate is wrong  in the test as we reset the clock too late, bummer... */ ));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
-        cancelEntitlementAndCheckForCompletion(bpSubscription, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
+        cancelEntitlementAndCheckForCompletion(bpSubscription, NextEvent.BLOCK, NextEvent.BLOCK);
 
-        invoiceChecker.checkInvoice(account.getId(), 3,
-                                    callContext,
-                                    expectedInvoices);
+        //Move clock to EOT - Both base and addon are cancelled
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
 
         checkNoMoreInvoiceToGenerate(account);
     }
