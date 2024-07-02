@@ -115,4 +115,13 @@ public class MockPlanPhase extends DefaultPlanPhase {
         setFixed(new MockFixed(null));
         setRecurring(new MockRecurring(BillingPeriod.MONTHLY, new MockInternationalPrice()));
     }
+
+    public MockPlanPhase(final Plan plan, final PhaseType phaseType, final int durationNumber, final TimeUnit durationUnit) {
+        setPhaseType(phaseType);
+        setDuration(new DefaultDuration().setNumber(durationNumber).setUnit(durationUnit));
+        setPlan(plan);
+        setFixed(new MockFixed(null));
+        setRecurring(new MockRecurring(BillingPeriod.MONTHLY, new MockInternationalPrice()));
+    }
+
 }
