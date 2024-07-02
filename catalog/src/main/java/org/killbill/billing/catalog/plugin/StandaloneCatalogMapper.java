@@ -236,7 +236,7 @@ public class StandaloneCatalogMapper {
     }
 
     private Collection<Product> toFilteredDefaultProduct(final Collection<Product> input) {
-        if (!input.iterator().hasNext()) {
+        if (input == null||!input.iterator().hasNext()) {
             return Collections.emptyList();
         }
         final Iterable<String> inputProductNames = input.stream()
@@ -282,7 +282,7 @@ public class StandaloneCatalogMapper {
     }
 
     private DefaultPlanPhase[] toDefaultPlanPhases(final Iterable<PlanPhase> input) {
-        if (!input.iterator().hasNext()) {
+        if (input == null||!input.iterator().hasNext()) {
             return new DefaultPlanPhase[0];
         }
         return toArrayWithTransform(input, this::toDefaultPlanPhase);
