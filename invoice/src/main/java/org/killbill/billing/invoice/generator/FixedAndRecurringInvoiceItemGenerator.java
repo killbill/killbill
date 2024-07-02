@@ -451,7 +451,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                 if (thisEvent.getRecurringPrice() == null && thisEvent.getPlanPhase().getPhaseType() != PhaseType.EVERGREEN) {
                     try {
                         if (nextEvent != null && nextEvent.getSubscriptionId().equals(thisEvent.getSubscriptionId()) && (nextEvent.getTransitionType() == SubscriptionBaseTransitionType.PHASE)) {
-                            invoiceItemEndDate = nextEvent.getEffectiveDate().toLocalDate();
+                            invoiceItemEndDate = internalCallContext.toLocalDate(nextEvent.getEffectiveDate());
                         }
                         else {
                             invoiceItemEndDate = thisEvent.getPlanPhase().getDuration().addToLocalDate(roundedStartDate);
