@@ -119,7 +119,7 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         //
         // Create original subscription (Trial PHASE) -> $0 invoice.
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
 

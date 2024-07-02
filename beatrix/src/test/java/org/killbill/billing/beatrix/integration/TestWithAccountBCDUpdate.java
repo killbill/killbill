@@ -129,7 +129,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 17), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 17), new LocalDate(2016, 5, 17), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
