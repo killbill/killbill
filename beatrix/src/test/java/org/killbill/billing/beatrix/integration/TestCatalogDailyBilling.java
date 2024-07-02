@@ -69,7 +69,7 @@ public class TestCatalogDailyBilling extends TestIntegrationBase  {
         assertEquals(invoices.size(), 1);
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2024, 4, 12), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2024, 4, 12), new LocalDate(2024, 4, 13), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         // Move clock to 4/13 - Invoice generated
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -127,7 +127,7 @@ public class TestCatalogDailyBilling extends TestIntegrationBase  {
         assertEquals(invoices.size(), 1);
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2024, 4, 12), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2024, 4, 12), new LocalDate(2024, 4, 13), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         // Move clock to 4/13 - Invoice generated
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);

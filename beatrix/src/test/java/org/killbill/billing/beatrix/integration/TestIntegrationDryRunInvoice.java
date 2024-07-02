@@ -177,9 +177,9 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         //
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
-        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
+        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), initialCreationDate.plusDays(30).toLocalDate(), InvoiceItemType.FIXED, new BigDecimal("0")));
+        // End date for the trial item (fixed price of zero), CTD set to end of TRIAL phase
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), initialCreationDate.plusDays(30).toLocalDate(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 6, 14), new LocalDate(2015, 7, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -238,9 +238,9 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Create ANNUAL BP
         final DefaultEntitlement baseEntitlementAnnual = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKeyAnnual", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final DefaultSubscriptionBase subscriptionAnnual = subscriptionDataFromSubscription(baseEntitlementAnnual.getSubscriptionBase());
-        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        invoiceChecker.checkChargedThroughDate(subscriptionAnnual.getId(), clock.getUTCToday(), callContext);
+        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), initialCreationDate.plusDays(30).toLocalDate(), InvoiceItemType.FIXED, new BigDecimal("0")));
+        // End date for the trial item (fixed price of zero), CTD set to end of TRIAL phase
+        invoiceChecker.checkChargedThroughDate(subscriptionAnnual.getId(), initialCreationDate.plusDays(30).toLocalDate(), callContext);
 
         // Verify next dryRun invoice and then move the clock to that date to also verify real invoice is the same
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
@@ -269,16 +269,16 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Create the first monthly
         final DefaultEntitlement baseEntitlementMonthly1 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final DefaultSubscriptionBase subscriptionMonthly1 = subscriptionDataFromSubscription(baseEntitlementMonthly1.getSubscriptionBase());
-        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(secondSubscriptionCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        invoiceChecker.checkChargedThroughDate(subscriptionMonthly1.getId(), clock.getUTCToday(), callContext);
+        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(secondSubscriptionCreationDate.toLocalDate(), secondSubscriptionCreationDate.plusDays(30).toLocalDate(), InvoiceItemType.FIXED, new BigDecimal("0")));
+        // End date for the trial item (fixed price of zero), CTD set to end of TRIAL phase
+        invoiceChecker.checkChargedThroughDate(subscriptionMonthly1.getId(), secondSubscriptionCreationDate.plusDays(30).toLocalDate(), callContext);
 
         // Create the second monthly
         final DefaultEntitlement baseEntitlementMonthly2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey2", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final DefaultSubscriptionBase subscriptionMonthly2 = subscriptionDataFromSubscription(baseEntitlementMonthly2.getSubscriptionBase());
-        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(secondSubscriptionCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        invoiceChecker.checkChargedThroughDate(subscriptionMonthly2.getId(), clock.getUTCToday(), callContext);
+        invoiceChecker.checkInvoice(account.getId(), invoiceNumber++, callContext, new ExpectedInvoiceItemCheck(secondSubscriptionCreationDate.toLocalDate(), secondSubscriptionCreationDate.plusDays(30).toLocalDate(), InvoiceItemType.FIXED, new BigDecimal("0")));
+        // End date for the trial item (fixed price of zero), CTD set to end of TRIAL phase
+        invoiceChecker.checkChargedThroughDate(subscriptionMonthly2.getId(), secondSubscriptionCreationDate.plusDays(30).toLocalDate(), callContext);
 
         // Verify next dryRun invoice and then move the clock to that date to also verify real invoice is the same
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 1, 14), new LocalDate(2015, 2, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));

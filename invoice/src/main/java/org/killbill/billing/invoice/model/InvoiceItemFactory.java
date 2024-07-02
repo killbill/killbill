@@ -93,7 +93,7 @@ public class InvoiceItemFactory {
                 item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case FIXED:
-                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency, quantity, itemDetails);
+                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, currency, quantity, itemDetails);
                 break;
             case RECURRING:
                 item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, quantity, itemDetails);

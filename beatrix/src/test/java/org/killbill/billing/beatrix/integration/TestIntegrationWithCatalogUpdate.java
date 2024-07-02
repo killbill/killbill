@@ -375,7 +375,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, testCallContext);
 
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
-        assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 6, 1));
+        assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 6, 8));
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addWeeks(1);

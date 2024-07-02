@@ -88,7 +88,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
         List<ExpectedInvoiceItemCheck> toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         //
@@ -103,7 +103,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -122,7 +122,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -139,7 +139,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 3);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -160,7 +160,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testMultiplePartialRepairs() throws Exception {
+    public void testMultiplePartialRepairs() throws Exception { //TODO_1739 - This test needs to be reviewed carefully
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -180,7 +180,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
         List<ExpectedInvoiceItemCheck> toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         // Move the clock to 2012-04-04
@@ -196,11 +196,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         //
@@ -215,11 +215,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 3);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -237,11 +237,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 4);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -265,11 +265,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 5);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -300,11 +300,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 6);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -340,11 +340,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 7);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 4), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
@@ -708,7 +708,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
         List<ExpectedInvoiceItemCheck> toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         //
@@ -723,7 +723,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
 
         toBeChecked = List.of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         toBeChecked = List.of(
