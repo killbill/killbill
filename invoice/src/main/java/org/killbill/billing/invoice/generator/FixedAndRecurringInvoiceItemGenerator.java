@@ -181,11 +181,12 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         final Iterator<BillingEvent> eventIt = events.iterator();
         BillingEvent currentEvent = eventIt.next();
 
-        while (eventIt.hasNext()) {
-            final BillingEvent nextEvent = eventIt.next();
+        do {
+            BillingEvent nextEvent = eventIt.hasNext() ? eventIt.next() : null;
 
             if (currentEvent.getTransitionType() != BCD_CHANGE) {
-                final InvoiceItem currentFixedPriceItem = generateFixedPriceItem(invoiceId, accountId, currentEvent, nextEvent, targetDate, currency, invoiceItemGeneratorLogger, internalCallContext);
+                final BillingEvent adjustedNextEvent = (currentEvent.getSubscriptionId() == (nextEvent != null ? nextEvent.getSubscriptionId() : null)) ? nextEvent : null;
+                final InvoiceItem currentFixedPriceItem = generateFixedPriceItem(invoiceId, accountId, currentEvent, adjustedNextEvent, targetDate, currency, invoiceItemGeneratorLogger, internalCallContext);
 
                 if (!isSameDayAndSameSubscription(prevItem, currentEvent, internalCallContext) && prevItem != null) {
                     proposedItems.add(prevItem);
@@ -194,17 +195,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             }
 
             currentEvent = nextEvent;
-        }
-
-        // Process the last event
-        if (currentEvent.getTransitionType() != BCD_CHANGE) {
-            final InvoiceItem lastFixedPriceItem = generateFixedPriceItem(invoiceId, accountId, currentEvent, null, targetDate, currency, invoiceItemGeneratorLogger, internalCallContext);
-
-            if (!isSameDayAndSameSubscription(prevItem, currentEvent, internalCallContext) && prevItem != null) {
-                proposedItems.add(prevItem);
-            }
-            prevItem = lastFixedPriceItem;
-        }
+        } while (currentEvent != null);
 
         if (prevItem != null) {
             proposedItems.add(prevItem);
@@ -458,7 +449,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                         }
 
                     } catch (final CatalogApiException e) {
-                        log.warn("Error while computing invoice item end date");
+                        log.warn("Error while computing invoice item end date, ", e.getMessage());
                     }
                 }
                 final FixedPriceInvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getBundleId(),
