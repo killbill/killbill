@@ -89,7 +89,7 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2023, 8, 31));
         assertListenerStatus();
 
-        //Both BASE and ADDON CTD set to 2023-09-01 - Noy sure if this is correct
+        // BASE CTD set to 2023-09-01 - Not sure if this is correct, shouldn't it be 2023-08-31??
         baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
         Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
 
@@ -135,6 +135,10 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundle-monthly");
         addonSub.changePlanWithDate(new DefaultEntitlementSpecifier(newAddOnSpec), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        // BASE CTD set to 2023-08-31 - as expected
+        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
+        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
 
         // TEST fails here, ADDON CTD is 2023-09-04, I would expect it to be 2023-08-31 since START_OF_BUNDLE is used
         addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
