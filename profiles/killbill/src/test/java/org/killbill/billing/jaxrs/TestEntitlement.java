@@ -460,7 +460,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
     }
 
-    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction", enabled = false)
+    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction")
     public void testCreateEntitlementsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception { //TODO_1739 - Test disabled due to behavior change, revisit
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -551,16 +551,6 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.INVOICE_ADJUSTMENT,
