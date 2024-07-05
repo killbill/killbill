@@ -92,7 +92,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         assertListenerStatus();
 
         // Now unpark
-        final List<ExpectedInvoiceItemCheck> expected = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
+        final List<ExpectedInvoiceItemCheck> expected = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO),
                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
         invoiceChecker.checkInvoice(invoice, callContext, expected);

@@ -78,7 +78,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                                    SubscriptionEventType.START_BILLING, null, null, null, null);
         final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, Collections.emptyList(), callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), new LocalDate(2015, 10, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);

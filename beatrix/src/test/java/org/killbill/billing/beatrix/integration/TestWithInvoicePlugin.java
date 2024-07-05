@@ -301,7 +301,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice but plugin added one item
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
@@ -387,7 +387,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice.
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
@@ -471,7 +471,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
@@ -541,7 +541,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice but plugin added one item
         final Entitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
         checkInvoiceDescriptions(firstInvoice);
 
@@ -652,7 +652,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
@@ -711,7 +711,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
@@ -817,7 +817,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(),
                                     1,
                                     callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, BigDecimal.ZERO),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")));
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -917,7 +917,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
@@ -994,19 +994,19 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Create original subscription (Trial PHASE) -> $0 invoice but plugin added one item
         final DefaultEntitlement sub1 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey1", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(sub1.getId(), internalCallContext);
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
 
         final DefaultEntitlement sub2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey2", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(sub2.getId(), internalCallContext);
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
         final DefaultEntitlement sub3 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey3", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(sub3.getId(), internalCallContext);
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 3);
 

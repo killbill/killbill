@@ -257,10 +257,10 @@ public class TestSubscription extends TestIntegrationBase {
         final List<ExpectedInvoiceItemCheck> toBeChecked = List.of(
                 new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("387.05")), // amount=387.05, rate=399.95 -> Telescopic-Scope
                 new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("967.69")), // amount=967.69, rate=999.95 -> Laser-Scope
-                new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0")), // Shotgun
+                new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.FIXED, new BigDecimal("0")), // Shotgun
                 new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("387.05")), // amount=387.05, rate=399.95 -> Telescopic-Scope
                 new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("967.69")), // amount=967.69, rate=999.95 -> Laser-Scope
-                new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0"))); // Shotgun
+                new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.FIXED, new BigDecimal("0"))); // Shotgun
 
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
     }
