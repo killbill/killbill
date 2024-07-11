@@ -147,7 +147,7 @@ public class CatalogUpdater {
             plan.setProduct(product);
             plan.setRecurringBillingMode(catalog.getRecurringBillingMode());
 
-            if (desc.getTrialLength() > 0 && desc.getTrialTimeUnit() != TimeUnit.UNLIMITED) {
+            if (desc.getTrialLength() != null && desc.getTrialLength() > 0 && desc.getTrialTimeUnit() != TimeUnit.UNLIMITED) {
                 final DefaultPlanPhase trialPhase = new DefaultPlanPhase();
                 trialPhase.setPhaseType(PhaseType.TRIAL);
                 trialPhase.setDuration(new DefaultDuration().setUnit(desc.getTrialTimeUnit()).setNumber(desc.getTrialLength()));
