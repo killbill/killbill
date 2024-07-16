@@ -225,6 +225,9 @@ public class StandaloneCatalogMapper {
     }
 
     private Iterable<Product> toDefaultProducts(final Iterable<Product> input) {
+        if (input == null) {
+            return null;
+        }
         if (tmpDefaultProducts == null) {
             final Map<String, Product> map = new HashMap<>();
             for (final Product product : input) {
@@ -236,7 +239,7 @@ public class StandaloneCatalogMapper {
     }
 
     private Collection<Product> toFilteredDefaultProduct(final Collection<Product> input) {
-        if (input == null||!input.iterator().hasNext()) {
+        if (input == null || !input.iterator().hasNext()) {
             return Collections.emptyList();
         }
         final Iterable<String> inputProductNames = input.stream()
@@ -254,6 +257,9 @@ public class StandaloneCatalogMapper {
     }
 
     private Iterable<Plan> toDefaultPlans(final StaticCatalog staticCatalog, final Iterable<Plan> input) {
+        if (input == null) {
+            return null;
+        }
         if (tmpDefaultPlans == null) {
             final Map<String, Plan> map = new HashMap<>();
             for (final Plan plan : input) {
@@ -282,7 +288,7 @@ public class StandaloneCatalogMapper {
     }
 
     private DefaultPlanPhase[] toDefaultPlanPhases(final Iterable<PlanPhase> input) {
-        if (input == null||!input.iterator().hasNext()) {
+        if (input == null || !input.iterator().hasNext()) {
             return new DefaultPlanPhase[0];
         }
         return toArrayWithTransform(input, this::toDefaultPlanPhase);
