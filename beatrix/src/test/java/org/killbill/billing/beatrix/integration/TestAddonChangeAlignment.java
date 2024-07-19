@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
@@ -133,7 +134,8 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         //change addon with start of bundle alignment with requestedDate=2023-08-15 - change will happen immediately
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
         final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundle-monthly");
-        addonSub.changePlanWithDate(new DefaultEntitlementSpecifier(newAddOnSpec), clock.getUTCToday(), Collections.emptyList(), callContext);
+        //addonSub.changePlanWithDate(new DefaultEntitlementSpecifier(newAddOnSpec), clock.getUTCToday(), Collections.emptyList(), callContext);
+        addonSub.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(newAddOnSpec), null, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // BASE CTD set to 2023-08-31 - as expected
