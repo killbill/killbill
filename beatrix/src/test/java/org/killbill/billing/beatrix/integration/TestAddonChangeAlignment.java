@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,6 +30,8 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -42,7 +45,7 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         return super.getConfigSource(null, allExtraProperties);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow") // Behaves the same way as testChangeAlignmentStartOfBundleImmediateChange
     public void testChangeAlignmentStartOfBundleEOTChange() throws Exception {
         final LocalDate today = new LocalDate(2023, 8, 1);
         clock.setDay(today);
@@ -62,7 +65,7 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2023, 8, 5));
 
         //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
+        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleDefault-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -75,9 +78,17 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
 
         //change addon with start of bundle alignment on 2023-08-15 - change will happen immediately as subscription is in TRIAL phase
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundle-monthly");
+        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleCustom-monthly");
         addonSub.changePlan(new DefaultEntitlementSpecifier(newAddOnSpec), Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        //3 invoices (corresponding to base, addon and new addon)
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
+        Assert.assertEquals(invoices.size(), 3);
+        //verify that new invoice only has one FIXED item
+        final Invoice invoice = invoices.get(2);
+        Assert.assertEquals(invoice.getInvoiceItems().size(), 1);
+        Assert.assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
 
         //Base CTD is still 2023-08-01 as expected
         baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
@@ -115,7 +126,7 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
 
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow") // Behaves the same way as testChangeAlignmentStartOfBundleEOTChange
     public void testChangeAlignmentStartOfBundleImmediateChange() throws Exception {
         final LocalDate today = new LocalDate(2023, 8, 1);
         clock.setDay(today);
@@ -135,7 +146,7 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2023, 8, 5));
 
         //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
+        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleDefault-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -148,9 +159,17 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
 
         //change addon with start of bundle alignment and IMMEDIATE policy - change will happen immediately
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundle-monthly");
+        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleCustom-monthly");
         addonSub.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(newAddOnSpec), null, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        //3 invoices (corresponding to base, addon and new addon)
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
+        Assert.assertEquals(invoices.size(), 3);
+        //verify that new invoice only has one FIXED item
+        final Invoice invoice = invoices.get(2);
+        Assert.assertEquals(invoice.getInvoiceItems().size(), 1);
+        Assert.assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
 
         // BASE CTD set to 2023-08-01 - as expected
         baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
