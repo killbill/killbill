@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2010-2013 Ning, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+  <!-- Effective after the v1 -->
+  <effectiveDate>2013-02-08T00:00:01+00:00</effectiveDate>
+  <catalogName>Movies</catalogName>
+
+  <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+  <currencies>
+    <currency>USD</currency>
+  </currencies>
+
+  <products>
+    <product name="Basic">
+      <category>BASE</category>
+      <available>
+        <addonProduct>BasicAOStartOfBundle</addonProduct>
+        <addonProduct>BasicAOStartOfSubscription</addonProduct>
+      </available>
+    </product>
+    <product name="BasicAOStartOfBundle">
+      <category>ADD_ON</category>
+    </product>
+    <product name="BasicAOStartOfSubscription">
+      <category>ADD_ON</category>
+    </product>
+  </products>
+
+  <rules>
+    <changePolicy>
+      <changePolicyCase>
+        <policy>END_OF_TERM</policy>
+      </changePolicyCase>
+    </changePolicy>
+
+    <changeAlignment>
+      <changeAlignmentCase>
+        <alignment>START_OF_BUNDLE</alignment>
+      </changeAlignmentCase>
+    </changeAlignment>
+
+    <cancelPolicy>
+      <cancelPolicyCase>
+        <productCategory>BASE</productCategory>
+        <policy>END_OF_TERM</policy>
+      </cancelPolicyCase>
+        <cancelPolicyCase>
+            <policy>IMMEDIATE</policy>
+        </cancelPolicyCase>
+    </cancelPolicy>
+
+    <createAlignment>
+      <createAlignmentCase>
+        <product>BasicAOStartOfBundle</product>
+        <alignment>START_OF_BUNDLE</alignment>
+      </createAlignmentCase>
+      <createAlignmentCase>
+        <product>BasicAOStartOfSubscription</product>
+        <alignment>START_OF_SUBSCRIPTION</alignment>
+      </createAlignmentCase>
+      <createAlignmentCase>
+        <alignment>START_OF_BUNDLE</alignment>
+      </createAlignmentCase>
+    </createAlignment>
+
+    <billingAlignment>
+      <billingAlignmentCase>
+        <product>BasicAOStartOfSubscription</product>
+        <alignment>SUBSCRIPTION</alignment>
+      </billingAlignmentCase>
+      <billingAlignmentCase>
+        <alignment>ACCOUNT</alignment>
+      </billingAlignmentCase>
+    </billingAlignment>
+
+    <priceList>
+      <priceListCase>
+        <toPriceList>DEFAULT</toPriceList>
+      </priceListCase>
+    </priceList>
+  </rules>
+
+  <plans>
+    <plan name="basic-monthly">
+      <product>Basic</product>
+      <initialPhases>
+        <phase type="TRIAL">
+          <duration>
+            <unit>DAYS</unit>
+            <number>30</number>
+          </duration>
+          <fixed>
+            <fixedPrice>
+              <!-- empty price implies $0 -->
+            </fixedPrice>
+          </fixed>
+        </phase>
+      </initialPhases>
+      <finalPhase type="EVERGREEN">
+        <duration>
+          <unit>UNLIMITED</unit>
+        </duration>
+        <recurring>
+          <billingPeriod>MONTHLY</billingPeriod>
+          <recurringPrice>
+            <price>
+              <currency>USD</currency>
+              <value>1000.00</value>
+            </price>
+          </recurringPrice>
+        </recurring>
+      </finalPhase>
+    </plan>
+    <plan name="BasicAOStartOfBundle-monthly">
+      <product>BasicAOStartOfBundle</product>
+      <initialPhases>
+        <phase type="TRIAL">
+          <duration>
+            <unit>DAYS</unit>
+            <number>30</number>
+          </duration>
+          <fixed>
+            <fixedPrice>
+              <!-- empty price implies $0 -->
+            </fixedPrice>
+          </fixed>
+        </phase>
+      </initialPhases>
+      <finalPhase type="EVERGREEN">
+        <duration>
+          <unit>UNLIMITED</unit>
+        </duration>
+        <recurring>
+          <billingPeriod>MONTHLY</billingPeriod>
+          <recurringPrice>
+            <price>
+              <currency>USD</currency>
+              <value>100.00</value>
+            </price>
+          </recurringPrice>
+        </recurring>
+      </finalPhase>
+    </plan>
+    <plan name="BasicAOStartOfSubscription-monthly">
+      <product>BasicAOStartOfSubscription</product>
+      <initialPhases>
+        <phase type="TRIAL">
+          <duration>
+            <unit>DAYS</unit>
+            <number>30</number>
+          </duration>
+          <fixed>
+            <fixedPrice>
+              <!-- empty price implies $0 -->
+            </fixedPrice>
+          </fixed>
+        </phase>
+      </initialPhases>
+      <finalPhase type="EVERGREEN">
+        <duration>
+          <unit>UNLIMITED</unit>
+        </duration>
+        <recurring>
+          <billingPeriod>MONTHLY</billingPeriod>
+          <recurringPrice>
+            <price>
+              <currency>USD</currency>
+              <value>150.00</value>
+            </price>
+          </recurringPrice>
+        </recurring>
+      </finalPhase>
+    </plan>
+  </plans>
+  <priceLists>
+    <defaultPriceList name="DEFAULT">
+      <plans>
+        <plan>basic-monthly</plan>
+        <plan>BasicAOStartOfBundle-monthly</plan>
+        <plan>BasicAOStartOfSubscription-monthly</plan>
+      </plans>
+    </defaultPriceList>
+  </priceLists>
+</catalog>

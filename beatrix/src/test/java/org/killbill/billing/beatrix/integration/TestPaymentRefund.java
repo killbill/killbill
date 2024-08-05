@@ -151,9 +151,9 @@ public class TestPaymentRefund extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        invoiceChecker.checkChargedThroughDate(bpEntitlement.getId(), clock.getUTCToday(), callContext);
+        invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), initialCreationDate.plusDays(30).toLocalDate(), InvoiceItemType.FIXED, new BigDecimal("0")));
+        // Trial item (fixed price of zero) has end date corresponding to end of TRIAL phase, CTD should also be set to end of TRIAL phase
+        invoiceChecker.checkChargedThroughDate(bpEntitlement.getId(), initialCreationDate.plusDays(30).toLocalDate(), callContext);
 
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 0, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoice = invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),

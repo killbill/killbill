@@ -112,9 +112,9 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
-        invoiceChecker.checkInvoice(childAccount.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(childAccount.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 31), InvoiceItemType.FIXED, new BigDecimal("0")));
         //invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.PARENT_SUMMARY, new BigDecimal("0")));
-        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 31), callContext);
 
         // 2012-05-2 => DAY 1 : Parent Invoice commit status
         addDaysAndCheckForCompletion(1, NextEvent.INVOICE);
@@ -195,8 +195,8 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(childAccount1.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
-        invoiceChecker.checkInvoice(childAccount1.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+        invoiceChecker.checkInvoice(childAccount1.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 31), InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 31), callContext);
 
         // 2012-05-2 => DAY 1 : Parent Invoice commit status
         addDaysAndCheckForCompletion(1, NextEvent.INVOICE);
@@ -205,8 +205,8 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         addDaysAndCheckForCompletion(1);
         final DefaultEntitlement baseEntitlement2 = createBaseEntitlementAndCheckForCompletion(childAccount2.getId(), "externalKey2", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(childAccount2.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkChargedThroughDate(baseEntitlement2.getId(), new LocalDate(2012, 5, 3), callContext);
+        invoiceChecker.checkInvoice(childAccount2.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 6, 2), InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement2.getId(), new LocalDate(2012, 6, 2), callContext);
 
         // 2012-05-3 => DAY 3 : Parent Invoice commit status  (Sub.2)
         addDaysAndCheckForCompletion(1, NextEvent.INVOICE);
