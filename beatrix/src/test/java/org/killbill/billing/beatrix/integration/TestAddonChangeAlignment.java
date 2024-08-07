@@ -17,6 +17,7 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,10 +26,12 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -49,11 +52,13 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
-        //create base 2024-08-01
+        //create base 2023-08-01
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID baseEntId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 1), new LocalDate(2023, 8, 31), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         //Base CTD is 2023-08-31 as expected
         Subscription baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
@@ -62,10 +67,12 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2023, 8, 5));
 
         //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
+        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleDefault-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 5), new LocalDate(2023, 8, 31), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         //ADDON CTD is 2023-08-31 as expected
         Subscription addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
@@ -74,7 +81,7 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2023, 8, 15));
 
         //change addon with start of bundle alignment on 2023-08-15 - change will not happen immediately
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundle-monthly");
+        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleCustom-monthly");
         addonSub.changePlan(new DefaultEntitlementSpecifier(newAddOnSpec), Collections.emptyList(), callContext);
 
         //Base CTD is still 2023-08-31 as expected
@@ -85,19 +92,40 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
         Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
 
-        //move clock to 2023-08-31 - Phase change for BASE, ADDON plan CHANGE takes effect
+        //move clock to 2023-08-31 - Phase change for BASE, plan CHANGE for ADDON takes effect
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
         clock.setDay(new LocalDate(2023, 8, 31));
         assertListenerStatus();
 
-        // BASE CTD set to 2023-09-01 - Not sure if this is correct, shouldn't it be 2023-08-31??
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 31), new LocalDate(2023, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("32.26")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 31), new LocalDate(2023, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("3.23")));
+
+        // BASE CTD set to 2023-09-01, shouldn't this be 2023-08-31 as in the case of the IMMEDIATE test below?
         baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
         Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
 
-        // TEST fails here, ADDON CTD is 2023-09-04, I would expect it to be 2023-08-31 since START_OF_BUNDLE is used
+        // ADDON CTD set to 2023-09-01, shouldn't this be 2023-08-31 as in the case of the IMMEDIATE test below?
         addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
+        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
 
+        //move clock to 2023-09-30 - invoice for base and addon
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 9, 30));
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 9, 1), new LocalDate(2023, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("1000")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 9, 1), new LocalDate(2023, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("100")));
+
+
+        // BASE CTD set to 2023-10-01
+        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
+        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
+
+        // ADDON CTD is 2023-10-01
+        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
+        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
     }
 
     @Test(groups = "slow")
@@ -107,11 +135,13 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
-        //create base 2024-08-01
+        //create base 2023-08-01
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID baseEntId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 1), new LocalDate(2023, 8, 31), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         //Base CTD is 2023-08-31 as expected
         Subscription baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
@@ -120,10 +150,12 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2023, 8, 5));
 
         //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
+        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleDefault-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 5), new LocalDate(2023, 8, 31), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         //ADDON CTD is 2023-08-31 as expected
         Subscription addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
@@ -131,260 +163,54 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
 
         clock.setDay(new LocalDate(2023, 8, 15));
 
-        //change addon with start of bundle alignment with requestedDate=2023-08-15 - change will happen immediately
+        //change addon with start of bundle alignment with IMMEDIATE policy - change will happen immediately
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundle-monthly");
-        //addonSub.changePlanWithDate(new DefaultEntitlementSpecifier(newAddOnSpec), clock.getUTCToday(), Collections.emptyList(), callContext);
+        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfBundleCustom-monthly");
         addonSub.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(newAddOnSpec), null, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 15), new LocalDate(2023, 8, 31), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         // BASE CTD set to 2023-08-31 - as expected
         baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
         Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
 
-        // TEST fails here, ADDON CTD is 2023-09-04, I would expect it to be 2023-08-31 since START_OF_BUNDLE is used
-        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-    }
-
-
-    @Test(groups = "slow")
-    public void testChangeAlignmentStartOfSubscriptionEOTChange() throws Exception {
-        final LocalDate today = new LocalDate(2023, 8, 1);
-        clock.setDay(today);
-
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
-        //create base 2024-08-01
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID baseEntId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //Base CTD is 2023-08-31 as expected
-        Subscription baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 5));
-
-        //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //ADDON CTD is 2023-08-31 as expected
-        Subscription addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 15));
-
-        //change addon with start of subscription alignment on 2023-08-15 - change will not happen immediately
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfSubscription-monthly");
-        addonSub.changePlan(new DefaultEntitlementSpecifier(newAddOnSpec), Collections.emptyList(), callContext);
-
-        //Base CTD is still 2023-08-31 as expected
-        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        //ADDON CTD is still 2023-08-31 as expected
+        // ADDON CTD set to 2023-08-31 - as expected
         addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
         Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
 
-        //move clock to 2023-08-31 - PHASE change for BASE, Plan CHANGE for ADDON
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
+        //move clock to 2023-08-31 - Phase change for BASE, ADDON takes effect
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
         clock.setDay(new LocalDate(2023, 8, 31));
         assertListenerStatus();
 
-        //Base CTD is 2023-09-01 - Not sure if this is correct
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 31), new LocalDate(2023, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("32.26")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 8, 31), new LocalDate(2023, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("3.23")));
+        // BASE CTD set to 2023-09-01
         baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
         Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
 
-        //ADDON CTD is 2023-09-04 - as expected
+        // ADDON CTD is 2023-09-01
         addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 4));
+        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
 
+        //move clock to 2023-09-30 - invoice for base and addon
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2023, 9, 30));
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 9, 1), new LocalDate(2023, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("1000")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2023, 9, 1), new LocalDate(2023, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("100")));
+
+
+        // BASE CTD set to 2023-10-01
+        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
+        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
+
+        // ADDON CTD is 2023-10-01
+        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
+        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
     }
-
-    @Test(groups = "slow")
-    public void testChangeAlignmentStartOfSubscriptionImmediateChange() throws Exception {
-        final LocalDate today = new LocalDate(2023, 8, 1);
-        clock.setDay(today);
-
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
-        //create base 2024-08-01
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID baseEntId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //Base CTD is 2023-08-31 as expected
-        Subscription baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 5));
-
-        //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //ADDON CTD is 2023-08-31 as expected
-        Subscription addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 15));
-
-        //change addon with start of subscription alignment with requestedDate=2023-08-15 - change will happen immediately
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOStartOfSubscription-monthly");
-        addonSub.changePlanWithDate(new DefaultEntitlementSpecifier(newAddOnSpec), clock.getUTCToday(), Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //Base CTD is still 2023-08-31 as expected
-        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        //ADDON CTD is 2023-09-04 - as expected
-        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 4));
-
-        //move clock to 2023-08-31 - PHASE change for BASE
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); //Need another NextEvent.PHASE for ADDON??
-        clock.setDay(new LocalDate(2023, 8, 31));
-        assertListenerStatus();
-
-        //Base CTD is 2023-09-01 - Not sure if this is correct
-        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
-
-        //ADDON CTD is 2023-09-04 - Not sure if this is correct
-        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 4));
-
-    }
-
-
-    @Test(groups = "slow")
-    public void testChangeAlignmentChangeOfPlanEOTChange() throws Exception {
-        final LocalDate today = new LocalDate(2023, 8, 1);
-        clock.setDay(today);
-
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
-        //create base 2024-08-01
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID baseEntId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //Base CTD is 2023-08-31 as expected
-        Subscription baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 5));
-
-        //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //ADDON CTD is 2023-08-31 as expected
-        Subscription addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 15));
-
-        //change addon with change of plan alignment on 2023-08-15 - change will not happen immediately
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOChangeOfPlan-monthly");
-        addonSub.changePlan(new DefaultEntitlementSpecifier(newAddOnSpec), Collections.emptyList(), callContext);
-
-        //Base CTD is still 2023-08-31 as expected
-        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        //ADDON CTD is still 2023-08-31 as expected
-        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        //move clock to 2023-08-31 - PHASE change for BASE, Plan CHANGE for ADDON
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
-        clock.setDay(new LocalDate(2023, 8, 31));
-        assertListenerStatus();
-
-        //Base CTD is 2023-09-01 - Not sure if this is correct
-        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
-
-        //ADDON CTD is 2023-09-30 - as expected (although CHANGE_OF_PLAN is used, the plan change takes effect at END_OF_TERM that is on 2023-08-31, hence ADDON CTD is 2023-09-30)
-        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 30));
-
-    }
-
-    @Test(groups = "slow")
-    public void testChangeAlignmentChangeOfPlanImmediateChange() throws Exception {
-        final LocalDate today = new LocalDate(2023, 8, 1);
-        clock.setDay(today);
-
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
-        //create base 2024-08-01
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID baseEntId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //Base CTD is 2023-08-31 as expected
-        Subscription baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 5));
-
-        //create addon 2023-08-05
-        final PlanPhaseSpecifier addonSpec = new PlanPhaseSpecifier("BasicAO-monthly");
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID addonEntId = entitlementApi.addEntitlement(baseSub.getBundleId(), new DefaultEntitlementSpecifier(addonSpec), null, null, false, Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //ADDON CTD is 2023-08-31 as expected
-        Subscription addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        clock.setDay(new LocalDate(2023, 8, 15));
-
-        //change addon with change of plan alignment with requestedDate=2023-08-15 - change will happen immediately
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier newAddOnSpec = new PlanPhaseSpecifier("BasicAOChangeOfPlan-monthly");
-        addonSub.changePlanWithDate(new DefaultEntitlementSpecifier(newAddOnSpec), clock.getUTCToday(), Collections.emptyList(), callContext);
-        assertListenerStatus();
-
-        //Base CTD is still 2023-08-31 as expected
-        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 8, 31));
-
-        //ADDON CTD is still 2023-09-14 as expected
-        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 14));
-
-        //move clock to 2023-08-31 - PHASE change for BASE
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); //Need another NextEvent.PHASE for ADDON??
-        clock.setDay(new LocalDate(2023, 8, 31));
-        assertListenerStatus();
-
-        //Base CTD is 2023-09-01 - Not sure if this is correct
-        baseSub = subscriptionApi.getSubscriptionForEntitlementId(baseEntId, false, callContext);
-        Assert.assertEquals(baseSub.getChargedThroughDate(), new LocalDate(2023, 9, 1));
-
-        //ADDON CTD is 2023-09-14 - as expected
-        addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
-        Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 9, 14));
-
-    }
-
-
-
 }

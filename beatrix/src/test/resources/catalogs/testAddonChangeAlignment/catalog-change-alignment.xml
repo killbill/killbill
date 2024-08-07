@@ -32,17 +32,17 @@
     <product name="Basic">
       <category>BASE</category>
       <available>
-        <addonProduct>BasicAO</addonProduct>
-        <addonProduct>BasicAOStartOfBundle</addonProduct>
+        <addonProduct>BasicAOStartOfBundleDefault</addonProduct>
+        <addonProduct>BasicAOStartOfBundleCustom</addonProduct>
         <addonProduct>BasicAOStartOfSubscription</addonProduct>
         <addonProduct>BasicAOChangeOfPlan</addonProduct>
         <addonProduct>BasicAOChangeOfPricelist</addonProduct>
       </available>
     </product>
-    <product name="BasicAO">
+    <product name="BasicAOStartOfBundleDefault">
       <category>ADD_ON</category>
     </product>
-    <product name="BasicAOStartOfBundle">
+    <product name="BasicAOStartOfBundleCustom">
       <category>ADD_ON</category>
     </product>
     <product name="BasicAOStartOfSubscription">
@@ -65,7 +65,7 @@
 
     <changeAlignment>
       <changeAlignmentCase>
-        <toProduct>BasicAOStartOfBundle</toProduct>
+        <toProduct>BasicAOStartOfBundleCustom</toProduct>
         <alignment>START_OF_BUNDLE</alignment>
       </changeAlignmentCase>
       <changeAlignmentCase>
@@ -90,9 +90,9 @@
         <productCategory>BASE</productCategory>
         <policy>END_OF_TERM</policy>
       </cancelPolicyCase>
-        <cancelPolicyCase>
-            <policy>IMMEDIATE</policy>
-        </cancelPolicyCase>
+      <cancelPolicyCase>
+        <policy>IMMEDIATE</policy>
+      </cancelPolicyCase>
     </cancelPolicy>
 
     <createAlignment>
@@ -145,8 +145,8 @@
         </recurring>
       </finalPhase>
     </plan>
-    <plan name="BasicAO-monthly">
-      <product>BasicAO</product>
+    <plan name="BasicAOStartOfBundleDefault-monthly">
+      <product>BasicAOStartOfBundleDefault</product>
       <initialPhases>
         <phase type="TRIAL">
           <duration>
@@ -175,8 +175,8 @@
         </recurring>
       </finalPhase>
     </plan>
-    <plan name="BasicAOStartOfBundle-monthly">
-      <product>BasicAOStartOfBundle</product>
+    <plan name="BasicAOStartOfBundleCustom-monthly">
+      <product>BasicAOStartOfBundleCustom</product>
       <initialPhases>
         <phase type="TRIAL">
           <duration>
@@ -300,8 +300,8 @@
     <defaultPriceList name="DEFAULT">
       <plans>
         <plan>basic-monthly</plan>
-        <plan>BasicAO-monthly</plan>
-        <plan>BasicAOStartOfBundle-monthly</plan>
+        <plan>BasicAOStartOfBundleDefault-monthly</plan>
+        <plan>BasicAOStartOfBundleCustom-monthly</plan>
         <plan>BasicAOStartOfSubscription-monthly</plan>
         <plan>BasicAOChangeOfPlan-monthly</plan>
         <plan>BasicAOChangeOfPricelist-monthly</plan>
