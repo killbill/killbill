@@ -242,6 +242,8 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
         final InvoiceItemBase that = (InvoiceItemBase) o;
 
+        final boolean isFixedItem = getInvoiceItemType() == InvoiceItemType.FIXED;
+
         if (getInvoiceItemType() != null ? !getInvoiceItemType().equals(that.getInvoiceItemType()) : that.getInvoiceItemType() != null) {
             return false;
         }
@@ -260,7 +262,8 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         if (safeCompareTo(startDate, that.startDate) != 0) {
             return false;
         }
-        if (safeCompareTo(endDate, that.endDate) != 0) {
+        if (!isFixedItem && safeCompareTo(endDate, that.endDate) != 0) {
+        //if (safeCompareTo(endDate, that.endDate) != 0) {
             return false;
         }
         if (safeCompareTo(amount, that.amount) != 0) {
