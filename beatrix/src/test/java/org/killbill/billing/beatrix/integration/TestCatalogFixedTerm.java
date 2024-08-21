@@ -17,8 +17,6 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
@@ -36,11 +34,15 @@ import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.utils.io.Resources;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestCatalogFixedTerm extends TestIntegrationBase {
 
@@ -75,19 +77,22 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance", null);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addYears(2);//2023-12-01
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
 
         busHandler.pushExpectedEvents(NextEvent.EXPIRED, NextEvent.NULL_INVOICE);
         clock.addYears(1);//2024-12-01
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.EXPIRED);
         assertListenerStatus();
-        
+
         checkNoMoreInvoiceToGenerate(account.getId(), testCallContext);
 
     }
@@ -99,15 +104,18 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inarrear", null);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
         
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addYears(2);//2023-12-01
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
         
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.EXPIRED); 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.EXPIRED);
         clock.addYears(2);//2025-12-01
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.EXPIRED);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
         
@@ -124,21 +132,25 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance-discountandrecurring", null);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addYears(2); //2023-12-01
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE,NextEvent.INVOICE, NextEvent.NULL_INVOICE,NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        busHandler.pushExpectedEvents(NextEvent.PHASE,NextEvent.INVOICE, NextEvent.NULL_INVOICE,NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addYears(1); //2024-12-01
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 3, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 01), new LocalDate(2026, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
         
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addYears(2); //2026-12-01
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, testCallContext).getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 4, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2026, 12, 01), new LocalDate(2028, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
