@@ -60,17 +60,29 @@ public class SubscriptionUsageInArrear {
     private static final Comparator<RawUsageRecord> RAW_USAGE_DATE_COMPARATOR = new Comparator<RawUsageRecord>() {
         @Override
         public int compare(final RawUsageRecord o1, final RawUsageRecord o2) {
-            int compared = o1.getDate().compareTo(o2.getDate());
+
+            // Compare by subscriptionId (not really needed as we only have entry per subscription in this class)
+            int compared = o1.getSubscriptionId().compareTo(o2.getSubscriptionId());
             if (compared != 0) {
                 return compared;
-            } else {
-                compared = o1.getUnitType().compareTo(o2.getUnitType());
-                if (compared != 0) {
-                    return compared;
-                } else {
-                    return o1.hashCode() != o2.hashCode() ? o1.hashCode() - o2.hashCode() : 0;
-                }
             }
+            // Compare by recordDate
+            compared = o1.getDate().compareTo(o2.getDate());
+            if (compared != 0) {
+                return compared;
+            }
+            // Compare by unitType
+            compared = o1.getUnitType().compareTo(o2.getUnitType());
+            if (compared != 0) {
+                return compared;
+            }
+            // Compare by amount
+            compared = o1.getAmount().compareTo(o2.getAmount());
+            if (compared != 0) {
+                return compared;
+            }
+            // Compare by trackingId
+            return o1.getTrackingId().compareTo(o2.getTrackingId());
         }
     };
 
