@@ -213,6 +213,41 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testAddPlanWithNullTrailLengthOnExistingCatalog() throws Exception {
+
+        final StandaloneCatalog originalCatalog = getCatalog("SpyCarBasic.xml");
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
+
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
+
+        final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("standard-annual", "Standard", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, null, TimeUnit.UNLIMITED, Collections.emptyList());
+        catalogUpdater.addSimplePlanDescriptor(desc);
+
+        final StandaloneCatalog catalog = catalogUpdater.getCatalog();
+
+        final Plan plan = catalog.findPlan("standard-annual");
+        assertEquals(plan.getName(), "standard-annual");
+
+        assertEquals(plan.getInitialPhases().length, 0);
+        assertEquals(plan.getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertNull(plan.getFinalPhase().getFixed());
+        assertEquals(plan.getFinalPhase().getName(), "standard-annual-evergreen");
+
+        assertEquals(plan.getFinalPhase().getRecurring().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices().length, 1);
+        assertEquals(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices()[0].getValue(), BigDecimal.TEN);
+        assertEquals(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices()[0].getCurrency(), Currency.USD);
+
+        assertEquals(catalog.getPriceLists().getAllPriceLists().size(), 1);
+        final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
+        assertEquals(priceList.getName(), new PriceListDefault().getName());
+        assertEquals(priceList.getPlans().size(), 4);
+    }
+
+
+    @Test(groups = "fast")
     public void testAddExistingPlanWithNewCurrency() throws Exception {
         final StandaloneCatalog originalCatalog = getCatalog("SpyCarBasic.xml");
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);

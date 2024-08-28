@@ -260,8 +260,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_NUMBER, "(null)");
         }
 
-        final List<Tag> invoicesTags = getInvoicesTags(context);
-
         return transactionalSqlDao.execute(true, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
@@ -274,6 +272,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // The context may not contain the account record id at this point - we couldn't do it in the API above
                 // as we couldn't get access to the invoice object until now.
                 final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+                final List<Tag> invoicesTags = getInvoicesTags(contextWithAccountRecordId);
                 invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             }
             return invoice;

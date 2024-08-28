@@ -128,6 +128,7 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
     }
 
+
     @Test(groups = "slow")
     public void testChangeAlignmentStartOfBundleImmediateChange() throws Exception {
         final LocalDate today = new LocalDate(2023, 8, 1);
@@ -307,7 +308,6 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
         Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
     }
-
 
     @Test(groups = "slow")
     public void testChangeAlignmentStartOfSubscriptionImmediateChange() throws Exception {
@@ -499,7 +499,6 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
     }
 
-
     @Test(groups = "slow")
     public void testChangeAlignmentChangeOfPlanImmediateChange() throws Exception {
         final LocalDate today = new LocalDate(2023, 8, 1);
@@ -595,5 +594,6 @@ public class TestAddonChangeAlignment extends TestIntegrationBase {
         addonSub = subscriptionApi.getSubscriptionForEntitlementId(addonEntId, false, callContext);
         Assert.assertEquals(addonSub.getChargedThroughDate(), new LocalDate(2023, 10, 1));
     }
+
 
 }
