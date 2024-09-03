@@ -100,7 +100,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         clock.addDays(21);
         assertListenerStatus();
 
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(billingMigrationDate, null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(billingMigrationDate, billingMigrationDate.plusDays(30), InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
         expectedInvoices.clear();
 

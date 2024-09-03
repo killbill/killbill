@@ -605,7 +605,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Trial invoice
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 15), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 15), new LocalDate(2016, 5, 15), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         // Verify next month (extra null invoice because of the original notification set on the 1st)
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -666,7 +666,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // Trial invoice (with re-alignment invoice item from free plan)
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 15), InvoiceItemType.RECURRING, BigDecimal.ZERO),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 15), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 15), new LocalDate(2016, 6, 14), InvoiceItemType.FIXED, BigDecimal.ZERO));
 
         // Verify next month (extra null invoice because of the original notification set on the 1st)
         busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -811,7 +811,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         assertListenerStatus();
 
         // Add ADD_ON on the same day

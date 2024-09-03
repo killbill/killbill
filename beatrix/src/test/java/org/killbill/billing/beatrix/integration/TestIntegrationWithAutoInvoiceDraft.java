@@ -170,14 +170,14 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // Committing the invoice updates the CTD
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         // Move out of TRIAL
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
@@ -233,14 +233,14 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // Committing the invoice updates the CTD
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         // Move out of TRIAL
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
@@ -254,7 +254,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         final Subscription cancelledSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext);
-        assertEquals(cancelledSubscription.getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(cancelledSubscription.getChargedThroughDate(), new LocalDate(2017, 7, 16));
         // We default to now() when we compute the date if the CTD is in the past
         assertEquals(internalCallContext.toLocalDate(cancelledSubscription.getBillingEndDate()), new LocalDate(2017, 7, 16));
 
@@ -271,7 +271,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // No change
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
     }
 
     @Test(groups = "slow")

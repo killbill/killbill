@@ -74,7 +74,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         final UUID subId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 17), null, InvoiceItemType.FIXED, new BigDecimal("0.00")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 17), new LocalDate(2020, 10, 17), InvoiceItemType.FIXED, new BigDecimal("0.00")));
 
 
         // Catalog effDt = 2020-09-18T11:19:01
@@ -94,7 +94,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 18), null, InvoiceItemType.FIXED, new BigDecimal("0.00")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 18), new LocalDate(2020, 10, 17), InvoiceItemType.FIXED, new BigDecimal("0.00")));
 
 
         // Catalog effDt = 2020-09-19T11:19:01 (we remove the plan pistol-discount-monthly)
