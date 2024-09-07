@@ -125,8 +125,10 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
             return getOrCreatePhaseDefinitionFromTransactionWithoutUsageOverrides(parentPhaseName, catalogEffectiveDate, override, inTransactionHandle, context);
         }
 
+        // If we have some usage overrides, we need to create (or reuse) all the entries
         final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos = new CatalogOverrideUsageDefinitionModelDao[override.getUsagePriceOverrides().size()];
          List<UsagePriceOverride> resolvedUsageOverrides = override.getUsagePriceOverrides();
+         // Loop through each usage override section (usually 1)
           for (int i = 0; i < resolvedUsageOverrides.size(); i++) {
             final UsagePriceOverride curOverride = resolvedUsageOverrides.get(i);
              if (curOverride != null) {
@@ -199,6 +201,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         final List<TierPriceOverride> resolvedTierOverrides = override.getTierPriceOverrides();
 
         final CatalogOverrideTierDefinitionModelDao[] overrideTierDefinitionModelDaos = new CatalogOverrideTierDefinitionModelDao[resolvedTierOverrides.size()];
+        // Loop through each tier override for the parentUsage (can be several tiers)
         for (int i = 0; i < resolvedTierOverrides.size(); i++) {
             final TierPriceOverride curOverride = resolvedTierOverrides.get(i);
             if (curOverride != null) {
@@ -256,6 +259,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         final List<TieredBlockPriceOverride> resolvedTierBlockOverrides =  tierPriceOverride.getTieredBlockPriceOverrides();
 
         final CatalogOverrideBlockDefinitionModelDao[] overrideBlockDefinitionModelDaos = new CatalogOverrideBlockDefinitionModelDao[resolvedTierBlockOverrides.size()];
+        // Loop through each tier block within a given tier (usually 1)
         for (int i = 0; i < resolvedTierBlockOverrides.size(); i++) {
             final TieredBlockPriceOverride curOverride = resolvedTierBlockOverrides.get(i);
             if (curOverride != null) {
@@ -290,7 +294,6 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
     private Long getOverrideTierDefinitionFromTransaction(final CatalogOverrideBlockDefinitionModelDao[] overrideBlockDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverrideTierBlockSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideTierBlockSqlDao.class);
-
         final List<String> keys = new ArrayList<String>();
         for (int i = 0; i < overrideBlockDefinitionModelDaos.length; i++) {
             final CatalogOverrideBlockDefinitionModelDao cur = overrideBlockDefinitionModelDaos[i];
@@ -306,6 +309,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
     {
         final CatalogOverrideBlockDefinitionSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideBlockDefinitionSqlDao.class);
 
+        // If an existing block definition exists (i.e. based on the exact same attributes), we return it
         CatalogOverrideBlockDefinitionModelDao result = sqlDao.getByAttributes(tieredBlockPriceOverride.getUnitName(),
                 currency, tieredBlockPriceOverride.getPrice(),
                 tieredBlockPriceOverride.getMax(),
