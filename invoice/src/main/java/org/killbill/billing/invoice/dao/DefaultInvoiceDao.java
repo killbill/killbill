@@ -51,6 +51,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.customfield.CustomFieldInternalApi;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
@@ -82,6 +83,8 @@ import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.customfield.CustomField;
+import org.killbill.billing.util.customfield.IntegerCustomField;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Pagination;
@@ -106,6 +109,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.killbill.billing.invoice.InvoiceDispatcher.INVOICE_SEQUENCE_NUMBER;
 import static org.killbill.billing.util.entity.dao.SearchQuery.SEARCH_QUERY_MARKER;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -135,13 +139,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private final CacheController<String, UUID> objectIdCacheController;
     private final NonEntityDao nonEntityDao;
     private final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster;
+    private final CustomFieldInternalApi customFieldInternalApi;
     private final TagInternalApi tagInternalApi;
     private final AuditDao auditDao;
 
-
-
     @Inject
-    public DefaultInvoiceDao(final TagInternalApi tagInternalApi,
+    public DefaultInvoiceDao(final CustomFieldInternalApi customFieldInternalApi,
+                             final TagInternalApi tagInternalApi,
                              final IDBI dbi,
                              @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi,
                              final NextBillingDatePoster nextBillingDatePoster,
@@ -156,6 +160,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final AuditDao auditDao,
                              final InternalCallContextFactory internalCallContextFactory) {
         super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), InvoiceSqlDao.class);
+        this.customFieldInternalApi = customFieldInternalApi;
         this.tagInternalApi = tagInternalApi;
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
@@ -176,6 +181,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
@@ -188,7 +194,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                             .collect(Collectors.toUnmodifiableList());
 
             if (includeInvoiceComponents) {
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
             }
 
             return invoices;
@@ -197,19 +203,21 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, invoicesTags, entitySqlDaoWrapperFactory, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context));
     }
 
     @Override
     public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(includeVoidedInvoices, invoiceDao, fromDate, upToDate, context);
             if (includeInvoiceComponents) {
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
             }
 
             return invoices;
@@ -240,6 +248,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public InvoiceModelDao getById(final UUID invoiceId, final boolean includeRepairStatus, final InternalTenantContext context) throws InvoiceApiException {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
@@ -249,7 +258,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             if (invoice == null) {
                 throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
             }
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, includeRepairStatus, entitySqlDaoWrapperFactory, context);
+            invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, includeRepairStatus, entitySqlDaoWrapperFactory, context);
             return invoice;
         });
     }
@@ -260,10 +269,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_NUMBER, "(null)");
         }
 
+        // Note: the context may not contain the account record id at this point
+        final CustomField invoiceNumberCustomField = customFieldInternalApi.searchUniqueCustomField(INVOICE_SEQUENCE_NUMBER, String.valueOf(number), ObjectType.INVOICE, context);
+
         return transactionalSqlDao.execute(true, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
-            final InvoiceModelDao invoice = invoiceDao.getByRecordId(number.longValue(), context);
+            final InvoiceModelDao invoice;
+            if (invoiceNumberCustomField != null) {
+                invoice = invoiceDao.getById(invoiceNumberCustomField.getObjectId().toString(), context); // TODO context is missing the account record id?
+            } else {
+                invoice = invoiceDao.getByRecordId(number.longValue(), context);
+            }
             if (invoice == null) {
                 throw new InvoiceApiException(ErrorCode.INVOICE_NUMBER_NOT_FOUND, number.longValue());
             }
@@ -272,8 +289,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // The context may not contain the account record id at this point - we couldn't do it in the API above
                 // as we couldn't get access to the invoice object until now.
                 final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+                final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
                 final List<Tag> invoicesTags = getInvoicesTags(contextWithAccountRecordId);
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+                invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             }
             return invoice;
         });
@@ -281,7 +299,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
-
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(false, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
@@ -292,7 +310,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
 
             final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+            invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             return invoice;
         });
     }
@@ -301,6 +319,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
         // TODO_1658 Do we want a special query along with a new index on grpId or is the cardinality small enough that we
         // fetch by accountRecordId. Note that we only 'populate' on the filtered list.
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
             @Override
@@ -311,7 +330,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                   .filter(invoice -> invoice.getGrpId().equals(groupId))
                                                                   .sorted(INVOICE_MODEL_DAO_COMPARATOR)
                                                                   .collect(Collectors.toUnmodifiableList());
-                invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoices, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
                 return invoices;
             }
         });
@@ -382,6 +401,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
         final UUID accountId = inputInvoices.iterator().next().getAccountId();
 
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         final Map<UUID, InvoiceModelDao> inputInvoicesById = new HashMap<UUID, InvoiceModelDao>();
@@ -418,6 +438,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                 billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);
                             }
                             createdInvoiceIds.add(invoiceModelDao.getId());
+
+                            if (invoiceModelDao.getInvoiceNumber() != null) {
+                                // In 0.26+, we could consider an ALTER table to add the number to the table
+                                // TODO Should an event be sent?
+                                final CustomField invoiceSequenceNumberCustomField = new IntegerCustomField(INVOICE_SEQUENCE_NUMBER, invoiceModelDao.getInvoiceNumber(), ObjectType.INVOICE, invoiceModelDao.getId(), context.getCreatedDate());
+                                customFieldInternalApi.addCustomFieldsFromTransaction(entitySqlDaoWrapperFactory.getHandle(), List.of(invoiceSequenceNumberCustomField), context);
+                            }
                         } else {
 
                             // Allow transition from DRAFT to COMMITTED or keep current status
@@ -495,7 +522,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // CBA COMPLEXITY...
                 //
                 // Optimized path where we don't need to refresh invoices
-                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoicesTags, context, entitySqlDaoWrapperFactory);
+                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoiceCustomFields, invoicesTags, context, entitySqlDaoWrapperFactory);
                 if (createdInvoiceIds.equals(allInvoiceIds)) {
                     final List<InvoiceModelDao> cbaInvoicesInput = new ArrayList<>();
                     for (final UUID id : createdInvoiceIds) {
@@ -529,13 +556,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public List<InvoiceModelDao> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
             final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesBySubscription(subscriptionId.toString(), context);
-            invoiceDaoHelper.populateChildren(invoices, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+            invoiceDaoHelper.populateChildren(invoices, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
 
             return invoices;
         });
@@ -634,13 +662,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             BigDecimal cba = BigDecimal.ZERO;
 
             BigDecimal accountBalance = BigDecimal.ZERO;
-            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, invoicesTags, entitySqlDaoWrapperFactory, context);
+            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context);
             for (final InvoiceModelDao cur : invoices) {
 
                 // Skip DRAFT OR VOID invoices
@@ -671,9 +700,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate startDate, @Nullable final LocalDate upToDate, final InternalTenantContext context) {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
-        return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(accountId, invoicesTags, entityWrapperFactory, startDate, upToDate, context));
+        return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(accountId, invoiceCustomFields, invoicesTags, entityWrapperFactory, startDate, upToDate, context));
     }
 
     @Override
@@ -716,6 +746,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
         }
 
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(false, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
@@ -731,6 +762,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
             // Retrieve the amounts to adjust, if needed
             final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts = invoiceDaoHelper.computeItemAdjustments(payment.getInvoiceId().toString(),
+                                                                                                            invoiceCustomFields,
                                                                                                             invoicesTags,
                                                                                                             entitySqlDaoWrapperFactory,
                                                                                                             invoiceItemIdsWithNullAmounts,
@@ -785,7 +817,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Retrieve invoice after the Refund
                 final InvoiceModelDao invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
                 Preconditions.checkState(invoice != null, "Invoice shouldn't be null for payment " + payment.getId());
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
 
                 final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
 
@@ -808,7 +840,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
 
                 // The invoice object has been kept up-to-date, we can pass it to CBA complexity
-                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(invoice.getAccountId(), invoicesTags, context, entitySqlDaoWrapperFactory);
+                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(invoice.getAccountId(), invoiceCustomFields, invoicesTags, context, entitySqlDaoWrapperFactory);
                 cbaWrapper.runCBALogicWithNotificationEvents(initSet, Collections.emptySet(), List.of(invoice));
 
             }
@@ -820,6 +852,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public InvoicePaymentModelDao postChargeback(final UUID paymentId, final UUID paymentAttemptId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(false, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
@@ -858,7 +891,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             // Notify the bus since the balance of the invoice changed
             final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
 
-            final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoicesTags, context, entitySqlDaoWrapperFactory);
+            final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoiceCustomFields, invoicesTags, context, entitySqlDaoWrapperFactory);
             cbaWrapper.runCBALogicWithNotificationEvents(Set.of(payment.getInvoiceId()));
 
             notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargeBack, accountId, paymentAttemptId, context.getUserToken(), context);
@@ -869,6 +902,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public InvoicePaymentModelDao postChargebackReversal(final UUID paymentId, final UUID paymentAttemptId, final String chargebackTransactionExternalKey, final InternalCallContext context) throws InvoiceApiException {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(false, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
@@ -894,7 +928,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             // Notify the bus since the balance of the invoice changed
             final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargebackReversed.getId().toString(), context);
 
-            final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoicesTags, context, entitySqlDaoWrapperFactory);
+            final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoiceCustomFields, invoicesTags, context, entitySqlDaoWrapperFactory);
             cbaWrapper.runCBALogicWithNotificationEvents(Set.of(chargebackReversed.getInvoiceId()));
 
             notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargebackReversed, accountId, paymentAttemptId, context.getUserToken(), context);
@@ -910,8 +944,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public Map<UUID, BigDecimal> computeItemAdjustments(final String invoiceId, final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final InternalTenantContext context) throws InvoiceApiException {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
-        return transactionalSqlDao.execute(false, InvoiceApiException.class, sqlWrapperFactory -> invoiceDaoHelper.computeItemAdjustments(invoiceId, invoicesTags, sqlWrapperFactory, invoiceItemIdsWithNullAmounts, context));
+        return transactionalSqlDao.execute(false, InvoiceApiException.class, sqlWrapperFactory -> invoiceDaoHelper.computeItemAdjustments(invoiceId, invoiceCustomFields, invoicesTags, sqlWrapperFactory, invoiceItemIdsWithNullAmounts, context));
     }
 
     @Override
@@ -1070,7 +1105,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final InternalCallContext context) throws InvoiceApiException {
-
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
         final Set<UUID> invoiceIds = new HashSet<>();
 
@@ -1085,7 +1120,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 invoice.getStatus() != InvoiceStatus.COMMITTED) {
                 throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
             }
-            invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+            invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
 
             // Retrieve the invoice item and make sure it belongs to the right invoice
             final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
@@ -1134,10 +1169,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
-            cbaDao.doCBAComplexityFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
+            cbaDao.doCBAComplexityFromTransaction(invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context);
             return null;
         });
     }
@@ -1269,6 +1305,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void changeInvoiceStatus(final UUID invoiceId, final InvoiceStatus newStatus, final InternalCallContext context) throws InvoiceApiException {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         transactionalSqlDao.execute(false, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
@@ -1289,7 +1326,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
             // Run through all invoices
             // Current invoice could be a credit item that needs to be rebalanced
-            cbaDao.doCBAComplexityFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
+            cbaDao.doCBAComplexityFromTransaction(invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context);
 
             // Invoice creation event sent on COMMITTED
             if (InvoiceStatus.COMMITTED.equals(newStatus)) {
@@ -1362,13 +1399,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public InvoiceModelDao getParentDraftInvoice(final UUID parentAccountId, final InternalCallContext context) throws InvoiceApiException {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final InvoiceModelDao invoice = invoiceSqlDao.getParentDraftInvoice(parentAccountId.toString(), context);
             if (invoice != null) {
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+                invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
             }
             return invoice;
         });
@@ -1398,6 +1436,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(childAccount.getParentAccountId(), childAccountContext);
         final InternalCallContext parentAccountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), childAccountContext);
 
+        final List<CustomField> parentInvoiceCustomFields = getInvoiceCustomFields(parentAccountContext);
+        final List<CustomField> childInvoiceCustomFields = getInvoiceCustomFields(childAccountContext);
         final List<Tag> parentInvoicesTags = getInvoicesTags(parentAccountContext);
         final List<Tag> childInvoicesTags = getInvoicesTags(childAccountContext);
 
@@ -1472,12 +1512,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             createAndRefresh(transactional, invoiceRelation, parentAccountContext);
 
             // Add child CBA complexity and notify bus on child invoice creation
-            final CBALogicWrapper childCbaWrapper = new CBALogicWrapper(childAccount.getId(), childInvoicesTags, childAccountContext, entitySqlDaoWrapperFactory);
+            final CBALogicWrapper childCbaWrapper = new CBALogicWrapper(childAccount.getId(), childInvoiceCustomFields, childInvoicesTags, childAccountContext, entitySqlDaoWrapperFactory);
             childCbaWrapper.runCBALogicWithNotificationEvents(Collections.emptySet(), Set.of(childInvoice.getId()), List.of(childInvoice));
             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childAccountContext);
 
             // Add parent CBA complexity and notify bus on child invoice creation
-            final CBALogicWrapper cbaWrapper = new CBALogicWrapper(childAccount.getParentAccountId(), parentInvoicesTags, parentAccountContext, entitySqlDaoWrapperFactory);
+            final CBALogicWrapper cbaWrapper = new CBALogicWrapper(childAccount.getParentAccountId(), parentInvoiceCustomFields, parentInvoicesTags, parentAccountContext, entitySqlDaoWrapperFactory);
             cbaWrapper.runCBALogicWithNotificationEvents(Collections.emptySet(), Set.of(parentInvoice.getId()), List.of(parentInvoice));
             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, parentInvoice, parentAccountContext);
 
@@ -1528,12 +1568,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private class CBALogicWrapper {
 
         private final UUID accountId;
+        private final List<CustomField> invoiceCustomFields;
         private final List<Tag> invoicesTags;
         private final InternalCallContext context;
         private final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory;
 
-        public CBALogicWrapper(final UUID accountId, final List<Tag> invoicesTags, final InternalCallContext context, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+        public CBALogicWrapper(final UUID accountId,
+                               final List<CustomField> invoiceCustomFields,
+                               final List<Tag> invoicesTags,
+                               final InternalCallContext context,
+                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
             this.accountId = accountId;
+            this.invoiceCustomFields = invoiceCustomFields;
             this.invoicesTags = invoicesTags;
             this.context = context;
             this.entitySqlDaoWrapperFactory = entitySqlDaoWrapperFactory;
@@ -1565,12 +1611,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
 
         private Set<UUID> runCBALogicWithInvoices(final List<InvoiceModelDao> invoices) throws EntityPersistenceException, InvoiceApiException {
-            return cbaDao.doCBAComplexityFromTransaction(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+            return cbaDao.doCBAComplexityFromTransaction(invoices, invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
 
         private Set<UUID> runCBALogicWithInvoiceIds(final Set<UUID> allInvoiceIds) throws EntityPersistenceException, InvoiceApiException {
-            return cbaDao.doCBAComplexityFromTransaction(allInvoiceIds, invoicesTags, entitySqlDaoWrapperFactory, context);
+            return cbaDao.doCBAComplexityFromTransaction(allInvoiceIds, invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
+    }
+
+    List<CustomField> getInvoiceCustomFields(final InternalTenantContext context) {
+        return customFieldInternalApi.getCustomFieldsForAccountType(ObjectType.INVOICE, context);
     }
 
     // PERF: fetch tags once. See also https://github.com/killbill/killbill/issues/720.

@@ -21,7 +21,6 @@ package org.killbill.billing.util.customfield.dao;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -55,12 +54,12 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.entity.dao.SearchAttribute;
 import org.killbill.billing.util.entity.dao.SearchQuery;
 import org.killbill.billing.util.entity.dao.SqlOperator;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +107,11 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
                         .become(CustomFieldSqlDao.class)
                         .getByAccountRecordId(context));
         return List.copyOf(result);
+    }
+
+    public void create(final Handle handle, final List<CustomFieldModelDao> entities, final InternalCallContext context) throws CustomFieldApiException {
+        final CustomFieldSqlDao sqlDao = handle.attach(CustomFieldSqlDao.class);
+        super.bulkCreate(sqlDao, entities, context);
     }
 
     @Override

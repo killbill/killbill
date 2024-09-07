@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -1080,6 +1080,56 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(splitInvoices, 3);
     }
 
+    @Test(groups = "slow")
+    public void testCustomInvoiceNumber() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 0);
+
+        testInvoicePluginApi.invoiceNumberSequenceStart = 677400001;
+
+        // Create original subscription (Trial PHASE) -> $0 invoice
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        final Invoice invoice1 = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
+        Assert.assertEquals((int) invoice1.getInvoiceNumber(), 677400001);
+
+        // TODO Check getByNumber which is implemented differently than other APIs
+        //Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice1.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400001);
+
+        // Move to Evergreen PHASE
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        final Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
+        Assert.assertEquals((int) invoice2.getInvoiceNumber(), 677400002);
+
+        // TODO Check getByNumber which is implemented differently than other APIs
+        //Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice2.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400002);
+
+        // No more sequencing
+        testInvoicePluginApi.invoiceNumberSequenceStart = -1;
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+        final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 3);
+        // Cannot really guess the right sequence across various DB engines (it would be 3 on MySQL)
+        Assert.assertNotEquals(invoice3.getInvoiceNumber(), 677400003);
+    }
+
     private static class TestInvoiceGroupingResult implements InvoiceGroupingResult {
 
         private List<InvoiceGroup> invoiceGroups;
@@ -1183,6 +1233,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         boolean wasRescheduled = false;
         int priorCallInvocationCalls = 0;
         int onSuccessInvocationCalls = 0;
+        int invoiceNumberSequenceStart = -1;
 
         boolean commit = false;
 
@@ -1248,6 +1299,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 assertNotNull(invoiceContext.getExistingInvoices());
             }
 
+            final List<PluginProperty> adjustedPluginProperties = new LinkedList<>();
+            if (invoiceNumberSequenceStart > 0) {
+                adjustedPluginProperties.add(new PluginProperty("INVOICE_SEQUENCE_NUMBER", invoiceNumberSequenceStart, false));
+                invoiceNumberSequenceStart += 1;
+            }
+
             return new AdditionalItemsResult() {
                 @Override
                 public List<InvoiceItem> getAdditionalItems() {
@@ -1256,7 +1313,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
                 @Override
                 public Iterable<PluginProperty> getAdjustedPluginProperties() {
-                    return null;
+                    return adjustedPluginProperties.isEmpty() ? null : adjustedPluginProperties;
                 }
             };
         }

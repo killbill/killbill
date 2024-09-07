@@ -2,7 +2,7 @@
  * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
  * Copyright 2020-2021 Equinix, Inc
- * Copyright 2014-2021 The Billing Project, LLC
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,7 +36,6 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -104,6 +103,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.PluginProperties;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -121,12 +121,12 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 import org.killbill.commons.utils.Joiner;
 import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.Strings;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
-import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,6 +142,7 @@ public class InvoiceDispatcher {
 
     private static final String DRY_RUN_CUR_DATE_PROP = "DRY_RUN_CUR_DATE";
     private static final String DRY_RUN_TARGET_DATE_PROP = "DRY_RUN_TARGET_DATE";
+    public static final String INVOICE_SEQUENCE_NUMBER = "INVOICE_SEQUENCE_NUMBER";
 
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
@@ -661,6 +662,7 @@ public class InvoiceDispatcher {
         return Iterables.toStream(inputProperties)
                         .anyMatch(p -> "KB_AUTO_INVOICING_REUSE_DRAFT".equals(p.getKey()) && "true".equalsIgnoreCase((String) p.getValue()));
     }
+
     private InvoicesWithFutureNotifications processAccountWithLockAndInputTargetDate(final UUID accountId,
                                                                                      final LocalDate originalTargetDate,
                                                                                      final BillingEventSet billingEvents,
@@ -696,7 +698,6 @@ public class InvoiceDispatcher {
             setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             return null;
         }
-
 
         startNano = System.nanoTime();
         final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, null, inputProperties, internalCallContext);
@@ -776,6 +777,7 @@ public class InvoiceDispatcher {
                 splitInvoices = Collections.singletonList(invoice);
             }
 
+            final Map<String, Object> pluginPropertiesMap = pluginProperties != null ? PluginProperties.toMap(pluginProperties) : Map.of();
 
             // Transformation to Invoice -> InvoiceModelDao
             final List<InvoiceModelDao> invoicesModelDao = new ArrayList<>();
@@ -784,6 +786,11 @@ public class InvoiceDispatcher {
                 final List<InvoiceItemModelDao> invoiceItemModelDaos = transformToInvoiceModelDao(cur.getInvoiceItems());
                 invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
                 invoicesModelDao.add(invoiceModelDao);
+
+                final Object invoiceSequenceNumber = pluginPropertiesMap.get(INVOICE_SEQUENCE_NUMBER);
+                if (invoiceSequenceNumber != null && !Strings.isNullOrEmpty(invoiceSequenceNumber.toString())) {
+                    invoiceModelDao.setInvoiceNumber(Integer.valueOf(invoiceSequenceNumber.toString()));
+                }
             }
 
             final Set<InvoiceTrackingModelDao> trackingIds = new HashSet<>();
