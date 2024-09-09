@@ -138,13 +138,9 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
              }
           }
 
-        final List<Long> targetPhaseDefinitionRecordIds = getOverridePhaseDefinitionFromTransaction(overrideUsageDefinitionModelDaos, inTransactionHandle, context);
-        List<CatalogOverridePhaseDefinitionModelDao> results = sqlDao.getByAttributes(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(), context);
-
-        for(CatalogOverridePhaseDefinitionModelDao phase : results) {
-            if (targetPhaseDefinitionRecordIds != null && targetPhaseDefinitionRecordIds.contains(phase.getRecordId())) {
-                return phase;
-            }
+        final Long phaseDefRecordId = getOverridePhaseDefinitionFromTransaction(overrideUsageDefinitionModelDaos, inTransactionHandle, context);
+        if (phaseDefRecordId != null) {
+            return sqlDao.getByRecordId(phaseDefRecordId, context);
         }
 
         final CatalogOverridePhaseDefinitionModelDao inputPhaseDef = new CatalogOverridePhaseDefinitionModelDao(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(),
@@ -176,18 +172,12 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         return sqlDao.getByRecordId(recordId, context);
     }
 
-    private List<Long> getOverridePhaseDefinitionFromTransaction(final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
+    private Long getOverridePhaseDefinitionFromTransaction(final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverridePhaseUsageSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePhaseUsageSqlDao.class);
-
-        final List<String> keys = new ArrayList<String>();
-        for (int i = 0; i < overrideUsageDefinitionModelDaos.length; i++) {
-            final CatalogOverrideUsageDefinitionModelDao cur = overrideUsageDefinitionModelDaos[i];
-            // Each key is the concatenation of the usage_number, usage_definition_record_id
-            if (cur != null) {
-                keys.add(getConcatenatedKey(i, cur.getRecordId()).toString());
-            }
-        }
-        return keys.size() > 0 ? sqlDao.getTargetPhaseDefinition(keys, keys.size(), context) : null;
+        final Long phaseDefRecordId = overrideUsageDefinitionModelDaos.length > 0 ?
+                         sqlDao.getTargetPhaseDefinition(overrideUsageDefinitionModelDaos[0].getRecordId(), context)
+                            : null;
+        return phaseDefRecordId;
     }
 
     private void createCatalogOverridePhaseUsageFromTransaction(final short usageNum, final CatalogOverrideUsageDefinitionModelDao usageDef, final CatalogOverridePhaseDefinitionModelDao phaseDef, final Handle inTransactionHandle, final InternalCallContext context) {

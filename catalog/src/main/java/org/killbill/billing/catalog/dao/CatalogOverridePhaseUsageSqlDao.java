@@ -45,7 +45,6 @@ public interface CatalogOverridePhaseUsageSqlDao extends Transactional<CatalogOv
                                                            @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<Long> getTargetPhaseDefinition(@PhaseUsageKeysCollectionBinder final Collection<String> concatUsageNumAndUsageDefRecordId,
-                                               @Bind("targetCount") final Integer targetCount,
+    public Long getTargetPhaseDefinition(@Bind("usageDefRecordId") Long usageDefRecordId,
                                                @SmartBindBean final InternalTenantContext context);
 }

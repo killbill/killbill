@@ -66,10 +66,10 @@ public class TestCatalogOverridePhaseUsageSqlDao extends CatalogTestSuiteWithEmb
     @Test(groups = "slow")
     public void testGetTargetPhaseDefinition() throws Exception {
 
-        final CatalogOverridePhaseUsageModelDao obj1 = new CatalogOverridePhaseUsageModelDao((short) 1, 2L, 3L);
-        final CatalogOverridePhaseUsageModelDao obj2 = new CatalogOverridePhaseUsageModelDao((short) 2, 5L, 3L);
-        final CatalogOverridePhaseUsageModelDao obj3 = new CatalogOverridePhaseUsageModelDao((short) 4, 7L, 3L);
-        final CatalogOverridePhaseUsageModelDao nobj1 = new CatalogOverridePhaseUsageModelDao((short) 4, 7L, 4L);
+        final CatalogOverridePhaseUsageModelDao obj1 = new CatalogOverridePhaseUsageModelDao((short) 0, 2L, 3L);
+        final CatalogOverridePhaseUsageModelDao obj2 = new CatalogOverridePhaseUsageModelDao((short) 1, 5L, 3L);
+        final CatalogOverridePhaseUsageModelDao obj3 = new CatalogOverridePhaseUsageModelDao((short) 2, 7L, 3L);
+        final CatalogOverridePhaseUsageModelDao nobj1 = new CatalogOverridePhaseUsageModelDao((short) 3, 7L, 4L);
 
         performTestInTransaction(new WithCatalogOverridePhaseUsageSqlDaoTransaction<Void>() {
             @Override
@@ -79,36 +79,8 @@ public class TestCatalogOverridePhaseUsageSqlDao extends CatalogTestSuiteWithEmb
                 sqlDao.create(obj3, internalCallContext);
                 sqlDao.create(nobj1, internalCallContext);
 
-                final List<String> keys = new ArrayList<String>();
-                keys.add("1,2");
-                keys.add("2,5");
-                keys.add("4,7");
-                final List<Long> targetPhases = sqlDao.getTargetPhaseDefinition(keys, keys.size(), internalCallContext);
-                assertEquals(targetPhases.size(), 1);
-                assertEquals(targetPhases.get(0), new Long(3));
-                return null;
-            }
-        });
-    }
-
-    @Test(groups = "slow")
-    public void testGetTargetPhaseDefWithSameUsageOverrideAndDifferentRecurringPriceOverride() throws Exception {
-
-        final CatalogOverridePhaseUsageModelDao obj1 = new CatalogOverridePhaseUsageModelDao((short) 1, 2L, 3L);
-        final CatalogOverridePhaseUsageModelDao obj2 = new CatalogOverridePhaseUsageModelDao((short) 1, 2L, 4L);
-
-        performTestInTransaction(new WithCatalogOverridePhaseUsageSqlDaoTransaction<Void>() {
-            @Override
-            public Void doTransaction(final CatalogOverridePhaseUsageSqlDao sqlDao) {
-                sqlDao.create(obj1, internalCallContext);
-                sqlDao.create(obj2, internalCallContext);
-
-                final List<String> keys = new ArrayList<String>();
-                keys.add("1,2");
-                final List<Long> targetPhases = sqlDao.getTargetPhaseDefinition(keys, keys.size(), internalCallContext);
-                assertEquals(targetPhases.size(), 2);
-                assertEquals(targetPhases.get(0), new Long(3));
-                assertEquals(targetPhases.get(1), new Long(4));
+                final Long phaseRecordId = sqlDao.getTargetPhaseDefinition(2L, internalCallContext);
+                assertEquals(phaseRecordId.longValue(), 3);
                 return null;
             }
         });
