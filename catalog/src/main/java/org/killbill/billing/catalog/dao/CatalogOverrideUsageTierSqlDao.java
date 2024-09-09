@@ -17,9 +17,6 @@
 
 package org.killbill.billing.catalog.dao;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
@@ -45,6 +42,7 @@ public interface CatalogOverrideUsageTierSqlDao extends Transactional<CatalogOve
                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getTargetUsageDefinition(@Bind("tierDefRecordId") final Long tierDefRecordId,
-                                               @SmartBindBean final InternalTenantContext context);
+    public Long getTargetUsageDefinition(@Bind("tierNumber") final int tierNumber,
+                                         @Bind("tierDefRecordId") final Long tierDefRecordId,
+                                         @SmartBindBean final InternalTenantContext context);
 }

@@ -56,7 +56,7 @@ from
 <tableName()>
 where
 1=1
-and block_number=0
+and block_number=:blockNumber
 and block_def_record_id=:blockDefRecordId
 and tenant_record_id = :tenantRecordId
 ;

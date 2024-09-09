@@ -34,7 +34,6 @@ import org.killbill.billing.catalog.api.TierPriceOverride;
 import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
-import org.killbill.clock.Clock;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
@@ -174,10 +173,15 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
     private Long getOverridePhaseDefinitionFromTransaction(final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverridePhaseUsageSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePhaseUsageSqlDao.class);
-        final Long phaseDefRecordId = overrideUsageDefinitionModelDaos.length > 0 ?
-                         sqlDao.getTargetPhaseDefinition(overrideUsageDefinitionModelDaos[0].getRecordId(), context)
-                            : null;
-        return phaseDefRecordId;
+        if (overrideUsageDefinitionModelDaos.length == 0) {
+            return null;
+        }
+        for (int i = 0; i < overrideUsageDefinitionModelDaos.length; i++) {
+            if (overrideUsageDefinitionModelDaos[i] != null) {
+                return sqlDao.getTargetPhaseDefinition(i, overrideUsageDefinitionModelDaos[i].getRecordId(), context);
+            }
+        }
+        return null;
     }
 
     private void createCatalogOverridePhaseUsageFromTransaction(final short usageNum, final CatalogOverrideUsageDefinitionModelDao usageDef, final CatalogOverridePhaseDefinitionModelDao phaseDef, final Handle inTransactionHandle, final InternalCallContext context) {
@@ -222,11 +226,16 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
     private Long getOverrideUsageDefinitionFromTransaction(final CatalogOverrideTierDefinitionModelDao[] overrideTierDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverrideUsageTierSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideUsageTierSqlDao.class);
-        // Use the first tier to find the usage definition
-        final Long usageDefRecordId = overrideTierDefinitionModelDaos.length > 0 ?
-                            sqlDao.getTargetUsageDefinition(overrideTierDefinitionModelDaos[0].getRecordId(), context)
-                            : null;
-        return usageDefRecordId;
+        if (overrideTierDefinitionModelDaos.length == 0) {
+            return null;
+        }
+        // Use the first non null tier to find the usage definition
+        for (int i = 0; i < overrideTierDefinitionModelDaos.length; i++) {
+            if (overrideTierDefinitionModelDaos[i] != null) {
+                return sqlDao.getTargetUsageDefinition(i, overrideTierDefinitionModelDaos[i].getRecordId(), context);
+            }
+        }
+        return null;
     }
 
     private void createCatalogOverrideUsageTierFromTransaction(final short tierNum, final CatalogOverrideTierDefinitionModelDao tierDef, final CatalogOverrideUsageDefinitionModelDao usageDef, final Handle inTransactionHandle, final InternalCallContext context) {
@@ -280,10 +289,16 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
     private Long getOverrideTierDefinitionFromTransaction(final CatalogOverrideBlockDefinitionModelDao[] overrideBlockDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverrideTierBlockSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideTierBlockSqlDao.class);
-        // We use the first block, i.e. block '0' to find the tier definition (in most case there is only one block anyways)
-        final Long tierDefinitionId = overrideBlockDefinitionModelDaos.length > 0 ?
-                         sqlDao.getTargetTierDefinition(overrideBlockDefinitionModelDaos[0].getRecordId(), context) : null;
-        return tierDefinitionId;
+        if (overrideBlockDefinitionModelDaos.length == 0) {
+            return null;
+        }
+        // We use the first non null block, i.e. block 'i' to find the tier definition
+        for (int i = 0; i < overrideBlockDefinitionModelDaos.length; i++) {
+            if (overrideBlockDefinitionModelDaos[i] != null) {
+                return sqlDao.getTargetTierDefinition(i, overrideBlockDefinitionModelDaos[i].getRecordId(), context);
+            }
+        }
+        return null;
     }
 
     private CatalogOverrideBlockDefinitionModelDao getOrCreateOverriddenBlockDefinitionFromTransaction(TieredBlockPriceOverride tieredBlockPriceOverride,final DateTime catalogEffectiveDate, String currency, final Handle inTransactionHandle, final InternalCallContext context)

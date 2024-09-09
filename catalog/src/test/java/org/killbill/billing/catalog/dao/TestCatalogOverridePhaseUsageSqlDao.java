@@ -79,7 +79,7 @@ public class TestCatalogOverridePhaseUsageSqlDao extends CatalogTestSuiteWithEmb
                 sqlDao.create(obj3, internalCallContext);
                 sqlDao.create(nobj1, internalCallContext);
 
-                final Long phaseRecordId = sqlDao.getTargetPhaseDefinition(2L, internalCallContext);
+                final Long phaseRecordId = sqlDao.getTargetPhaseDefinition(0, 2L, internalCallContext);
                 assertEquals(phaseRecordId.longValue(), 3);
                 return null;
             }

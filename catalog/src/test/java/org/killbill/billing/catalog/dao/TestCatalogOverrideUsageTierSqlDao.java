@@ -79,7 +79,13 @@ public class TestCatalogOverrideUsageTierSqlDao extends CatalogTestSuiteWithEmbe
                 sqlDao.create(obj3, internalCallContext);
                 sqlDao.create(nobj1, internalCallContext);
 
-                final Long usageDefRecordId = sqlDao.getTargetUsageDefinition(2L, internalCallContext);
+                Long usageDefRecordId = sqlDao.getTargetUsageDefinition(0,2L, internalCallContext);
+                assertEquals(usageDefRecordId.longValue(), 3);
+
+                usageDefRecordId = sqlDao.getTargetUsageDefinition(1,3L, internalCallContext);
+                assertEquals(usageDefRecordId.longValue(), 3);
+
+                usageDefRecordId = sqlDao.getTargetUsageDefinition(2,4L, internalCallContext);
                 assertEquals(usageDefRecordId.longValue(), 3);
                 return null;
             }

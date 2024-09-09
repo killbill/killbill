@@ -79,7 +79,7 @@ public class TestCatalogOverrideTierBlockSqlDao extends CatalogTestSuiteWithEmbe
                 sqlDao.create(obj3, internalCallContext);
                 sqlDao.create(nobj1, internalCallContext);
 
-                final Long targetTier = sqlDao.getTargetTierDefinition(2L, internalCallContext);
+                final Long targetTier = sqlDao.getTargetTierDefinition(0, 2L, internalCallContext);
                 assertEquals(targetTier, new Long(3));
                 return null;
             }
