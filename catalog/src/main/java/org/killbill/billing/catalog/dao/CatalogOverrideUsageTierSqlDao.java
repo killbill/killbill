@@ -45,7 +45,6 @@ public interface CatalogOverrideUsageTierSqlDao extends Transactional<CatalogOve
                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<Long> getTargetUsageDefinition(@UsageTierKeysCollectionBinder final Collection<String> concatTierNumAndTierDefRecordId,
-                                               @Bind("targetCount") final Integer targetCount,
+    public Long getTargetUsageDefinition(@Bind("tierDefRecordId") final Long tierDefRecordId,
                                                @SmartBindBean final InternalTenantContext context);
 }

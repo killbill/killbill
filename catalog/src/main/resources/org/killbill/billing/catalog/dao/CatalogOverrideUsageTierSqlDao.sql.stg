@@ -49,21 +49,16 @@ and tenant_record_id = :tenantRecordId
 ;
 >>
 
-getTargetUsageDefinition(keys) ::= <<
+getTargetUsageDefinition() ::= <<
 select
 target_usage_def_record_id
-from (select
-      target_usage_def_record_id
-      , count(*) count
-      from
-      <tableName()>
-      where
-      concat_ws(',', tier_number, tier_def_record_id) in (<keys: {key | :key_<i0>}; separator="," >)
-      and tenant_record_id = :tenantRecordId
-      group by target_usage_def_record_id) tmp
+from
+<tableName()>
 where
 1=1
-and tmp.count = :targetCount
+and tier_number=0
+and tier_def_record_id = :tierDefRecordId
+and tenant_record_id = :tenantRecordId
 ;
 >>
 

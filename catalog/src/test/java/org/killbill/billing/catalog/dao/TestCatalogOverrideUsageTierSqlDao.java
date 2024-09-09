@@ -66,10 +66,10 @@ public class TestCatalogOverrideUsageTierSqlDao extends CatalogTestSuiteWithEmbe
     @Test(groups = "slow")
     public void testGetTargetUsageDefinition() throws Exception {
 
-        final CatalogOverrideUsageTierModelDao obj1 = new CatalogOverrideUsageTierModelDao((short) 1, 2L, 3L);
-        final CatalogOverrideUsageTierModelDao obj2 = new CatalogOverrideUsageTierModelDao((short) 2, 5L, 3L);
-        final CatalogOverrideUsageTierModelDao obj3 = new CatalogOverrideUsageTierModelDao((short) 4, 7L, 3L);
-        final CatalogOverrideUsageTierModelDao nobj1 = new CatalogOverrideUsageTierModelDao((short) 4, 7L, 4L);
+        final CatalogOverrideUsageTierModelDao obj1 = new CatalogOverrideUsageTierModelDao((short) 0, 2L, 3L);
+        final CatalogOverrideUsageTierModelDao obj2 = new CatalogOverrideUsageTierModelDao((short) 1, 3L, 3L);
+        final CatalogOverrideUsageTierModelDao obj3 = new CatalogOverrideUsageTierModelDao((short) 2, 4L, 3L);
+        final CatalogOverrideUsageTierModelDao nobj1 = new CatalogOverrideUsageTierModelDao((short) 3, 7L, 4L);
 
         performTestInTransaction(new WithCatalogOverrideUsageTierSqlDaoTransaction<Void>() {
             @Override
@@ -79,40 +79,13 @@ public class TestCatalogOverrideUsageTierSqlDao extends CatalogTestSuiteWithEmbe
                 sqlDao.create(obj3, internalCallContext);
                 sqlDao.create(nobj1, internalCallContext);
 
-                final List<String> keys = new ArrayList<String>();
-                keys.add("1,2");
-                keys.add("2,5");
-                keys.add("4,7");
-                final List<Long> targetUsages = sqlDao.getTargetUsageDefinition(keys, keys.size(), internalCallContext);
-                assertEquals(targetUsages.size(), 1);
-                assertEquals(targetUsages.get(0), new Long(3));
+                final Long usageDefRecordId = sqlDao.getTargetUsageDefinition(2L, internalCallContext);
+                assertEquals(usageDefRecordId.longValue(), 3);
                 return null;
             }
         });
     }
 
-    @Test(groups = "slow")
-    public void testGetTargetUsageDefWithSameTierOverrideAndDifferentUsagePriceOverride() throws Exception {
-
-        final CatalogOverrideUsageTierModelDao obj1 = new CatalogOverrideUsageTierModelDao((short) 1, 2L, 3L);
-        final CatalogOverrideUsageTierModelDao obj2 = new CatalogOverrideUsageTierModelDao((short) 1, 2L, 4L);
-
-        performTestInTransaction(new WithCatalogOverrideUsageTierSqlDaoTransaction<Void>() {
-            @Override
-            public Void doTransaction(final CatalogOverrideUsageTierSqlDao sqlDao) {
-                sqlDao.create(obj1, internalCallContext);
-                sqlDao.create(obj2, internalCallContext);
-
-                final List<String> keys = new ArrayList<String>();
-                keys.add("1,2");
-                final List<Long> targetUsages = sqlDao.getTargetUsageDefinition(keys, keys.size(), internalCallContext);
-                assertEquals(targetUsages.size(), 2);
-                assertEquals(targetUsages.get(0), new Long(3));
-                assertEquals(targetUsages.get(1), new Long(4));
-                return null;
-            }
-        });
-    }
 
     private interface WithCatalogOverrideUsageTierSqlDaoTransaction<T> {
 
