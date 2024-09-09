@@ -268,6 +268,11 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
             }
         }
 
+        //
+        // Given the entries (overrideBlockDefinitionModelDaos) in the catalog_override_block_definition, we look for join keys from catalog_override_tier_block
+        // to see if the tier in catalog_override_tier_definition tables has already been created.
+        // If we don't find them, we create both the join key entries in catalog_override_tier_block and the tier entry in catalog_override_tier_definition
+        //
         final CatalogOverrideTierDefinitionSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideTierDefinitionSqlDao.class);
         final Long targetTierDefinitionRecordId = getOverrideTierDefinitionFromTransaction(overrideBlockDefinitionModelDaos, inTransactionHandle, context);
         if (targetTierDefinitionRecordId != null) {
@@ -294,15 +299,10 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
     private Long getOverrideTierDefinitionFromTransaction(final CatalogOverrideBlockDefinitionModelDao[] overrideBlockDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverrideTierBlockSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideTierBlockSqlDao.class);
-        final List<String> keys = new ArrayList<String>();
-        for (int i = 0; i < overrideBlockDefinitionModelDaos.length; i++) {
-            final CatalogOverrideBlockDefinitionModelDao cur = overrideBlockDefinitionModelDaos[i];
-            if (cur != null) {
-                // Each key is the concatenation of the block_number, block_definition_record_id
-                keys.add(getConcatenatedKey(i, cur.getRecordId()).toString());
-            }
-        }
-        return keys.size() > 0 ? sqlDao.getTargetTierDefinition(keys, keys.size(), context) : null;
+        // We use the first block, i.e. block '0' to find the tier definition (in most case there is only one block anyways)
+        final Long tierDefinitionId = overrideBlockDefinitionModelDaos.length > 0 ?
+                         sqlDao.getTargetTierDefinition(overrideBlockDefinitionModelDaos[0].getRecordId(), context) : null;
+        return tierDefinitionId;
     }
 
     private CatalogOverrideBlockDefinitionModelDao getOrCreateOverriddenBlockDefinitionFromTransaction(TieredBlockPriceOverride tieredBlockPriceOverride,final DateTime catalogEffectiveDate, String currency, final Handle inTransactionHandle, final InternalCallContext context)

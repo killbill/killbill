@@ -44,7 +44,6 @@ public interface CatalogOverrideTierBlockSqlDao extends Transactional<CatalogOve
                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getTargetTierDefinition(@TierBlockKeysCollectionBinder final Collection<String> concatBlockNumAndBlockDefRecordId,
-                                        @Bind("targetCount") final Integer targetCount,
+    public Long getTargetTierDefinition(@Bind("blockDefRecordId") final Long blockDefRecordId,
                                         @SmartBindBean final InternalTenantContext context);
 }
