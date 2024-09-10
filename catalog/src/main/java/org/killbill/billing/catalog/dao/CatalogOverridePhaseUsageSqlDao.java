@@ -17,9 +17,6 @@
 
 package org.killbill.billing.catalog.dao;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
@@ -45,7 +42,7 @@ public interface CatalogOverridePhaseUsageSqlDao extends Transactional<CatalogOv
                                                            @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<Long> getTargetPhaseDefinition(@PhaseUsageKeysCollectionBinder final Collection<String> concatUsageNumAndUsageDefRecordId,
-                                               @Bind("targetCount") final Integer targetCount,
-                                               @SmartBindBean final InternalTenantContext context);
+    public Long getTargetPhaseDefinition(@Bind("usageNumber") int usageNumber,
+                                         @Bind("usageDefRecordId") Long usageDefRecordId,
+                                         @SmartBindBean final InternalTenantContext context);
 }

@@ -66,10 +66,10 @@ public class TestCatalogOverrideTierBlockSqlDao extends CatalogTestSuiteWithEmbe
     @Test(groups = "slow")
     public void testGetTargetTierDefinition() throws Exception {
 
-        final CatalogOverrideTierBlockModelDao obj1 = new CatalogOverrideTierBlockModelDao((short) 1, 2L, 3L);
-        final CatalogOverrideTierBlockModelDao obj2 = new CatalogOverrideTierBlockModelDao((short) 2, 5L, 3L);
-        final CatalogOverrideTierBlockModelDao obj3 = new CatalogOverrideTierBlockModelDao((short) 4, 7L, 3L);
-        final CatalogOverrideTierBlockModelDao nobj1 = new CatalogOverrideTierBlockModelDao((short) 4, 7L, 4L);
+        final CatalogOverrideTierBlockModelDao obj1 = new CatalogOverrideTierBlockModelDao((short) 0, 2L, 3L);
+        final CatalogOverrideTierBlockModelDao obj2 = new CatalogOverrideTierBlockModelDao((short) 1, 5L, 3L);
+        final CatalogOverrideTierBlockModelDao obj3 = new CatalogOverrideTierBlockModelDao((short) 2, 7L, 3L);
+        final CatalogOverrideTierBlockModelDao nobj1 = new CatalogOverrideTierBlockModelDao((short) 3, 7L, 4L);
 
         performTestInTransaction(new WithCatalogOverrideTierBlockSqlDaoTransaction<Void>() {
             @Override
@@ -79,11 +79,7 @@ public class TestCatalogOverrideTierBlockSqlDao extends CatalogTestSuiteWithEmbe
                 sqlDao.create(obj3, internalCallContext);
                 sqlDao.create(nobj1, internalCallContext);
 
-                final List<String> keys = new ArrayList<String>();
-                keys.add("1,2");
-                keys.add("2,5");
-                keys.add("4,7");
-                final Long targetTier = sqlDao.getTargetTierDefinition(keys, keys.size(), internalCallContext);
+                final Long targetTier = sqlDao.getTargetTierDefinition(0, 2L, internalCallContext);
                 assertEquals(targetTier, new Long(3));
                 return null;
             }

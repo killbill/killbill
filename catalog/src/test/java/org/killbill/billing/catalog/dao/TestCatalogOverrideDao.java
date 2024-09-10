@@ -39,6 +39,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
@@ -104,20 +105,27 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
     public void testGetOverriddenPlanPhasesWithUsageOverrides() throws Exception {
 
         final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
-        final Plan plan = catalog.findPlan("gas-monthly");
+        final Plan plan = catalog.findPlan("gas-monthly-2-tiers");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
 
-        List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
-        DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("gallons", new BigDecimal("1"), new BigDecimal(4), Currency.USD, new BigDecimal("100"));
-        tieredBlockPriceOverrides.add(tieredBlockPriceOverride);
+        List<TieredBlockPriceOverride> tieredBlockPriceOverrides1 = new ArrayList<TieredBlockPriceOverride>();
+        DefaultTieredBlockPriceOverride tieredBlockPriceOverride1 = new DefaultTieredBlockPriceOverride("gallons", new BigDecimal("1"), new BigDecimal(4), Currency.USD, new BigDecimal("100"));
+        tieredBlockPriceOverrides1.add(tieredBlockPriceOverride1);
+
+        List<TieredBlockPriceOverride> tieredBlockPriceOverrides2 = new ArrayList<TieredBlockPriceOverride>();
+        DefaultTieredBlockPriceOverride tieredBlockPriceOverride2 = new DefaultTieredBlockPriceOverride("gallons", new BigDecimal("1"), new BigDecimal(8), Currency.USD, new BigDecimal("500"));
+        tieredBlockPriceOverrides2.add(tieredBlockPriceOverride2);
 
         List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
-        DefaultTierPriceOverride tierPriceOverride = new DefaultTierPriceOverride(tieredBlockPriceOverrides);
-        tierPriceOverrides.add(tierPriceOverride);
+        DefaultTierPriceOverride tierPriceOverride1 = new DefaultTierPriceOverride(tieredBlockPriceOverrides1);
+        tierPriceOverrides.add(tierPriceOverride1);
+
+        DefaultTierPriceOverride tierPriceOverride2 = new DefaultTierPriceOverride(tieredBlockPriceOverrides2);
+        tierPriceOverrides.add(tierPriceOverride2);
 
         List<UsagePriceOverride> usagePriceOverrides = new ArrayList<UsagePriceOverride>();
-        DefaultUsagePriceOverride usagePriceOverride = new DefaultUsagePriceOverride("gas-monthly-in-arrear", UsageType.CONSUMABLE, tierPriceOverrides);
+        DefaultUsagePriceOverride usagePriceOverride = new DefaultUsagePriceOverride("gas-monthly-2-tiers-in-arrear", UsageType.CONSUMABLE, tierPriceOverrides);
         usagePriceOverrides.add(usagePriceOverride);
 
        //Override the gallons price from $3.95 to $4 and also the recurring price from  $0 to $348.64
@@ -125,32 +133,87 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
 
         final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
 
+        final CatalogOverrideUsageDefinitionModelDao usageDef1 = checkUsageDefinition(newPlan, usagePriceOverride);
+        final List<CatalogOverrideTierDefinitionModelDao> tierDefs1 = checkTierDefs(usageDef1.getRecordId(), tieredBlockPriceOverride1, tieredBlockPriceOverride2);
+        assertEquals(tierDefs1.size(), 2);
+
+        // Exercise the idempotency of the getOrCreateOverridePlanDefinition method. We verify that we do not recreate any entries given the same input.
+        final CatalogOverridePlanDefinitionModelDao newPlan2 = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
+        final CatalogOverrideUsageDefinitionModelDao usageDef2 = checkUsageDefinition(newPlan2, usagePriceOverride);
+        // Check we have not recreated the same usage definition record
+        assertEquals(usageDef1.getRecordId(), usageDef2.getRecordId());
+
+        final List<CatalogOverrideTierDefinitionModelDao> tierDefs2 = checkTierDefs(usageDef2.getRecordId(), tieredBlockPriceOverride1, tieredBlockPriceOverride2);
+        assertEquals(tierDefs2.size(), 2);
+        assertEquals(tierDefs1.get(0).getRecordId(), tierDefs2.get(0).getRecordId());
+        assertEquals(tierDefs1.get(1).getRecordId(), tierDefs2.get(1).getRecordId());
+
+        // Exercise the recreation of all the entries given a different override input
+        tieredBlockPriceOverrides1.clear();
+        tieredBlockPriceOverride1 = new DefaultTieredBlockPriceOverride("gallons", new BigDecimal("1"), new BigDecimal(3), Currency.USD, new BigDecimal("100"));
+        tieredBlockPriceOverrides1.add(tieredBlockPriceOverride1);
+
+        tieredBlockPriceOverrides2.clear();
+        tieredBlockPriceOverrides2 = new ArrayList<TieredBlockPriceOverride>();
+        tieredBlockPriceOverride2 = new DefaultTieredBlockPriceOverride("gallons", new BigDecimal("1"), new BigDecimal(5), Currency.USD, new BigDecimal("500"));
+        tieredBlockPriceOverrides2.add(tieredBlockPriceOverride2);
+
+        tierPriceOverrides.clear();
+        tierPriceOverride1 = new DefaultTierPriceOverride(tieredBlockPriceOverrides1);
+        tierPriceOverrides.add(tierPriceOverride1);
+
+        tierPriceOverride2 = new DefaultTierPriceOverride(tieredBlockPriceOverrides2);
+        tierPriceOverrides.add(tierPriceOverride2);
+
+        usagePriceOverrides.clear();
+        usagePriceOverride = new DefaultUsagePriceOverride("gas-monthly-2-tiers-in-arrear", UsageType.CONSUMABLE, tierPriceOverrides);
+        usagePriceOverrides.add(usagePriceOverride);
+
+        final CatalogOverridePlanDefinitionModelDao otherPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
+
+        final CatalogOverrideUsageDefinitionModelDao otherUsageDef = checkUsageDefinition(otherPlan, usagePriceOverride);
+        final List<CatalogOverrideTierDefinitionModelDao> otherTierDefs = checkTierDefs(otherUsageDef.getRecordId(), tieredBlockPriceOverride1, tieredBlockPriceOverride2);
+        assertEquals(otherTierDefs.size(), 2);
+        assertNotEquals(otherTierDefs.get(0).getRecordId(), tierDefs2.get(0).getRecordId());
+        assertNotEquals(otherTierDefs.get(1).getRecordId(), tierDefs2.get(1).getRecordId());
+    }
+
+
+    private CatalogOverrideUsageDefinitionModelDao checkUsageDefinition(final CatalogOverridePlanDefinitionModelDao newPlan, final UsagePriceOverride usagePriceOverride) {
         final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(newPlan.getRecordId(), internalCallContext);
         assertEquals(phases.size(), 1);
         final CatalogOverridePhaseDefinitionModelDao curPhase = phases.get(0);
-
-        assertEquals(curPhase.getCurrency(), resolvedOverrides[0].getCurrency().name());
-        assertEquals(curPhase.getFixedPrice().compareTo(resolvedOverrides[0].getFixedPrice()), 0);
-        assertEquals(curPhase.getRecurringPrice().compareTo(resolvedOverrides[0].getRecurringPrice()), 0);
-        assertEquals(curPhase.getParentPhaseName(), resolvedOverrides[0].getPhaseName());
 
         final List<CatalogOverrideUsageDefinitionModelDao> usages = catalogOverrideDao.getOverriddenPhaseUsages(curPhase.getRecordId(), internalCallContext);
         assertEquals(usages.size(), 1);
         final CatalogOverrideUsageDefinitionModelDao curUsage = usages.get(0);
         assertEquals(curUsage.getParentUsageName(), usagePriceOverride.getName());
         assertEquals(curUsage.getType(), usagePriceOverride.getUsageType().toString());
+        return usages.get(0);
+    }
+        private List<CatalogOverrideTierDefinitionModelDao> checkTierDefs(final Long usageDefRecordId, final TieredBlockPriceOverride tieredBlockPriceOverride1, final TieredBlockPriceOverride tieredBlockPriceOverride2) {
 
-        final List<CatalogOverrideTierDefinitionModelDao> tiers = catalogOverrideDao.getOverriddenUsageTiers(curUsage.getRecordId(), internalCallContext);
-        assertEquals(tiers.size(), 1);
-        final CatalogOverrideTierDefinitionModelDao curTier = tiers.get(0);
+        final List<CatalogOverrideTierDefinitionModelDao> tiers = catalogOverrideDao.getOverriddenUsageTiers(usageDefRecordId, internalCallContext);
+        assertEquals(tiers.size(), 2);
 
-        final List<CatalogOverrideBlockDefinitionModelDao> tierBlocks =  catalogOverrideDao.getOverriddenTierBlocks(curTier.getRecordId(), internalCallContext);
-        assertEquals(tierBlocks.size(), 1);
-        final CatalogOverrideBlockDefinitionModelDao curTieredBlock =  tierBlocks.get(0);
-        assertEquals(curTieredBlock.getParentUnitName(),tieredBlockPriceOverride.getUnitName());
-        assertEquals(curTieredBlock.getPrice().compareTo(tieredBlockPriceOverride.getPrice()), 0);
-        assertEquals(curTieredBlock.getSize().compareTo(tieredBlockPriceOverride.getSize()), 0);
-        assertEquals(curTieredBlock.getMax().compareTo(tieredBlockPriceOverride.getMax()), 0);
+        final CatalogOverrideTierDefinitionModelDao firstTier = tiers.get(0);
+        final List<CatalogOverrideBlockDefinitionModelDao> firstTierBlocks =  catalogOverrideDao.getOverriddenTierBlocks(firstTier.getRecordId(), internalCallContext);
+        assertEquals(firstTierBlocks.size(), 1);
+        final CatalogOverrideBlockDefinitionModelDao firstTierBlock =  firstTierBlocks.get(0);
+        assertEquals(firstTierBlock.getParentUnitName(),tieredBlockPriceOverride1.getUnitName());
+        assertEquals(firstTierBlock.getPrice().compareTo(tieredBlockPriceOverride1.getPrice()), 0);
+        assertEquals(firstTierBlock.getSize().compareTo(tieredBlockPriceOverride1.getSize()), 0);
+        assertEquals(firstTierBlock.getMax().compareTo(tieredBlockPriceOverride1.getMax()), 0);
+
+        final CatalogOverrideTierDefinitionModelDao secondTier = tiers.get(1);
+        final List<CatalogOverrideBlockDefinitionModelDao> secondTierBlocks =  catalogOverrideDao.getOverriddenTierBlocks(secondTier.getRecordId(), internalCallContext);
+        assertEquals(secondTierBlocks.size(), 1);
+        final CatalogOverrideBlockDefinitionModelDao secondTierBlock =  secondTierBlocks.get(0);
+        assertEquals(secondTierBlock.getParentUnitName(),tieredBlockPriceOverride2.getUnitName());
+        assertEquals(secondTierBlock.getPrice().compareTo(tieredBlockPriceOverride2.getPrice()), 0);
+        assertEquals(secondTierBlock.getSize().compareTo(tieredBlockPriceOverride2.getSize()), 0);
+        assertEquals(secondTierBlock.getMax().compareTo(tieredBlockPriceOverride2.getMax()), 0);
+        return tiers;
     }
 
     @Test(groups = "slow")
