@@ -1,0 +1,3 @@
+drop index catalog_override_phase_usage_idx on catalog_override_phase_usage;
+create index catalog_override_phase_usage_idx1 on catalog_override_phase_usage(usage_def_record_id);
+create index catalog_override_phase_usage_idx2 on catalog_override_phase_usage(tenant_record_id, target_phase_def_record_id);
