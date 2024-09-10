@@ -99,16 +99,15 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
     private Long getOverridePlanDefinitionFromTransaction(final CatalogOverridePhaseDefinitionModelDao[] overridePhaseDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverridePlanPhaseSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePlanPhaseSqlDao.class);
-
-        final List<String> keys = new ArrayList<String>();
+        if (overridePhaseDefinitionModelDaos.length == 0) {
+            return null;
+        }
         for (int i = 0; i < overridePhaseDefinitionModelDaos.length; i++) {
-            final CatalogOverridePhaseDefinitionModelDao cur = overridePhaseDefinitionModelDaos[i];
-            if (cur != null) {
-                // Each key is the concatenation of the phase_number, phase_definition_record_id
-                keys.add(getConcatenatedKey(i, cur.getRecordId()).toString());
+            if (overridePhaseDefinitionModelDaos[i] != null) {
+                return sqlDao.getTargetPlanDefinition(i, overridePhaseDefinitionModelDaos[i].getRecordId(), context);
             }
         }
-        return keys.size() > 0 ? sqlDao.getTargetPlanDefinition(keys, keys.size(), context) : null;
+        return null;
     }
 
     private void createCatalogOverridePlanPhaseFromTransaction(final short phaseNum, final CatalogOverridePhaseDefinitionModelDao phaseDef, final CatalogOverridePlanDefinitionModelDao planDef, final Handle inTransactionHandle, final InternalCallContext context) {

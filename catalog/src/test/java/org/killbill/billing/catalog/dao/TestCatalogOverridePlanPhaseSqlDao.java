@@ -79,11 +79,7 @@ public class TestCatalogOverridePlanPhaseSqlDao extends CatalogTestSuiteWithEmbe
                 sqlDao.create(obj3, internalCallContext);
                 sqlDao.create(nobj1, internalCallContext);
 
-                final List<String> keys = new ArrayList<String>();
-                keys.add("1,2");
-                keys.add("2,5");
-                keys.add("4,7");
-                final Long targetPlan = sqlDao.getTargetPlanDefinition(keys, keys.size(), internalCallContext);
+                final Long targetPlan = sqlDao.getTargetPlanDefinition(2, 5L, internalCallContext);
                 assertEquals(targetPlan, new Long(3));
                 return null;
             }
