@@ -21,6 +21,7 @@ package org.killbill.billing.util.customfield.dao;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -217,13 +218,13 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
                                           Set.of("id",
                                                  "object_id",
                                                  "object_type",
-                                                 "is_active",
                                                  "field_name",
                                                  "field_value",
                                                  "created_by",
                                                  "created_date",
                                                  "updated_by",
-                                                 "updated_date"));
+                                                 "updated_date"),
+                                          Map.of());
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
 

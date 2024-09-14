@@ -606,7 +606,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                  "created_by",
                                                  "created_date",
                                                  "updated_by",
-                                                 "updated_date"));
+                                                 "updated_date"),
+                                          Map.of("migrated", Boolean.class));
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
             searchQuery.addSearchClause("id", SqlOperator.EQ, searchKey);
