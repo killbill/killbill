@@ -991,24 +991,29 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 0);
 
+        testInvoicePluginApi.invoiceNumberSequenceStart = 123456;
+
         // Create original subscription (Trial PHASE) -> $0 invoice but plugin added one item
         final DefaultEntitlement sub1 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey1", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
+        final Invoice invoice1 = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(sub1.getId(), internalCallContext);
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
+        Assert.assertEquals((int) invoice1.getInvoiceNumber(), 123456);
 
         final DefaultEntitlement sub2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey2", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
+        final Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(sub2.getId(), internalCallContext);
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
+        Assert.assertEquals((int) invoice2.getInvoiceNumber(), 123457);
 
         final DefaultEntitlement sub3 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey3", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
+        final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(sub3.getId(), internalCallContext);
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 3);
+        Assert.assertEquals((int) invoice3.getInvoiceNumber(), 123458);
 
         testInvoicePluginApi.grpResult = new Function<Invoice, InvoiceGroupingResult>() {
 
@@ -1054,6 +1059,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 6);
+        Assert.assertEquals((int) invoices.get(3).getInvoiceNumber(), 123459);
+        Assert.assertEquals((int) invoices.get(4).getInvoiceNumber(), 123460);
+        Assert.assertEquals((int) invoices.get(5).getInvoiceNumber(), 123461);
 
         // Verify we have indeed 3 split invoices for the targetDate 20122-05-1 and each having one RECURRING + its mathcing TAX item
         long splitInvoices = invoices.stream()
@@ -1304,8 +1312,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
             final List<PluginProperty> adjustedPluginProperties = new LinkedList<>();
             if (invoiceNumberSequenceStart > 0) {
-                adjustedPluginProperties.add(new PluginProperty("INVOICE_SEQUENCE_NUMBER", invoiceNumberSequenceStart, false));
-                invoiceNumberSequenceStart += 1;
+                // There's only one test that uses the grouping function and 3 invoices are expected
+                final int numbersToGenerate = grpResult == NullInvoiceGroupingResult ? 1 : 3;
+                for (int i = 0; i < numbersToGenerate; i++) {
+                    adjustedPluginProperties.add(new PluginProperty("INVOICE_SEQUENCE_NUMBER", invoiceNumberSequenceStart, false));
+                    invoiceNumberSequenceStart += 1;
+                }
             }
 
             return new AdditionalItemsResult() {

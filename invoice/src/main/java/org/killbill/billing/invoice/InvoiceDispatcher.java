@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -103,7 +104,6 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.util.PluginProperties;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -777,7 +777,11 @@ public class InvoiceDispatcher {
                 splitInvoices = Collections.singletonList(invoice);
             }
 
-            final Map<String, Object> pluginPropertiesMap = pluginProperties != null ? PluginProperties.toMap(pluginProperties) : Map.of();
+            // We should probably update InvoiceGroupingResult one day to allow more control to the caller
+            final LinkedList<Object> invoiceSequenceNumbers = new LinkedList<>();
+            StreamSupport.stream(pluginProperties.spliterator(), false)
+                         .filter(pp -> INVOICE_SEQUENCE_NUMBER.equals(pp.getKey()))
+                         .forEach(pp -> invoiceSequenceNumbers.add(pp.getValue()));
 
             // Transformation to Invoice -> InvoiceModelDao
             final List<InvoiceModelDao> invoicesModelDao = new ArrayList<>();
@@ -787,7 +791,7 @@ public class InvoiceDispatcher {
                 invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
                 invoicesModelDao.add(invoiceModelDao);
 
-                final Object invoiceSequenceNumber = pluginPropertiesMap.get(INVOICE_SEQUENCE_NUMBER);
+                final Object invoiceSequenceNumber = invoiceSequenceNumbers.isEmpty() ? null : invoiceSequenceNumbers.removeFirst();
                 if (invoiceSequenceNumber != null && !Strings.isNullOrEmpty(invoiceSequenceNumber.toString())) {
                     invoiceModelDao.setInvoiceNumber(Integer.valueOf(invoiceSequenceNumber.toString()));
                 }
