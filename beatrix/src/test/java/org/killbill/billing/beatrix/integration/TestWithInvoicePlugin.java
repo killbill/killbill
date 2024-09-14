@@ -1084,7 +1084,8 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
     public void testCustomInvoiceNumber() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDay(new LocalDate(2012, 4, 1));
+        final LocalDate startDate = new LocalDate(2012, 4, 1);
+        clock.setDay(startDate);
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -1102,8 +1103,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
         Assert.assertEquals((int) invoice1.getInvoiceNumber(), 677400001);
 
-        // TODO Check getByNumber which is implemented differently than other APIs
-        //Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice1.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400001);
+        Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice1.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400001);
+        Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, false, callContext).get(0).getInvoiceNumber(), 677400001);
+        Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), startDate, clock.getUTCToday(), false, false, callContext).get(0).getInvoiceNumber(), 677400001);
 
         // Move to Evergreen PHASE
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -1114,8 +1116,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
         Assert.assertEquals((int) invoice2.getInvoiceNumber(), 677400002);
 
-        // TODO Check getByNumber which is implemented differently than other APIs
-        //Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice2.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400002);
+        Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice2.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400002);
+        Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, false, callContext).get(1).getInvoiceNumber(), 677400002);
+        Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), startDate, clock.getUTCToday(), false, false, callContext).get(1).getInvoiceNumber(), 677400002);
 
         // No more sequencing
         testInvoicePluginApi.invoiceNumberSequenceStart = -1;

@@ -195,6 +195,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
             if (includeInvoiceComponents) {
                 invoiceDaoHelper.populateChildren(invoices, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+            } else {
+                invoiceDaoHelper.populateInvoiceModelDao(invoices, invoiceCustomFields, invoicesTags);
             }
 
             return invoices;
@@ -218,6 +220,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(includeVoidedInvoices, invoiceDao, fromDate, upToDate, context);
             if (includeInvoiceComponents) {
                 invoiceDaoHelper.populateChildren(invoices, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, context);
+            } else {
+                invoiceDaoHelper.populateInvoiceModelDao(invoices, invoiceCustomFields, invoicesTags);
             }
 
             return invoices;
@@ -285,13 +289,15 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 throw new InvoiceApiException(ErrorCode.INVOICE_NUMBER_NOT_FOUND, number.longValue());
             }
 
+            // The context may not contain the account record id at this point - we couldn't do it in the API above
+            // as we couldn't get access to the invoice object until now.
+            final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+            final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(contextWithAccountRecordId);
+            final List<Tag> invoicesTags = getInvoicesTags(contextWithAccountRecordId);
             if (includeInvoiceChildren) {
-                // The context may not contain the account record id at this point - we couldn't do it in the API above
-                // as we couldn't get access to the invoice object until now.
-                final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-                final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
-                final List<Tag> invoicesTags = getInvoicesTags(contextWithAccountRecordId);
                 invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+            } else {
+                invoiceDaoHelper.populateInvoiceModelDao(invoice, invoiceCustomFields, invoicesTags);
             }
             return invoice;
         });

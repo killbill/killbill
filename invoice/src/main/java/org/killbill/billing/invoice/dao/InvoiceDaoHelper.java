@@ -239,6 +239,20 @@ public class InvoiceDaoHelper {
                                         invoiceItemToBeAdjusted.getCatalogEffectiveDate(), effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
     }
 
+    public void populateInvoiceModelDao(final InvoiceModelDao invoice,
+                                        final List<CustomField> invoiceCustomFields,
+                                        final List<Tag> invoicesTags) {
+        setInvoiceWrittenOff(invoice, invoicesTags);
+        setInvoiceNumber(invoice, invoiceCustomFields);
+    }
+
+    public void populateInvoiceModelDao(final Iterable<InvoiceModelDao> invoices,
+                                        final List<CustomField> invoiceCustomFields,
+                                        final List<Tag> invoicesTags) {
+        setInvoicesWrittenOff(invoices, invoicesTags);
+        setInvoiceNumber(invoices, invoiceCustomFields);
+    }
+
     public void populateChildren(final InvoiceModelDao invoice,
                                  final List<CustomField> invoiceCustomFields,
                                  final List<Tag> invoicesTags,
@@ -249,14 +263,14 @@ public class InvoiceDaoHelper {
         setInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setTrackingIdsFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
-        setInvoiceWrittenOff(invoice, invoicesTags);
         if(includeRepairStatus) {
             setInvoiceRepaired(invoice, entitySqlDaoWrapperFactory, context);
         }
         if (!invoice.isParentInvoice()) {
             setParentInvoice(invoice, invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
-        setInvoiceNumber(invoice, invoiceCustomFields);
+
+        populateInvoiceModelDao(invoice, invoiceCustomFields, invoicesTags);
     }
 
     public void populateChildren(final Iterable<InvoiceModelDao> invoices,
@@ -273,7 +287,6 @@ public class InvoiceDaoHelper {
         setInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setTrackingIdsFromTransaction(invoices, entitySqlDaoWrapperFactory, context);
-        setInvoicesWrittenOff(invoices, invoicesTags);
         if (includeRepairStatus) {
             setInvoicesRepaired(invoices, entitySqlDaoWrapperFactory, context);
         }
@@ -286,7 +299,7 @@ public class InvoiceDaoHelper {
             setParentInvoice(nonParentInvoices, invoiceCustomFields, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
 
-        setInvoiceNumber(invoices, invoiceCustomFields);
+        populateInvoiceModelDao(invoices, invoiceCustomFields, invoicesTags);
     }
 
     public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final Boolean includeVoidedInvoices,
