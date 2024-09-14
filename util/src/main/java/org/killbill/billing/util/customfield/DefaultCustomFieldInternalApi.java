@@ -51,7 +51,7 @@ public class DefaultCustomFieldInternalApi implements CustomFieldInternalApi {
 
     @Override
     public CustomField searchUniqueCustomField(final String key, final String value, final ObjectType objectType, final InternalTenantContext context) {
-        final String searchKey = String.format("_q=1&object_type=%s&is_active=1&field_name=%s&field_value=%s", objectType, key, value);
+        final String searchKey = String.format("_q=1&object_type=%s&field_name=%s&field_value=%s", objectType, key, value);
         final Pagination<CustomField> page = getEntityPaginationNoException(1L,
                                                                                     new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
                                                                                         @Override
