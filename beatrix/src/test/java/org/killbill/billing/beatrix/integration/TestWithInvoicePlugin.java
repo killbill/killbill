@@ -59,6 +59,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
@@ -77,6 +78,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -982,7 +984,6 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testInvoiceGrouping() throws Exception {
-
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
@@ -1130,17 +1131,43 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, false, callContext).get(1).getInvoiceNumber(), 677400002);
         Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), startDate, clock.getUTCToday(), false, false, callContext).get(1).getInvoiceNumber(), 677400002);
 
+        // Test credits
+        isCommitVoidTest = true;
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), startDate, "credit invoice", new BigDecimal("20.00"), account.getCurrency(), null);
+        final List<InvoiceItem> credits = invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), List.of(inputCredit), true, List.of(), callContext);
+        assertListenerStatus();
+        Assert.assertEquals(credits.size(), 1);
+        Assert.assertEquals((int) invoiceUserApi.getInvoice(credits.get(0).getInvoiceId(), callContext).getInvoiceNumber(), 677400003);
+
+        // Test charges
+        isCommitVoidTest = true;
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "description", clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("20.00"), account.getCurrency(), null);
+        final List<InvoiceItem> charges = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), List.of(externalCharge), true, List.of(), callContext);
+        assertListenerStatus();
+        Assert.assertEquals(charges.size(), 1);
+        Assert.assertEquals((int) invoiceUserApi.getInvoice(charges.get(0).getInvoiceId(), callContext).getInvoiceNumber(), 677400004);
+
         // No more sequencing
         testInvoicePluginApi.invoiceNumberSequenceStart = -1;
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+        final Invoice invoice5 = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                                              new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 3);
-        // Cannot really guess the right sequence across various DB engines (it would be 3 on MySQL)
-        Assert.assertNotEquals(invoice3.getInvoiceNumber(), 677400003);
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 5);
+        // Cannot really guess the right sequence across various DB engines (it would be 5 on MySQL)
+        Assert.assertNotEquals(invoice5.getInvoiceNumber(), 677400005);
+
+        // Test deletion
+        Assert.assertEquals((int) invoiceUserApi.getInvoice(invoice1.getId(), callContext).getInvoiceNumber(), 677400001);
+        final CustomField customField = customFieldUserApi.getCustomFieldsForObject(invoice1.getId(), ObjectType.INVOICE, callContext).get(0);
+        busHandler.pushExpectedEvents(NextEvent.CUSTOM_FIELD);
+        customFieldUserApi.removeCustomFields(List.of(customField), callContext);
+        assertListenerStatus();
+        Assert.assertNotEquals((int) invoiceUserApi.getInvoice(invoice1.getId(), callContext).getInvoiceNumber(), 677400001);
     }
 
     private static class TestInvoiceGroupingResult implements InvoiceGroupingResult {
