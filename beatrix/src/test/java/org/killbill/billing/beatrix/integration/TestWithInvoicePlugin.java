@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -181,6 +182,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.wasRescheduled = false;
         testInvoicePluginApi.priorCallInvocationCalls = 0;
         testInvoicePluginApi.onSuccessInvocationCalls = 0;
+        testInvoicePluginApi.invoiceNumberSequenceStart = -1;
         testInvoicePluginApi.taxItems = NoTaxItems;
         testInvoicePluginApi.grpResult = NullInvoiceGroupingResult;
         testInvoicePluginApi.checkPluginProperties = NoCheckPluginProperties;
@@ -1310,7 +1312,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 assertNotNull(invoiceContext.getExistingInvoices());
             }
 
-            final List<PluginProperty> adjustedPluginProperties = new LinkedList<>();
+            final Collection<PluginProperty> adjustedPluginProperties = new LinkedList<>();
             if (invoiceNumberSequenceStart > 0) {
                 // There's only one test that uses the grouping function and 3 invoices are expected
                 final int numbersToGenerate = grpResult == NullInvoiceGroupingResult ? 1 : 3;
