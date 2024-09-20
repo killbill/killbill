@@ -89,8 +89,10 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper;
+import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -104,6 +106,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterators;
 import org.killbill.commons.utils.collect.Sets;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -246,14 +249,78 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public InvoiceModelDao getByRecordId(final Long recordId, final InternalTenantContext context) {
+        throw new UnsupportedOperationException("#getByRecordId isn't used");
+    }
+
+    @Override
     public InvoiceModelDao getById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
         return getById(invoiceId, false, context);
     }
 
     @Override
-    public InvoiceModelDao getById(final UUID invoiceId, final boolean includeRepairStatus, final InternalTenantContext context) throws InvoiceApiException {
+    public Pagination<InvoiceModelDao> getAll(final InternalTenantContext context) {
+        throw new UnsupportedOperationException("#getAll isn't used");
+    }
+
+    @Override
+    public Pagination<InvoiceModelDao> get(final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(InvoiceSqlDao.class,
+                                              new PaginationIteratorBuilder<InvoiceModelDao, Invoice, EntitySqlDao<InvoiceModelDao, Invoice>>() {
+                                                  @Override
+                                                  public Long getCount(final EntitySqlDao<InvoiceModelDao, Invoice> sqlDao, final InternalTenantContext context) {
+                                                      // Only need to compute it once, because no search filter has been applied (see DefaultPaginationSqlDaoHelper)
+                                                      return null;
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<InvoiceModelDao> build(final EntitySqlDao<InvoiceModelDao, Invoice> sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      final Iterator<InvoiceModelDao> invoiceModelDaoIterator = sqlDao.get(offset, limit, getNaturalOrderingColumns(), ordering.toString(), context);
+                                                      return Iterators.transform(invoiceModelDaoIterator,
+                                                                                 invoiceModelDao -> {
+                                                                                     final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(invoiceModelDao.getId(), context);
+                                                                                     final List<Tag> invoiceTags = getInvoiceTags(invoiceModelDao.getId(), context);
+                                                                                     invoiceDaoHelper.populateInvoiceModelDao(invoiceModelDao, invoiceCustomFields, invoiceTags);
+                                                                                     return invoiceModelDao;
+                                                                                 });
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
+
+    @Override
+    public Pagination<InvoiceModelDao> getByAccountRecordId(final Long offset, final Long limit, final InternalTenantContext context) {
         final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(context);
         final List<Tag> invoicesTags = getInvoicesTags(context);
+        return paginationHelper.getPaginationWithAccountRecordId(InvoiceSqlDao.class,
+                                                                 new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
+                                                                     @Override
+                                                                     public Long getCount(final InvoiceSqlDao sqlDao, final InternalTenantContext context) {
+                                                                         // Only need to compute it once, because no search filter has been applied (see DefaultPaginationSqlDaoHelper)
+                                                                         return null;
+                                                                     }
+
+                                                                     @Override
+                                                                     public Iterator<InvoiceModelDao> build(final InvoiceSqlDao sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                                         final Iterator<InvoiceModelDao> byAccountRecordIdWithPaginationEnabled = sqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit, context);
+                                                                         return Iterators.transform(byAccountRecordIdWithPaginationEnabled,
+                                                                                             invoiceModelDao -> {
+                                                                                                 invoiceDaoHelper.populateInvoiceModelDao(invoiceModelDao, invoiceCustomFields, invoicesTags);
+                                                                                                 return invoiceModelDao;
+                                                                                             });
+                                                                     }
+                                                                 },
+                                                                 offset,
+                                                                 limit,
+                                                                 context);
+    }
+
+    @Override
+    public InvoiceModelDao getById(final UUID invoiceId, final boolean includeRepairStatus, final InternalTenantContext context) throws InvoiceApiException {
+        final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(invoiceId, context);
+        final List<Tag> invoicesTags = getInvoiceTags(invoiceId, context);
 
         return transactionalSqlDao.execute(true, InvoiceApiException.class, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
@@ -292,8 +359,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             // The context may not contain the account record id at this point - we couldn't do it in the API above
             // as we couldn't get access to the invoice object until now.
             final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
-            final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(contextWithAccountRecordId);
-            final List<Tag> invoicesTags = getInvoicesTags(contextWithAccountRecordId);
+            final List<CustomField> invoiceCustomFields = getInvoiceCustomFields(invoice.getId(), contextWithAccountRecordId);
+            final List<Tag> invoicesTags = getInvoiceTags(invoice.getId(), contextWithAccountRecordId);
             if (includeInvoiceChildren) {
                 invoiceDaoHelper.populateChildren(invoice, invoiceCustomFields, invoicesTags, false, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
             } else {
@@ -1630,10 +1697,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         return customFieldInternalApi.getCustomFieldsForAccountType(ObjectType.INVOICE, context);
     }
 
+    List<CustomField> getInvoiceCustomFields(final UUID invoiceId, final InternalTenantContext context) {
+        return customFieldInternalApi.getCustomFieldsForObject(invoiceId, ObjectType.INVOICE, context);
+    }
+
     // PERF: fetch tags once. See also https://github.com/killbill/killbill/issues/720.
     @VisibleForTesting
     List<Tag> getInvoicesTags(final InternalTenantContext context) {
         return tagInternalApi.getTagsForAccountType(ObjectType.INVOICE, false, context);
+    }
+
+    List<Tag> getInvoiceTags(final UUID invoiceId, final InternalTenantContext context) {
+        return tagInternalApi.getTags(invoiceId,  ObjectType.INVOICE, context);
     }
 
     private static boolean checkAgainstExistingInvoiceItemState(final InvoiceItemModelDao existingInvoiceItem, final InvoiceItemModelDao inputInvoiceItem) {

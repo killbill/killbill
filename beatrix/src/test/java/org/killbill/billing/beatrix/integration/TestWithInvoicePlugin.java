@@ -1114,9 +1114,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
         Assert.assertEquals((int) invoice1.getInvoiceNumber(), 677400001);
 
+        // Test the various APIs to ensure we pull the right invoice number
+        Assert.assertEquals((int) invoiceUserApi.getInvoice(invoice1.getId(), callContext).getInvoiceNumber(), 677400001);
         Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice1.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400001);
         Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, false, callContext).get(0).getInvoiceNumber(), 677400001);
         Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), startDate, clock.getUTCToday(), false, false, callContext).get(0).getInvoiceNumber(), 677400001);
+        Assert.assertEquals((int) invoiceUserApi.getInvoices(0L, 1L, callContext).iterator().next().getInvoiceNumber(), 677400001);
 
         // Move to Evergreen PHASE
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -1127,9 +1130,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
         Assert.assertEquals((int) invoice2.getInvoiceNumber(), 677400002);
 
+        // Test the various APIs to ensure we pull the right invoice number
+        Assert.assertEquals((int) invoiceUserApi.getInvoice(invoice2.getId(), callContext).getInvoiceNumber(), 677400002);
         Assert.assertEquals((int) invoiceUserApi.getInvoiceByNumber(invoice2.getInvoiceNumber(), callContext).getInvoiceNumber(), 677400002);
         Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, false, callContext).get(1).getInvoiceNumber(), 677400002);
         Assert.assertEquals((int) invoiceUserApi.getInvoicesByAccount(account.getId(), startDate, clock.getUTCToday(), false, false, callContext).get(1).getInvoiceNumber(), 677400002);
+        Assert.assertEquals((int) invoiceUserApi.getInvoices(1L, 1L, callContext).iterator().next().getInvoiceNumber(), 677400002);
 
         // Test credits
         isCommitVoidTest = true;
