@@ -37,6 +37,7 @@ import org.killbill.billing.util.broadcast.dao.BroadcastDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.killbill.billing.util.customfield.DefaultCustomFieldInternalApi;
 import org.killbill.billing.util.customfield.api.DefaultCustomFieldUserApi;
 import org.killbill.billing.util.customfield.dao.CustomFieldDao;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -80,6 +81,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected DefaultTagUserApi tagUserApi;
     @Inject
     protected DefaultCustomFieldUserApi customFieldUserApi;
+    @Inject
+    protected DefaultCustomFieldInternalApi customFieldInternalApi;
     @Inject
     protected CustomFieldDao customFieldDao;
     @Inject

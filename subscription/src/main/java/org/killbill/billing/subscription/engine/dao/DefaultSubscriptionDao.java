@@ -204,7 +204,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                  "created_by",
                                                  "created_date",
                                                  "updated_by",
-                                                 "updated_date"));
+                                                 "updated_date"),
+                                          Map.of());
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
             searchQuery.addSearchClause("id", SqlOperator.EQ, searchKey);

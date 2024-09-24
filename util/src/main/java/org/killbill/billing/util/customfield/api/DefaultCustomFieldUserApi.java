@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.commons.utils.Preconditions;
@@ -45,7 +48,7 @@ import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePagina
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
-    private static final Function<CustomFieldModelDao, CustomField> CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION = StringCustomField::new;
+    public static final Function<CustomFieldModelDao, CustomField> CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION = StringCustomField::new;
 
     private final InternalCallContextFactory internalCallContextFactory;
     private final CustomFieldDao customFieldDao;
@@ -118,15 +121,19 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     private static CustomFieldModelDao createCustomFieldModelDao(final CustomField input, final CallContext context, final boolean validateCustomFieldId) {
+        return createCustomFieldModelDao(input, context.getCreatedDate(), validateCustomFieldId);
+    }
+
+    public static CustomFieldModelDao createCustomFieldModelDao(final CustomField input, final DateTime createdDate, final boolean validateCustomFieldId) {
         if (validateCustomFieldId && input.getId() == null) {
             Preconditions.checkNotNull(input.getId(), "createCustomFieldModelDao() input.getId(). This likely happens in updating custom field, where ID is required.");
         }
         // Respect user-specified ID for #addCustomFields()
         // TODO See https://github.com/killbill/killbill/issues/35
         if (input.getId() != null) {
-            return new CustomFieldModelDao(input.getId(), context.getCreatedDate(), context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+            return new CustomFieldModelDao(input.getId(), createdDate, createdDate, input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
         } else {
-            return new CustomFieldModelDao(context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+            return new CustomFieldModelDao(createdDate, input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
         }
     }
 
@@ -171,7 +178,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
         return customFieldDao.getCustomFieldAuditLogsWithHistoryForId(customFieldId, auditLevel, internalCallContextFactory.createInternalTenantContext(customFieldId, ObjectType.CUSTOM_FIELD, tenantContext));
     }
 
-    private List<CustomField> withCustomFieldsTransform(final Collection<CustomFieldModelDao> input) {
+    public static List<CustomField> withCustomFieldsTransform(final Collection<CustomFieldModelDao> input) {
         return input.stream().map(CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION).collect(Collectors.toUnmodifiableList());
     }
 }

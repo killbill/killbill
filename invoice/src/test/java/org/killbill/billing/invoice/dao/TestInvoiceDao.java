@@ -2113,13 +2113,15 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testSearch() throws EntityPersistenceException {
-        Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final UUID accountId = account.getId();
+        final LocalDate utcToday = clock.getUTCToday();
+        Invoice invoice = new DefaultInvoice(UUIDs.randomUUID(), accountId, null, utcToday, utcToday, Currency.USD, false, InvoiceStatus.COMMITTED);
         invoiceUtil.createInvoice(invoice, context);
 
-        invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), accountId, null, utcToday, utcToday, Currency.USD, true, InvoiceStatus.COMMITTED);
         invoiceUtil.createInvoice(invoice, context);
 
-        invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.EUR);
+        invoice = new DefaultInvoice(UUIDs.randomUUID(), accountId, null, utcToday, utcToday, Currency.EUR, false, InvoiceStatus.COMMITTED);
         invoiceUtil.createInvoice(invoice, context);
 
         //search based on invoice id
@@ -2158,11 +2160,21 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on invoice number
 
         //search based on query marker
-        page = invoiceDao.searchInvoices("_q=1&account_id="+account.getId(), 0L, 1L, internalCallContext);
+        page = invoiceDao.searchInvoices("_q=1&account_id=" + accountId, 0L, 1L, internalCallContext);
         all = Iterables.toUnmodifiableList(page);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
         Assert.assertNull(all.get(0).getBalance()); //balance not returned as search is based on query marker
+
+        //search based on query marker with boolean
+        page = invoiceDao.searchInvoices("_q=1&migrated=TRUE", 0L, 10L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 1);
+        page = invoiceDao.searchInvoices("_q=1&migrated=FALSE", 0L, 10L, internalCallContext);
+        all = Iterables.toUnmodifiableList(page);
+        Assert.assertNotNull(all);
+        Assert.assertEquals(all.size(), 2);
 
         //search based on balance
         page = invoiceDao.searchInvoices("_q=1&balance[eq]=0", 0L, 1L, internalCallContext);

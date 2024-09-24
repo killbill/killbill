@@ -22,6 +22,7 @@ package org.killbill.billing.account.dao;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -200,7 +201,11 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                  "created_by",
                                                  "created_date",
                                                  "updated_by",
-                                                 "updated_date"));
+                                                 "updated_date"),
+                                          Map.of("billing_cycle_day_local", Integer.class,
+                                                 "first_name_length", Integer.class,
+                                                 "is_payment_delegated_to_parent", Boolean.class,
+                                                 "migrated", Boolean.class));
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
 

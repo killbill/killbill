@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -46,9 +47,11 @@ public class SearchQuery {
     /**
      * @param searchQuery the raw search query
      * @param allowList   the list of allowed columns to search on
+     * @param columnTypes column types (String by default)
      */
     public SearchQuery(final String searchQuery,
-                       final Collection<String> allowList) {
+                       final Set<String> allowList,
+                       final Map<String, Class> columnTypes) {
         this(SqlOperator.AND);
 
         final String[] params = searchQuery.split("&");
@@ -62,8 +65,15 @@ public class SearchQuery {
 
             final String operator = columnParts.length > 1 ? columnParts[1] : null;
             final String value = parts.length > 1 ? parts[1] : null;
-            // Duck typing... This might not always work. To do better, we'd need to have the caller add the type in the allowList (Map column name -> type)
-            final Object valueTyped = Objects.requireNonNullElse(convertToNumber(value), value);
+            final Class valueType = columnTypes.get(column);
+            final Object valueTyped;
+            if (valueType == Boolean.class) {
+                valueTyped = Boolean.valueOf(value);
+            } else if (valueType == Integer.class || valueType == Long.class || valueType == Double.class) {
+                valueTyped = Objects.requireNonNullElse(convertToNumber(value), value);
+            } else {
+                valueTyped = value;
+            }
             addSearchClause(column, operator == null ? SqlOperator.EQ : SqlOperator.valueOf(operator.toUpperCase(Locale.ROOT)), valueTyped);
         }
     }

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2024 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -43,6 +43,7 @@ import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -92,12 +93,13 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         inputInvoice.addInvoiceItem(invoiceItem);
         invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
 
+        final List<CustomField> customFields = Collections.emptyList();
         final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByInvoiceId(invoice1, tags);
+        populateChildrenByInvoiceId(invoice1, customFields, tags);
 
         final InvoiceModelDao invoice2 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByAccountRecordId(invoice2, tags);
+        populateChildrenByAccountRecordId(invoice2, customFields, tags);
 
         Assert.assertEquals(invoice1, invoice2);
     }
@@ -115,12 +117,13 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), inputInvoice.getId(), new DateTime(), BigDecimal.TEN, Currency.USD, Currency.USD, null, InvoicePaymentStatus.SUCCESS);
         invoiceUtil.createPayment(payment, internalAccountContext);
 
+        final List<CustomField> customFields = Collections.emptyList();
         final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByInvoiceId(invoice1, tags);
+        populateChildrenByInvoiceId(invoice1, customFields, tags);
 
         final InvoiceModelDao invoice2 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByAccountRecordId(invoice2, tags);
+        populateChildrenByAccountRecordId(invoice2, customFields, tags);
 
         Assert.assertEquals(new DefaultInvoice(invoice1).getBalance().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(new DefaultInvoice(invoice1).getPaidAmount().compareTo(BigDecimal.TEN), 0);
@@ -145,13 +148,13 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceTrackingSqlDao trackingSqlDao = dbi.onDemand(InvoiceTrackingSqlDao.class);
         trackingSqlDao.create(List.of(new InvoiceTrackingModelDao("12345", inputInvoice.getId(), UUID.randomUUID(), "foo", today)), internalAccountContext);
 
-
+        final List<CustomField> customFields = Collections.emptyList();
         final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByInvoiceId(invoice1, tags);
+        populateChildrenByInvoiceId(invoice1, customFields, tags);
 
         final InvoiceModelDao invoice2 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByAccountRecordId(invoice2, tags);
+        populateChildrenByAccountRecordId(invoice2, customFields, tags);
 
         Assert.assertEquals(new DefaultInvoice(invoice1).getTrackingIds().size(), 1);
         Assert.assertEquals(new DefaultInvoice(invoice2).getTrackingIds().size(), 1);
@@ -172,12 +175,13 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
 
+        final List<CustomField> customFields = Collections.emptyList();
         final List<Tag> tags = List.of(new DefaultControlTag(ControlTagType.WRITTEN_OFF, ObjectType.INVOICE, inputInvoice.getId(), clock.getUTCNow()));
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByInvoiceId(invoice1, tags);
+        populateChildrenByInvoiceId(invoice1, customFields, tags);
 
         final InvoiceModelDao invoice2 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
-        populateChildrenByAccountRecordId(invoice2, tags);
+        populateChildrenByAccountRecordId(invoice2, customFields, tags);
 
         Assert.assertEquals(invoice1, invoice2);
         Assert.assertEquals((new DefaultInvoice(invoice1)).getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -212,12 +216,13 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
 
         ////
 
+        final List<CustomField> customFields = Collections.emptyList();
         final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(childInvoice.getId(), internalAccountContext);
-        populateChildrenByInvoiceId(invoice1, tags);
+        populateChildrenByInvoiceId(invoice1, customFields, tags);
 
         final InvoiceModelDao invoice2 = getRawInvoice(childInvoice.getId(), internalAccountContext);
-        populateChildrenByAccountRecordId(invoice2, tags);
+        populateChildrenByAccountRecordId(invoice2, customFields, tags);
 
         Assert.assertEquals(invoice1, invoice2);
     }
@@ -227,21 +232,21 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         return dao.getById(invoiceId.toString(), context);
     }
 
-    private void populateChildrenByAccountRecordId(final InvoiceModelDao invoice, final List<Tag> tags) {
+    private void populateChildrenByAccountRecordId(final InvoiceModelDao invoice, final List<CustomField> customFields, final List<Tag> tags) {
         transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                invoiceDaoHelper.populateChildren(List.of(invoice), tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
+                invoiceDaoHelper.populateChildren(List.of(invoice), customFields, tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
                 return null;
             }
         });
     }
 
-    private void populateChildrenByInvoiceId(final InvoiceModelDao invoice, final List<Tag> tags) {
+    private void populateChildrenByInvoiceId(final InvoiceModelDao invoice, final List<CustomField> customFields, final List<Tag> tags) {
         transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                invoiceDaoHelper.populateChildren(invoice, tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
+                invoiceDaoHelper.populateChildren(invoice, customFields, tags, false, entitySqlDaoWrapperFactory, internalAccountContext);
                 return null;
             }
         });
