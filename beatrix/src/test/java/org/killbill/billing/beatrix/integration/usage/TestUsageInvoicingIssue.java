@@ -49,6 +49,10 @@ public class TestUsageInvoicingIssue extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         invoiceConfig.setMaxInvoiceLimit(new Period("P1M"));

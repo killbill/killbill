@@ -65,6 +65,14 @@ import org.killbill.billing.payment.core.sm.control.RefundControlOperation;
 import org.killbill.billing.payment.core.sm.control.VoidControlOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.config.TimeSpanConverter;
+import org.killbill.billing.util.globallocker.LockerType;
+import org.killbill.billing.util.queue.QueueRetryException;
+import org.killbill.commons.locker.GlobalLock;
+import org.killbill.commons.locker.LockFailedException;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
@@ -256,7 +264,34 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
             final LeavingStateCallback leavingStateCallback = new DefaultControlInitiated(this, paymentStateContext, paymentDao, paymentControlStateMachineHelper.getInitialState(), paymentControlStateMachineHelper.getRetriedState(), transactionType);
             final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, paymentControlStateMachineHelper.getRetriedState(), retryServiceScheduler);
 
-            state.runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
+            /* When doing an invoice payment, KB invokes 2 separate state machines: the top level one to drive the payment attempt transitions
+             * and also allow all the payment control plugins to be invoked, and the bottom one is used to drive the payment transaction transitions.
+             * There is a global Account lock that is held while running the operation, but we first need to take it here because DefaultControlInitiated
+             * may change the state of payment attempts on disk
+             * See https://github.com/killbill/killbill/issues/1599
+             */
+            GlobalLock lock = null;
+            boolean mustResetThreadRequestData = false;
+            try {
+                // To make locks re-entrant, we need a request id
+                if (Request.getPerThreadRequestData() == null || Request.getPerThreadRequestData().getRequestId() == null) {
+                    Request.setPerThreadRequestData(new RequestData(UUIDs.randomUUID().toString()));
+                    mustResetThreadRequestData = true;
+                }
+
+                lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getId().toString(), paymentConfig.getMaxGlobalLockRetries());
+                state.runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
+            } catch (final LockFailedException e) {
+                throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(paymentConfig.getRescheduleIntervalOnLock(internalCallContext)));
+            } finally {
+                if (lock != null) {
+                    lock.release();
+                }
+
+                if (mustResetThreadRequestData) {
+                    Request.resetPerThreadRequestData();
+                }
+            }
         } catch (final MissingEntryException e) {
             throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
         } catch (final OperationException e) {
