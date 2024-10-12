@@ -161,7 +161,7 @@ jobs:
       #   run: |
       #     bundle exec rake test:plugins TESTOPTS="--stop-on-failure"
       - name: Upload artifact on failure
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3.1.1
         if: failure()
         with:
           name: failure-${{ matrix.database }}

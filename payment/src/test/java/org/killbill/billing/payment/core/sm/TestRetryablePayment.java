@@ -62,6 +62,7 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.globallocker.LockerType;
+import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
@@ -720,7 +721,6 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testRetryLogicFromRetriedStateWithLockFailure() throws LockFailedException {
-
         GlobalLock lock = null;
         try {
             // Grab lock so that operation later will fail...
@@ -752,12 +752,13 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                          internalCallContext
                                                         );
 
-            processor.retryPaymentTransaction(attempt.getId(), List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
-
-            final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
-            assertEquals(pas.size(), 2);
-            final PaymentAttemptModelDao failedAttempt = findAbortedPaymentAttempt(pas);
-            assertNotNull(failedAttempt);
+            try {
+                processor.retryPaymentTransaction(attempt.getId(), List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
+                fail();
+            } catch (final QueueRetryException e) {
+                final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
+                assertEquals(pas.size(), 1);
+            }
         } finally {
             if (lock != null) {
                 lock.release();
