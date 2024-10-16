@@ -20,6 +20,7 @@ package org.killbill.billing.util.nodes;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,12 +30,12 @@ import org.killbill.CreatorName;
 import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.clock.Clock;
+import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,7 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
         this.broadcastApi = broadcastApi;
         this.clock = clock;
         this.mapper = mapper;
-        this. nodeTransfomer = input -> {
+        this.nodeTransfomer = input -> {
             try {
                 final NodeInfoModelJson nodeInfoModelJson = mapper.deserializeNodeInfo(input.getNodeInfo());
                 return new DefaultNodeInfo(nodeInfoModelJson);
@@ -75,10 +76,17 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     @Override
     public NodeInfo getCurrentNodeInfo() {
         final List<NodeInfoModelDao> allNodes = nodeInfoDao.getAll();
-        final NodeInfoModelDao current = allNodes.stream()
-                .filter(input -> input.getNodeName().equals(CreatorName.get()))
-                .findFirst().get();
-        return nodeTransfomer.apply(current);
+
+        final Optional<NodeInfoModelDao> currentNode =
+                allNodes.stream()
+                        .filter(nodeInfoModel -> CreatorName.get().equals(nodeInfoModel.getNodeName()))
+                        .findFirst();
+
+        if (currentNode.isEmpty()) {
+            throw new IllegalStateException(String.format("No node found with the name %s in the cluster", CreatorName.get()));
+        }
+
+        return nodeTransfomer.apply(currentNode.get());
     }
 
     @Override
@@ -95,7 +103,7 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     }
 
     @Override
-    public void notifyPluginChanged(final PluginInfo plugin,final Iterable<PluginInfo> latestPlugins) {
+    public void notifyPluginChanged(final PluginInfo plugin, final Iterable<PluginInfo> latestPlugins) {
         final String updatedNodeInfoJson;
         try {
             updatedNodeInfoJson = computeLatestNodeInfo(latestPlugins);
@@ -104,7 +112,6 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
             logger.warn("Failed to update nodeInfo after plugin change", e);
         }
     }
-
 
     private String computeLatestNodeInfo(final Iterable<PluginInfo> rawPluginInfo) throws IOException {
 
