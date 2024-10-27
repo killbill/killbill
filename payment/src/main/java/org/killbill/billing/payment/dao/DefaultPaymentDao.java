@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -274,7 +275,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                  "created_by",
                                                  "created_date",
                                                  "updated_by",
-                                                 "updated_date"));
+                                                 "updated_date"),
+                                          Map.of());
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
             final String likeSearchKey = String.format("%%%s%%", searchKey);
@@ -616,11 +618,11 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                  "external_key",
                                                  "account_id",
                                                  "plugin_name",
-                                                 "is_active",
                                                  "created_by",
                                                  "created_date",
                                                  "updated_by",
-                                                 "updated_date"));
+                                                 "updated_date"),
+                                          Map.of());
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
             final String likeSearchKey = String.format("%%%s%%", searchKey);

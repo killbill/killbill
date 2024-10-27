@@ -152,7 +152,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testAutoInvoicingDraftBasic() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
@@ -215,7 +215,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testAutoInvoicingDraftBasicWithCancellation() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
@@ -276,7 +276,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testWithExistingDraftInvoice() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
@@ -345,7 +345,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testAutoInvoicingReuseDraftBasic() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
 
         // Set both AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);

@@ -130,6 +130,7 @@ import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
+import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
@@ -338,6 +339,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected PaymentDao paymentDao;
+
+    @Inject
+    protected CustomFieldUserApi customFieldUserApi;
 
     @Inject
     protected NotificationQueueService notificationQueueService;

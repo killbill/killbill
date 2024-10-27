@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -54,6 +55,9 @@ import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.commons.utils.Strings;
+
+import static org.killbill.billing.invoice.InvoiceDispatcher.INVOICE_SEQUENCE_NUMBER;
 
 public class InvoiceApiHelper {
 
@@ -112,8 +116,18 @@ public class InvoiceApiHelper {
                     final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, targetDate, existingInvoices, isRescheduled, internalCallContext);
                     // Could be a bit weird for a plugin to keep updating properties for each invoice
                     pluginProperties = itemsResult.getPluginProperties();
+
                     // Transformation to InvoiceModelDao
                     final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
+
+                    final PluginProperty invoiceSequenceNumber = StreamSupport.stream(pluginProperties.spliterator(), false)
+                                                                              .filter(pp -> INVOICE_SEQUENCE_NUMBER.equals(pp.getKey()))
+                                                                              .findFirst()
+                                                                              .orElse(null);
+                    if (invoiceSequenceNumber != null && !Strings.isNullOrEmpty(invoiceSequenceNumber.getValue().toString())) {
+                        invoiceModelDao.setInvoiceNumber(Integer.valueOf(invoiceSequenceNumber.getValue().toString()));
+                    }
+
                     final List<InvoiceItem> invoiceItems = invoiceForPlugin.getInvoiceItems();
                     final List<InvoiceItemModelDao> invoiceItemModelDaos = toInvoiceItemModelDao(invoiceItems);
                     invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);

@@ -92,6 +92,11 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                 installDDLSilently(resourceName);
             }
         }
+
+        // MySQL client 9.0 support
+        if ("true".equals(System.getProperty("org.killbill.billing.dbi.test.mysql.v9"))) {
+            getInstance().executeScript(String.format("ALTER USER '%s'@'%%' IDENTIFIED WITH caching_sha2_password BY '%s'", instance.getUsername(), instance.getPassword()));
+        }
     }
 
     private void installDDLSilently(final String resourceName) throws IOException {
