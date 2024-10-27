@@ -22,7 +22,7 @@ jobs:
       matrix:
         include:
           - ruby-version: '2.5.0'
-            ref: refs/heads/tests-for-1739
+            ref: refs/heads/master
             database-adapter: 'mysql2'
             database-user: 'root'
             database-password: 'root'
