@@ -49,20 +49,15 @@ and tenant_record_id = :tenantRecordId
 ;
 >>
 
-getTargetTierDefinition(keys) ::= <<
+getTargetTierDefinition() ::= <<
 select
 target_tier_def_record_id
-from (select
-      target_tier_def_record_id
-      , count(*) count
-      from
-      <tableName()>
-      where
-      concat_ws(',', block_number, block_def_record_id) in (<keys: {key | :key_<i0>}; separator="," >)
-      and tenant_record_id = :tenantRecordId
-      group by target_tier_def_record_id) tmp
+from
+<tableName()>
 where
 1=1
-and tmp.count = :targetCount
+and block_number=:blockNumber
+and block_def_record_id=:blockDefRecordId
+and tenant_record_id = :tenantRecordId
 ;
 >>

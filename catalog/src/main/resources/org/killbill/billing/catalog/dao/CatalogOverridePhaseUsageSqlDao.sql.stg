@@ -52,18 +52,13 @@ and tenant_record_id = :tenantRecordId
 getTargetPhaseDefinition(keys) ::= <<
 select
 target_phase_def_record_id
-from (select
-      target_phase_def_record_id
-      , count(*) count
-      from
-      <tableName()>
-      where
-      concat_ws(',', usage_number, usage_def_record_id) in (<keys: {key | :key_<i0>}; separator="," >)
-      and tenant_record_id = :tenantRecordId
-      group by target_phase_def_record_id) tmp
+from
+<tableName()>
 where
 1=1
-and tmp.count = :targetCount
+and usage_number=:usageNumber
+and usage_def_record_id = :usageDefRecordId
+and tenant_record_id = :tenantRecordId
 ;
 >>
 

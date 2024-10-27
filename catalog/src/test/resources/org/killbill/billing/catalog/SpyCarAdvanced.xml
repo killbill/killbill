@@ -973,6 +973,83 @@
                 </usages>
             </finalPhase>
         </plan>
+        <plan name="gas-monthly-2-tiers">
+            <product>Gas</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="gas-monthly-2-tiers-in-arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>gallons</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>1.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>2.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>3.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>JPY</currency>
+                                                <value>0.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>BTC</currency>
+                                                <value>0.001</value>
+                                            </price>
+                                        </prices>
+                                        <max>100</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>gallons</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>2.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>3.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>4.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>JPY</currency>
+                                                <value>1.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>BTC</currency>
+                                                <value>0.002</value>
+                                            </price>
+                                        </prices>
+                                        <max>500</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -985,6 +1062,7 @@
                 <plan>remotecontrol-monthly</plan>
                 <plan>oilslick-monthly</plan>
                 <plan>gas-monthly</plan>
+                <plan>gas-monthly-2-tiers</plan>
             </plans>
         </defaultPriceList>
         <childPriceList name="SpecialDiscount">

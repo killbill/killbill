@@ -45,7 +45,7 @@ public interface CatalogOverridePlanPhaseSqlDao extends Transactional<CatalogOve
                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getTargetPlanDefinition(@BindIn("keys") final Collection<String> concatPhaseNumAndPhaseDefRecordId,
-                                        @Bind("targetCount") final Integer targetCount,
+    public Long getTargetPlanDefinition(@Bind("phaseNumber") final int phaseNumber,
+                                        @Bind("phaseDefRecordId") final Long phaseDefRecordId,
                                         @SmartBindBean final InternalTenantContext context);
 }
