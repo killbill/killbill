@@ -19,6 +19,7 @@ package org.killbill.billing.util.nodes;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -31,13 +32,13 @@ import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.clock.Clock;
 import org.killbill.commons.concurrent.Executors;
+import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +71,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
 
     @Override
     public String getName() {
-        return KILLBILL_SERVICES.NODES_SERVICE.getServiceName() ;
+        return KILLBILL_SERVICES.NODES_SERVICE.getServiceName();
     }
 
     @Override
@@ -81,6 +82,16 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
     @LifecycleHandlerType(LifecycleLevel.BOOT)
     public void init() {
         try {
+            final Optional<NodeInfoModelDao> nodeWithSameName =
+                    nodeInfoDao.getAll()
+                               .stream()
+                               .filter(nodeInfoModelDao -> CreatorName.get().equals(nodeInfoModelDao.getNodeName()))
+                               .findFirst();
+
+            if (nodeWithSameName.isPresent()) {
+                logger.error("A node with the name {} already exists in the cluster. Proceeding with the startup...", CreatorName.get());
+            }
+
             // Compute a first version early on before plugins were installed to at least provide info about Kill Bill component versions
             createBootNodeInfo(true);
         } catch (final JsonProcessingException e) {
@@ -89,6 +100,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
     }
 
     public static class NodeInfoRunnable implements Runnable {
+
         final NodeInfoDao nodeInfoDao;
 
         public NodeInfoRunnable(final NodeInfoDao nodeInfoDao) {
@@ -100,7 +112,6 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
             nodeInfoDao.setUpdatedDate(CreatorName.get());
         }
     }
-
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
@@ -145,14 +156,13 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
         final Iterable<PluginInfo> rawPluginInfo = skipPlugins ? Collections.emptyList() : pluginInfoApi.getPluginsInfo();
         final List<PluginInfo> pluginInfo = !Iterables.isEmpty(rawPluginInfo) ? Iterables.toUnmodifiableList(rawPluginInfo) : Collections.emptyList();
         final String kbVersion = org.killbill.billing.util.nodes.KillbillVersions.getKillbillVersion();
-        final String kbApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getApiVersion();
-        final String kbPluginApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getPluginApiVersion();
-        final String kbPlatformVersion  = org.killbill.billing.util.nodes.KillbillVersions.getPlatformVersion();
-        final String kbCommonVersion  = org.killbill.billing.util.nodes.KillbillVersions.getCommonVersion();
-
+        final String kbApiVersion = org.killbill.billing.util.nodes.KillbillVersions.getApiVersion();
+        final String kbPluginApiVersion = org.killbill.billing.util.nodes.KillbillVersions.getPluginApiVersion();
+        final String kbPlatformVersion = org.killbill.billing.util.nodes.KillbillVersions.getPlatformVersion();
+        final String kbCommonVersion = org.killbill.billing.util.nodes.KillbillVersions.getCommonVersion();
 
         final NodeInfoModelJson nodeInfo = new NodeInfoModelJson(CreatorName.get(), bootTime, bootTime, kbVersion, kbApiVersion, kbPluginApiVersion, kbCommonVersion, kbPlatformVersion,
-             pluginInfo.stream().map(PluginInfoModelJson::new).collect(Collectors.toUnmodifiableList()));
+                                                                 pluginInfo.stream().map(PluginInfoModelJson::new).collect(Collectors.toUnmodifiableList()));
 
         final String nodeInfoValue = mapper.serializeNodeInfo(nodeInfo);
         final NodeInfoModelDao bootNodeInfo = new NodeInfoModelDao(CreatorName.get(), clock.getUTCNow(), nodeInfoValue);
