@@ -152,7 +152,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testAutoInvoicingDraftBasic() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
@@ -170,14 +170,14 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // Committing the invoice updates the CTD
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         // Move out of TRIAL
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
@@ -215,7 +215,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testAutoInvoicingDraftBasicWithCancellation() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
@@ -233,14 +233,14 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // Committing the invoice updates the CTD
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         // Move out of TRIAL
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
@@ -254,7 +254,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         final Subscription cancelledSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext);
-        assertEquals(cancelledSubscription.getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(cancelledSubscription.getChargedThroughDate(), new LocalDate(2017, 7, 16));
         // We default to now() when we compute the date if the CTD is in the past
         assertEquals(internalCallContext.toLocalDate(cancelledSubscription.getBillingEndDate()), new LocalDate(2017, 7, 16));
 
@@ -271,12 +271,12 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // No change
-        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), false, callContext).getChargedThroughDate(), new LocalDate(2017, 7, 16));
     }
 
     @Test(groups = "slow")
     public void testWithExistingDraftInvoice() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
@@ -345,7 +345,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testAutoInvoicingReuseDraftBasic() throws Exception {
-        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        clock.setTime(new DateTime(2017, 6, 16, account.getReferenceTime().getHourOfDay(), account.getReferenceTime().getMinuteOfHour(), account.getReferenceTime().getSecondOfMinute(), 0));
 
         // Set both AUTO_INVOICING_DRAFT and AUTO_INVOICING_REUSE_DRAFT
         add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);

@@ -231,7 +231,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), bundleExternalKey, bpProductName, ProductCategory.BASE, term,
                                                                                             NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         subscriptionChecker.checkSubscriptionCreated(bpEntitlement.getId(), internalCallContext);
-        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.FIXED, new BigDecimal("0")));
 
         // Create the add-on
         final DefaultEntitlement aoEntitlement = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), aoProductName, ProductCategory.ADD_ON, term,

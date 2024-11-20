@@ -64,6 +64,10 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void setup() throws AccountApiException, SubscriptionBaseApiException {
+        if (hasFailed()) {
+            return;
+        }
+
         account = invoiceUtil.createAccount(callContext);
         subscription = invoiceUtil.createSubscription();
     }

@@ -55,12 +55,12 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.entity.dao.SearchAttribute;
 import org.killbill.billing.util.entity.dao.SearchQuery;
 import org.killbill.billing.util.entity.dao.SqlOperator;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +108,11 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
                         .become(CustomFieldSqlDao.class)
                         .getByAccountRecordId(context));
         return List.copyOf(result);
+    }
+
+    public void create(final Handle handle, final List<CustomFieldModelDao> entities, final InternalCallContext context) throws CustomFieldApiException {
+        final CustomFieldSqlDao sqlDao = handle.attach(CustomFieldSqlDao.class);
+        super.bulkCreate(sqlDao, entities, context);
     }
 
     @Override
@@ -213,13 +218,13 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
                                           Set.of("id",
                                                  "object_id",
                                                  "object_type",
-                                                 "is_active",
                                                  "field_name",
                                                  "field_value",
                                                  "created_by",
                                                  "created_date",
                                                  "updated_by",
-                                                 "updated_date"));
+                                                 "updated_date"),
+                                          Map.of());
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
 

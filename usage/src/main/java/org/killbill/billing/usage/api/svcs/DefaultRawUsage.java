@@ -65,6 +65,42 @@ public class DefaultRawUsage implements RawUsageRecord {
     }
 
     @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultRawUsage)) {
+            return false;
+        }
+
+        final DefaultRawUsage that = (DefaultRawUsage) o;
+
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+        if (recordDate != null ? !recordDate.equals(that.recordDate) : that.recordDate != null) {
+            return false;
+        }
+        if (unitType != null ? !unitType.equals(that.unitType) : that.unitType != null) {
+            return false;
+        }
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+            return false;
+        }
+        return trackingId != null ? trackingId.equals(that.trackingId) : that.trackingId == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = subscriptionId != null ? subscriptionId.hashCode() : 0;
+        result = 31 * result + (recordDate != null ? recordDate.hashCode() : 0);
+        result = 31 * result + (unitType != null ? unitType.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (trackingId != null ? trackingId.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("DefaultRawUsage{");
         sb.append("subscriptionId=").append(subscriptionId);

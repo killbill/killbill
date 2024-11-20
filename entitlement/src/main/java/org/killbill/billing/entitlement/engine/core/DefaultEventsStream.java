@@ -496,7 +496,11 @@ public class DefaultEventsStream implements EventsStream {
         if (entitlementEffectiveEndDateTime != null && entitlementEffectiveEndDateTime.compareTo(utcNow) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
-            if (entitlementEffectiveStartDateTime.compareTo(utcNow) > 0) {
+            final SubscriptionBaseTransition expiryTransition = subscription.getAllTransitions(false).stream().filter(transition -> transition.getTransitionType().equals(SubscriptionBaseTransitionType.EXPIRED)).findFirst().orElse(null);
+            if (expiryTransition != null && expiryTransition.getEffectiveTransitionTime() != null && expiryTransition.getEffectiveTransitionTime().compareTo(utcNow) <= 0) {
+                entitlementState = EntitlementState.EXPIRED;
+            }
+            else if (entitlementEffectiveStartDateTime.compareTo(utcNow) > 0) {
                 entitlementState = EntitlementState.PENDING;
             } else {
                 // Gather states across all services and check if one of them is set to 'blockEntitlement'

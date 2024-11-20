@@ -98,7 +98,9 @@ CREATE TABLE catalog_override_phase_usage (
     tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX catalog_override_phase_usage_idx ON catalog_override_phase_usage(tenant_record_id, usage_number, usage_def_record_id);
+CREATE INDEX catalog_override_phase_usage_idx1 on catalog_override_phase_usage(usage_def_record_id);
+CREATE INDEX catalog_override_phase_usage_idx2 on catalog_override_phase_usage(tenant_record_id, target_phase_def_record_id);
+
 
 DROP TABLE IF EXISTS catalog_override_usage_tier;
 CREATE TABLE catalog_override_usage_tier (
