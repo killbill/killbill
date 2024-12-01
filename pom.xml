@@ -29,7 +29,7 @@
     <packaging>pom</packaging>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
-    <url>http://github.com/killbill/killbill</url>
+    <url>http://github.com/BoFromTheEast/killbillFork</url>
     <modules>
         <module>account</module>
         <module>api</module>
@@ -49,14 +49,14 @@
         <module>profiles</module>
     </modules>
     <scm>
-        <connection>scm:git:git://github.com/killbill/killbill.git</connection>
-        <developerConnection>scm:git:git@github.com:killbill/killbill.git</developerConnection>
+        <connection>scm:git:git://github.com/BoFromTheEast/killbillFork.git</connection>
+        <developerConnection>scm:git:git@github.com:BoFromTheEast/killbillFork.git</developerConnection>
         <tag>HEAD</tag>
-        <url>http://github.com/killbill/killbill/tree/master</url>
+        <url>https://github.com/BoFromTheEast/killbillFork/tree/master</url>
     </scm>
     <issueManagement>
         <system>Github</system>
-        <url>http://github.com/killbill/killbill</url>
+        <url>http://github.com/BoFromTheEast/killbillFork</url>
     </issueManagement>
     <properties>
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
