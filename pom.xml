@@ -49,14 +49,16 @@
         <module>profiles</module>
     </modules>
     <scm>
-        <connection>scm:git:git://github.com/BoFromTheEast/killbillFork.git</connection>
-        <developerConnection>scm:git:git@github.com:BoFromTheEast/killbillFork.git</developerConnection>
+        <connection>scm:git:git://github.com/killbill/killbill.git</connection>
+        <developerConnection>scm:git:git@github.com:killbill/killbill.git</developerConnection>
+
         <tag>HEAD</tag>
-        <url>https://github.com/BoFromTheEast/killbillFork/tree/master</url>
+        <url>http://github.com/killbill/killbill/tree/master</url>
+
     </scm>
     <issueManagement>
         <system>Github</system>
-        <url>http://github.com/BoFromTheEast/killbillFork</url>
+        <url>http://github.com/killbill/killbill</url>
     </issueManagement>
     <properties>
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
