@@ -300,8 +300,12 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     
-
-    public void accountDataSetter(final DefaultMutableAccountData accountData, final Account currentAccount) {
+	/**
+	 * 
+	 * @param accountData
+	 * @param currentAccount
+	 */
+    private void accountDataSetter(final DefaultMutableAccountData accountData, final Account currentAccount) {
     	
     	
     	// Set all updatable fields with the new values if non null, otherwise defaults to the current values
@@ -327,6 +331,22 @@ public class DefaultAccount extends EntityBase implements Account {
 	      accountData.setIsPaymentDelegatedToParent(isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : currentAccount.isPaymentDelegatedToParent());
     }
     
+    /**
+     * 
+     * @param currentAccount
+     */
+    private void validate(final Account currentAccount) {
+    	validateAccountUpdateInput(currentAccount, false);
+    }
+    /**
+     * 
+     * @param currentAccount
+     * @param accountData
+     * @return 
+     */
+    private DefaultAccount createDefaultAccount(Account currentAccount, DefaultMutableAccountData accountData) {
+    	return new DefaultAccount(currentAccount.getId(), accountData);
+    }
     
     /**
      * @param currentAccount existing account data
@@ -337,7 +357,7 @@ public class DefaultAccount extends EntityBase implements Account {
     public Account mergeWithDelegate(final Account currentAccount) {
         final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
 
-        validateAccountUpdateInput(currentAccount, false);
+        validate(currentAccount);
 
         accountData.setExternalKey(currentAccount.getExternalKey());
 
@@ -358,7 +378,7 @@ public class DefaultAccount extends EntityBase implements Account {
             accountData.setIsMigrated(isMigrated);
         }
 
-        return new DefaultAccount(currentAccount.getId(), accountData);
+        return createDefaultAccount(currentAccount, accountData);
     }
 
     @Override
