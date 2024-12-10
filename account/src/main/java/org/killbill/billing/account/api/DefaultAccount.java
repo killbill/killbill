@@ -355,30 +355,51 @@ public class DefaultAccount extends EntityBase implements Account {
     @Override
     @Deprecated // TODO Get rid of this in 0.22
     public Account mergeWithDelegate(final Account currentAccount) {
+        // Validate input
+        validateAccountUpdateInput(currentAccount, false);
+
+        // Create a mutable copy of the current account
         final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
 
-        validate(currentAccount);
-
+        // Set fields
         accountData.setExternalKey(currentAccount.getExternalKey());
-
         accountData.setCurrency(currentAccount.getCurrency());
 
-        if (currentAccount.getBillCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
-            billCycleDayLocal != null && // and the value proposed is not null
-            billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) {  // and the proposed date is not 0
-            accountData.setBillCycleDayLocal(billCycleDayLocal);
-        } else {
-            accountData.setBillCycleDayLocal(currentAccount.getBillCycleDayLocal());
-        }
+        // Handle bill cycle day logic
+        final Integer newBillCycleDay = (currentAccount.getBillCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL 
+                && billCycleDayLocal != null 
+                && billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) 
+                ? billCycleDayLocal 
+                : currentAccount.getBillCycleDayLocal();
+        accountData.setBillCycleDayLocal(newBillCycleDay);
 
-        accountDataSetter(accountData, currentAccount);
-        
-        final Boolean isMigrated = this.isMigrated != null ? this.isMigrated : currentAccount.isMigrated();
-        if (isMigrated != null) {
-            accountData.setIsMigrated(isMigrated);
-        }
+        // Update optional fields
+        updateOptionalFields(accountData, currentAccount);
 
-        return createDefaultAccount(currentAccount, accountData);
+        // Create and return the merged account
+        return new DefaultAccount(currentAccount.getId(), accountData);
+    }
+
+    // Helper method to update optional fields
+    private void updateOptionalFields(final DefaultMutableAccountData accountData, final Account currentAccount) {
+        accountData.setEmail(email != null ? email : currentAccount.getEmail());
+        accountData.setName(name != null ? name : currentAccount.getName());
+        accountData.setFirstNameLength(firstNameLength != null ? firstNameLength : currentAccount.getFirstNameLength());
+        accountData.setPaymentMethodId(paymentMethodId != null ? paymentMethodId : currentAccount.getPaymentMethodId());
+        accountData.setTimeZone(timeZone != null ? timeZone : currentAccount.getTimeZone());
+        accountData.setLocale(locale != null ? locale : currentAccount.getLocale());
+        accountData.setAddress1(address1 != null ? address1 : currentAccount.getAddress1());
+        accountData.setAddress2(address2 != null ? address2 : currentAccount.getAddress2());
+        accountData.setCompanyName(companyName != null ? companyName : currentAccount.getCompanyName());
+        accountData.setCity(city != null ? city : currentAccount.getCity());
+        accountData.setStateOrProvince(stateOrProvince != null ? stateOrProvince : currentAccount.getStateOrProvince());
+        accountData.setCountry(country != null ? country : currentAccount.getCountry());
+        accountData.setPostalCode(postalCode != null ? postalCode : currentAccount.getPostalCode());
+        accountData.setPhone(phone != null ? phone : currentAccount.getPhone());
+        accountData.setNotes(notes != null ? notes : currentAccount.getNotes());
+        accountData.setParentAccountId(parentAccountId != null ? parentAccountId : currentAccount.getParentAccountId());
+        accountData.setIsPaymentDelegatedToParent(isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : currentAccount.isPaymentDelegatedToParent());
+        accountData.setIsMigrated(isMigrated != null ? isMigrated : currentAccount.isMigrated());
     }
 
     @Override
