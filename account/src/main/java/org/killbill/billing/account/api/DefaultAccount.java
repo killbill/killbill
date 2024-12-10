@@ -299,6 +299,55 @@ public class DefaultAccount extends EntityBase implements Account {
         return new DefaultMutableAccountData(this);
     }
 
+    
+	/**
+	 * 
+	 * @param accountData
+	 * @param currentAccount
+	 */
+    private void accountDataSetter(final DefaultMutableAccountData accountData, final Account currentAccount) {
+    	
+    	
+    	// Set all updatable fields with the new values if non null, otherwise defaults to the current values
+	      accountData.setEmail(email != null ? email : currentAccount.getEmail());
+	      accountData.setName(name != null ? name : currentAccount.getName());
+	      final Integer firstNameLength = this.firstNameLength != null ? this.firstNameLength : currentAccount.getFirstNameLength();
+	      if (firstNameLength != null) {
+	          accountData.setFirstNameLength(firstNameLength);
+	      }
+	      accountData.setPaymentMethodId(paymentMethodId != null ? paymentMethodId : currentAccount.getPaymentMethodId());
+	      accountData.setTimeZone(timeZone != null ? timeZone : currentAccount.getTimeZone());
+	      accountData.setLocale(locale != null ? locale : currentAccount.getLocale());
+	      accountData.setAddress1(address1 != null ? address1 : currentAccount.getAddress1());
+	      accountData.setAddress2(address2 != null ? address2 : currentAccount.getAddress2());
+	      accountData.setCompanyName(companyName != null ? companyName : currentAccount.getCompanyName());
+	      accountData.setCity(city != null ? city : currentAccount.getCity());
+	      accountData.setStateOrProvince(stateOrProvince != null ? stateOrProvince : currentAccount.getStateOrProvince());
+	      accountData.setCountry(country != null ? country : currentAccount.getCountry());
+	      accountData.setPostalCode(postalCode != null ? postalCode : currentAccount.getPostalCode());
+	      accountData.setPhone(phone != null ? phone : currentAccount.getPhone());
+	      accountData.setNotes(notes != null ? notes : currentAccount.getNotes());
+	      accountData.setParentAccountId(parentAccountId != null ? parentAccountId : currentAccount.getParentAccountId());
+	      accountData.setIsPaymentDelegatedToParent(isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : currentAccount.isPaymentDelegatedToParent());
+    }
+    
+    /**
+     * 
+     * @param currentAccount
+     */
+    private void validate(final Account currentAccount) {
+    	validateAccountUpdateInput(currentAccount, false);
+    }
+    /**
+     * 
+     * @param currentAccount
+     * @param accountData
+     * @return 
+     */
+    private DefaultAccount createDefaultAccount(Account currentAccount, DefaultMutableAccountData accountData) {
+    	return new DefaultAccount(currentAccount.getId(), accountData);
+    }
+    
     /**
      * @param currentAccount existing account data
      * @return merged account data
@@ -306,29 +355,36 @@ public class DefaultAccount extends EntityBase implements Account {
     @Override
     @Deprecated // TODO Get rid of this in 0.22
     public Account mergeWithDelegate(final Account currentAccount) {
-        final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
-
+        // Validate input
         validateAccountUpdateInput(currentAccount, false);
 
-        accountData.setExternalKey(currentAccount.getExternalKey());
+        // Create a mutable copy of the current account
+        final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
 
+        // Set fields
+        accountData.setExternalKey(currentAccount.getExternalKey());
         accountData.setCurrency(currentAccount.getCurrency());
 
-        if (currentAccount.getBillCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
-            billCycleDayLocal != null && // and the value proposed is not null
-            billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) {  // and the proposed date is not 0
-            accountData.setBillCycleDayLocal(billCycleDayLocal);
-        } else {
-            accountData.setBillCycleDayLocal(currentAccount.getBillCycleDayLocal());
-        }
+        // Handle bill cycle day logic
+        final Integer newBillCycleDay = (currentAccount.getBillCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL 
+                && billCycleDayLocal != null 
+                && billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) 
+                ? billCycleDayLocal 
+                : currentAccount.getBillCycleDayLocal();
+        accountData.setBillCycleDayLocal(newBillCycleDay);
 
-        // Set all updatable fields with the new values if non null, otherwise defaults to the current values
+        // Update optional fields
+        updateOptionalFields(accountData, currentAccount);
+
+        // Create and return the merged account
+        return new DefaultAccount(currentAccount.getId(), accountData);
+    }
+
+    // Helper method to update optional fields
+    private void updateOptionalFields(final DefaultMutableAccountData accountData, final Account currentAccount) {
         accountData.setEmail(email != null ? email : currentAccount.getEmail());
         accountData.setName(name != null ? name : currentAccount.getName());
-        final Integer firstNameLength = this.firstNameLength != null ? this.firstNameLength : currentAccount.getFirstNameLength();
-        if (firstNameLength != null) {
-            accountData.setFirstNameLength(firstNameLength);
-        }
+        accountData.setFirstNameLength(firstNameLength != null ? firstNameLength : currentAccount.getFirstNameLength());
         accountData.setPaymentMethodId(paymentMethodId != null ? paymentMethodId : currentAccount.getPaymentMethodId());
         accountData.setTimeZone(timeZone != null ? timeZone : currentAccount.getTimeZone());
         accountData.setLocale(locale != null ? locale : currentAccount.getLocale());
@@ -343,12 +399,7 @@ public class DefaultAccount extends EntityBase implements Account {
         accountData.setNotes(notes != null ? notes : currentAccount.getNotes());
         accountData.setParentAccountId(parentAccountId != null ? parentAccountId : currentAccount.getParentAccountId());
         accountData.setIsPaymentDelegatedToParent(isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : currentAccount.isPaymentDelegatedToParent());
-        final Boolean isMigrated = this.isMigrated != null ? this.isMigrated : currentAccount.isMigrated();
-        if (isMigrated != null) {
-            accountData.setIsMigrated(isMigrated);
-        }
-
-        return new DefaultAccount(currentAccount.getId(), accountData);
+        accountData.setIsMigrated(isMigrated != null ? isMigrated : currentAccount.isMigrated());
     }
 
     @Override
