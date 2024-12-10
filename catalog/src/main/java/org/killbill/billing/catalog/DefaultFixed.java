@@ -60,7 +60,10 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
 
     public DefaultFixed(final DefaultFixed in, final PlanPhasePriceOverride override) {
         this.type = in.getType();
-        this.fixedPrice = in.getPrice() != null ? new DefaultInternationalPrice((DefaultInternationalPrice) in.getPrice(), override, true) : null;
+        this.fixedPrice = getPrice(in, override);
+    }
+    public DefaultInternationalPrice getPrice(DefaultFixed in, PlanPhasePriceOverride override){
+        return in.getPrice() != null ? new DefaultInternationalPrice((DefaultInternationalPrice) in.getPrice(), override, true) : null;
     }
 
     @Override
