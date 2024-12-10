@@ -19,7 +19,6 @@ package org.killbill.billing.subscription.catalog;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -72,84 +71,58 @@ public class SubscriptionCatalog {
     //
 
     //
-    // Private (subscription-specific) apis that require state associated with this
-    // a given subscription
+    // Private (subscription-specific) apis that require state associated with this a given subscription
     //
-    public Plan findPlan(final String planName, final DateTime requestedDate, final DateTime transitionTime)
-            throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate,
-                transitionTime);
+    public Plan findPlan(final String planName, final DateTime requestedDate, final DateTime transitionTime) throws CatalogApiException {
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, transitionTime);
         return entry.getPlan();
 
     }
 
     public Plan getNextPlanVersion(final Plan curPlan) {
 
-        final AtomicBoolean foundCurVersion = new AtomicBoolean(false);
-        final StaticCatalog[] nextCatalogVersion = { null };
-
-        // Create a list to hold threads
-        List<Thread> threads = new ArrayList<>();
-        // Create a shared object to synchronize on
-        final Object lock = new Object();
-
+        boolean foundCurVersion = false;
+        StaticCatalog nextCatalogVersion = null;
         for (int i = 0; i < versions.size(); i++) {
-            final int index = i;
-            Thread thread = new Thread(() -> {
-                final StaticCatalog curCatalogversion = versions.get(index);
-                synchronized (lock) {
-                    if (foundCurVersion.get() && nextCatalogVersion == null) {
-                        nextCatalogVersion[0] = curCatalogversion;
-                    }
-                    if (curCatalogversion.getEffectiveDate().compareTo(curPlan.getCatalog().getEffectiveDate()) == 0) {
-                        foundCurVersion.set(true);
-                    }
-                }
-            });
-            threads.add(thread);
-            thread.start();
-        }
-
-        // Wait for all threads to complete
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return null;
+            final StaticCatalog curCatalogversion = versions.get(i);
+            if (foundCurVersion) {
+                nextCatalogVersion = curCatalogversion;
+                break;
+            }
+            if (curCatalogversion.getEffectiveDate().compareTo(curPlan.getCatalog().getEffectiveDate()) == 0) {
+                foundCurVersion = true;
             }
         }
-
-        if (nextCatalogVersion[0] == null) {
+        if (nextCatalogVersion == null) {
             return null;
         }
 
         try {
-            return nextCatalogVersion[0].findPlan(curPlan.getName());
+            return nextCatalogVersion.findPlan(curPlan.getName());
         } catch (final CatalogApiException ignored) {
             return null;
         }
     }
 
     public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from,
-            final PlanSpecifier to,
-            final DateTime requestedDate)
+                                                final PlanSpecifier to,
+                                                final DateTime requestedDate)
             throws CatalogApiException {
         // Use the "to" specifier, to make sure the new plan always exists
         final StaticCatalog staticCatalog = versionForDate(requestedDate);
         return getPlanChangeResult(from, to, staticCatalog);
     }
 
-    private PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to,
-            final StaticCatalog staticCatalog)
+
+    private PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog staticCatalog)
             throws CatalogApiException {
         final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getPlanChangeResult(from, to);
     }
 
     public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase,
-            final DateTime requestedDate,
-            final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+                                                final DateTime requestedDate,
+                                                final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionChangePlanDate);
         return planCancelPolicy(planPhase, staticCatalog);
     }
@@ -161,8 +134,8 @@ public class SubscriptionCatalog {
     }
 
     public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier,
-            final DateTime requestedDate,
-            final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+                                                   final DateTime requestedDate,
+                                                   final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         final StaticCatalog staticCatalog = getStaticCatalog(specifier, requestedDate, subscriptionChangePlanDate);
         return planCreateAlignment(specifier, staticCatalog);
     }
@@ -174,11 +147,12 @@ public class SubscriptionCatalog {
     }
 
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase,
-            final DateTime requestedDate,
-            final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+                                             final DateTime requestedDate,
+                                             final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionChangePlanDate);
         return billingAlignment(planPhase, staticCatalog);
     }
+
 
     private BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog staticCatalog)
             throws CatalogApiException {
@@ -186,16 +160,14 @@ public class SubscriptionCatalog {
         return planRules.getBillingAlignment(planPhase);
     }
 
-    private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate,
-            final DateTime subscriptionChangePlanDate) throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec), requestedDate,
-                subscriptionChangePlanDate);
+    private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec), requestedDate, subscriptionChangePlanDate);
         return entry.getStaticCatalog();
     }
 
     private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
-            final DateTime requestedDate,
-            final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+                                                  final DateTime requestedDate,
+                                                  final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         final List<StaticCatalog> catalogs = versionsBeforeDate(requestedDate);
         if (catalogs.isEmpty()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
@@ -210,30 +182,24 @@ public class SubscriptionCatalog {
                 plan = wrapper.findPlan(c);
             } catch (final CatalogApiException e) {
                 if (e.getCode() != CAT_NO_SUCH_PLAN.getCode() &&
-                        e.getCode() != ErrorCode.CAT_PLAN_NOT_FOUND.getCode()) {
+                    e.getCode() != ErrorCode.CAT_PLAN_NOT_FOUND.getCode()) {
                     throw e;
                 } else {
-                    // If we can't find an entry it probably means the plan has been retired so we
-                    // keep looking...
+                    // If we can't find an entry it probably means the plan has been retired so we keep looking...
                     continue;
                 }
             }
 
             final boolean oldestCatalog = (i == 0);
             final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
-            final boolean catalogOlderThanSubscriptionChangePlanDate = !subscriptionChangePlanDate
-                    .isBefore(catalogEffectiveDate);
+            final boolean catalogOlderThanSubscriptionChangePlanDate = !subscriptionChangePlanDate.isBefore(catalogEffectiveDate);
             if (oldestCatalog || // Prevent issue with time granularity -- see #760
-                    catalogOlderThanSubscriptionChangePlanDate) { // It's a new subscription, this plan always applies
+                catalogOlderThanSubscriptionChangePlanDate) { // It's a new subscription, this plan always applies
                 return new CatalogPlanEntry(c, plan);
             } else { // It's an existing subscription
-                if (plan.getEffectiveDateForExistingSubscriptions() != null) { // If it is null, any change to this
-                                                                               // catalog does not apply to existing
-                                                                               // subscriptions
-                    final DateTime existingSubscriptionDate = CatalogDateHelper
-                            .toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
-                    if (requestedDate.compareTo(existingSubscriptionDate) >= 0) { // This plan is now applicable to
-                                                                                  // existing subs
+                if (plan.getEffectiveDateForExistingSubscriptions() != null) { // If it is null, any change to this catalog does not apply to existing subscriptions
+                    final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
+                    if (requestedDate.compareTo(existingSubscriptionDate) >= 0) { // This plan is now applicable to existing subs
                         return new CatalogPlanEntry(c, plan);
                     }
                 } else if (candidateInSubsequentCatalog == null) {
@@ -249,18 +215,17 @@ public class SubscriptionCatalog {
 
         final PlanSpecifier spec = wrapper.getSpec();
         throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND,
-                spec.getPlanName() != null ? spec.getPlanName() : "undefined",
-                spec.getProductName() != null ? spec.getProductName() : "undefined",
-                spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "undefined",
-                spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
+                                      spec.getPlanName() != null ? spec.getPlanName() : "undefined",
+                                      spec.getProductName() != null ? spec.getProductName() : "undefined",
+                                      spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "undefined",
+                                      spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
     }
 
     private List<StaticCatalog> versionsBeforeDate(final DateTime date) {
 
         final List<StaticCatalog> result = new ArrayList<StaticCatalog>();
 
-        // Fetch latest version allowed -- to benefit from custom logic implemented in
-        // VersionedCatalog
+        // Fetch latest version allowed -- to benefit from custom logic implemented in VersionedCatalog
         final StaticCatalog latestVersion = versionForDate(date);
         for (StaticCatalog v : versions) {
             // Add all versions prior or equal to the one returned.
@@ -308,7 +273,7 @@ public class SubscriptionCatalog {
         }
 
         public PlanRequestWrapper(final PlanSpecifier spec,
-                final PlanPhasePriceOverridesWithCallContext overrides) {
+                                  final PlanPhasePriceOverridesWithCallContext overrides) {
             this.spec = spec;
             this.overrides = overrides;
         }
