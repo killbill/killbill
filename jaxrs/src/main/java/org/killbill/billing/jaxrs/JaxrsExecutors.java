@@ -29,33 +29,36 @@ import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
 
 public class JaxrsExecutors {
 
-
     private static final long TIMEOUT_EXECUTOR_SEC = 3L;
 
     private static final String JAXRS_THREAD_PREFIX = "jaxrs-th-";
     private static final String JAXRS_TH_GROUP_NAME = "jaxrs-grp";
 
-
-    private final JaxrsConfig JaxrsConfig;
+    private final JaxrsConfig jaxrsConfig;
 
     private volatile ExecutorService jaxrsExecutorService;
 
     @Inject
-    public JaxrsExecutors(JaxrsConfig JaxrsConfig) {
-        this.JaxrsConfig = JaxrsConfig;
-
+    public JaxrsExecutors(JaxrsConfig jaxrsConfig) {
+        this.jaxrsConfig = jaxrsConfig;
     }
 
     public void initialize() {
-        this.jaxrsExecutorService = createJaxrsExecutorService();
+        if (jaxrsExecutorService == null || jaxrsExecutorService.isShutdown()) {
+            synchronized (this) {
+                if (jaxrsExecutorService == null || jaxrsExecutorService.isShutdown()) {
+                    this.jaxrsExecutorService = createJaxrsExecutorService();
+                }
+            }
+        }
     }
 
-
     public void stop() throws InterruptedException {
-        jaxrsExecutorService.shutdownNow();
-        jaxrsExecutorService.awaitTermination(TIMEOUT_EXECUTOR_SEC, TimeUnit.SECONDS);
-        jaxrsExecutorService = null;
-
+        if (jaxrsExecutorService != null) {
+            jaxrsExecutorService.shutdownNow();
+            jaxrsExecutorService.awaitTermination(TIMEOUT_EXECUTOR_SEC, TimeUnit.SECONDS);
+            jaxrsExecutorService = null;
+        }
     }
 
     public ExecutorService getJaxrsExecutorService() {
@@ -63,13 +66,12 @@ public class JaxrsExecutors {
     }
 
     private ExecutorService createJaxrsExecutorService() {
-        return new WithProfilingThreadPoolExecutor(JaxrsConfig.getJaxrsThreadNb(),
-                                                   JaxrsConfig.getJaxrsThreadNb(),
+        return new WithProfilingThreadPoolExecutor(jaxrsConfig.getJaxrsThreadNb(),
+                                                   jaxrsConfig.getJaxrsThreadNb(),
                                                    0L,
                                                    TimeUnit.MILLISECONDS,
                                                    new LinkedBlockingQueue<Runnable>(),
                                                    new ThreadFactory() {
-
                                                        @Override
                                                        public Thread newThread(final Runnable r) {
                                                            final Thread th = new Thread(new ThreadGroup(JAXRS_TH_GROUP_NAME), r);
@@ -77,6 +79,5 @@ public class JaxrsExecutors {
                                                            return th;
                                                        }
                                                    });
-
     }
 }
