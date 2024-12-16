@@ -212,7 +212,7 @@ public class SubscriptionResourceHelpers {
         final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanName() != null ?
                                                       new PlanPhaseSpecifier(spec.getPlanName(), phaseType) :
                                                       new PlanPhaseSpecifier(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), phaseType);
-        final Currency resolvedCurrency = input.getFixedPrice() != null || input.getRecurringPrice() != null ? currency : null;
+        final Currency resolvedCurrency = input.getFixedPrice() != null || input.getRecurringPrice() != null || (input.getUsagePrices() != null && !input.getUsagePrices().isEmpty()) ? currency : null;
 
         return new PlanPhasePriceOverride() {
 
