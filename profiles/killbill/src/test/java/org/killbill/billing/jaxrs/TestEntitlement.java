@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.BlockingStates;
 import org.killbill.billing.client.model.BulkSubscriptionsBundles;
@@ -46,6 +47,7 @@ import org.killbill.billing.client.model.Subscriptions;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AccountTimeline;
+import org.killbill.billing.client.model.gen.BlockPrice;
 import org.killbill.billing.client.model.gen.BlockingState;
 import org.killbill.billing.client.model.gen.BulkSubscriptionsBundle;
 import org.killbill.billing.client.model.gen.Bundle;
@@ -53,6 +55,8 @@ import org.killbill.billing.client.model.gen.EventSubscription;
 import org.killbill.billing.client.model.gen.Invoice;
 import org.killbill.billing.client.model.gen.PhasePrice;
 import org.killbill.billing.client.model.gen.Subscription;
+import org.killbill.billing.client.model.gen.TierPrice;
+import org.killbill.billing.client.model.gen.UsagePrice;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -2047,6 +2051,63 @@ public class TestEntitlement extends TestJaxrsBase {
                 return refreshedSubscription != null && refreshedSubscription.getChargedThroughDate().compareTo(ctd) == 0;
             }
         });
+    }
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionWithOnlyUsageOverrides() throws Exception {
+        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        clock.setDay(initialDate);
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setPlanName("trebuchet-usage-in-arrear");
+
+        final PhasePrice recurringOverride = new PhasePrice();
+        recurringOverride.setPlanName("trebuchet-usage-in-arrear");
+        recurringOverride.setPhaseType("EVERGREEN");
+
+        final UsagePrice usagePrice = new UsagePrice();
+        usagePrice.setUsageName("u1");
+        usagePrice.setUsageType(UsageType.CAPACITY);
+
+        final List<TierPrice> tierPrices = new ArrayList<>();
+
+        BlockPrice blockPrice = new BlockPrice();
+        blockPrice.setPrice(new BigDecimal("120"));
+        blockPrice.setMax(new BigDecimal(100));
+        blockPrice.setUnitName("stones");
+        TierPrice tierPrice = new TierPrice();
+        tierPrice.setBlockPrices(List.of(blockPrice));
+        tierPrices.add(tierPrice);
+
+        blockPrice = new BlockPrice();
+        blockPrice.setPrice(new BigDecimal("1100"));
+        blockPrice.setMax(new BigDecimal(-1));
+        blockPrice.setUnitName("stones");
+        tierPrice = new TierPrice();
+        tierPrice.setBlockPrices(List.of(blockPrice));
+        tierPrices.add(tierPrice);
+
+        usagePrice.setTierPrices(tierPrices);
+
+        recurringOverride.setUsagePrices(List.of(usagePrice));
+        input.setPriceOverrides(List.of(recurringOverride));
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION);
+
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                null,
+                                                                                (LocalDate) null,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
+        callbackServlet.assertListenerStatus();
+        final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE);
     }
 
 }
