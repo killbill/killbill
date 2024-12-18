@@ -2054,6 +2054,41 @@ public class TestEntitlement extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
+    public void testCreateSubscriptionWithEmptyOverrides() throws Exception {
+        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        clock.setDay(initialDate);
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setPlanName("trebuchet-usage-in-arrear");
+
+        final PhasePrice recurringOverride = new PhasePrice();
+        recurringOverride.setPlanName("trebuchet-usage-in-arrear");
+        recurringOverride.setPhaseType("EVERGREEN");
+
+        input.setPriceOverrides(List.of(recurringOverride));
+
+        try {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE,
+                                               ExtBusEventType.ENTITLEMENT_CREATION,
+                                               ExtBusEventType.SUBSCRIPTION_CREATION,
+                                               ExtBusEventType.SUBSCRIPTION_CREATION);
+            final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                    null,
+                                                                                    (LocalDate) null,
+                                                                                    NULL_PLUGIN_PROPERTIES,
+                                                                                    requestOptions);
+            callbackServlet.assertListenerStatus();
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getMessage(), "At least one fixed price, one recurring price or one usage price must be overridden");
+        }
+
+    }
+
+    @Test(groups = "slow")
     public void testCreateSubscriptionWithOnlyUsageOverrides() throws Exception {
         final LocalDate initialDate = new LocalDate(2012, 4, 25);
         clock.setDay(initialDate);
