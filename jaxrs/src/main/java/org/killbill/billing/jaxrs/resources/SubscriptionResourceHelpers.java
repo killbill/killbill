@@ -93,7 +93,8 @@ public class SubscriptionResourceHelpers {
         if (priceOverrides != null) {
             for (final PhasePriceJson input : priceOverrides) {
                 Preconditions.checkNotNull(input);
-
+                Preconditions.checkArgument(input.getFixedPrice() != null || input.getRecurringPrice() != null ||  (input.getUsagePrices() != null && !input.getUsagePrices().isEmpty()),
+                                            "At least one fixed price, one recurring price or one usage price must be overridden");
                 final List<UsagePriceOverride> usagePrices = new LinkedList<>();
                 if (input.getUsagePrices() != null) {
                     buildUsagePrices(currency, input, usagePrices);
@@ -212,8 +213,6 @@ public class SubscriptionResourceHelpers {
         final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanName() != null ?
                                                       new PlanPhaseSpecifier(spec.getPlanName(), phaseType) :
                                                       new PlanPhaseSpecifier(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), phaseType);
-        final Currency resolvedCurrency = input.getFixedPrice() != null || input.getRecurringPrice() != null ? currency : null;
-
         return new PlanPhasePriceOverride() {
 
             @Override
@@ -228,7 +227,7 @@ public class SubscriptionResourceHelpers {
 
             @Override
             public Currency getCurrency() {
-                return resolvedCurrency;
+                return currency;
             }
 
             @Override
