@@ -93,7 +93,7 @@ public class SubscriptionResourceHelpers {
         if (priceOverrides != null) {
             for (final PhasePriceJson input : priceOverrides) {
                 Preconditions.checkNotNull(input);
-                Preconditions.checkArgument(input.getFixedPrice() != null || input.getRecurringPrice() != null || input.getUsagePrices() != null || (input.getUsagePrices() != null && !input.getUsagePrices().isEmpty()),
+                Preconditions.checkArgument(input.getFixedPrice() != null || input.getRecurringPrice() != null ||  (input.getUsagePrices() != null && !input.getUsagePrices().isEmpty()),
                                             "At least one fixed price, one recurring price or one usage price must be overridden");
                 final List<UsagePriceOverride> usagePrices = new LinkedList<>();
                 if (input.getUsagePrices() != null) {

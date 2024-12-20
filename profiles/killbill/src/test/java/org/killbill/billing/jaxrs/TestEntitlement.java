@@ -2143,6 +2143,8 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
         final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscription.getPlanName(), "trebuchet-usage-in-arrear-1"); //overridden plan name
+
     }
 
 }
