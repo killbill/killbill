@@ -63,7 +63,6 @@ public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
                                                                   BillingPeriod.MONTHLY,
                                                                   Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage,
-                                                                                                                                Collections.emptyList(),
                                                                                                                                 targetDate,
                                                                                                                                 false,
                                                                                                                                 billingEvent1,
@@ -99,7 +98,6 @@ public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
                                                                   Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
 
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage,
-                                                                                                                                Collections.emptyList(),
                                                                                                                                 targetDate,
                                                                                                                                 false,
                                                                                                                                 billingEvent1,

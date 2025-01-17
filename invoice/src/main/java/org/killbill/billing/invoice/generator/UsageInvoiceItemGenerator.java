@@ -50,18 +50,19 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFu
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
-import org.killbill.billing.invoice.usage.RawUsageOptimizer.RawUsageOptimizerResult;
+import org.killbill.billing.invoice.usage.RawUsageOptimizer.RawUsageResult;
 import org.killbill.billing.invoice.usage.SubscriptionUsageInArrear;
 import org.killbill.billing.invoice.usage.SubscriptionUsageInArrear.SubscriptionUsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.commons.utils.collect.MultiValueHashMap;
 import org.killbill.commons.utils.collect.MultiValueMap;
-import org.killbill.billing.util.config.definition.InvoiceConfig;
-import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +91,12 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                                                 final DryRunInfo dryRunInfo,
                                                 final Iterable<PluginProperty> pluginProperties,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
+        // Trivial case
+        if (eventSet.isEmpty()) {
+            return new InvoiceGeneratorResult(Collections.emptyList(), Collections.emptySet());
+        }
+
+
         final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices.getInvoices());
         try {
             // Pretty-print the generated invoice items from the junction events
@@ -100,11 +107,17 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             final Set<TrackingRecordId> trackingIds = new HashSet<>();
             final List<InvoiceItem> items = new ArrayList<>();
             final Iterator<BillingEvent> events = eventSet.iterator();
-
             final boolean isDryRun = dryRunInfo != null;
-            RawUsageOptimizerResult rawUsgRes = null;
-            List<BillingEvent> curEvents = new ArrayList<>();
+            final List<SubscriptionUsageInArrear> subsUsageInArrear = new ArrayList<>();
+            final List<BillingEvent> curEvents = new ArrayList<>();
+
+            final Iterable<InvoiceItem> existingUsageItems = perSubscriptionInArrearUsageItems.values().stream()
+                                                                                              .flatMap(Collection::stream)
+                                                                                              .collect(Collectors.toUnmodifiableList());
+            final DateTime optimizedUsageStartDate = rawUsageOptimizer.getOptimizedStartDate(minBillingEventDate, targetDate, existingUsageItems, eventSet.getUsages(),  internalCallContext);
+
             UUID curSubscriptionId = null;
+            boolean curSubscriptionHasUsage = false;
             while (events.hasNext()) {
                 final BillingEvent event = events.next();
                 // Skip events that are posterior to the targetDate
@@ -113,61 +126,60 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                     continue;
                 }
 
-                // Optimize to do the usage query only once after we know there are indeed some usage items
-                if (rawUsgRes == null && event.getUsages().stream().anyMatch(input -> input.getBillingMode() == BillingMode.IN_ARREAR)) {
-                    final Iterable<InvoiceItem> existingUsageItems = perSubscriptionInArrearUsageItems.values().stream()
-                            .flatMap(Collection::stream)
-                            .collect(Collectors.toUnmodifiableList());
-
-                    rawUsgRes = rawUsageOptimizer.getInArrearUsage(minBillingEventDate, targetDate, existingUsageItems, eventSet.getUsages(), dryRunInfo, pluginProperties, internalCallContext);
-
-                    // Check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate + 1 P, where P = max{all Periods available} (e.g MONTHLY)
-                    // To make it simpler we check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate, and warn if this is not the case
-                    // (this mean we push folks to configure their system in such a way that we read (existing invoices) a bit too much as
-                    // opposed to not enough, leading to double invoicing.
-                    //
-                    // Ask Kill Bill team for an optimal configuration based on your use case ;-)
-                    if (existingInvoices.getCutoffDate() != null && existingInvoices.getCutoffDate().toDateTimeAtStartOfDay(DateTimeZone.UTC).compareTo(rawUsgRes.getRawUsageStartDate()) > 0) {
-                        log.warn("Detected an invoice cuttOff date={}, and usage optimized start date= {} that could lead to some issues", existingInvoices.getCutoffDate(), rawUsgRes.getRawUsageStartDate());
-                    }
-
-                }
-
-                // None of the billing events report any usage IN_ARREAR sections
-                if (rawUsgRes == null) {
-                    continue;
-                }
-
-
 
                 final UUID subscriptionId = event.getSubscriptionId();
-                if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(account.getId(), invoiceId, curEvents, rawUsgRes.getRawUsage(), rawUsgRes.getExistingTrackingIds(), targetDate, rawUsgRes.getRawUsageStartDate(), usageDetailMode, invoiceConfig, internalCallContext);
-                    final List<InvoiceItem> usageInArrearItems = perSubscriptionInArrearUsageItems.get(curSubscriptionId);
-
-                    final SubscriptionUsageInArrearItemsAndNextNotificationDate subscriptionResult = subscriptionUsageInArrear.computeMissingUsageInvoiceItems(usageInArrearItems != null ? usageInArrearItems : Collections.emptyList(), invoiceItemGeneratorLogger, isDryRun);
-                    final List<InvoiceItem> newInArrearUsageItems = subscriptionResult.getInvoiceItems();
-                    items.addAll(newInArrearUsageItems);
-                    trackingIds.addAll(subscriptionResult.getTrackingIds());
-
-                    updatePerSubscriptionNextNotificationUsageDate(curSubscriptionId, subscriptionResult.getPerUsageNotificationDates(), BillingMode.IN_ARREAR, perSubscriptionFutureNotificationDates);
-                    curEvents = new ArrayList<>();
+                if (curSubscriptionId != null &&
+                    !curSubscriptionId.equals(subscriptionId)) {
+                    if (curSubscriptionHasUsage) {
+                        final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(curSubscriptionId, account.getId(), invoiceId, curEvents, targetDate, optimizedUsageStartDate, usageDetailMode, invoiceConfig, internalCallContext);
+                        subsUsageInArrear.add(subscriptionUsageInArrear);
+                    }
+                    curEvents.clear();
+                    curSubscriptionHasUsage = false;
                 }
+                // Track for each event if there is any usage in arrear for current subscription
+                curSubscriptionHasUsage = curSubscriptionHasUsage || event.getUsages().stream().anyMatch(input -> input.getBillingMode() == BillingMode.IN_ARREAR);
                 curSubscriptionId = subscriptionId;
                 curEvents.add(event);
             }
-            if (curSubscriptionId != null) {
-                final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(account.getId(), invoiceId, curEvents, rawUsgRes.getRawUsage(), rawUsgRes.getExistingTrackingIds(), targetDate, rawUsgRes.getRawUsageStartDate(), usageDetailMode, invoiceConfig, internalCallContext);
-                final List<InvoiceItem> usageInArrearItems = perSubscriptionInArrearUsageItems.get(curSubscriptionId);
+            if (curSubscriptionId != null && curSubscriptionHasUsage) {
+                final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(curSubscriptionId, account.getId(), invoiceId, curEvents, targetDate, optimizedUsageStartDate, usageDetailMode, invoiceConfig, internalCallContext);
+                subsUsageInArrear.add(subscriptionUsageInArrear);
+            }
+            // Reset variables for cleanliness - won't be used anymore
+            curSubscriptionId = null;
+            curSubscriptionHasUsage = false;
+            curEvents.clear();
 
-                final SubscriptionUsageInArrearItemsAndNextNotificationDate subscriptionResult = subscriptionUsageInArrear.computeMissingUsageInvoiceItems(usageInArrearItems != null ? usageInArrearItems : Collections.emptyList(), invoiceItemGeneratorLogger, isDryRun);
+            // Bail early if there is no usage in arrear
+            if (subsUsageInArrear.isEmpty()) {
+                return new InvoiceGeneratorResult(Collections.emptyList(), Collections.emptySet());
+            }
+
+            Preconditions.checkNotNull(optimizedUsageStartDate, "start should not be null");
+            final RawUsageResult rawUsgRes = rawUsageOptimizer.getInArrearUsage(optimizedUsageStartDate, targetDate, dryRunInfo, pluginProperties, internalCallContext);
+
+            // Check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate + 1 P, where P = max{all Periods available} (e.g MONTHLY)
+            // To make it simpler we check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate, and warn if this is not the case
+            // (this mean we push folks to configure their system in such a way that we read (existing invoices) a bit too much as
+            // opposed to not enough, leading to double invoicing.
+            //
+            // Ask Kill Bill team for an optimal configuration based on your use case ;-)
+            if (existingInvoices.getCutoffDate() != null && existingInvoices.getCutoffDate().toDateTimeAtStartOfDay(DateTimeZone.UTC).compareTo(optimizedUsageStartDate) > 0) {
+                log.warn("Detected an invoice cuttOff date={}, and usage optimized start date= {} that could lead to some issues", existingInvoices.getCutoffDate(), optimizedUsageStartDate);
+            }
+
+            for (SubscriptionUsageInArrear sub : subsUsageInArrear) {
+                final List<InvoiceItem> usageInArrearItems = perSubscriptionInArrearUsageItems.get(sub.getSubscriptionId());
+                final SubscriptionUsageInArrearItemsAndNextNotificationDate subscriptionResult = sub.computeMissingUsageInvoiceItems(usageInArrearItems != null ? usageInArrearItems : Collections.emptyList(),
+                                                                                                                                                           rawUsgRes.getRawUsage(),
+                                                                                                                                                           rawUsgRes.getExistingTrackingIds(),                                                                                                                                      invoiceItemGeneratorLogger, isDryRun);
                 final List<InvoiceItem> newInArrearUsageItems = subscriptionResult.getInvoiceItems();
                 items.addAll(newInArrearUsageItems);
                 trackingIds.addAll(subscriptionResult.getTrackingIds());
-                updatePerSubscriptionNextNotificationUsageDate(curSubscriptionId, subscriptionResult.getPerUsageNotificationDates(), BillingMode.IN_ARREAR, perSubscriptionFutureNotificationDates);
+                updatePerSubscriptionNextNotificationUsageDate(sub.getSubscriptionId(), subscriptionResult.getPerUsageNotificationDates(), BillingMode.IN_ARREAR, perSubscriptionFutureNotificationDates);
             }
             invoiceItemGeneratorLogger.logItems();
-
             return new InvoiceGeneratorResult(items, trackingIds);
         } catch (final CatalogApiException e) {
             throw new InvoiceApiException(e);
