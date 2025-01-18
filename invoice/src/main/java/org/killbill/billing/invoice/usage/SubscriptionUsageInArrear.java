@@ -96,7 +96,7 @@ public class SubscriptionUsageInArrear {
     private final UsageDetailMode usageDetailMode;
     private final InvoiceConfig invoiceConfig;
 
-    final List<ContiguousIntervalUsageInArrear> billingEventTransitionTimePeriods;
+    final List<ContiguousIntervalUsageInArrear> usageIntervals;
 
     public SubscriptionUsageInArrear(final UUID subscriptionId,
                                      final UUID accountId,
@@ -117,11 +117,11 @@ public class SubscriptionUsageInArrear {
         this.internalTenantContext = internalTenantContext;
         this.usageDetailMode = usageDetailMode;
         this.invoiceConfig = invoiceConfig;
-        this.billingEventTransitionTimePeriods = computeInArrearUsageInterval();
+        this.usageIntervals = computeInArrearUsageInterval();
     }
 
-    public List<ContiguousIntervalUsageInArrear> getBillingEventTransitionTimePeriods() {
-        return billingEventTransitionTimePeriods;
+    public List<ContiguousIntervalUsageInArrear> getUsageIntervals() {
+        return usageIntervals;
     }
 
     public UUID getSubscriptionId() {
@@ -144,7 +144,7 @@ public class SubscriptionUsageInArrear {
                                                                   .sorted(RAW_USAGE_DATE_COMPARATOR)
                                                                   .collect(Collectors.toUnmodifiableList());
         final SubscriptionUsageInArrearItemsAndNextNotificationDate result = new SubscriptionUsageInArrearItemsAndNextNotificationDate();
-        for (final ContiguousIntervalUsageInArrear usageInterval : billingEventTransitionTimePeriods) {
+        for (final ContiguousIntervalUsageInArrear usageInterval : usageIntervals) {
             final UsageInArrearItemsAndNextNotificationDate newItemsWithDetailsAndDate = usageInterval.computeMissingItemsAndNextNotificationDate(rawSubscriptionUsage, existingTrackingIds, existingUsage, isDryRun);
 
             // For debugging purposes

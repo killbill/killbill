@@ -597,8 +597,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         }).collect(Collectors.toUnmodifiableList());
     }
 
-    @VisibleForTesting
-    List<DateTime> getTransitionTimes() {
+    public List<DateTime> getTransitionTimes() {
         return transitionTimes.stream()
                               .map(t -> t.getDate())
                               .collect(Collectors.toList());

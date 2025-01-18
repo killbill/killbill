@@ -17,14 +17,17 @@
 
 package org.killbill.billing.invoice.generator;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -67,6 +70,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
+
+
+    private static final String USAGE_TRANSITIONS = "USAGE_TRANSITIONS";
 
     private static final Logger log = LoggerFactory.getLogger(UsageInvoiceItemGenerator.class);
 
@@ -156,6 +162,18 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                 return new InvoiceGeneratorResult(Collections.emptyList(), Collections.emptySet());
             }
 
+            // Add the USAGE_TRANSITIONS property to the list prior to calling the usage plugin - if any
+            final Map<CompositeKey, List<DateTime>> transitionTimesMap = subsUsageInArrear.stream()
+                    .flatMap(sub -> sub.getUsageIntervals().stream()
+                            .map(interval -> new AbstractMap.SimpleEntry<>(
+                                    new CompositeKey(sub.getSubscriptionId(),
+                                            String.join(",", interval.getUnitTypes())),
+                                    interval.getTransitionTimes())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            final LinkedList<PluginProperty> pluginPropertiesWithUsage = new LinkedList<PluginProperty>();
+            pluginPropertiesWithUsage.addAll((Collection<? extends PluginProperty>) pluginProperties);
+            pluginPropertiesWithUsage.add(new PluginProperty(USAGE_TRANSITIONS, transitionTimesMap, false));
+
             Preconditions.checkNotNull(optimizedUsageStartDate, "start should not be null");
             final RawUsageResult rawUsgRes = rawUsageOptimizer.getInArrearUsage(optimizedUsageStartDate, targetDate, dryRunInfo, pluginProperties, internalCallContext);
 
@@ -168,6 +186,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             if (existingInvoices.getCutoffDate() != null && existingInvoices.getCutoffDate().toDateTimeAtStartOfDay(DateTimeZone.UTC).compareTo(optimizedUsageStartDate) > 0) {
                 log.warn("Detected an invoice cuttOff date={}, and usage optimized start date= {} that could lead to some issues", existingInvoices.getCutoffDate(), optimizedUsageStartDate);
             }
+
 
             for (SubscriptionUsageInArrear sub : subsUsageInArrear) {
                 final List<InvoiceItem> usageInArrearItems = perSubscriptionInArrearUsageItems.get(sub.getSubscriptionId());
@@ -185,6 +204,38 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             throw new InvoiceApiException(e);
         }
     }
+
+    private static class CompositeKey {
+        private final UUID subscriptionId;
+        private final String unitTypes;
+
+        public CompositeKey(UUID subscriptionId, String unitTypes) {
+            this.subscriptionId = subscriptionId;
+            this.unitTypes = unitTypes;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CompositeKey that = (CompositeKey) o;
+            return subscriptionId.equals(that.subscriptionId) && unitTypes.equals(that.unitTypes);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(subscriptionId, unitTypes);
+        }
+
+        @Override
+        public String toString() {
+            return "CompositeKey{" +
+                    "subscriptionId=" + subscriptionId +
+                    ", unitTypes='" + unitTypes + '\'' +
+                    '}';
+        }
+    }
+
 
     private DateTime getMinBillingEventDate(final BillingEventSet eventSet, final InternalCallContext internalCallContext) {
         DateTime minDate = null;
