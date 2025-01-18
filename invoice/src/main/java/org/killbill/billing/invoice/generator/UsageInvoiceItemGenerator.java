@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -163,13 +164,24 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             }
 
             // Add the USAGE_TRANSITIONS property to the list prior to calling the usage plugin - if any
-            final Map<CompositeKey, List<DateTime>> transitionTimesMap = subsUsageInArrear.stream()
+            final Map<CompositeKey, Set<DateTime>> transitionTimesMap = subsUsageInArrear.stream()
                     .flatMap(sub -> sub.getUsageIntervals().stream()
                             .map(interval -> new AbstractMap.SimpleEntry<>(
                                     new CompositeKey(sub.getSubscriptionId(),
                                             String.join(",", interval.getUnitTypes())),
-                                    interval.getTransitionTimes())))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                                    new HashSet<>(interval.getTransitionTimes()))))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (existing, replacement) -> {
+                                existing.addAll(replacement);
+                                return existing;
+                            }));
+
+            // Ensure dates are ordered ascending
+            transitionTimesMap.replaceAll((key, value) -> value.stream()
+                    .sorted()
+                    .collect(Collectors.toCollection(LinkedHashSet::new)));
             final LinkedList<PluginProperty> pluginPropertiesWithUsage = new LinkedList<PluginProperty>();
             pluginPropertiesWithUsage.addAll((Collection<? extends PluginProperty>) pluginProperties);
             pluginPropertiesWithUsage.add(new PluginProperty(USAGE_TRANSITIONS, transitionTimesMap, false));
