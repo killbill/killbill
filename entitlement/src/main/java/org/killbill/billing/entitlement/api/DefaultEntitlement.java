@@ -764,7 +764,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
+                List.of(new DefaultEntitlementSpecifier(spec.getPlanPhaseSpecifier(), spec.getBillCycleDay(), spec.getQuantity(), getExternalKey(), spec.getOverrides())),
                 null,
                 null,
                 false);
@@ -783,10 +783,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+                final EntitlementSpecifier updatedSpec = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next();
 
                 final DateTime resultingEffectiveDate;
                 try {
-                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, null, actionPolicy, context);
+                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), updatedSpec, null, actionPolicy, context);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 } catch (final CatalogApiException e) {
@@ -799,7 +800,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 try {
-                    getSubscriptionBase().changePlanWithPolicy(spec, actionPolicy, callContext);
+                    getSubscriptionBase().changePlanWithPolicy(updatedSpec, actionPolicy, callContext);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
