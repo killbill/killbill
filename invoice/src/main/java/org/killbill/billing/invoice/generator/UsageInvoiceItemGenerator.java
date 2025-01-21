@@ -183,11 +183,11 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                     .sorted()
                     .collect(Collectors.toCollection(LinkedHashSet::new)));
             final LinkedList<PluginProperty> pluginPropertiesWithUsage = new LinkedList<PluginProperty>();
-            pluginPropertiesWithUsage.addAll((Collection<? extends PluginProperty>) pluginProperties);
+            pluginPropertiesWithUsage.addAll(Iterables.toStream(pluginProperties).collect(Collectors.toCollection(LinkedList::new)));
             pluginPropertiesWithUsage.add(new PluginProperty(USAGE_TRANSITIONS, transitionTimesMap, false));
 
             Preconditions.checkNotNull(optimizedUsageStartDate, "start should not be null");
-            final RawUsageResult rawUsgRes = rawUsageOptimizer.getInArrearUsage(optimizedUsageStartDate, targetDate, dryRunInfo, pluginProperties, internalCallContext);
+            final RawUsageResult rawUsgRes = rawUsageOptimizer.getInArrearUsage(optimizedUsageStartDate, targetDate, dryRunInfo, pluginPropertiesWithUsage, internalCallContext);
 
             // Check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate + 1 P, where P = max{all Periods available} (e.g MONTHLY)
             // To make it simpler we check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate, and warn if this is not the case
