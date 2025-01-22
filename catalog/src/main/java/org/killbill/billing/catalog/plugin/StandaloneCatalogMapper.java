@@ -236,7 +236,7 @@ public class StandaloneCatalogMapper {
     }
 
     private Collection<Product> toFilteredDefaultProduct(final Collection<Product> input) {
-        if (!input.iterator().hasNext()) {
+        if (input == null || !input.iterator().hasNext()) {
             return Collections.emptyList();
         }
         final Iterable<String> inputProductNames = input.stream()
@@ -351,7 +351,9 @@ public class StandaloneCatalogMapper {
         result.setRecurringBillingMode(input.getRecurringBillingMode());
         result.setEffectiveDateForExistingSubscriptions(input.getEffectiveDateForExistingSubscriptions());
         result.setFinalPhase(toDefaultPlanPhase(input.getFinalPhase()));
-        result.setInitialPhases(toDefaultPlanPhases(List.of(input.getInitialPhases())));
+        if(input.getInitialPhases() != null && input.getInitialPhases().length != 0) {
+            result.setInitialPhases(toDefaultPlanPhases(List.of(input.getInitialPhases())));
+        }
         result.setPlansAllowedInBundle(input.getPlansAllowedInBundle());
         result.setProduct(toDefaultProduct(input.getProduct()));
         result.setPriceListName(input.getPriceList().getName());
