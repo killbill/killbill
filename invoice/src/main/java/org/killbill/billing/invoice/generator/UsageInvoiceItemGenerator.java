@@ -164,10 +164,11 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             }
 
             // Add the USAGE_TRANSITIONS property to the list prior to calling the usage plugin - if any
-            final Map<CompositeKey, Set<DateTime>> transitionTimesMap = subsUsageInArrear.stream()
+            final Map<Map.Entry, Set<DateTime>> transitionTimesMap = subsUsageInArrear.stream()
                     .flatMap(sub -> sub.getUsageIntervals().stream()
                             .map(interval -> new AbstractMap.SimpleEntry<>(
-                                    new CompositeKey(sub.getSubscriptionId(),
+                                    // Use Map.Entry so this is available from the plugin
+                                    new AbstractMap.SimpleEntry<>(sub.getSubscriptionId(),
                                             String.join(",", interval.getUnitTypes())),
                                     new HashSet<>(interval.getTransitionTimes()))))
                     .collect(Collectors.toMap(
@@ -216,38 +217,6 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             throw new InvoiceApiException(e);
         }
     }
-
-    private static class CompositeKey {
-        private final UUID subscriptionId;
-        private final String unitTypes;
-
-        public CompositeKey(UUID subscriptionId, String unitTypes) {
-            this.subscriptionId = subscriptionId;
-            this.unitTypes = unitTypes;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CompositeKey that = (CompositeKey) o;
-            return subscriptionId.equals(that.subscriptionId) && unitTypes.equals(that.unitTypes);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(subscriptionId, unitTypes);
-        }
-
-        @Override
-        public String toString() {
-            return "CompositeKey{" +
-                    "subscriptionId=" + subscriptionId +
-                    ", unitTypes='" + unitTypes + '\'' +
-                    '}';
-        }
-    }
-
 
     private DateTime getMinBillingEventDate(final BillingEventSet eventSet, final InternalCallContext internalCallContext) {
         DateTime minDate = null;
