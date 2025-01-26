@@ -100,12 +100,12 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         objectMapper = new ObjectMapper();
     }
 
-    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        return createContiguousIntervalCapacityInArrear(usage, rawUsages, targetDate, closedInterval, usageDetailMode, events);
+    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
+        return createContiguousIntervalCapacityInArrear(usage, targetDate, closedInterval, usageDetailMode, events);
     }
 
-    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
-        final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, events[0].getEffectiveDate(), detailMode, invoiceConfig, false, internalCallContext);
+    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
+        final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, targetDate, events[0].getEffectiveDate(), detailMode, invoiceConfig,  internalCallContext);
         for (final BillingEvent event : events) {
             intervalCapacityInArrear.addBillingEvent(event);
             intervalCapacityInArrear.addAllSeenUnitTypesForBillingEvent(event, intervalCapacityInArrear.getUnitTypes());
@@ -114,12 +114,12 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return intervalCapacityInArrear;
     }
 
-    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        return createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, closedInterval, usageDetailMode, events);
+    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
+        return createContiguousIntervalConsumableInArrear(usage, targetDate, closedInterval, usageDetailMode, events);
     }
 
-    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
-        final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, events[0].getEffectiveDate(), detailMode, invoiceConfig, false, internalCallContext);
+    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
+        final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, targetDate, events[0].getEffectiveDate(), detailMode, invoiceConfig, internalCallContext);
         for (final BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
             intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event, intervalConsumableInArrear.getUnitTypes());

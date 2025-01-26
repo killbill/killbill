@@ -91,8 +91,6 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     protected final Usage usage;
     protected final Set<String> unitTypes;
-    protected final List<RawUsageRecord> rawSubscriptionUsage;
-    protected final Set<TrackingRecordId> allExistingTrackingIds;
     protected final LocalDate targetDate;
     protected final UUID accountId;
     protected final UUID invoiceId;
@@ -101,7 +99,6 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected final InvoiceConfig invoiceConfig;
     protected final InternalTenantContext internalTenantContext;
     protected final UsageDetailMode usageDetailMode;
-    protected final boolean isDryRun;
     protected final UsageClockUtil usageClockUtil;
 
     @VisibleForTesting
@@ -134,20 +131,15 @@ public abstract class ContiguousIntervalUsageInArrear {
     public ContiguousIntervalUsageInArrear(final Usage usage,
                                            final UUID accountId,
                                            final UUID invoiceId,
-                                           final List<RawUsageRecord> rawSubscriptionUsage,
-                                           final Set<TrackingRecordId> existingTrackingIds,
                                            final LocalDate targetDate,
                                            final DateTime rawUsageStartDate,
                                            final UsageDetailMode usageDetailMode,
                                            final InvoiceConfig invoiceConfig,
-                                           final boolean isDryRun,
                                            final InternalTenantContext internalTenantContext) {
         this.usage = usage;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.unitTypes = usage.getUsageType() == UsageType.CAPACITY ? getCapacityInArrearUnitTypes(usage) : getConsumableInArrearUnitTypes(usage);
-        this.rawSubscriptionUsage = rawSubscriptionUsage;
-        this.allExistingTrackingIds = existingTrackingIds;
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
         this.invoiceConfig = invoiceConfig;
@@ -155,7 +147,6 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.billingEvents = new LinkedList<>();
         this.allSeenUnitTypes = new LinkedHashMap<BillingEvent, Set<String>>();
         this.transitionTimes = new LinkedList<>();
-        this.isDryRun = isDryRun;
         this.isBuilt = new AtomicBoolean(false);
         this.usageDetailMode = usageDetailMode;
         this.usageClockUtil = new UsageClockUtil(invoiceConfig);
@@ -277,7 +268,10 @@ public abstract class ContiguousIntervalUsageInArrear {
      * @param existingUsage existing on disk usage items for the subscription
      * @throws CatalogApiException
      */
-    public UsageInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage) throws CatalogApiException, InvoiceApiException {
+    public UsageInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<RawUsageRecord> rawSubscriptionUsage,
+                                                                                                final Set<TrackingRecordId> allExistingTrackingIds,
+                                                                                                final List<InvoiceItem> existingUsage,
+                                                                                                final boolean isDryRun) throws CatalogApiException, InvoiceApiException {
         Preconditions.checkState(isBuilt.get(), "#computeMissingItemsAndNextNotificationDate(): isBuilt");
 
         if (transitionTimes.size() < 2) {
@@ -286,7 +280,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         final List<InvoiceItem> result = new LinkedList<>();
 
-        final RolledUpUnitsWithTracking allUsageWithTracking = getRolledUpUsage();
+        final RolledUpUnitsWithTracking allUsageWithTracking = getRolledUpUsage(rawSubscriptionUsage);
         final List<RolledUpUsageWithMetadata> allUsage = allUsageWithTracking.getUsage();
 
         final Set<TrackingRecordId> allTrackingIds = allUsageWithTracking.getTrackingIds();
@@ -325,11 +319,11 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
-            final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(ru.getStart(), ru.getEnd(), rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
+            final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(ru.getStart(), ru.getEnd(), rolledUpUnits, billedItems, areAllBilledItemsWithDetails, isDryRun);
             final BigDecimal toBeBilledUsageUnrounded = toBeBilledUsageDetails.getAmount();
             // See https://github.com/killbill/killbill/issues/1124
             final BigDecimal toBeBilledUsage = KillBillMoney.of(toBeBilledUsageUnrounded, getCurrency());
-            populateResults(ru.getStart(), ru.getEnd(), ru.getCatalogEffectiveDate(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, isPeriodPreviouslyBilled, result);
+            populateResults(ru.getStart(), ru.getEnd(), ru.getCatalogEffectiveDate(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, isPeriodPreviouslyBilled, isDryRun, result);
 
         }
         final LocalDate nextNotificationDate = computeNextNotificationDate();
@@ -361,9 +355,9 @@ public abstract class ContiguousIntervalUsageInArrear {
                 .findFirst().orElse(null);
     }
 
-    protected abstract void populateResults(final DateTime startDate, final DateTime endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException;
+    protected abstract void populateResults(final DateTime startDate, final DateTime endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final boolean isDryRun, final List<InvoiceItem> result) throws InvoiceApiException;
 
-    protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
+    protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails, final boolean isDryRun) throws CatalogApiException;
 
     private boolean areAllBilledItemsWithDetails(final Iterable<InvoiceItem> billedItems) {
         return Iterables.toStream(billedItems).noneMatch(input -> input.getItemDetails() == null || input.getItemDetails().isEmpty());
@@ -393,7 +387,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
     
     @VisibleForTesting
-    RolledUpUnitsWithTracking getRolledUpUsage() throws InvoiceApiException {
+    RolledUpUnitsWithTracking getRolledUpUsage(final List<RawUsageRecord> rawSubscriptionUsage) throws InvoiceApiException {
 
         final List<RolledUpUsageWithMetadata> result = new ArrayList<>();
         final Set<TrackingRecordId> trackingIds = new HashSet<>();
@@ -603,8 +597,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         }).collect(Collectors.toUnmodifiableList());
     }
 
-    @VisibleForTesting
-    List<DateTime> getTransitionTimes() {
+    public List<DateTime> getTransitionTimes() {
         return transitionTimes.stream()
                               .map(t -> t.getDate())
                               .collect(Collectors.toList());

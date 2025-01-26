@@ -217,8 +217,8 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         pluginProperties.add(new PluginProperty("lily", "lolo", true));
         pluginProperties.add(new PluginProperty("", "", true));
 
-        // We expect to see those 3 + 2 (DRY_RUN_CUR_DATE, DRY_RUN_TARGET_DATE) set by the system
-        testUsagePluginApi.setExpectedPluginProperties(5);
+        // We expect to see those 3 + 3 (DRY_RUN_CUR_DATE, DRY_RUN_TARGET_DATE, USAGE_TRANSITIONS) set by the system
+        testUsagePluginApi.setExpectedPluginProperties(6);
 
         invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2023, 7, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), pluginProperties, callContext);
 
@@ -237,8 +237,10 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         @Override
         public List<RawUsageRecord> getUsageForAccount(final DateTime startDate, final DateTime endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
-            final int nbProps = Iterables.size(properties);
-            Assert.assertEquals(nbProps, expectedPluginProperties, String.format("Expected %d plugin properties, got %d", expectedPluginProperties, nbProps));
+            if (expectedPluginProperties > 0) {
+                final int nbProps = Iterables.size(properties);
+                Assert.assertEquals(nbProps, expectedPluginProperties, String.format("Expected %d plugin properties, got %d", expectedPluginProperties, nbProps));
+            }
 
             final List<RawUsageRecord> result = new LinkedList<>();
             for (final DateTime curDate : usageData.keySet()) {

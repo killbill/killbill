@@ -87,41 +87,45 @@ public class SubscriptionUsageInArrear {
     };
 
     private final UUID accountId;
+    private final UUID subscriptionId;
     private final UUID invoiceId;
     private final List<BillingEvent> subscriptionBillingEvents;
     private final LocalDate targetDate;
-    private final List<RawUsageRecord> rawSubscriptionUsage;
-    private final Set<TrackingRecordId> existingTrackingIds;
     private final DateTime rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
     private final UsageDetailMode usageDetailMode;
     private final InvoiceConfig invoiceConfig;
 
-    public SubscriptionUsageInArrear(final UUID accountId,
+    final List<ContiguousIntervalUsageInArrear> usageIntervals;
+
+    public SubscriptionUsageInArrear(final UUID subscriptionId,
+                                     final UUID accountId,
                                      final UUID invoiceId,
                                      final List<BillingEvent> subscriptionBillingEvents,
-                                     final List<RawUsageRecord> rawUsage,
-                                     final Set<TrackingRecordId> existingTrackingIds,
                                      final LocalDate targetDate,
                                      final DateTime rawUsageStartDate,
                                      final UsageDetailMode usageDetailMode,
                                      final InvoiceConfig invoiceConfig,
-                                     final InternalTenantContext internalTenantContext) {
+                                     final InternalTenantContext internalTenantContext) throws CatalogApiException {
 
+        this.subscriptionId = subscriptionId;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.subscriptionBillingEvents = subscriptionBillingEvents;
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
         this.internalTenantContext = internalTenantContext;
-        // Extract raw usage for that subscription and sort it by date
-        this.rawSubscriptionUsage = rawUsage.stream()
-                .filter(input -> input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscriptionId()))
-                .sorted(RAW_USAGE_DATE_COMPARATOR)
-                .collect(Collectors.toUnmodifiableList());
-        this.existingTrackingIds = existingTrackingIds;
         this.usageDetailMode = usageDetailMode;
         this.invoiceConfig = invoiceConfig;
+        this.usageIntervals = computeInArrearUsageInterval();
+    }
+
+    public List<ContiguousIntervalUsageInArrear> getUsageIntervals() {
+        return usageIntervals;
+    }
+
+    public UUID getSubscriptionId() {
+        return subscriptionId;
     }
 
     /**
@@ -130,11 +134,18 @@ public class SubscriptionUsageInArrear {
      * @param existingUsage the existing on disk usage items.
      * @throws CatalogApiException
      */
-    public SubscriptionUsageInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage, final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger, final boolean isDryRun) throws CatalogApiException, InvoiceApiException {
+    public SubscriptionUsageInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage,
+                                                                                                 final List<RawUsageRecord> rawUsage,
+                                                                                                 final Set<TrackingRecordId> existingTrackingIds,
+                                                                                                 final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger,
+                                                                                                 final boolean isDryRun) throws CatalogApiException, InvoiceApiException {
+        final List<RawUsageRecord> rawSubscriptionUsage = rawUsage.stream()
+                                                                  .filter(input -> input.getSubscriptionId().equals(subscriptionId))
+                                                                  .sorted(RAW_USAGE_DATE_COMPARATOR)
+                                                                  .collect(Collectors.toUnmodifiableList());
         final SubscriptionUsageInArrearItemsAndNextNotificationDate result = new SubscriptionUsageInArrearItemsAndNextNotificationDate();
-        final List<ContiguousIntervalUsageInArrear> billingEventTransitionTimePeriods = computeInArrearUsageInterval(isDryRun);
-        for (final ContiguousIntervalUsageInArrear usageInterval : billingEventTransitionTimePeriods) {
-            final UsageInArrearItemsAndNextNotificationDate newItemsWithDetailsAndDate = usageInterval.computeMissingItemsAndNextNotificationDate(existingUsage);
+        for (final ContiguousIntervalUsageInArrear usageInterval : usageIntervals) {
+            final UsageInArrearItemsAndNextNotificationDate newItemsWithDetailsAndDate = usageInterval.computeMissingItemsAndNextNotificationDate(rawSubscriptionUsage, existingTrackingIds, existingUsage, isDryRun);
 
             // For debugging purposes
             invoiceItemGeneratorLogger.append(usageInterval, newItemsWithDetailsAndDate.getInvoiceItems());
@@ -146,7 +157,7 @@ public class SubscriptionUsageInArrear {
     }
 
     @VisibleForTesting
-    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval(final boolean isDryRun) throws CatalogApiException, InvoiceApiException {
+    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval() throws CatalogApiException {
         final List<ContiguousIntervalUsageInArrear> usageIntervals = new LinkedList<>();
 
         final Map<UsageKey, ContiguousIntervalUsageInArrear> inFlightInArrearUsageIntervals = new HashMap<>();
@@ -175,9 +186,8 @@ public class SubscriptionUsageInArrear {
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usageKey);
                 if (existingInterval == null) {
                     existingInterval = usage.getUsageType() == UsageType.CAPACITY ?
-                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, isDryRun, internalTenantContext) :
-                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, isDryRun, internalTenantContext);
-
+                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext) :
+                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
                     inFlightInArrearUsageIntervals.put(usageKey, existingInterval);
                 }
                 // Add billing event for that usage interval
