@@ -565,7 +565,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
+                List.of(new DefaultEntitlementSpecifier(spec.getPlanPhaseSpecifier(), spec.getBillCycleDay(), spec.getQuantity(), getExternalKey(), spec.getOverrides())),
                 null,
                 null,
                 false);
@@ -587,10 +587,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-
+                final EntitlementSpecifier updatedSpec = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next();
                 final DateTime effectiveChangeDate;
                 try {
-                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, null, null, context);
+                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), updatedSpec, null, null, context);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 } catch (final CatalogApiException e) {
@@ -690,7 +690,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
                 getBundleExternalKey(),
-                List.of(new DefaultEntitlementSpecifier(null, null, null, getExternalKey(), null)),
+                List.of(new DefaultEntitlementSpecifier(spec.getPlanPhaseSpecifier(), spec.getBillCycleDay(), spec.getQuantity(), getExternalKey(), spec.getOverrides())),
                 effectiveDate,
                 effectiveDate,
                 false);
@@ -714,10 +714,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-
+                final EntitlementSpecifier updatedSpec = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next();
                 final DateTime resultingEffectiveDate;
                 try {
-                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, effectiveDate, null, context);
+                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), updatedSpec, effectiveDate, null, context);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 } catch (final CatalogApiException e) {
