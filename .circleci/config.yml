@@ -91,23 +91,6 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ .Revision }}
-      - run:
-          name: Setup latest DDL
-          command: |
-            set +e
-            count=0
-            until mysqladmin ping -h 127.0.0.1 -u root --password=root --silent; do
-              if [[ "$count" == "25" ]]; then
-                exit 1
-              fi
-              (( count++ ))
-
-              printf '.'
-              sleep 5
-            done
-
-            set -e
-            ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run: mvn -Djava.security.egd=file:/dev/./urandom clean install -Plocaltest-mysql
       - run:
           name: Save test results
@@ -130,23 +113,6 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ .Revision }}
-      - run:
-          name: Setup latest DDL
-          command: |
-            set +e
-            count=0
-            until mysqladmin ping -h 127.0.0.1 -u root --password=root --silent; do
-              if [[ "$count" == "25" ]]; then
-                exit 1
-              fi
-              (( count++ ))
-
-              printf '.'
-              sleep 5
-            done
-
-            set -e
-            ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run: mvn -Dkillbill.features.invoice.optimization=true -Dkillbill.features.bus.optimization=true -Djava.security.egd=file:/dev/./urandom clean install -Plocaltest-mysql
       - run:
           name: Save test results
@@ -169,9 +135,6 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ .Revision }}
-      - run:
-          name: Setup latest DDL
-          command: ./bin/db-helper -a create --driver postgres -u postgres -p postgres -t yes
       - run: mvn -Djava.security.egd=file:/dev/./urandom clean install -Plocaltest-postgresql
       - run:
           name: Save test results
@@ -195,9 +158,6 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ .Revision }}
-      - run:
-          name: Setup latest DDL
-          command: ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run:
           name: Run integration tests
           command: |
