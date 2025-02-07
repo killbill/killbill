@@ -77,6 +77,10 @@ public abstract class BillCycleDayCalculator {
 
 
     private static LocalDate alignToNextBillCycleDate(final LocalDate prevTransitionDate, final LocalDate curTransitionDate, /* date to be aligned */ final int billingCycleDay, final BillingPeriod billingPeriod) {
+        // Trivial case, nothing to align with
+        if (billingPeriod == BillingPeriod.NO_BILLING_PERIOD) {
+            return curTransitionDate;
+        }
         // billingCycleDay alignment only makes sense for month based BillingPeriod (MONTHLY, QUARTERLY, BIANNUAL, ANNUAL)
         final boolean isMonthBased = (billingPeriod.getPeriod().getMonths() | billingPeriod.getPeriod().getYears()) > 0;
         if (!isMonthBased) {

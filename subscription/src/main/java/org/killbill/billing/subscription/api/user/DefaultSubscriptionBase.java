@@ -696,16 +696,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             if (nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
 
                                 DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
-                                final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
                                 nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, cur.getEffectiveTransitionTime(), nextEffectiveDate, catalog, bcdLocal, context);
                                 // Add the catalog change transition if it is for a date past our current transition
-                                if (!nextEffectiveDate.isBefore(cur.getEffectiveTransitionTime())) {
+                                if (nextEffectiveDate != null && !nextEffectiveDate.isBefore(cur.getEffectiveTransitionTime())) {
                                     // Computed from the nextPlan
+                                    final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
                                     final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
                                     final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
                                                                                                                               cur.getTotalOrdering(), bcdLocal, cur.getNextQuantity(), catalogEffectiveDateForNextPlan);
-
                                     candidatesCatalogChangeEvents.add(newBillingTransition);
                                 }
 
@@ -728,10 +727,17 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
+    // Align to next BCD based on recurring section for the phase
     private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime prevTransitionDate, final DateTime curTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
 
         if (!apiService.isEffectiveDateForExistingSubscriptionsAlignedToBCD(context)) {
             return curTransitionDate;
+        }
+
+        // If there is no recurring phase, we can't align to any BCD and we don't create a billing transition for such phase
+        // TODO It does not take into consideration possible usage sections that could be present
+        if (curPlanPhase.getRecurring() == null) {
+            return null;
         }
 
         final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
