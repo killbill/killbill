@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -32,6 +33,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
+import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -213,6 +215,36 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2022, 6, 5), new LocalDate(2022, 7, 5), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2091")
+    public void testBCDAlignmentWithTrial() throws Exception {
+
+        final LocalDate today = new LocalDate(2022, 3, 27);
+        clock.setDay(today);
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(3));
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("comprehensive-monthly-with-trial");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext);
+        assertListenerStatus();
+
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2022, 3, 27), new LocalDate(2022, 4, 3), InvoiceItemType.FIXED, new BigDecimal("0.0")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(7); // 2022-04-03
+        assertListenerStatus();
+
+        // Check we see new price from V2
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 4, 3), new LocalDate(2022, 5, 3), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
     }

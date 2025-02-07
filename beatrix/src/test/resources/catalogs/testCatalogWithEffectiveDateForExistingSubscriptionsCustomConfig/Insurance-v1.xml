@@ -39,6 +39,9 @@
         <product name="Collision">
             <category>BASE</category>
         </product>
+        <product name="Comprehensive">
+            <category>BASE</category>
+        </product>
     </products>
 
     <rules>
@@ -109,13 +112,63 @@
                 </recurring>
             </finalPhase>
         </plan>
-
+        <plan name="comprehensive-monthly-with-trial">
+            <product>Comprehensive</product>
+            <initialPhases>
+                <phase prettyName="" type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>7</number>
+                    </duration>
+                    <fixed type="ONE_TIME">
+                        <fixedPrice>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>0.0</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>0.0</value>
+                            </price>
+                            <price>
+                                <currency>USD</currency>
+                                <value>0.0</value>
+                            </price>
+                        </fixedPrice>
+                    </fixed>
+                    <usages/>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>49.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>49.95</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>49.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
                 <plan>liability-monthly-no-trial</plan>
                 <plan>collision-monthly-no-trial</plan>
+                <plan>comprehensive-monthly-with-trial</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
