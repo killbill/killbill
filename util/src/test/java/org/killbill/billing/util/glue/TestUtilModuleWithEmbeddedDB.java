@@ -59,6 +59,7 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         install(new CustomFieldModule(configSource));
         install(new NonEntityDaoModule(configSource));
         install(new SecurityModuleWithNoSecurityManager(configSource));
+        install(new ExportModule(configSource));
         bind(TestApiListener.class).asEagerSingleton();
     }
 

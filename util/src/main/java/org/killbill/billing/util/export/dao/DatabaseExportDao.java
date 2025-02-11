@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -31,6 +32,7 @@ import javax.inject.Singleton;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.api.ColumnInfo;
 import org.killbill.billing.util.api.DatabaseExportOutputStream;
+import org.killbill.billing.util.config.definition.ExportConfig;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.validation.DefaultColumnInfo;
 import org.killbill.billing.util.validation.dao.DatabaseSchemaDao;
@@ -47,12 +49,16 @@ public class DatabaseExportDao {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseExportDao.class);
 
     private final DatabaseSchemaDao databaseSchemaDao;
+
+    private final ExportConfig exportConfig;
     private final IDBI dbi;
 
     @Inject
     public DatabaseExportDao(final DatabaseSchemaDao databaseSchemaDao,
+                             final ExportConfig exportConfig,
                              final IDBI dbi) {
         this.databaseSchemaDao = databaseSchemaDao;
+        this.exportConfig = exportConfig;
         this.dbi = dbi;
     }
 
@@ -65,6 +71,9 @@ public class DatabaseExportDao {
         KB_PER_ACCOUNT("account_record_id", "tenant_record_id"),
         /* bus_events, notifications table */
         NOTIFICATION("search_key1", "search_key2"),
+
+        /* aviate_catalog_* tables */
+        AVIATE_CATALOG("account_id", "tenant_id"),
         /* To be discarded */
         OTHER(null, null);
 
@@ -85,7 +94,7 @@ public class DatabaseExportDao {
         }
     }
 
-    public void exportDataForAccount(final DatabaseExportOutputStream out, final InternalTenantContext context) {
+    public void exportDataForAccount(final DatabaseExportOutputStream out, final UUID accountId, final UUID tenantId, final InternalTenantContext context) {
         if (context.getAccountRecordId() == null || context.getTenantRecordId() == null) {
             return;
         }
@@ -104,7 +113,7 @@ public class DatabaseExportDao {
         int j = 0;
         for (final ColumnInfo column : columns) {
             if (!column.getTableName().equals(lastSeenTableName)) {
-                exportDataForAccountAndTable(out, columnsForTable, columnsLookup, context);
+                exportDataForAccountAndTable(out, columnsForTable, columnsLookup, accountId, tenantId, context);
                 lastSeenTableName = column.getTableName();
                 columnsForTable.clear();
                 columnsLookup.clear();
@@ -114,13 +123,15 @@ public class DatabaseExportDao {
             columnsLookup.put(column.getColumnName(), j);
             j++;
         }
-        exportDataForAccountAndTable(out, columnsForTable, columnsLookup, context);
+        exportDataForAccountAndTable(out, columnsForTable, columnsLookup, accountId, tenantId, context);
     }
 
 
     private void exportDataForAccountAndTable(final DatabaseExportOutputStream out,
                                               final List<ColumnInfo> columnsForTable,
                                               final Map<String, Integer> columnsLookup,
+                                              final UUID accountId,
+                                              final UUID tenantId,
                                               final InternalTenantContext context) {
 
 
@@ -132,6 +143,8 @@ public class DatabaseExportDao {
             tableType = TableType.KB_ACCOUNT;
         } else if (TableName.ACCOUNT_HISTORY.getTableName().equalsIgnoreCase(tableName)) {
             tableType = TableType.KB_ACCOUNT_HISTORY;
+        } else if(exportConfig.aviateCatalogTablesIncluded() && tableName.startsWith("aviate_catalog")) {
+            tableType = TableType.AVIATE_CATALOG;
         }
 
         boolean firstColumn = true;
@@ -171,13 +184,13 @@ public class DatabaseExportDao {
 
         // Notify the stream that we're about to write data for a different table
         out.newTable(tableName, columnsForTable);
-
+        final TableType finalTableType = tableType;
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 final ResultIterator<Map<String, Object>> iterator = handle.createQuery(queryBuilder.toString())
-                                                                           .bind("accountRecordId", context.getAccountRecordId())
-                                                                           .bind("tenantRecordId", context.getTenantRecordId())
+                                                                           .bind("accountRecordId", finalTableType == TableType.AVIATE_CATALOG ? accountId : context.getAccountRecordId())
+                                                                           .bind("tenantRecordId", finalTableType == TableType.AVIATE_CATALOG ? tenantId : context.getTenantRecordId())
                                                                            .iterator();
                 try {
                     while (iterator.hasNext()) {
