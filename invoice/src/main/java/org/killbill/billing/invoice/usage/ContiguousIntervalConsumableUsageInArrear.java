@@ -66,19 +66,25 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     public ContiguousIntervalConsumableUsageInArrear(final Usage usage,
                                                      final UUID accountId,
                                                      final UUID invoiceId,
-                                                     final List<RawUsageRecord> rawSubscriptionUsage,
-                                                     final Set<TrackingRecordId> existingTrackingId,
                                                      final LocalDate targetDate,
                                                      final DateTime rawUsageStartDate,
                                                      final UsageDetailMode usageDetailMode,
                                                      final InvoiceConfig invoiceConfig,
-                                                     final boolean isDryRun,
                                                      final InternalTenantContext internalTenantContext) {
-        super(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, isDryRun, internalTenantContext);
+        super(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
     }
 
     @Override
-    protected void populateResults(final DateTime startDate, final DateTime endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final DateTime startDate,
+                                   final DateTime endDate,
+                                   final DateTime catalogEffectiveDate,
+                                   final BigDecimal billedUsage,
+                                   final BigDecimal toBeBilledUsage,
+                                   final UsageInArrearAggregate toBeBilledUsageDetails,
+                                   final boolean areAllBilledItemsWithDetails,
+                                   final boolean isPeriodPreviouslyBilled,
+                                   final boolean isDryRun,
+                                    final List<InvoiceItem> result) throws InvoiceApiException {
         // In the case past invoice items showed the details (areAllBilledItemsWithDetails=true), billed usage has already been taken into account
         // as it part of the reconciliation logic, so no need to subtract it here
         final BigDecimal amountToBill = (usage.getTierBlockPolicy() == TierBlockPolicy.ALL_TIERS && areAllBilledItemsWithDetails) ? toBeBilledUsage : toBeBilledUsage.subtract(billedUsage);
@@ -115,7 +121,12 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @Override
-    protected UsageInArrearAggregate getToBeBilledUsageDetails(final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final DateTime startDate,
+                                                               final DateTime endDate,
+                                                               final List<RolledUpUnit> rolledUpUnits,
+                                                               final Iterable<InvoiceItem> billedItems,
+                                                               final boolean areAllBilledItemsWithDetails,
+                                                               final boolean isDryRun) throws CatalogApiException {
 
         final Map<String, List<UsageConsumableInArrearTierUnitAggregate>> previousUnitsUsage;
         if (usageDetailMode == UsageDetailMode.DETAIL || areAllBilledItemsWithDetails) {
@@ -136,7 +147,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             }
             final List<UsageConsumableInArrearTierUnitAggregate> previousUsage = previousUnitsUsage.containsKey(cur.getUnitType()) ? previousUnitsUsage.get(cur.getUnitType()) : Collections.emptyList();
 
-            final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledConsumableInArrear = computeToBeBilledConsumableInArrear(startDate.toLocalDate(), endDate.toLocalDate(), cur, previousUsage);
+            final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledConsumableInArrear = computeToBeBilledConsumableInArrear(startDate.toLocalDate(), endDate.toLocalDate(), cur, previousUsage, isDryRun);
             usageConsumableInArrearTierUnitAggregates.addAll(toBeBilledConsumableInArrear);
         }
         return new UsageConsumableInArrearAggregate(usageConsumableInArrearTierUnitAggregates);
@@ -186,14 +197,18 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @VisibleForTesting
-    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrear(final LocalDate startDate, final LocalDate endDate, final RolledUpUnit roUnit, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage) throws CatalogApiException {
+    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrear(final LocalDate startDate,
+                                                                                       final LocalDate endDate,
+                                                                                       final RolledUpUnit roUnit,
+                                                                                       final List<UsageConsumableInArrearTierUnitAggregate> previousUsage,
+                                                                                       final boolean isDryRun) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get(), "#computeToBeBilledConsumableInArrear(): isBuilt");
         final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(startDate, endDate, tieredBlocks, previousUsage, roUnit.getAmount());
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(startDate, endDate, tieredBlocks, previousUsage, roUnit.getAmount(), isDryRun);
             case TOP_TIER:
                 return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount()));
             default:
@@ -201,7 +216,12 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         }
     }
 
-    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final LocalDate startDate, final LocalDate endDate, final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final BigDecimal units) throws CatalogApiException {
+    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final LocalDate startDate,
+                                                                                                     final LocalDate endDate,
+                                                                                                     final List<TieredBlock> tieredBlocks,
+                                                                                                     final List<UsageConsumableInArrearTierUnitAggregate> previousUsage,
+                                                                                                     final BigDecimal units,
+                                                                                                     final boolean isDryRun) throws CatalogApiException {
         final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledDetails = new LinkedList<>();
         BigDecimal remainingUnits = units;
         int tierNum = 0;
@@ -283,7 +303,6 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         final StringBuilder sb = new StringBuilder("ContiguousIntervalConsumableUsageInArrear{");
         sb.append("transitionTimes=").append(transitionTimes);
         sb.append(", billingEvents=").append(billingEvents);
-        sb.append(", rawSubscriptionUsage=").append(rawSubscriptionUsage);
         sb.append(", rawUsageStartDate=").append(rawUsageStartDate);
         sb.append('}');
         return sb.toString();

@@ -56,19 +56,25 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     public ContiguousIntervalCapacityUsageInArrear(final Usage usage,
                                                    final UUID accountId,
                                                    final UUID invoiceId,
-                                                   final List<RawUsageRecord> rawSubscriptionUsage,
-                                                   final Set<TrackingRecordId> existingTrackingId,
                                                    final LocalDate targetDate,
                                                    final DateTime rawUsageStartDate,
                                                    final UsageDetailMode usageDetailMode,
                                                    final InvoiceConfig invoiceConfig,
-                                                   final boolean isDryRun,
                                                    final InternalTenantContext internalTenantContext) {
-        super(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, isDryRun, internalTenantContext);
+        super(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
     }
 
     @Override
-    protected void populateResults(final DateTime startDate, final DateTime endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final DateTime startDate,
+                                   final DateTime endDate,
+                                   final DateTime catalogEffectiveDate,
+                                   final BigDecimal billedUsage,
+                                   final BigDecimal toBeBilledUsage,
+                                   final UsageInArrearAggregate toBeBilledUsageDetails,
+                                   final boolean areAllBilledItemsWithDetails,
+                                   final boolean isPeriodPreviouslyBilled,
+                                   final boolean isDryRun,
+                                   final List<InvoiceItem> result) throws InvoiceApiException {
         // Compute final amount by subtracting  amount that was already billed.
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
@@ -91,7 +97,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected UsageInArrearAggregate getToBeBilledUsageDetails(final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails, final boolean isDryRun) throws CatalogApiException {
         return computeToBeBilledCapacityInArrear(rolledUpUnits);
     }
 
@@ -151,7 +157,6 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         final StringBuilder sb = new StringBuilder("ContiguousIntervalCapacityUsageInArrear{");
         sb.append("transitionTimes=").append(transitionTimes);
         sb.append(", billingEvents=").append(billingEvents);
-        sb.append(", rawSubscriptionUsage=").append(rawSubscriptionUsage);
         sb.append(", rawUsageStartDate=").append(rawUsageStartDate);
         sb.append('}');
         return sb.toString();

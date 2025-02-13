@@ -22,13 +22,21 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.Duration;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.rules.CaseBillingAlignment;
 import org.killbill.billing.catalog.api.rules.CaseCancelPolicy;
 import org.killbill.billing.catalog.api.rules.CaseChangePlanAlignment;
 import org.killbill.billing.catalog.api.rules.CaseChangePlanPolicy;
 import org.killbill.billing.catalog.api.rules.CaseCreateAlignment;
 import org.killbill.billing.catalog.api.rules.CasePriceList;
+import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.catalog.plugin.api.StandalonePluginCatalog;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -45,6 +53,36 @@ public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
         output.setRecurringBillingMode(inputCatalog.getRecurringBillingMode());
         Assert.assertEquals(output, inputCatalog);
 
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1944")
+    public void testMappingWithNullAvailableAndIncluded() {
+        final StandalonePluginCatalog pluginCatalog = Mockito.mock(StandalonePluginCatalog.class);
+        Mockito.when(pluginCatalog.getEffectiveDate()).thenReturn(DateTime.now());
+        final Product mockProduct = Mockito.mock(Product.class);
+        Mockito.when(mockProduct.getName()).thenReturn("Standard");
+        Mockito.when(mockProduct.getAvailable()).thenReturn(null);
+        Mockito.when(mockProduct.getIncluded()).thenReturn(null);
+        Mockito.when(pluginCatalog.getProducts()).thenReturn(List.of(mockProduct));
+        final PriceList defaultPriceList = Mockito.mock(PriceList.class);
+        Mockito.when(defaultPriceList.getName()).thenReturn("DEFAULT");
+        final Plan mockPlan = Mockito.mock(Plan.class);
+        Mockito.when(mockPlan.getName()).thenReturn("standard-monthly");
+        Mockito.when(mockPlan.getPriceList()).thenReturn(defaultPriceList);
+        final PlanPhase planPhase = Mockito.mock(PlanPhase.class);
+        Mockito.when(planPhase.getDuration()).thenReturn(Mockito.mock(Duration.class));
+        Mockito.when(mockPlan.getFinalPhase()).thenReturn(planPhase);
+        Mockito.when(pluginCatalog.getPlans()).thenReturn(List.of(mockPlan));
+        Mockito.when(pluginCatalog.getDefaultPriceList()).thenReturn(defaultPriceList);
+        Mockito.when(pluginCatalog.getCurrencies()).thenReturn((List.of(Mockito.mock(Currency.class))));
+        Mockito.when(pluginCatalog.getPlanRules()).thenReturn(Mockito.mock(PlanRules.class));
+        final StandaloneCatalogMapper mapper = new StandaloneCatalogMapper("test-catalog");
+
+        try {
+            final StandaloneCatalog output = mapper.toStandaloneCatalog(pluginCatalog);
+        } catch (final NullPointerException e) {
+            Assert.fail("NullPointerException occurs in mapper");
+        }
     }
 
     private StandalonePluginCatalog buildStandalonePluginCatalog(final StandaloneCatalog inputCatalog) {

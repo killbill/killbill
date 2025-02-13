@@ -32,9 +32,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Usage;
@@ -76,17 +74,19 @@ public class RawUsageOptimizer {
         this.usageClockUtil = new UsageClockUtil(config);
     }
 
-    public RawUsageOptimizerResult getInArrearUsage(final DateTime firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, @Nullable final DryRunInfo dryRunInfo, final Iterable<PluginProperty> inputProperties, final InternalCallContext internalCallContext) {
-
-        // The idea is that if we need to come up with a DateTime we use the largest possible based on the provided LocalDate to return enough points and have the usage invoice code filter what is not relevant.
-        // Since target date is within account#timezone, we compute a datetime at the end of the day in account#timezone and then convert to UTC
-        final DateTime targetDateMax = usageClockUtil.toDateTimeAtEndOfDay(targetDate, internalCallContext);
-
+    public DateTime getOptimizedStartDate(final DateTime firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
         final int configRawUsagePreviousPeriod = config.getMaxRawUsagePreviousPeriod(internalCallContext);
         final DateTime optimizedStartDate = configRawUsagePreviousPeriod >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
         log.debug("RawUsageOptimizerResult accountRecordId='{}', configRawUsagePreviousPeriod='{}', firstEventStartDate='{}', optimizedStartDate='{}',  targetDate='{}'",
                   internalCallContext.getAccountRecordId(), configRawUsagePreviousPeriod, firstEventStartDate, optimizedStartDate, targetDate);
+        return optimizedStartDate;
+    }
 
+    public RawUsageResult getInArrearUsage(final DateTime optimizedStartDate, final LocalDate targetDate, @Nullable final DryRunInfo dryRunInfo, final Iterable<PluginProperty> inputProperties, final InternalCallContext internalCallContext) {
+
+        // The idea is that if we need to come up with a DateTime we use the largest possible based on the provided LocalDate to return enough points and have the usage invoice code filter what is not relevant.
+        // Since target date is within account#timezone, we compute a datetime at the end of the day in account#timezone and then convert to UTC
+        final DateTime targetDateMax = usageClockUtil.toDateTimeAtEndOfDay(targetDate, internalCallContext);
         final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(optimizedStartDate, targetDateMax, dryRunInfo, inputProperties, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(optimizedStartDate.toLocalDate(), targetDate, internalCallContext);
@@ -94,7 +94,7 @@ public class RawUsageOptimizer {
         for (final InvoiceTrackingModelDao invoiceTrackingModelDao : trackingIds) {
             existingTrackingIds.add(new TrackingRecordId(invoiceTrackingModelDao.getTrackingId(), invoiceTrackingModelDao.getInvoiceId(), invoiceTrackingModelDao.getSubscriptionId(), invoiceTrackingModelDao.getUnitType(), invoiceTrackingModelDao.getRecordDate()));
         }
-        return new RawUsageOptimizerResult(optimizedStartDate, rawUsageData, existingTrackingIds);
+        return new RawUsageResult(rawUsageData, existingTrackingIds);
     }
 
     @VisibleForTesting
@@ -209,20 +209,14 @@ public class RawUsageOptimizer {
         return false;
     }
 
-    public static class RawUsageOptimizerResult {
+    public static class RawUsageResult {
 
-        private final DateTime rawUsageStartDate;
         private final List<RawUsageRecord> rawUsage;
         private final Set<TrackingRecordId> existingTrackingIds;
 
-        public RawUsageOptimizerResult(final DateTime rawUsageStartDate, final List<RawUsageRecord> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
-            this.rawUsageStartDate = rawUsageStartDate;
+        public RawUsageResult(final List<RawUsageRecord> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
             this.rawUsage = rawUsage;
             this.existingTrackingIds = existingTrackingIds;
-        }
-
-        public DateTime getRawUsageStartDate() {
-            return rawUsageStartDate;
         }
 
         public List<RawUsageRecord> getRawUsage() {

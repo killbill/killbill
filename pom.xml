@@ -22,10 +22,10 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.146.43</version>
+        <version>0.146.50</version>
     </parent>
     <artifactId>killbill</artifactId>
-    <version>0.24.13-SNAPSHOT</version>
+    <version>0.24.14-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>

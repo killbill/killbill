@@ -1,0 +1,31 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.test.config": [
+        {
+            "name": "TestNG",
+            "workingDirectory": "${workspaceFolder}",
+            "args": [],
+            "vmArgs": ["-ea"],
+            "env": {},
+            "sourcePaths": ["src/test/java"],
+            "testKind": "testng"
+        }
+    ],
+    "java.server.launchMode": "Standard",
+    "java.completion.importOrder": [
+        "java",
+        "javax",
+        "org",
+        "com",
+        "",
+        "#"
+    ],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable",
+    "editor.formatOnPaste": false,
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
+    "editor.formatOnSave": false,
+    "java.format.settings.url": ".vscode/eclipse-java-killbill-style.xml",
+    "debug.autoExpandLazyVariables": "on",
+    "debug.inlineValues": "on",
+}

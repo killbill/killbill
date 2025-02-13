@@ -1,0 +1,2 @@
+CREATE INDEX invoice_account_record_id_record_id ON invoices(account_record_id, record_id);
+CREATE INDEX invoice_history_account_record_id_record_id ON invoice_history(account_record_id, record_id);
