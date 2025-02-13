@@ -1,7 +1,6 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2020-2025 Equinix, Inc
+ * Copyright 2014-2025 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,10 +33,17 @@ import org.testng.annotations.Test;
 
 import com.ning.compress.lzf.LZFEncoder;
 
-public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
+public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbeddedDB {
+
+    @Override
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.export.aviateCatalogTablesIncluded", "true");
+        return getConfigSource(null, allExtraProperties);
+    }
 
     @Test(groups = "slow")
-    public void testExportSimpleData() throws Exception {
+    public void testExportDataWithAviateTables() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
@@ -58,6 +64,7 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         final byte[] properties = LZFEncoder.encode(new byte[] { 'c', 'a', 'f', 'e' });
         final String tableNameA = "test_database_export_dao_a";
         final String tableNameB = "test_database_export_dao_b";
+        final String tableNameC = "aviate_catalog_a";
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
@@ -74,11 +81,19 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
                                "account_record_id bigint /*! unsigned */ not null," +
                                "tenant_record_id bigint /*! unsigned */ not null default 0," +
                                "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameC);
+                handle.execute("create table " + tableNameC + "(record_id serial unique," +
+                               "name varchar(36) default 'plana'," +
+                               "account_id varchar(36) not null," +
+                               "tenant_id varchar(36) not null," +
+                               "primary key(record_id));");
+
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
                                internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
-
+                handle.execute("insert into " + tableNameC + " (account_id, tenant_id) values (?, ?)",
+                               accountId, tenantId);
                 // Add row in accounts table
                 handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, is_payment_delegated_to_parent, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) " +
                                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -93,10 +108,14 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(newDump, "-- accounts record_id|id|external_key|email|name|first_name_length|currency|billing_cycle_day_local|parent_account_id|is_payment_delegated_to_parent|payment_method_id|reference_time|time_zone|locale|address1|address2|company_name|city|state_or_province|country|postal_code|phone|notes|migrated|created_date|created_by|updated_date|updated_by|tenant_record_id\n" +
                                      String.format("%s|%s|%s|%s|%s|%s||||true||%s|%s|||||||||||false|%s|%s|%s|%s|%s", internalCallContext.getAccountRecordId(), accountId, accountId, accountEmail, accountName, firstNameLength, "1970-05-24T18:33:02.000+00:00", timeZone,
                                                    "1970-05-24T18:33:02.000+00:00", createdBy, "1982-02-18T20:03:42.000+00:00", updatedBy, internalCallContext.getTenantRecordId()) + "\n" +
+                                     "-- " + tableNameC + " record_id|name|account_id|tenant_id\n" +
+                                     "1|plana|" + accountId + "|" + tenantId + "\n" +
                                      "-- " + tableNameA + " record_id|a_column|blob_column|account_record_id|tenant_record_id\n" +
                                      "1|a|WlYAAARjYWZl|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
                                      "-- " + tableNameB + " record_id|b_column|account_record_id|tenant_record_id\n" +
-                                     "1|b|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n");
+                                     "1|b|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n"
+
+                           );
 
     }
 
@@ -105,4 +124,5 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         dao.exportDataForAccount(out, accountId, tenantId, internalCallContext);
         return out.toString();
     }
+
 }
