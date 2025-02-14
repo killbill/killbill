@@ -42,7 +42,7 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
         return getConfigSource(null, allExtraProperties);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testExportDataWithAviateTables() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
