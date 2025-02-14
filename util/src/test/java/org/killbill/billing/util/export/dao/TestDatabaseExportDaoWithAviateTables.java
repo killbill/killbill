@@ -42,7 +42,7 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
         return getConfigSource(null, allExtraProperties);
     }
 
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow")
     public void testExportDataWithAviateTables() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
@@ -50,7 +50,7 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
 
         // Empty database
         final String dump = getDump(accountId, tenantId);
-//        Assert.assertEquals(dump, ""); //TODO_354 - debug
+        Assert.assertEquals(dump, "");
 
         final String accountEmail = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String accountName = UUID.randomUUID().toString().substring(0, 4);
