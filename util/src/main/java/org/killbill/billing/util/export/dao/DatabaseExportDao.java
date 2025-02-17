@@ -173,14 +173,29 @@ public class DatabaseExportDao {
             return;
         }
 
-        // Build the query - make sure to filter by account and tenant!
-        queryBuilder.append(" from ")
-                    .append(tableName)
-                    .append(" where ")
-                    .append(tableType.getAccountRecordIdColumnName())
-                    .append(" = :accountRecordId and ")
-                    .append(tableType.getTenantRecordIdColumnName())
-                    .append("  = :tenantRecordId");
+        if (tableType == TableType.AVIATE_CATALOG) {
+            queryBuilder.append(" from ")
+                        .append(tableName)
+                        .append(" where ")
+                        .append(tableType.getTenantRecordIdColumnName())
+                        .append("  = :tenantRecordId and (")
+                        .append(tableType.getAccountRecordIdColumnName())
+                        .append(" = :accountRecordId OR ")
+                        .append(tableType.getAccountRecordIdColumnName())
+                        .append(" is null)")
+            ;
+
+        } else {
+
+            // Build the query - make sure to filter by account and tenant!
+            queryBuilder.append(" from ")
+                        .append(tableName)
+                        .append(" where ")
+                        .append(tableType.getAccountRecordIdColumnName())
+                        .append(" = :accountRecordId and ")
+                        .append(tableType.getTenantRecordIdColumnName())
+                        .append("  = :tenantRecordId");
+        }
 
         // Notify the stream that we're about to write data for a different table
         out.newTable(tableName, columnsForTable);

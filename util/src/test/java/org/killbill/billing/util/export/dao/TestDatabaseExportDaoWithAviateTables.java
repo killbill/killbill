@@ -35,6 +35,11 @@ import com.ning.compress.lzf.LZFEncoder;
 
 public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbeddedDB {
 
+    private final String tableNameA = "test_database_export_dao_a";
+    private final String tableNameB = "test_database_export_dao_b";
+    private final String tableNameC = "aviate_catalog_a";
+
+
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
@@ -43,7 +48,7 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
     }
 
     @Test(groups = "slow")
-    public void testExportDataWithAviateTables() throws Exception {
+    public void testExportWithAccountIdAndTenantId() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
@@ -62,32 +67,9 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
         final String updatedBy = UUID.randomUUID().toString().substring(0, 4);
 
         final byte[] properties = LZFEncoder.encode(new byte[] { 'c', 'a', 'f', 'e' });
-        final String tableNameA = "test_database_export_dao_a";
-        final String tableNameB = "test_database_export_dao_b";
-        final String tableNameC = "aviate_catalog_a";
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("drop table if exists " + tableNameA);
-                handle.execute("create table " + tableNameA + "(record_id serial unique," +
-                               "a_column char default 'a'," +
-                               "blob_column mediumblob," +
-                               "account_record_id bigint /*! unsigned */ not null," +
-                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
-                               "primary key(record_id));");
-                handle.execute("drop table if exists " + tableNameB);
-                handle.execute("create table " + tableNameB + "(record_id serial unique," +
-                               "b_column char default 'b'," +
-                               "account_record_id bigint /*! unsigned */ not null," +
-                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
-                               "primary key(record_id));");
-                handle.execute("drop table if exists " + tableNameC);
-                handle.execute("create table " + tableNameC + "(record_id serial unique," +
-                               "name varchar(36) default 'plana'," +
-                               "account_id varchar(36) not null," +
-                               "tenant_id varchar(36) not null," +
-                               "primary key(record_id));");
-
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
@@ -117,6 +99,182 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
 
                            );
 
+    }
+
+    @Test(groups = "slow")
+    public void testExportWithTenantIdAndNullAccountId() throws Exception {
+
+        final UUID accountId = UUID.randomUUID();
+        final UUID tenantId = UUID.randomUUID();
+
+        // Empty database
+        final String dump = getDump(accountId, tenantId);
+        Assert.assertEquals(dump, "");
+
+        final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
+        dbi.withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("drop table if exists " + tableNameA);
+                handle.execute("create table " + tableNameA + "(record_id serial unique," +
+                               "a_column char default 'a'," +
+                               "blob_column mediumblob," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameB);
+                handle.execute("create table " + tableNameB + "(record_id serial unique," +
+                               "b_column char default 'b'," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameC);
+                handle.execute("create table " + tableNameC + "(record_id serial unique," +
+                               "name varchar(36) default 'plana'," +
+                               "account_id varchar(36)," +
+                               "tenant_id varchar(36) not null," +
+                               "primary key(record_id));");
+
+                handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
+                               properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
+                               internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                handle.execute("insert into " + tableNameC + " (account_id, tenant_id) values (?, ?)",
+                               accountId, tenantId); //record with account Id
+                handle.execute("insert into " + tableNameC + " (account_id, tenant_id) values (?, ?)",
+                               null, tenantId); //record with null account Id
+                return null;
+            }
+        });
+        // Verify new dump
+        final String newDump = getDump(accountId, tenantId);
+
+        Assert.assertEquals(newDump,
+                            "-- " + tableNameC + " record_id|name|account_id|tenant_id\n" +
+                            "1|plana|" + accountId + "|" + tenantId + "\n" +
+                            "2|plana|" + "|" + tenantId + "\n" +
+                            "-- " + tableNameA + " record_id|a_column|blob_column|account_record_id|tenant_record_id\n" +
+                            "1|a|WlYAAARjYWZl|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
+                            "-- " + tableNameB + " record_id|b_column|account_record_id|tenant_record_id\n" +
+                            "1|b|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n"
+
+                           );
+    }
+
+    @Test(groups = "slow")
+    public void testExportWithTenantDataOnly() throws Exception {
+
+        final UUID accountId = UUID.randomUUID();
+        final UUID tenantId = UUID.randomUUID();
+
+        // Empty database
+        final String dump = getDump(accountId, tenantId);
+        Assert.assertEquals(dump, "");
+
+        final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
+        dbi.withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("drop table if exists " + tableNameA);
+                handle.execute("create table " + tableNameA + "(record_id serial unique," +
+                               "a_column char default 'a'," +
+                               "blob_column mediumblob," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameB);
+                handle.execute("create table " + tableNameB + "(record_id serial unique," +
+                               "b_column char default 'b'," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameC);
+                handle.execute("create table " + tableNameC + "(record_id serial unique," +
+                               "name varchar(36) default 'plana'," +
+                               "account_id varchar(36)," +
+                               "tenant_id varchar(36) not null," +
+                               "primary key(record_id));");
+
+                handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
+                               properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
+                               internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                handle.execute("insert into " + tableNameC + " (account_id, tenant_id) values (?, ?)",
+                               null, tenantId); //record with null account Id
+                return null;
+            }
+        });
+        // Verify new dump
+        final String newDump = getDump(accountId, tenantId);
+
+        Assert.assertEquals(newDump,
+                            "-- " + tableNameC + " record_id|name|account_id|tenant_id\n" +
+                            "1|plana|" + "|" + tenantId + "\n" +
+                            "-- " + tableNameA + " record_id|a_column|blob_column|account_record_id|tenant_record_id\n" +
+                            "1|a|WlYAAARjYWZl|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
+                            "-- " + tableNameB + " record_id|b_column|account_record_id|tenant_record_id\n" +
+                            "1|b|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n"
+
+                           );
+    }
+
+    @Test(groups = "slow")
+    public void testExportWithMultipleAccountIds() throws Exception {
+
+        final UUID accountId = UUID.randomUUID();
+        final UUID tenantId = UUID.randomUUID();
+
+        // Empty database
+        final String dump = getDump(accountId, tenantId);
+        Assert.assertEquals(dump, "");
+
+        final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
+        dbi.withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("drop table if exists " + tableNameA);
+                handle.execute("create table " + tableNameA + "(record_id serial unique," +
+                               "a_column char default 'a'," +
+                               "blob_column mediumblob," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameB);
+                handle.execute("create table " + tableNameB + "(record_id serial unique," +
+                               "b_column char default 'b'," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameC);
+                handle.execute("create table " + tableNameC + "(record_id serial unique," +
+                               "name varchar(36) default 'plana'," +
+                               "account_id varchar(36)," +
+                               "tenant_id varchar(36) not null," +
+                               "primary key(record_id));");
+
+                handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
+                               properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
+                               internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                handle.execute("insert into " + tableNameC + " (account_id, tenant_id) values (?, ?)",
+                               accountId, tenantId); //record with accountId
+                handle.execute("insert into " + tableNameC + " (account_id, tenant_id) values (?, ?)",
+                               UUID.randomUUID(), tenantId); //record with different accountId
+                return null;
+            }
+        });
+        // Verify new dump
+        final String newDump = getDump(accountId, tenantId);
+
+        Assert.assertEquals(newDump,
+                            "-- " + tableNameC + " record_id|name|account_id|tenant_id\n" +
+                            "1|plana|" +accountId+ "|" + tenantId + "\n" +
+                            "-- " + tableNameA + " record_id|a_column|blob_column|account_record_id|tenant_record_id\n" +
+                            "1|a|WlYAAARjYWZl|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
+                            "-- " + tableNameB + " record_id|b_column|account_record_id|tenant_record_id\n" +
+                            "1|b|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n"
+
+                           );
     }
 
     private String getDump(final UUID accountId, final UUID tenantId) {
