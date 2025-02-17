@@ -70,6 +70,25 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("drop table if exists " + tableNameA);
+                handle.execute("create table " + tableNameA + "(record_id serial unique," +
+                               "a_column char default 'a'," +
+                               "blob_column mediumblob," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameB);
+                handle.execute("create table " + tableNameB + "(record_id serial unique," +
+                               "b_column char default 'b'," +
+                               "account_record_id bigint /*! unsigned */ not null," +
+                               "tenant_record_id bigint /*! unsigned */ not null default 0," +
+                               "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameC);
+                handle.execute("create table " + tableNameC + "(record_id serial unique," +
+                               "name varchar(36) default 'plana'," +
+                               "account_id varchar(36)," +
+                               "tenant_id varchar(36) not null," +
+                               "primary key(record_id));");
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
