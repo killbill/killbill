@@ -46,7 +46,9 @@ import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpec
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestInArrearCreateChangeCancel extends TestIntegrationBase {
@@ -118,14 +120,19 @@ public class TestInArrearCreateChangeCancel extends TestIntegrationBase {
         addOnEntitlement4.changePlanWithDate(aoSpec, changeCancelDate, Collections.emptyList(), callContext);
 
 
-        //CANCEL BASE with date 2025-03-12 - INVOICE NOT GENERATED
-//        baseEntitlement.cancelEntitlementWithDate(changeCancelDate, true, Collections.emptyList(), callContext);
-//        checkNoMoreInvoiceToGenerate(account);
+        //undo all scheduled price changes
+        busHandler.pushExpectedEvents(NextEvent.UNDO_CHANGE, NextEvent.UNDO_CHANGE, NextEvent.UNDO_CHANGE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
+        addOnEntitlement1.undoChangePlan(Collections.emptyList(), callContext);
+        addOnEntitlement3.undoChangePlan(Collections.emptyList(), callContext);
+        addOnEntitlement4.undoChangePlan(Collections.emptyList(), callContext);
+        assertListenerStatus();
 
         //CANCEL BASE with date 2025-03-12 - INVOICE NOT GENERATED
         DateTime changeCancelDateTime = new DateTime(2025,3, 12,0,0);
         baseEntitlement.cancelEntitlementWithDate(changeCancelDateTime, changeCancelDateTime, Collections.emptyList(), callContext);
         checkNoMoreInvoiceToGenerate(account);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), true, true, true, callContext);
+        Assert.assertEquals(invoices.size(), 0);
 
     }
 
