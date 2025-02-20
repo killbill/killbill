@@ -23,9 +23,9 @@ import org.skife.config.Description;
 
 public interface ExportConfig extends KillbillConfig {
 
-    @Config("org.killbill.export.aviateCatalogTablesIncluded")
-    @Default("false")
-    @Description("Whether to include aviate catalog tables in export")
-    boolean aviateCatalogTablesIncluded();
+    @Config("org.killbill.export.extra.tables.prefix")
+    @Default("")
+    @Description("Prefix of the extra tables that need to be imported")
+    String getExtraTablesPrefix();
 
 }

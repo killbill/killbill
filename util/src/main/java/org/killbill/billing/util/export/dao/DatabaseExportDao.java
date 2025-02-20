@@ -72,8 +72,8 @@ public class DatabaseExportDao {
         /* bus_events, notifications table */
         NOTIFICATION("search_key1", "search_key2"),
 
-        /* aviate_catalog_* tables */
-        AVIATE_CATALOG("account_id", "tenant_id"),
+        /* extra tables */
+        EXTRA("account_id", "tenant_id"),
         /* To be discarded */
         OTHER(null, null);
 
@@ -143,8 +143,8 @@ public class DatabaseExportDao {
             tableType = TableType.KB_ACCOUNT;
         } else if (TableName.ACCOUNT_HISTORY.getTableName().equalsIgnoreCase(tableName)) {
             tableType = TableType.KB_ACCOUNT_HISTORY;
-        } else if(exportConfig.aviateCatalogTablesIncluded() && tableName.startsWith("aviate_catalog")) {
-            tableType = TableType.AVIATE_CATALOG;
+        } else if(exportConfig.getExtraTablesPrefix() != null && !exportConfig.getExtraTablesPrefix().isEmpty() && tableName.startsWith(exportConfig.getExtraTablesPrefix())) {
+            tableType = TableType.EXTRA;
         }
 
         boolean firstColumn = true;
@@ -173,7 +173,7 @@ public class DatabaseExportDao {
             return;
         }
 
-        if (tableType == TableType.AVIATE_CATALOG) {
+        if (tableType == TableType.EXTRA) {
             queryBuilder.append(" from ")
                         .append(tableName)
                         .append(" where ")
@@ -181,7 +181,7 @@ public class DatabaseExportDao {
                         .append("  = :tenantRecordId and (")
                         .append(tableType.getAccountRecordIdColumnName())
                         .append(" = :accountRecordId OR ")
-                        .append(tableType.getAccountRecordIdColumnName())
+                        .append(tableType.getAccountRecordIdColumnName()) //TODO_354 - Custom logic for aviate_catalog, to include tenant level entries when accountId is null
                         .append(" is null)")
             ;
 
@@ -204,8 +204,8 @@ public class DatabaseExportDao {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 final ResultIterator<Map<String, Object>> iterator = handle.createQuery(queryBuilder.toString())
-                                                                           .bind("accountRecordId", finalTableType == TableType.AVIATE_CATALOG ? accountId : context.getAccountRecordId())
-                                                                           .bind("tenantRecordId", finalTableType == TableType.AVIATE_CATALOG ? tenantId : context.getTenantRecordId())
+                                                                           .bind("accountRecordId", finalTableType == TableType.EXTRA ? accountId : context.getAccountRecordId())
+                                                                           .bind("tenantRecordId", finalTableType == TableType.EXTRA ? tenantId : context.getTenantRecordId())
                                                                            .iterator();
                 try {
                     while (iterator.hasNext()) {

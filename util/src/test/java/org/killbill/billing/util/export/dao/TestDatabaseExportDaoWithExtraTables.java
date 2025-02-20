@@ -33,7 +33,7 @@ import org.testng.annotations.Test;
 
 import com.ning.compress.lzf.LZFEncoder;
 
-public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbeddedDB {
+public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbeddedDB {
 
     private final String tableNameA = "test_database_export_dao_a";
     private final String tableNameB = "test_database_export_dao_b";
@@ -43,7 +43,7 @@ public class TestDatabaseExportDaoWithAviateTables extends UtilTestSuiteWithEmbe
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-        allExtraProperties.put("org.killbill.export.aviateCatalogTablesIncluded", "true");
+        allExtraProperties.put("org.killbill.export.extra.tables.prefix", "aviate_catalog");
         return getConfigSource(null, allExtraProperties);
     }
 
