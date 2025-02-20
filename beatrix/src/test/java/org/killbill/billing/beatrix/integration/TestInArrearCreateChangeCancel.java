@@ -83,9 +83,9 @@ public class TestInArrearCreateChangeCancel extends TestIntegrationBase {
         final Entitlement addOnEntitlement2 = entitlementApi.getEntitlementForId(allEntitlements.get(2), false, callContext);
         final Entitlement addOnEntitlement3 = entitlementApi.getEntitlementForId(allEntitlements.get(3), false, callContext);
 
-        //add addon4 with usage price overrides
+        //add addon4 with usage price overrides of $0
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        TieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("bullets", BigDecimal.valueOf(1), BigDecimal.valueOf(1), Currency.USD, BigDecimal.valueOf(1000));
+        TieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("bullets", BigDecimal.valueOf(1), BigDecimal.valueOf(0), Currency.USD, BigDecimal.valueOf(1000));
         TierPriceOverride tierPriceOverride = new DefaultTierPriceOverride(List.of(tieredBlockPriceOverride));
         UsagePriceOverride usagePriceOverride = new DefaultUsagePriceOverride("ao4-usage", UsageType.CONSUMABLE, List.of(tierPriceOverride));
         PlanPhasePriceOverride planPhaseOverride = new DefaultPlanPhasePriceOverride("ao4-in-arrear-evergreen", Currency.USD, null, null, List.of(usagePriceOverride));
@@ -96,12 +96,12 @@ public class TestInArrearCreateChangeCancel extends TestIntegrationBase {
 
         final LocalDate changeCancelDate = today.plusMonths(1);
 
-        //CHANGE AO1 to AO1 with recurring price override and date  2025-03-12 - INVOICE NOT GENERATED
+        //SCHEDULE CHANGE AO1 to AO1 with recurring price override OF 1.34 and date  2025-03-12 - INVOICE NOT GENERATED
         planPhaseOverride = new DefaultPlanPhasePriceOverride("ao1-in-arrear-evergreen", Currency.USD, null, new BigDecimal(1.34), null);
         EntitlementSpecifier aoSpec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("ao1-in-arrear", PhaseType.EVERGREEN), null, null, null, List.of(planPhaseOverride));
         addOnEntitlement1.changePlanWithDate(aoSpec, changeCancelDate, Collections.emptyList(), callContext);
 
-        //CHANGE AO3 to AO3 with recurring price override and date  2025-03-12 - INVOICE NOT GENERATED
+        //CHANGE AO3 to AO3 with recurring price override of 6.58, Usage price $1 and date  2025-03-12 - INVOICE NOT GENERATED
         tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("bullets", BigDecimal.valueOf(1), BigDecimal.valueOf(1), Currency.USD, BigDecimal.valueOf(1000));
         tierPriceOverride = new DefaultTierPriceOverride(List.of(tieredBlockPriceOverride));
         usagePriceOverride = new DefaultUsagePriceOverride("bullets-usage-in-arrear-usage", UsageType.CONSUMABLE, List.of(tierPriceOverride));
@@ -109,19 +109,23 @@ public class TestInArrearCreateChangeCancel extends TestIntegrationBase {
         aoSpec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("ao3-in-arrear", PhaseType.EVERGREEN), null, null, null, List.of(planPhaseOverride));
         addOnEntitlement3.changePlanWithDate(aoSpec, changeCancelDate, Collections.emptyList(), callContext);
 
-        //CHANGE AO4 to AO4 with recurring price override and date  2025-03-12 - INVOICE NOT GENERATED
-        planPhaseOverride = new DefaultPlanPhasePriceOverride("ao4-in-arrear", Currency.USD, null, new BigDecimal(3.35), null);
+        //CHANGE AO4 to AO4 with recurring price override of 3.35 and usage price $1 and date  2025-03-12 - INVOICE NOT GENERATED
+        tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("bullets", BigDecimal.valueOf(1), BigDecimal.valueOf(1), Currency.USD, BigDecimal.valueOf(1000));
+        tierPriceOverride = new DefaultTierPriceOverride(List.of(tieredBlockPriceOverride));
+        usagePriceOverride = new DefaultUsagePriceOverride("bullets-usage-in-arrear-usage", UsageType.CONSUMABLE, List.of(tierPriceOverride));
+        planPhaseOverride = new DefaultPlanPhasePriceOverride("ao4-in-arrear", Currency.USD, null, new BigDecimal(3.35), List.of(usagePriceOverride));
         aoSpec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("ao4-in-arrear", PhaseType.EVERGREEN), null, null, null, List.of(planPhaseOverride));
         addOnEntitlement4.changePlanWithDate(aoSpec, changeCancelDate, Collections.emptyList(), callContext);
 
 
         //CANCEL BASE with date 2025-03-12 - INVOICE NOT GENERATED
-        baseEntitlement.cancelEntitlementWithDate(changeCancelDate, true, Collections.emptyList(), callContext);
-        checkNoMoreInvoiceToGenerate(account);
-
-//        DateTime changeCancelDateTime = new DateTime(2025,3, 12,0,0);
-//        baseEntitlement.cancelEntitlementWithDate(changeCancelDateTime, changeCancelDateTime, Collections.emptyList(), callContext);
+//        baseEntitlement.cancelEntitlementWithDate(changeCancelDate, true, Collections.emptyList(), callContext);
 //        checkNoMoreInvoiceToGenerate(account);
+
+        //CANCEL BASE with date 2025-03-12 - INVOICE NOT GENERATED
+        DateTime changeCancelDateTime = new DateTime(2025,3, 12,0,0);
+        baseEntitlement.cancelEntitlementWithDate(changeCancelDateTime, changeCancelDateTime, Collections.emptyList(), callContext);
+        checkNoMoreInvoiceToGenerate(account);
 
     }
 
