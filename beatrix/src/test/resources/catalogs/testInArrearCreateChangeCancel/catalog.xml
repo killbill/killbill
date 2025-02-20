@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2014-2020 Groupon, Inc
+  ~ Copyright 2014-2020 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://docs.killbill.io/latest/catalog.xsd">
+    <effectiveDate>2019-01-01T00:00:00+00:00</effectiveDate>
+    <catalogName>ExampleCatalog</catalogName>
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+    <units>
+        <unit name="bullets"/>
+    </units>	
+    <products>
+        <product name="Standard">
+            <category>BASE</category>
+            <available>
+                <addonProduct>ao1</addonProduct>
+                <addonProduct>ao2</addonProduct>
+                <addonProduct>ao3</addonProduct>
+                <addonProduct>ao4</addonProduct>				
+            </available>			
+        </product>
+        <product name="ao1">
+            <category>ADD_ON</category>
+        </product>		
+        <product name="ao2">
+            <category>ADD_ON</category>
+        </product>	
+        <product name="ao3">
+            <category>ADD_ON</category>
+        </product>	
+        <product name="ao4">
+            <category>ADD_ON</category>
+        </product>			
+    </products>
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+    </rules>
+    <plans>
+        <plan name="standard-monthly-in-arrear">
+            <product>Standard</product>
+			<recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>0</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+  <plan name="ao1-in-arrear">
+            <product>ao1</product>
+			<recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>1.24</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>	
+		  <plan name="ao2-in-arrear">
+            <product>ao2</product>
+			<recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>3.7</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>	
+		<plan name="ao3-in-arrear">
+            <product>ao3</product>
+			<recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>6.05</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+					<usages>
+						<usage name="ao3-usage" prettyName="Ao3 Usage In Arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+							<billingPeriod>MONTHLY</billingPeriod>
+							<tiers>
+								<tier>
+									<blocks>
+										<tieredBlock>
+											<unit>bullets</unit>
+											<size>1</size>
+											<prices>
+												<price>
+													<currency>USD</currency>
+													<value>1</value>
+												</price>
+											</prices>
+											<max>1000</max>
+										</tieredBlock>
+									</blocks>
+								</tier>
+							</tiers>
+						</usage>
+					</usages>
+            </finalPhase>
+        </plan>	
+		<plan name="ao4-in-arrear">
+            <product>ao4</product>
+			<recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>0</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage name="ao4-usage" prettyName="Ao4 Usage In Arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>bullets</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>1</value>
+                                            </price>
+										</prices>
+                                        <max>1000</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>	
+		<plan name="ao1-in-advance">
+            <product>ao1</product>
+			<recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>5</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>	
+		  <plan name="ao2-in-advance">
+            <product>ao2</product>
+			<recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>8</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>			
+	<plan name="standard-monthly-in-advance">
+            <product>Standard</product>
+			<recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>24.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>		
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+			<plan>standard-monthly-in-arrear</plan>
+            <plan>standard-monthly-in-advance</plan>
+			<plan>ao1-in-advance</plan>
+			<plan>ao2-in-advance</plan>
+			<plan>ao1-in-arrear</plan>
+			<plan>ao2-in-arrear</plan>
+			<plan>ao3-in-arrear</plan>
+			<plan>ao4-in-arrear</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>
