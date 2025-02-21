@@ -18,15 +18,9 @@
 
 package org.killbill.billing.util.export.dao;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
-import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.killbill.billing.util.api.DatabaseExportOutputStream;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
@@ -34,7 +28,7 @@ import org.testng.annotations.Test;
 
 import com.ning.compress.lzf.LZFEncoder;
 
-public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
+public class TestDatabaseExportDao extends TestDatabaseExportDaoBase {
 
     @Test(groups = "slow")
     public void testExportSimpleData() throws Exception {
@@ -96,9 +90,4 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
 
     }
 
-    private String getDump(final UUID accountId, final UUID tenantId) {
-        final DatabaseExportOutputStream out = new CSVExportOutputStream(new ByteArrayOutputStream());
-        dao.exportDataForAccount(out, accountId, tenantId, internalCallContext);
-        return out.toString();
-    }
 }

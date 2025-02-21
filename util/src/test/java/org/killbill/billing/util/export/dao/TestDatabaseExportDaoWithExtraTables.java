@@ -17,15 +17,12 @@
 
 package org.killbill.billing.util.export.dao;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.killbill.billing.util.api.DatabaseExportOutputStream;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
@@ -33,12 +30,7 @@ import org.testng.annotations.Test;
 
 import com.ning.compress.lzf.LZFEncoder;
 
-public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbeddedDB {
-
-    private final String tableNameA = "test_database_export_dao_a";
-    private final String tableNameB = "test_database_export_dao_b";
-    private final String tableNameC = "aviate_catalog_a";
-
+public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoBase {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -61,8 +53,6 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final String createdBy = UUID.randomUUID().toString().substring(0, 4);
         final Date updatedDate = new Date(382910622000L);
         final String updatedBy = UUID.randomUUID().toString().substring(0, 4);
-
-        dropTables();
 
         // Empty database
         final String dump = getDump(accountId, tenantId);
@@ -128,8 +118,6 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        dropTables();
-
         // Empty database
         final String dump = getDump(accountId, tenantId);
         Assert.assertEquals(dump, "");
@@ -190,7 +178,7 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        dropTables();
+        //        dropTables();
 
         // Empty database
         final String dump = getDump(accountId, tenantId);
@@ -249,7 +237,7 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        dropTables();
+        //        dropTables();
 
         // Empty database
         final String dump = getDump(accountId, tenantId);
@@ -302,27 +290,6 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
                             "1|b|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n"
 
                            );
-    }
-
-    private void dropTables() {
-
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("drop table if exists " + tableNameA);
-                handle.execute("drop table if exists " + tableNameB);
-                handle.execute("drop table if exists " + tableNameC);
-                return null;
-            }
-        });
-
-
-    }
-
-    private String getDump(final UUID accountId, final UUID tenantId) {
-        final DatabaseExportOutputStream out = new CSVExportOutputStream(new ByteArrayOutputStream());
-        dao.exportDataForAccount(out, accountId, tenantId, internalCallContext);
-        return out.toString();
     }
 
 }
