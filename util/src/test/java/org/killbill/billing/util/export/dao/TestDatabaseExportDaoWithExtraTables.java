@@ -54,10 +54,6 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
         final Date updatedDate = new Date(382910622000L);
         final String updatedBy = UUID.randomUUID().toString().substring(0, 4);
 
-//        // Empty database
-//        final String dump = getDump(accountId, tenantId);
-//        Assert.assertEquals(dump, "");
-
         final byte[] properties = LZFEncoder.encode(new byte[] { 'c', 'a', 'f', 'e' });
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -118,10 +114,6 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-//        // Empty database
-//        final String dump = getDump(accountId, tenantId);
-//        Assert.assertEquals(dump, "");
-
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -178,12 +170,6 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-//        //        dropTables();
-//
-//        // Empty database
-//        final String dump = getDump(accountId, tenantId);
-//        Assert.assertEquals(dump, "");
-
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -236,12 +222,6 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
 
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
-
-//        //        dropTables();
-//
-//        // Empty database
-//        final String dump = getDump(accountId, tenantId);
-//        Assert.assertEquals(dump, "");
 
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
