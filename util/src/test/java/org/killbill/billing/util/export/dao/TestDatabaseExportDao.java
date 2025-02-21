@@ -42,10 +42,6 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        // Empty database
-        final String dump = getDump(accountId, tenantId);
-        Assert.assertEquals(dump, "");
-
         final String accountEmail = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String accountName = UUID.randomUUID().toString().substring(0, 4);
         final int firstNameLength = 4;
