@@ -32,25 +32,25 @@ public class TestDatabaseExportDaoBase extends UtilTestSuiteWithEmbeddedDB {
     protected final String tableNameB = "test_database_export_dao_b";
     protected final String tableNameC = "aviate_catalog_a";
 
-    @BeforeMethod
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        dropTables();
-    }
+//    @BeforeMethod
+//    public void beforeMethod() throws Exception {
+//        super.beforeMethod();
+//        dropTables();
+//    }
 
-    protected void dropTables() {
-
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("drop table if exists " + tableNameA);
-                handle.execute("drop table if exists " + tableNameB);
-                handle.execute("drop table if exists " + tableNameC);
-                return null;
-            }
-        });
-
-    }
+//    protected void dropTables() {
+//
+//        dbi.withHandle(new HandleCallback<Void>() {
+//            @Override
+//            public Void withHandle(final Handle handle) throws Exception {
+//                handle.execute("drop table if exists " + tableNameA);
+//                handle.execute("drop table if exists " + tableNameB);
+//                handle.execute("drop table if exists " + tableNameC);
+//                return null;
+//            }
+//        });
+//
+//    }
 
     protected String getDump(final UUID accountId, final UUID tenantId) {
         final DatabaseExportOutputStream out = new CSVExportOutputStream(new ByteArrayOutputStream());
