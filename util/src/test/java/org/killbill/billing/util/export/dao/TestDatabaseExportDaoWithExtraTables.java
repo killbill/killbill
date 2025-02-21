@@ -62,6 +62,12 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final Date updatedDate = new Date(382910622000L);
         final String updatedBy = UUID.randomUUID().toString().substring(0, 4);
 
+        dropTables();
+
+        // Empty database
+        final String dump = getDump(accountId, tenantId);
+        Assert.assertEquals(dump, "");
+
         final byte[] properties = LZFEncoder.encode(new byte[] { 'c', 'a', 'f', 'e' });
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -122,6 +128,12 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
+        dropTables();
+
+        // Empty database
+        final String dump = getDump(accountId, tenantId);
+        Assert.assertEquals(dump, "");
+
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -178,6 +190,12 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
+        dropTables();
+
+        // Empty database
+        final String dump = getDump(accountId, tenantId);
+        Assert.assertEquals(dump, "");
+
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -231,6 +249,12 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
+        dropTables();
+
+        // Empty database
+        final String dump = getDump(accountId, tenantId);
+        Assert.assertEquals(dump, "");
+
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -280,9 +304,23 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
                            );
     }
 
+    private void dropTables() {
+
+        dbi.withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("drop table if exists " + tableNameA);
+                handle.execute("drop table if exists " + tableNameB);
+                handle.execute("drop table if exists " + tableNameC);
+                return null;
+            }
+        });
+
+
+    }
+
     private String getDump(final UUID accountId, final UUID tenantId) {
         final DatabaseExportOutputStream out = new CSVExportOutputStream(new ByteArrayOutputStream());
-//        refreshCallContext(accountId);
         dao.exportDataForAccount(out, accountId, tenantId, internalCallContext);
         return out.toString();
     }
