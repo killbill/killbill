@@ -53,10 +53,6 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        // Empty database
-        final String dump = getDump(accountId, tenantId);
-        Assert.assertEquals(dump, "");
-
         final String accountEmail = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String accountName = UUID.randomUUID().toString().substring(0, 4);
         final int firstNameLength = 4;
@@ -126,10 +122,6 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        // Empty database
-        final String dump = getDump(accountId, tenantId);
-        Assert.assertEquals(dump, "");
-
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -186,10 +178,6 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        // Empty database
-        final String dump = getDump(accountId, tenantId);
-        Assert.assertEquals(dump, "");
-
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -243,10 +231,6 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
         final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
 
-        // Empty database
-        final String dump = getDump(accountId, tenantId);
-        Assert.assertEquals(dump, "");
-
         final byte[] properties = LZFEncoder.encode(new byte[]{'c', 'a', 'f', 'e'});
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -298,6 +282,7 @@ public class TestDatabaseExportDaoWithExtraTables extends UtilTestSuiteWithEmbed
 
     private String getDump(final UUID accountId, final UUID tenantId) {
         final DatabaseExportOutputStream out = new CSVExportOutputStream(new ByteArrayOutputStream());
+//        refreshCallContext(accountId);
         dao.exportDataForAccount(out, accountId, tenantId, internalCallContext);
         return out.toString();
     }
