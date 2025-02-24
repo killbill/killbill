@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.DefaultTieredBlockPriceOverride;
 import org.killbill.billing.catalog.DefaultUsagePriceOverride;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.TierPriceOverride;
@@ -50,6 +51,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestUsagePriceOverride extends TestIntegrationBase {
@@ -85,16 +87,21 @@ public class TestUsagePriceOverride extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addOnEntitlementId = entitlementApi.addEntitlement(baseSubscription.getBundleId(), usageAddOnEntitlementSpecifier, null, null, false, Collections.emptyList(), callContext);
-        final Subscription aoSub = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, false, callContext);
+        Subscription aoSub = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, false, callContext);
         assertListenerStatus();
 
+        //overridden plan name
+        Plan aoPlan = aoSub.getLastActivePlan();
+        Assert.assertEquals(aoPlan.getName(), "bullets-usage-in-arrear-1");
+
+        //record usage for 2024-11-14
         recordUsageData(aoSub.getId(), "t1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(10L), callContext);
 
         //check invoice for targetDate=2024-12-14 - addon recurring/usage item as per overridden price
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 11, 14), new LocalDate(2024, 12, 14), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 11, 14), new LocalDate(2024, 12, 14), InvoiceItemType.RECURRING, new BigDecimal("6.05")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 11, 14), new LocalDate(2024, 12, 14), InvoiceItemType.USAGE, new BigDecimal("12.5"))); //10 units x 1.25 (overridden price)
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 11, 14), new LocalDate(2024, 12, 14), InvoiceItemType.RECURRING, new BigDecimal("6.05"))); //overridden recurring price
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 11, 14), new LocalDate(2024, 12, 14), InvoiceItemType.USAGE, new BigDecimal("12.5"))); //10 units x 1.25 (overridden usage price)
         Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday().plusMonths(1), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
@@ -113,12 +120,17 @@ public class TestUsagePriceOverride extends TestIntegrationBase {
         clock.setDay(changeDate);
         assertListenerStatus();
 
+        //overridden plan name
+        aoSub = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, false, callContext);
+        aoPlan = aoSub.getLastActivePlan();
+        Assert.assertEquals(aoPlan.getName(), "bullets-usage-in-arrear-2");
+
         recordUsageData(aoSub.getId(), "t2", "bullets", clock.getUTCNow(), BigDecimal.valueOf(20L), callContext);
 
         //check invoice - test fails here as addon usage item is not as per overridden price
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.RECURRING, new BigDecimal("10")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.USAGE, new BigDecimal("45"))); //20 units x 2.25 (overridden price) - test fails here
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.RECURRING, new BigDecimal("10"))); // overridden recurring price
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.USAGE, new BigDecimal("45"))); //20 units x 2.25 (overridden udage price) - test fails here
         dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday().plusMonths(1), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
     }
