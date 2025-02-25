@@ -92,7 +92,6 @@ public class TestUsagePriceOverride extends TestIntegrationBase {
 
         //overridden plan name
         Plan aoPlan = aoSub.getLastActivePlan();
-//        Assert.assertEquals(aoPlan.getName(), "bullets-usage-in-arrear-1");
 
         //record usage for 2024-11-14
         recordUsageData(aoSub.getId(), "t1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(10L), callContext);
@@ -123,11 +122,10 @@ public class TestUsagePriceOverride extends TestIntegrationBase {
         //overridden plan name
         aoSub = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, false, callContext);
         aoPlan = aoSub.getLastActivePlan();
-//        Assert.assertEquals(aoPlan.getName(), "bullets-usage-in-arrear-2");
 
         recordUsageData(aoSub.getId(), "t2", "bullets", clock.getUTCNow(), BigDecimal.valueOf(20L), callContext);
 
-        //check invoice - test fails here as addon usage item is not as per overridden price
+        //check invoice
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.RECURRING, new BigDecimal("10"))); // overridden recurring price
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 14), new LocalDate(2025, 1, 14), InvoiceItemType.USAGE, new BigDecimal("45"))); //20 units x 2.25 (overridden udage price) - test fails here
