@@ -262,10 +262,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         final PluginProperty ipcdRetriesProperty = StreamSupport.stream(pluginProperties   .spliterator(), false)
-                                                 .filter(p -> p.getKey().equals("IPCD_RETRIES"))
+                                                 .filter(p -> "IPCD_RETRIES".equals(p.getKey()))
                                                  .findFirst()
                                                  .orElse(null);
-        final boolean ipcdRetries = ipcdRetriesProperty != null ? (boolean) ipcdRetriesProperty.getValue() : false;
+        final boolean ipcdRetries = ipcdRetriesProperty != null ? Boolean.parseBoolean(ipcdRetriesProperty.getValue().toString()) : false;
         DateTime nextRetryDate = null;
         switch (transactionType) {
             case PURCHASE:
