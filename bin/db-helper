@@ -160,20 +160,6 @@ function cleanup() {
     rm -f "/tmp/*.$$"
 }
 
-function flyway() {
-    flyway_bin=util/target/killbill-flyway.jar
-    if [ ! -f "$flyway_bin" ]; then
-        echo "File $flyway_bin does not exists - build util first"
-        usage
-    fi
-
-    locations=
-    for migration_dir in `find */src/main/resources -type d -name migration`; do
-        locations="${locations}filesystem:$migration_dir,"
-    done
-
-    java -jar $flyway_bin -locations=$locations -user=$USER -password=$PWD -url=$URL ${@}
-}
 
 while true; do
   case "$1" in
@@ -252,10 +238,6 @@ if [ $ACTION == "clean" ]; then
         psql -h $HOST -p $PORT -U $USER -d $DATABASE < $CLEAN_FILE
         clean_pgfile
     fi
-fi
-
-if [ $ACTION == "migrate" ] || [ $ACTION == "dryRunMigrate" ] || [ $ACTION == "repair" ] || [ $ACTION == "info" ]; then
-    flyway $ACTION
 fi
 
 cleanup

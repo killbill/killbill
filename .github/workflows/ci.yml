@@ -84,11 +84,13 @@ jobs:
         if: ${{ matrix.database == 'mysql' }}
         run: |
           mysql -h 127.0.0.1 -u root --password=root -e 'create database killbill'
+          chmod +x ./bin/db-helper
           ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - name: Setup latest DDL
         if: ${{ matrix.database == 'postgresql' }}
         run: |
           psql -h 127.0.0.1 -U postgres -p 5432 -c 'create database killbill'
+          chmod +x ./bin/db-helper
           ./bin/db-helper -a create --driver postgres -u postgres -t yes -h 127.0.0.1 --port 5432
       - name: Install plugin specific MySQL DDL
         if: ${{ matrix.database == 'mysql' }}
