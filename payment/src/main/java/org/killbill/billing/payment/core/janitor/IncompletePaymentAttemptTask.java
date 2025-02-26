@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -35,6 +37,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
@@ -46,7 +49,6 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -54,6 +56,7 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.skife.config.TimeSpan;
@@ -177,7 +180,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                     // isApiPayment=false might not always be correct here: a payment with control plugin
                     // might have been triggered from the API and crashed in an INIT state, which the loop
                     // would attempt to fix here. But this is really an edge case.
-                    doIteration(item, false);
+                    doIteration(item, false, Collections.emptyList());
                 } catch (final Exception e) {
                     log.warn("Exception during Janitor loop", e);
                 }
@@ -204,7 +207,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
     //  * Used in PaymentEnteringStateCallback to decide whether to send a PaymentErrorInternalEvent
     // To ensure that payments are retried, isApiPayment must be true (see https://github.com/killbill/killbill/issues/880).
     @VisibleForTesting
-    public boolean doIteration(final PaymentAttemptModelDao attempt, final boolean isApiPayment) {
+    public boolean doIteration(final PaymentAttemptModelDao attempt, final boolean isApiPayment, final Iterable<PluginProperty> pluginProperties) {
         // We don't grab account lock here as the lock will be taken when calling the completeRun API.
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getTenantRecordId(), attempt.getAccountRecordId());
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantContext.getTenantRecordId(),
@@ -248,6 +251,12 @@ public class IncompletePaymentAttemptTask implements Runnable {
             log.info("Completing attemptId='{}', stateName='{}'", attempt.getId(), attempt.getStateName());
 
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
+
+            final List<PluginProperty> combinedPluginProperties = Stream.concat(
+                    StreamSupport.stream(pluginProperties.spliterator(), false),
+                    StreamSupport.stream(PluginPropertySerializer.deserialize(attempt.getPluginProperties()).spliterator(), false)
+                                                                               ).collect(Collectors.toList());
+
             final PaymentStateControlContext paymentStateContext = new PaymentStateControlContext(attempt.toPaymentControlPluginNames(),
                                                                                                   isApiPayment,
                                                                                                   null,
@@ -261,7 +270,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                                                                   transaction.getAmount(),
                                                                                                   transaction.getCurrency(),
                                                                                                   null,
-                                                                                                  PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
+                                                                                                  combinedPluginProperties,
                                                                                                   internalCallContext,
                                                                                                   internalCallContextFactory.createCallContext(internalCallContext));
 
@@ -358,7 +367,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
             if (paymentAttemptModelDao != null) {
                 if (hasTransactionChanged || retrySMHelper.getInitialState().getName().equals(paymentAttemptModelDao.getStateName())) {
                     // Run the completion part of the state machine to call the plugins and update the attempt in the right terminal state)
-                    hasAttemptChanged = doIteration(paymentAttemptModelDao, isApiPayment);
+                    hasAttemptChanged = doIteration(paymentAttemptModelDao, isApiPayment, Collections.emptyList());
                 }
             }
         }
