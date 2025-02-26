@@ -17,6 +17,8 @@
 
 package org.killbill.billing.util.config.definition;
 
+import java.util.List;
+
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
@@ -24,8 +26,8 @@ import org.skife.config.Description;
 public interface ExportConfig extends KillbillConfig {
 
     @Config("org.killbill.export.extra.tables.prefix")
-    @Default("")
+    @Default("aviate_catalog")
     @Description("Prefix of the extra tables that need to be imported")
-    String getExtraTablesPrefix();
+    List<String> getExtraTablesPrefix();
 
 }

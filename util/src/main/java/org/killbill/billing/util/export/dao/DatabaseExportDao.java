@@ -143,7 +143,7 @@ public class DatabaseExportDao {
             tableType = TableType.KB_ACCOUNT;
         } else if (TableName.ACCOUNT_HISTORY.getTableName().equalsIgnoreCase(tableName)) {
             tableType = TableType.KB_ACCOUNT_HISTORY;
-        } else if(exportConfig.getExtraTablesPrefix() != null && !exportConfig.getExtraTablesPrefix().isEmpty() && tableName.toLowerCase().startsWith(exportConfig.getExtraTablesPrefix().toLowerCase())) {
+        } else if(exportConfig.getExtraTablesPrefix() != null && !exportConfig.getExtraTablesPrefix().isEmpty() && exportConfig.getExtraTablesPrefix().stream().anyMatch(prefix -> tableName.toLowerCase().startsWith(prefix))) {
             tableType = TableType.EXTRA;
         }
 
@@ -245,4 +245,6 @@ public class DatabaseExportDao {
             }
         });
     }
+
+
 }
