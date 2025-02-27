@@ -23,6 +23,7 @@ import java.util.List;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
@@ -86,7 +87,7 @@ public class TestIncompletePaymentAttemptTaskWithDB extends PaymentTestSuiteWith
         }
 
         @Override
-        public boolean doIteration(final PaymentAttemptModelDao attempt, final boolean isApiPayment) {
+        public boolean doIteration(final PaymentAttemptModelDao attempt, final boolean isApiPayment, final Iterable<PluginProperty> pluginProperties) {
             throw new NullPointerException("NPE for tests");
         }
     }
