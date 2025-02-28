@@ -90,8 +90,8 @@ public class TestKillBillJndiLdapRealm extends UtilTestSuiteNoDB {
         System.out.println("Permissions: " + authorizationInfo.getStringPermissions());
     }
 
-    @Test(groups = "fast")
-    public void test2102() {
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/2102")
+    public void testGroupNamesFromSearchResult() {
         final BasicAttributes attrs = new BasicAttributes();
         attrs.put("memberOf", Arrays.asList("g1", "g2"));
         final SearchResult sr = new SearchResult("test", null, attrs);

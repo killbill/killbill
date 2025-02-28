@@ -197,24 +197,19 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
     Collection<String> extractGroupNamesFromSearchResult(final SearchResult searchResult) {
         // Extract the group name from the attribute
         final Iterator<? extends Attribute> attributesIterator = searchResult.getAttributes().getAll().asIterator();
-        final Collection<String> groups = Iterators.toStream(attributesIterator)
-                                                   // Find the attribute representing the group name
-                                                   .filter(attribute -> groupNameId.equalsIgnoreCase(attribute.getID()))
-                                                   .flatMap(groupNameAttribute -> {
-                                                 try {
-                                                     final NamingEnumeration<?> enumeration = groupNameAttribute.getAll();
-                                                     final List<?> enumerationAsList = Collections.list(enumeration);
-                                                     final List<String> values = new ArrayList<>();
-                                                     enumerationAsList.forEach(e -> values.addAll((Collection) e));
-                                                     return values.stream();
-                                                 } catch (final NamingException namingException) {
-                                                     return Stream.empty();
-                                                 }
-                                             })
-                                                   .filter(Objects::nonNull)
-                                                   .map(Object::toString)
-                                                   .collect(Collectors.toUnmodifiableSet());
-        return groups;
+        final List<String> attributes = new ArrayList<>();
+        Iterators.toStream(attributesIterator).filter(attribute -> groupNameId.equalsIgnoreCase(attribute.getID())).forEach(attr -> {
+            try {
+                if(attr.get() instanceof Collection) {
+                    attributes.addAll((Collection) attr.get());
+                } else {
+                    attributes.add(attr.get().toString());
+                }
+            } catch (NamingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return attributes;
     }
 
     private Set<String> groupsPermissions(final Set<String> groups) {
