@@ -72,6 +72,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 public class TestInvoicePayment extends TestIntegrationBase {
@@ -1340,6 +1341,120 @@ public class TestInvoicePayment extends TestIntegrationBase {
         addDaysAndCheckForCompletion(2, NextEvent.BLOCK);
         checkODState("OD1", account.getId());
     }
+
+    @Test(groups = "slow", description = "Verify fixPaymentTransactionState behavior for SUCCESS->FAILURE and retries enabled")
+    public void testWithSuccessfulPaymentFixedToFailureWithRetries() throws Exception {
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 1), callContext);
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
+        assertEquals(invoices.size(), 2);
+
+        Invoice invoice = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?
+                          invoices.get(0) : invoices.get(1);
+        assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoice.getPaidAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getChargedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getPayments().size(), 1);
+        assertEquals(invoice.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getPayments().get(0).getCurrency(), Currency.USD);
+        assertSame(invoice.getPayments().get(0).getStatus(), InvoicePaymentStatus.SUCCESS);
+        assertNotNull(invoice.getPayments().get(0).getPaymentId());
+
+        BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
+
+        List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, true, Collections.emptyList(), callContext);
+        assertEquals(payments.size(), 1);
+        assertEquals(payments.get(0).getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().size(), 1);
+        assertEquals(payments.get(0).getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().get(0).getCurrency(), Currency.USD);
+        assertEquals(payments.get(0).getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().get(0).getProcessedCurrency(), Currency.USD);
+        assertEquals(payments.get(0).getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payments.get(0).getPaymentAttempts().size(), 1);
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "SUCCESS");
+
+        // Transition the payment to failure
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        PluginProperty ipcdRetryProperty = new PluginProperty("IPCD_RETRIES", true, false);
+        adminPaymentApi.fixPaymentTransactionState(payments.get(0), payments.get(0).getTransactions().get(0), TransactionStatus.PAYMENT_FAILURE, null, null, List.of(ipcdRetryProperty), callContext);
+        assertListenerStatus();
+
+        invoice = invoiceUserApi.getInvoice(invoice.getId(), callContext);
+        assertEquals(invoice.getBalance().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getPaidAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoice.getChargedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getPayments().size(), 1);
+        assertEquals(invoice.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoice.getPayments().get(0).getCurrency(), Currency.USD);
+        assertSame(invoice.getPayments().get(0).getStatus(), InvoicePaymentStatus.INIT);
+        assertNotNull(invoice.getPayments().get(0).getPaymentId());
+
+        accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertEquals(accountBalance.compareTo(new BigDecimal("249.95")), 0);
+
+        payments = paymentApi.getAccountPayments(account.getId(), false, true, Collections.emptyList(), callContext);
+        assertEquals(payments.size(), 1);
+        assertEquals(payments.get(0).getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payments.get(0).getTransactions().size(), 1);
+        assertEquals(payments.get(0).getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().get(0).getCurrency(), Currency.USD);
+        assertEquals(payments.get(0).getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payments.get(0).getTransactions().get(0).getProcessedCurrency(), Currency.USD);
+        assertEquals(payments.get(0).getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        assertEquals(payments.get(0).getPaymentAttempts().size(), 2);
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        // Payment will be retried since the IPCD_RETRIES=true plugin property is specified
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        assertEquals(payments.get(0).getPaymentAttempts().get(1).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        assertEquals(payments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+
+        // Trigger the payment retry
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(8);
+        assertListenerStatus();
+
+        invoice = invoiceUserApi.getInvoice(invoice.getId(), callContext);
+        assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoice.getPaidAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getChargedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getPayments().size(), 1);
+        assertEquals(invoice.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoice.getPayments().get(0).getCurrency(), Currency.USD);
+        assertSame(invoice.getPayments().get(0).getStatus(), InvoicePaymentStatus.SUCCESS);
+        assertNotNull(invoice.getPayments().get(0).getPaymentId());
+
+        accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
+
+        payments = paymentApi.getAccountPayments(account.getId(), false, true, Collections.emptyList(), callContext);
+        assertEquals(payments.size(), 1);
+        assertEquals(payments.get(0).getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().size(), 2);
+        assertEquals(payments.get(0).getTransactions().get(1).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().get(1).getCurrency(), Currency.USD);
+        assertEquals(payments.get(0).getTransactions().get(1).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().get(1).getProcessedCurrency(), Currency.USD);
+        assertEquals(payments.get(0).getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payments.get(0).getPaymentAttempts().size(), 2);
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        assertEquals(payments.get(0).getPaymentAttempts().get(1).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        assertEquals(payments.get(0).getPaymentAttempts().get(1).getStateName(), "SUCCESS");
+    }
+
 
     @Test(groups = "slow", description = "Verify fixPaymentTransactionState behavior for FAILURE->SUCCESS")
     public void testWithFailedPaymentFixedToSuccess() throws Exception {

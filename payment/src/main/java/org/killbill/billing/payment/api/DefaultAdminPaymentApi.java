@@ -136,7 +136,7 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
                 .ifPresent(payAttemptModelDao -> {
                     // We can re-use the logic from IncompletePaymentAttemptTask as it is doing very similar work (i.e. run the completion part of
                     // the state machine to call the plugins and update the attempt in the right terminal state)
-                    incompletePaymentAttemptTask.doIteration(payAttemptModelDao, true);
+                    incompletePaymentAttemptTask.doIteration(payAttemptModelDao, true, properties);
                 });
     }
 }

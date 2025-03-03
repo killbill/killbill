@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -70,16 +71,16 @@ import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
-import org.killbill.commons.utils.Preconditions;
-import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +91,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public static final String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
 
     private static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
+
+    private static final String PROP_IPCD_RETRIES = "IPCD_RETRIES";
     private static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
     private static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
     private static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
@@ -260,7 +263,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         final TransactionType transactionType = paymentControlContext.getTransactionType();
-
+        final PluginProperty ipcdRetriesProperty = StreamSupport.stream(pluginProperties.spliterator(), false)
+                                                                .filter(p -> PROP_IPCD_RETRIES.equals(p.getKey()))
+                                                                .findFirst()
+                                                                .orElse(null);
+        final boolean ipcdRetries = ipcdRetriesProperty != null ? Boolean.parseBoolean(ipcdRetriesProperty.getValue().toString()) : false;
         DateTime nextRetryDate = null;
         switch (transactionType) {
             case PURCHASE:
@@ -282,7 +289,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     log.error("InvoicePaymentControlPluginApi onFailureCall failed ton update invoice for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
                 }
 
-                nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
+                nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), ipcdRetries, paymentControlContext.isApiPayment(), internalContext);
                 break;
             case CREDIT:
             case REFUND:
@@ -557,10 +564,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         throw new PaymentControlApiException(String.format("Unable to find invoice item for id %s", itemId), new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Invalid plugin properties"));
     }
 
-    private DateTime computeNextRetryDate(final String paymentExternalKey, final boolean isApiAPayment, final InternalCallContext internalContext) {
+    private DateTime computeNextRetryDate(final String paymentExternalKey, final boolean ipcdRetries, final boolean isApiAPayment, final InternalCallContext internalContext) {
 
         // Don't retry call that come from API.
-        if (isApiAPayment) {
+        if (!ipcdRetries && isApiAPayment) {
             return null;
         }
 
