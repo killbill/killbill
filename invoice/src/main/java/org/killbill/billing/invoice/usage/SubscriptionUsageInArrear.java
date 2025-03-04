@@ -43,6 +43,7 @@ import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGe
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
@@ -182,9 +183,10 @@ public class SubscriptionUsageInArrear {
 
                 final UsageKey usageKey = new UsageKey(usage.getName(), event.getCatalogEffectiveDate());
 
+
                 // Add inflight usage interval if non-existent
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usageKey);
-                if (existingInterval == null) {
+                if (existingInterval == null || event.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                     existingInterval = usage.getUsageType() == UsageType.CAPACITY ?
                                        new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext) :
                                        new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
