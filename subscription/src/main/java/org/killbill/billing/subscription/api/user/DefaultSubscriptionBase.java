@@ -670,12 +670,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     final Plan plan = cur.getNextPlan();
                     final PlanPhase planPhase = cur.getNextPhase();
 
+                    boolean isPlanOverridden = false;
                     if (plan != null) {
                         lastActiveCatalog = plan.getCatalog();
+                        isPlanOverridden = plan.getCatalog().getPlans().stream().filter(p -> p.getName().equals(plan.getName())).findFirst().isEmpty();
                     }
-
                     // Computed from lastActiveCatalog
-                    final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(lastActiveCatalog.getEffectiveDate());
+                    final DateTime catalogEffectiveDate = isPlanOverridden ? cur.getEffectiveTransitionTime() : CatalogDateHelper.toUTCDateTime(lastActiveCatalog.getEffectiveDate());
                     final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(),
                                                                                                            cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), cur.getNextQuantity(),
                                                                                                            catalogEffectiveDate);

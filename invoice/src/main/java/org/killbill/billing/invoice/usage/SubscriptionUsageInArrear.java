@@ -186,7 +186,7 @@ public class SubscriptionUsageInArrear {
 
                 // Add inflight usage interval if non-existent
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usageKey);
-                if (existingInterval == null || event.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
+                if (existingInterval == null) {
                     existingInterval = usage.getUsageType() == UsageType.CAPACITY ?
                                        new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext) :
                                        new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
