@@ -18,12 +18,9 @@
 
 package org.killbill.billing.util.export.dao;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Date;
 import java.util.UUID;
 
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.killbill.billing.util.api.DatabaseExportOutputStream;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
@@ -31,16 +28,14 @@ import org.testng.annotations.Test;
 
 import com.ning.compress.lzf.LZFEncoder;
 
-public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
-
+public class TestDatabaseExportDao extends TestDatabaseExportDaoBase {
 
     @Test(groups = "slow")
     public void testExportSimpleData() throws Exception {
-        // Empty database
-        final String dump = getDump();
-        Assert.assertEquals(dump, "");
 
-        final String accountId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
+        final UUID tenantId = UUID.randomUUID();
+
         final String accountEmail = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String accountName = UUID.randomUUID().toString().substring(0, 4);
         final int firstNameLength = 4;
@@ -83,7 +78,7 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         });
 
         // Verify new dump
-        final String newDump = getDump();
+        final String newDump = getDump(accountId, tenantId);
 
         Assert.assertEquals(newDump, "-- accounts record_id|id|external_key|email|name|first_name_length|currency|billing_cycle_day_local|parent_account_id|is_payment_delegated_to_parent|payment_method_id|reference_time|time_zone|locale|address1|address2|company_name|city|state_or_province|country|postal_code|phone|notes|migrated|created_date|created_by|updated_date|updated_by|tenant_record_id\n" +
                                      String.format("%s|%s|%s|%s|%s|%s||||true||%s|%s|||||||||||false|%s|%s|%s|%s|%s", internalCallContext.getAccountRecordId(), accountId, accountId, accountEmail, accountName, firstNameLength, "1970-05-24T18:33:02.000+00:00", timeZone,
@@ -95,9 +90,4 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
 
     }
 
-    private String getDump() {
-        final DatabaseExportOutputStream out = new CSVExportOutputStream(new ByteArrayOutputStream());
-        dao.exportDataForAccount(out, internalCallContext);
-        return out.toString();
-    }
 }

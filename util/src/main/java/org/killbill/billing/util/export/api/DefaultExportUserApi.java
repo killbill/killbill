@@ -44,7 +44,7 @@ public class DefaultExportUserApi implements ExportUserApi {
     @Override
     public void exportDataForAccount(final UUID accountId, final DatabaseExportOutputStream out, final CallContext context) {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
-        exportDao.exportDataForAccount(out, internalContext);
+        exportDao.exportDataForAccount(out, accountId, context.getTenantId(), internalContext);
     }
 
     @Override
