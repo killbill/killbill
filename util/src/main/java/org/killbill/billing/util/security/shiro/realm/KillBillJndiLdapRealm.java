@@ -16,15 +16,18 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.naming.NamingEnumeration;
@@ -44,10 +47,10 @@ import org.apache.shiro.realm.ldap.JndiLdapRealm;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.commons.utils.Strings;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.Iterators;
-import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -190,27 +193,23 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
         return new HashSet<>(finalGroupsNames);
     }
 
-    private Collection<String> extractGroupNamesFromSearchResult(final SearchResult searchResult) {
-        // Get all attributes for that group
+    @VisibleForTesting
+    Collection<String> extractGroupNamesFromSearchResult(final SearchResult searchResult) {
+        // Extract the group name from the attribute
         final Iterator<? extends Attribute> attributesIterator = searchResult.getAttributes().getAll().asIterator();
-
-        return Iterators.toStream(attributesIterator)
-                        // Find the attribute representing the group name
-                        .filter(attribute -> groupNameId.equalsIgnoreCase(attribute.getID()))
-                        // Extract the group name from the attribute
-                        // Note: at this point, groupNameAttributesIterator should really contain a single element
-                        .map(groupNameAttribute -> {
-                            try {
-                                final NamingEnumeration<?> enumeration = groupNameAttribute.getAll();
-                                return enumeration.asIterator();
-                            } catch (final NamingException namingException) {
-                                log.warn("Unable to read group name(s)", namingException);
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .map(Object::toString)
-                        .collect(Collectors.toUnmodifiableSet());
+        final List<String> attributes = new ArrayList<>();
+        Iterators.toStream(attributesIterator).filter(attribute -> groupNameId.equalsIgnoreCase(attribute.getID())).forEach(attr -> {
+            try {
+                if(attr.get() instanceof Collection) {
+                    attributes.addAll((Collection) attr.get());
+                } else {
+                    attributes.add(attr.get().toString());
+                }
+            } catch (NamingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return attributes;
     }
 
     private Set<String> groupsPermissions(final Set<String> groups) {

@@ -16,24 +16,27 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.SearchResult;
+
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.killbill.billing.util.UtilTestSuiteNoDB;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.util.UtilTestSuiteNoDB;
-import org.killbill.billing.util.config.definition.SecurityConfig;
 
 public class TestKillBillJndiLdapRealm extends UtilTestSuiteNoDB {
 
@@ -85,5 +88,16 @@ public class TestKillBillJndiLdapRealm extends UtilTestSuiteNoDB {
         final AuthorizationInfo authorizationInfo = ldapRealm.queryForAuthorizationInfo(principals, ldapRealm.getContextFactory());
         System.out.println("Roles: " + authorizationInfo.getRoles());
         System.out.println("Permissions: " + authorizationInfo.getStringPermissions());
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/2102")
+    public void testGroupNamesFromSearchResult() {
+        final BasicAttributes attrs = new BasicAttributes();
+        attrs.put("memberOf", Arrays.asList("g1", "g2"));
+        final SearchResult sr = new SearchResult("test", null, attrs);
+        final Collection<String> groups = killBillJndiLdapRealm.extractGroupNamesFromSearchResult(sr);
+        Assert.assertEquals(groups.size(), 2);
+        Assert.assertTrue(groups.contains("g1"));
+        Assert.assertTrue(groups.contains("g2"));
     }
 }
