@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.PriceOverrideSvcStatus;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
@@ -126,7 +127,7 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public DateTime getDateOfFirstRecurringNonZeroCharge();
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog, PriceOverrideSvcStatus priceOverrideSvcStatus, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public BillingAlignment getBillingAlignment(PlanPhaseSpecifier spec, DateTime transitionTime, VersionedCatalog catalog) throws SubscriptionBaseApiException;
     

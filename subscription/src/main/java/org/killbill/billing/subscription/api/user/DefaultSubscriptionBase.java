@@ -45,6 +45,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.PriceOverrideSvcStatus;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
@@ -612,7 +613,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog, final PriceOverrideSvcStatus priceOverrideSvcStatus, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
@@ -670,12 +671,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     final Plan plan = cur.getNextPlan();
                     final PlanPhase planPhase = cur.getNextPhase();
 
+                    boolean isPlanOverridden = false;
                     if (plan != null) {
                         lastActiveCatalog = plan.getCatalog();
+                        isPlanOverridden = priceOverrideSvcStatus.isOverriddenPlan(plan.getName());
                     }
-
                     // Computed from lastActiveCatalog
-                    final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(lastActiveCatalog.getEffectiveDate());
+                    final DateTime catalogEffectiveDate = isPlanOverridden ? cur.getEffectiveTransitionTime() : CatalogDateHelper.toUTCDateTime(lastActiveCatalog.getEffectiveDate());
                     final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(),
                                                                                                            cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), cur.getNextQuantity(),
                                                                                                            catalogEffectiveDate);

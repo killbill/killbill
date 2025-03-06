@@ -32,7 +32,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.override.PriceOverrideSvc;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
@@ -47,13 +47,13 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     @JsonIgnore
     private InternalCallContextFactory internalCallContextFactory;
     @JsonIgnore
-    private PriceOverride priceOverride;
+    private PriceOverrideSvc priceOverride;
 
     // Required for deserialization
     public StandaloneCatalogWithPriceOverride() {
     }
 
-    public StandaloneCatalogWithPriceOverride(final StaticCatalog catalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
+    public StandaloneCatalogWithPriceOverride(final StaticCatalog catalog, final PriceOverrideSvc priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
         // Initialize from input catalog
         setCatalogName(catalog.getCatalogName());
         setEffectiveDate(catalog.getEffectiveDate());
@@ -141,7 +141,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         return internalCallContextFactory.createInternalTenantContext(tenantRecordId, null);
     }
 
-    public void initialize(final StandaloneCatalog catalog, final PriceOverride priceOverride, final InternalCallContextFactory internalCallContextFactory) {
+    public void initialize(final StandaloneCatalog catalog, final PriceOverrideSvc priceOverride, final InternalCallContextFactory internalCallContextFactory) {
         super.initialize(catalog);
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;

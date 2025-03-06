@@ -23,7 +23,7 @@ import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.caching.PriceOverridePattern;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.glue.TestCatalogModuleWithEmbeddedDB;
-import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.override.PriceOverrideSvc;
 import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
 import org.skife.jdbi.v2.IDBI;
@@ -41,7 +41,7 @@ public class CatalogTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEm
     protected IDBI dbi;
 
     @Inject
-    protected PriceOverride priceOverride;
+    protected PriceOverrideSvc priceOverride;
 
     @Inject PriceOverridePattern priceOverridePattern;
 

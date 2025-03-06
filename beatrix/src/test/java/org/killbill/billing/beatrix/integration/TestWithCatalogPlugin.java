@@ -37,7 +37,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.override.PriceOverrideSvc;
 import org.killbill.billing.catalog.plugin.TestModelStandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.TestModelVersionedPluginCatalog;
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
@@ -66,7 +66,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
     private OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
 
     @Inject
-    private PriceOverride priceOverride;
+    private PriceOverrideSvc priceOverride;
 
     @Inject
     private InternalCallContextFactory internalCallContextFactory;
@@ -252,7 +252,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
     public static class TestCatalogPluginApi implements CatalogPluginApi {
 
-        private final PriceOverride priceOverride;
+        private final PriceOverrideSvc priceOverride;
         private final Clock clock;
         private final InternalTenantContext internalTenantContext;
         private final InternalCallContextFactory internalCallContextFactory;
@@ -262,7 +262,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         private int nbLatestCatalogVersionApiCalls;
         private int nbVersionedPluginCatalogApiCalls;
 
-        public TestCatalogPluginApi(final PriceOverride priceOverride, final Clock clock, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
+        public TestCatalogPluginApi(final PriceOverrideSvc priceOverride, final Clock clock, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
             this.priceOverride = priceOverride;
             this.clock = clock;
             this.internalTenantContext = internalTenantContext;

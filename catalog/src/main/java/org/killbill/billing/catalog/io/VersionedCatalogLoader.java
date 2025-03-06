@@ -43,7 +43,7 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.override.PriceOverrideSvc;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.killbill.commons.concurrent.Executors;
@@ -62,13 +62,13 @@ public class VersionedCatalogLoader implements CatalogLoader, Closeable {
     private static final Object PROTOCOL_FOR_FILE = "file";
     private static final String XML_EXTENSION = ".xml";
 
-    private final PriceOverride priceOverride;
+    private final PriceOverrideSvc priceOverride;
     private final ExecutorService executorService;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public VersionedCatalogLoader(final CatalogConfig config,
-                                  final PriceOverride priceOverride,
+                                  final PriceOverrideSvc priceOverride,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.executorService = Executors.newFixedThreadPool(Objects.requireNonNullElse(config.getCatalogThreadNb(), 1), VersionedCatalogLoader.class.getName());
         this.priceOverride = priceOverride;
