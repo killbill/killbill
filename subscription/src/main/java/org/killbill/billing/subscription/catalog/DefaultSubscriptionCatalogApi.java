@@ -17,12 +17,10 @@
 
 package org.killbill.billing.subscription.catalog;
 
-import java.util.List;
-
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
-import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.PriceOverrideSvcStatus;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.clock.Clock;
 
@@ -39,12 +37,6 @@ public class DefaultSubscriptionCatalogApi implements SubscriptionCatalogApi {
         this.clock = clock;
     }
 
-    @Override
-    public SubscriptionCatalog getFullCatalog(final InternalTenantContext context) throws CatalogApiException {
-        final VersionedCatalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-        return wrapCatalog(catalog, clock);
-    }
-
     public static SubscriptionCatalog wrapCatalog(final VersionedCatalog catalog, final Clock clock) {
         if (catalog instanceof SubscriptionCatalog) {
             // wrapping idempotency... for safety
@@ -52,5 +44,16 @@ public class DefaultSubscriptionCatalogApi implements SubscriptionCatalogApi {
         } else {
             return new SubscriptionCatalog(catalog, clock);
         }
+    }
+
+    @Override
+    public PriceOverrideSvcStatus getPriceOverrideSvcStatus() {
+        return catalogInternalApi.getPriceOverrideSvcStatus();
+    }
+
+    @Override
+    public SubscriptionCatalog getFullCatalog(final InternalTenantContext context) throws CatalogApiException {
+        final VersionedCatalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
+        return wrapCatalog(catalog, clock);
     }
 }

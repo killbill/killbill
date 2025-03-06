@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2020-2025 Equinix, Inc
+ * Copyright 2014-2025 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,11 +17,6 @@
 
 package org.killbill.billing.catalog.api;
 
-import org.killbill.billing.callcontext.InternalTenantContext;
-
-public interface CatalogInternalApi {
-
-    public VersionedCatalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
-
-    public PriceOverrideSvcStatus getPriceOverrideSvcStatus();
+public interface PriceOverrideSvcStatus {
+    boolean isOverriddenPlan(final String planName);
 }

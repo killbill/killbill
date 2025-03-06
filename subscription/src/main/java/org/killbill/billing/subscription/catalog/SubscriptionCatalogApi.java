@@ -19,8 +19,12 @@ package org.killbill.billing.subscription.catalog;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.PriceOverrideSvcStatus;
 
 public interface SubscriptionCatalogApi {
+
     public SubscriptionCatalog getFullCatalog(InternalTenantContext context) throws CatalogApiException;
+
+    public PriceOverrideSvcStatus getPriceOverrideSvcStatus();
 
 }

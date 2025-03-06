@@ -36,8 +36,8 @@ import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.DefaultCatalogOverrideDao;
 import org.killbill.billing.catalog.io.CatalogLoader;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
-import org.killbill.billing.catalog.override.DefaultPriceOverride;
-import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.override.DefaultPriceOverrideSvc;
+import org.killbill.billing.catalog.override.PriceOverrideSvc;
 import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
@@ -72,7 +72,7 @@ public class CatalogModule extends KillBillModule {
         bind(PriceOverridePattern.class).toInstance(priceOverridePattern);
         bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
         bind(CatalogLoader.class).to(VersionedCatalogLoader.class).asEagerSingleton();
-        bind(PriceOverride.class).to(DefaultPriceOverride.class).asEagerSingleton();
+        bind(PriceOverrideSvc.class).to(DefaultPriceOverrideSvc.class).asEagerSingleton();
     }
 
     protected void installCatalogDao() {

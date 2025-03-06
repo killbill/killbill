@@ -20,18 +20,26 @@ package org.killbill.billing.catalog.api;
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.override.PriceOverrideSvc;
 
 public class DefaultCatalogInternalApi implements CatalogInternalApi {
 
     private final CatalogService catalogService;
+    private final PriceOverrideSvc priceOverride;
 
     @Inject
-    public DefaultCatalogInternalApi(final CatalogService catalogService) {
+    public DefaultCatalogInternalApi(final CatalogService catalogService, final PriceOverrideSvc priceOverride) {
         this.catalogService = catalogService;
+        this.priceOverride = priceOverride;
     }
 
     @Override
     public VersionedCatalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
         return catalogService.getFullCatalogForInternalUse(useDefaultCatalog, filterTemplateCatalog, context);
+    }
+
+    @Override
+    public PriceOverrideSvcStatus getPriceOverrideSvcStatus() {
+        return priceOverride;
     }
 }

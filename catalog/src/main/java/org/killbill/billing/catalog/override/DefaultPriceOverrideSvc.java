@@ -51,7 +51,7 @@ import org.killbill.billing.catalog.caching.PriceOverridePattern;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 
-public class DefaultPriceOverride implements PriceOverride {
+public class DefaultPriceOverrideSvc implements PriceOverrideSvc {
 
     private static final AtomicLong DRY_RUN_PLAN_IDX = new AtomicLong(0);
 
@@ -61,7 +61,7 @@ public class DefaultPriceOverride implements PriceOverride {
     private final PriceOverridePattern priceOverridePattern;
 
     @Inject
-    public DefaultPriceOverride(final CatalogOverrideDao overrideDao, final OverriddenPlanCache overriddenPlanCache, final PriceOverridePattern priceOverridePattern) {
+    public DefaultPriceOverrideSvc(final CatalogOverrideDao overrideDao, final OverriddenPlanCache overriddenPlanCache, final PriceOverridePattern priceOverridePattern) {
         this.overrideDao = overrideDao;
         this.overriddenPlanCache = overriddenPlanCache;
         this.priceOverridePattern = priceOverridePattern;

@@ -34,7 +34,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
-import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.override.PriceOverrideSvc;
 import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
@@ -61,7 +61,7 @@ public class DefaultCatalogCache implements CatalogCache {
     private final CacheLoaderArgument cacheLoaderArgument;
     private final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
     private final VersionedCatalogMapper versionedCatalogMapper;
-    private final PriceOverride priceOverride;
+    private final PriceOverrideSvc priceOverride;
     private final InternalCallContextFactory internalCallContextFactory;
     private VersionedCatalog defaultCatalog;
 
@@ -70,7 +70,7 @@ public class DefaultCatalogCache implements CatalogCache {
                                final VersionedCatalogMapper versionedCatalogMapper,
                                final CacheControllerDispatcher cacheControllerDispatcher,
                                final VersionedCatalogLoader loader,
-                               final PriceOverride priceOverride,
+                               final PriceOverrideSvc priceOverride,
                                final InternalCallContextFactory internalCallContextFactory) {
         this.pluginRegistry = pluginRegistry;
         this.versionedCatalogMapper = versionedCatalogMapper;
