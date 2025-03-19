@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  killbill:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        KILLBILL_REPO: https://github.com/Entelect-Old-Mutual/om-sme-killbill.git
+        KILLBILL_BRANCH: master
+    ports:
+      - "8080:8080"
+    environment:
+      - KILLBILL_DAO_URL=jdbc:mysql://db:3306/killbill
+      - KILLBILL_DAO_USER=killbill
+      - KILLBILL_DAO_PASSWORD=killbill
+      - KILLBILL_CATALOG_URI=file:///var/lib/killbill/catalog.xml
+      - KILLBILL_SERVER_TEST_MODE=true
+    depends_on:
+      - db
+    volumes:
+      - ./config:/var/lib/killbill
+
+  kaui:
+    image: killbill/kaui:2.0.11
+    # You could also fork and build this from your organization if needed
+    ports:
+      - "9090:8080"
+    environment:
+      - KAUI_CONFIG_DAO_URL=jdbc:mysql://db:3306/kaui
+      - KAUI_CONFIG_DAO_USER=kaui
+      - KAUI_CONFIG_DAO_PASSWORD=kaui
+      - KAUI_KILLBILL_URL=http://killbill:8080
+    depends_on:
+      - db
+      - killbill
+
+  db:
+    image: mysql:5.7
+    platform: linux/amd64
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=killbill
+      - MYSQL_USER=killbill
+      - MYSQL_PASSWORD=killbill
+    volumes:
+      - kb-data:/var/lib/mysql
+      - ./mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    command: ['mysqld', '--character-set-server=utf8', '--collation-server=utf8_general_ci']
+
+volumes:
+  kb-data:
