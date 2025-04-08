@@ -2173,11 +2173,21 @@ public class TestEntitlement extends TestJaxrsBase {
         recurringOverride.setRecurringPrice(new BigDecimal("8.0"));
         addon.setPriceOverrides(List.of(recurringOverride));
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ACCOUNT_CHANGE);
+
+
         //create bundle
         final Subscriptions subscriptions = new Subscriptions();
         subscriptions.add(base);
         subscriptions.add(addon);
         final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(subscriptions, null, (LocalDate) null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         //verify addon has the correct recurring price
         Subscription addonSub = bundle.getSubscriptions().stream().filter(sub -> sub.getProductCategory() == ProductCategory.ADD_ON).findFirst().get();
@@ -2246,11 +2256,20 @@ public class TestEntitlement extends TestJaxrsBase {
         recurringOverride.setRecurringPrice(new BigDecimal("8.0"));
         addon.setPriceOverrides(List.of(recurringOverride));
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ACCOUNT_CHANGE);
+
         //create bundle
         final Subscriptions subscriptions = new Subscriptions();
         subscriptions.add(base);
         subscriptions.add(addon);
         final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(subscriptions, null, (LocalDate) null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         //verify addon has the correct recurring price
         Subscription addonSub = bundle.getSubscriptions().stream().filter(sub -> sub.getProductCategory() == ProductCategory.ADD_ON).findFirst().get();
