@@ -2146,5 +2146,145 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getPlanName(), "trebuchet-usage-in-arrear-1"); //overridden plan name
 
     }
+    @Test(groups = "slow")
+    public void testInArrearChangePlanToSamePlanWithRecurringPriceOverride() throws Exception {
+        final LocalDate today = new LocalDate(2024, 11, 14);
+        clock.setDay(today);
+
+        final String catalog = uploadTenantCatalog("org/killbill/billing/server/in_arrear.xml", true);
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        //base
+        final Subscription base = new Subscription();
+        base.setAccountId(accountJson.getAccountId());
+        base.setPlanName("pistol-monthly");
+
+        //addon with recurring price override
+        final Subscription addon = new Subscription();
+        addon.setAccountId(accountJson.getAccountId());
+        addon.setPlanName("bullets-usage-in-arrear");
+
+        PhasePrice recurringOverride = new PhasePrice();
+        recurringOverride.setPlanName("bullets-usage-in-arrear");
+        recurringOverride.setPhaseType("EVERGREEN");
+        recurringOverride.setRecurringPrice(new BigDecimal("8.0"));
+        addon.setPriceOverrides(List.of(recurringOverride));
+
+        //create bundle
+        final Subscriptions subscriptions = new Subscriptions();
+        subscriptions.add(base);
+        subscriptions.add(addon);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(subscriptions, null, (LocalDate) null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        //verify addon has the correct recurring price
+        Subscription addonSub = bundle.getSubscriptions().stream().filter(sub -> sub.getProductCategory() == ProductCategory.ADD_ON).findFirst().get();
+
+        List<PhasePrice> prices = addonSub.getPrices();
+        Assert.assertEquals(prices.size(), 1);
+        Assert.assertEquals(prices.get(0).getRecurringPrice().compareTo(new BigDecimal("8.0")), 0);
+
+        //change plan with date=2024-12-14 and with recurring price overrides
+        final LocalDate changeDate = new LocalDate(2024, 12, 14);
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(addonSub.getSubscriptionId());
+        newInput.setPlanName("bullets-usage-in-arrear");
+        recurringOverride = new PhasePrice();
+        recurringOverride.setPlanName("bullets-usage-in-arrear");
+        recurringOverride.setPhaseType("EVERGREEN");
+        recurringOverride.setRecurringPrice(new BigDecimal("12.0"));
+        newInput.setPriceOverrides(List.of(recurringOverride));
+        subscriptionApi.changeSubscriptionPlan(addonSub.getSubscriptionId(),
+                                               newInput,
+                                               changeDate,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+
+        //        verify addon has the correct recurring price
+        addonSub = subscriptionApi.getSubscription(addonSub.getSubscriptionId(), requestOptions);
+        prices = addonSub.getPrices();
+        Assert.assertEquals(prices.size(), 2); //two prices is this expected? This looks like a bug to me
+
+        //overridden price specified during plan creation
+        final PhasePrice price1 = prices.stream().filter(p -> "bullets-usage-in-arrear-1".equals(p.getPlanName())).findFirst().get();
+        Assert.assertEquals(price1.getRecurringPrice().compareTo(new BigDecimal("8.0")), 0);
+        //overridden price specified during plan change
+        final PhasePrice price2 = prices.stream().filter(p -> "bullets-usage-in-arrear-2".equals(p.getPlanName())).findFirst().get();
+        Assert.assertEquals(price2.getRecurringPrice().compareTo(new BigDecimal("12.0")), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testInArrearChangePlanToDifferentPlanWithRecurringPriceOverride() throws Exception {
+        final LocalDate today = new LocalDate(2024, 11, 14);
+        clock.setDay(today);
+
+        final String catalog = uploadTenantCatalog("org/killbill/billing/server/in_arrear.xml", true);
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        //base
+        final Subscription base = new Subscription();
+        base.setAccountId(accountJson.getAccountId());
+        base.setPlanName("pistol-monthly");
+
+        //addon with recuring price override
+        final Subscription addon = new Subscription();
+        addon.setAccountId(accountJson.getAccountId());
+        addon.setPlanName("bullets-usage-in-arrear");
+
+        PhasePrice recurringOverride = new PhasePrice();
+        recurringOverride.setPlanName("bullets-usage-in-arrear");
+        recurringOverride.setPhaseType("EVERGREEN");
+        recurringOverride.setRecurringPrice(new BigDecimal("8.0"));
+        addon.setPriceOverrides(List.of(recurringOverride));
+
+        //create bundle
+        final Subscriptions subscriptions = new Subscriptions();
+        subscriptions.add(base);
+        subscriptions.add(addon);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(subscriptions, null, (LocalDate) null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        //verify addon has the correct recurring price
+        Subscription addonSub = bundle.getSubscriptions().stream().filter(sub -> sub.getProductCategory() == ProductCategory.ADD_ON).findFirst().get();
+
+        List<PhasePrice> prices = addonSub.getPrices();
+        Assert.assertEquals(prices.size(), 1);
+        Assert.assertEquals(prices.get(0).getRecurringPrice().compareTo(new BigDecimal("8.0")), 0);
+
+        //change plan with date=2024-12-14 and with recurring price overrides
+        final LocalDate changeDate = new LocalDate(2024, 12, 14);
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(addonSub.getSubscriptionId());
+        newInput.setPlanName("bullets-usage-in-arrear-heavy");
+        recurringOverride = new PhasePrice();
+        recurringOverride.setPlanName("bullets-usage-in-arrear-heavy");
+        recurringOverride.setPhaseType("EVERGREEN");
+        recurringOverride.setRecurringPrice(new BigDecimal("12.0"));
+        newInput.setPriceOverrides(List.of(recurringOverride));
+        subscriptionApi.changeSubscriptionPlan(addonSub.getSubscriptionId(),
+                                               newInput,
+                                               changeDate,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+
+        //verfiy addon has the correct recurring price
+        addonSub = subscriptionApi.getSubscription(addonSub.getSubscriptionId(), requestOptions);
+        prices = addonSub.getPrices();
+        Assert.assertEquals(prices.size(), 2); //two prices is this expected? This looks like a bug to me
+
+        //overridden price specified during plan creation
+        final PhasePrice price1 = prices.stream().filter(p -> "bullets-usage-in-arrear-1".equals(p.getPlanName())).findFirst().get();
+        Assert.assertEquals(price1.getRecurringPrice().compareTo(new BigDecimal("8.0")), 0);
+        //overridden price specified during plan change
+        final PhasePrice price2 = prices.stream().filter(p -> "bullets-usage-in-arrear-heavy-2".equals(p.getPlanName())).findFirst().get();
+        Assert.assertEquals(price2.getRecurringPrice().compareTo(new BigDecimal("12.0")), 0);
+    }
+
 
 }
