@@ -2151,7 +2151,9 @@ public class TestEntitlement extends TestJaxrsBase {
         final LocalDate today = new LocalDate(2024, 11, 14);
         clock.setDay(today);
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final String catalog = uploadTenantCatalog("org/killbill/billing/server/in_arrear.xml", true);
+        callbackServlet.assertListenerStatus();
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -2221,9 +2223,12 @@ public class TestEntitlement extends TestJaxrsBase {
         final LocalDate today = new LocalDate(2024, 11, 14);
         clock.setDay(today);
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final String catalog = uploadTenantCatalog("org/killbill/billing/server/in_arrear.xml", true);
+        callbackServlet.assertListenerStatus();
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
+
 
         //base
         final Subscription base = new Subscription();
