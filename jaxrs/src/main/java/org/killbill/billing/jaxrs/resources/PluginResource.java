@@ -229,9 +229,6 @@ public class PluginResource extends JaxRsResourceBase {
                 builder.header(name, value);
             }
         }
-        if (response.getCharacterEncoding() != null) {
-            builder.encoding(response.getCharacterEncoding());
-        }
         if (response.getContentType() != null) {
             builder.type(response.getContentType());
         }
