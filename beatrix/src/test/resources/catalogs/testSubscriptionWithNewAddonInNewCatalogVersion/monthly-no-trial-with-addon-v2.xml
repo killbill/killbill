@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2014 The Billing Project, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://docs.killbill.io/latest/catalog.xsd">
+    <effectiveDate>2025-01-15T00:00:00+00:00</effectiveDate>
+    <catalogName>ExampleCatalog</catalogName>
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+    <products>
+        <product name="Standard">
+            <category>BASE</category>
+			<available>
+                <addonProduct>standard-ao</addonProduct>
+				<addonProduct>standard-ao2</addonProduct>
+            </available>					
+        </product>
+        <product name="standard-ao">
+            <category>ADD_ON</category>
+        </product>	
+        <product name="standard-ao2">
+            <category>ADD_ON</category>
+        </product>				
+    </products>
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+		<billingAlignment>
+			<billingAlignmentCase>
+				<alignment>BUNDLE</alignment>
+			</billingAlignmentCase>
+		</billingAlignment>		
+    </rules>
+    <plans>
+        <plan name="standard-monthly">
+            <product>Standard</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>30</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="standard-ao-monthly">
+            <product>standard-ao</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>10</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>	
+<plan name="standard-ao2-monthly">
+            <product>standard-ao2</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>12</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>				
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>standard-monthly</plan>
+				<plan>standard-ao-monthly</plan>
+				<plan>standard-ao2-monthly</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>
