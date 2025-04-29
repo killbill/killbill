@@ -102,12 +102,12 @@ public class TestSubscriptionWithNewAddonInNewCatalogVersion extends TestIntegra
         clock.addMonths(1);
         assertListenerStatus();
 
-//        //try to add new addon - test fails here
-//        final PlanPhaseSpecifier ao2Spec = new PlanPhaseSpecifier("standard-ao2-monthly", null);
-//        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
-//                                      NextEvent.PAYMENT);
-//        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(ao2Spec, null, null, UUID.randomUUID().toString(), null), clock.getUTCToday(), clock.getUTCToday(), false, Collections.emptyList(), testCallContext);
-//        assertListenerStatus();
+        //try to add new addon - test fails here
+        final PlanPhaseSpecifier ao2Spec = new PlanPhaseSpecifier("standard-ao2-monthly", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                                      NextEvent.PAYMENT);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(ao2Spec, null, null, UUID.randomUUID().toString(), null), clock.getUTCToday(), clock.getUTCToday(), false, Collections.emptyList(), testCallContext);
+        assertListenerStatus();
 
     }
 

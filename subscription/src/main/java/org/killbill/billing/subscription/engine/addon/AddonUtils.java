@@ -30,10 +30,11 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 
 public class AddonUtils {
 
-    public void checkAddonCreationRights(final SubscriptionBase baseSubscription, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context)
+    public void checkAddonCreationRights(final SubscriptionBase baseSubscription, final Plan targetAddOnPlan, final DateTime requestedDate, final SubscriptionCatalog catalog, final InternalTenantContext context)
             throws SubscriptionBaseApiException {
         if (baseSubscription.getState() == EntitlementState.CANCELLED ||
             (baseSubscription.getState() == EntitlementState.PENDING && context.toLocalDate(baseSubscription.getStartDate()).compareTo(context.toLocalDate(requestedDate)) < 0)) {
@@ -41,7 +42,9 @@ public class AddonUtils {
         }
 
         final Plan currentOrPendingPlan = baseSubscription.getCurrentOrPendingPlan();
-        final Product baseProduct = currentOrPendingPlan.getProduct();
+        final Plan newPlanVersion = catalog.getNextPlanVersion(currentOrPendingPlan);
+
+        final Product baseProduct = newPlanVersion != null ? newPlanVersion.getProduct() : currentOrPendingPlan.getProduct();
         if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED,
                                                    targetAddOnPlan.getName(), currentOrPendingPlan.getProduct().getName());

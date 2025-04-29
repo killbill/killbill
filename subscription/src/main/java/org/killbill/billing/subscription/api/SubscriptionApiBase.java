@@ -157,7 +157,7 @@ public class SubscriptionApiBase {
             case START_BILLING:
                 final SubscriptionBase baseSubscription = dao.getBaseSubscription(bundleId, catalog, context);
                 final DateTime startEffectiveDate = dryRunEffDt != null ? context.toUTCDateTime(dryRunEffDt) : utcNow;
-                final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, addonUtils, context);
+                final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, addonUtils, catalog, context);
                 final UUID subscriptionId = UUIDs.randomUUID();
                 dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, plan, inputSpec.getPhaseType(), plan.getPriceList().getName(),
                                                               startEffectiveDate, entitlementSpecifier.getBillCycleDay(), entitlementSpecifier.getQuantity(), catalog, context);
@@ -225,6 +225,7 @@ public class SubscriptionApiBase {
                                                     final Plan plan,
                                                     final DateTime effectiveDate,
                                                     final AddonUtils addonUtils,
+                                                    final SubscriptionCatalog catalog,
                                                     final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
         switch (plan.getProduct().getCategory()) {
             case BASE:
@@ -241,7 +242,7 @@ public class SubscriptionApiBase {
                 if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
                 }
-                addonUtils.checkAddonCreationRights(baseSubscription, plan, effectiveDate, context);
+                addonUtils.checkAddonCreationRights(baseSubscription, plan, effectiveDate, catalog, context);
                 return baseSubscription.getStartDate();
 
             case STANDALONE:

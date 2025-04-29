@@ -250,7 +250,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
                 bundleStartDate = effectiveDate;
             } else {
                 final SubscriptionBase baseSubscription = dao.getBaseSubscription(bundle.getId(), catalog, context);
-                bundleStartDate = getBundleStartDateWithSanity(bundle.getId(), baseSubscription, plan, effectiveDate, addonUtils, context);
+                bundleStartDate = getBundleStartDateWithSanity(bundle.getId(), baseSubscription, plan, effectiveDate, addonUtils, catalog, context);
             }
 
             final SubscriptionSpecifier subscription = new SubscriptionSpecifier();
