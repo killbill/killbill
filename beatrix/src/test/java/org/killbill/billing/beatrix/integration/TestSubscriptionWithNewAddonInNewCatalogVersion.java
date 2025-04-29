@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -31,7 +32,10 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -41,6 +45,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.utils.io.Resources;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import ch.qos.logback.core.pattern.PatternLayoutBase;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -145,6 +151,49 @@ public class TestSubscriptionWithNewAddonInNewCatalogVersion extends TestIntegra
         assertListenerStatus();
 
     }
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionWithNewAddOnInNewCatalogVersionPriceOverridesAndPlanChange() throws Exception {
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                                      NextEvent.PAYMENT);
+
+        //create base
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("standard-monthly", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "base", clock.getUTCToday(), clock.getUTCToday(), false, true, Collections.emptyList(), testCallContext);
+        Entitlement baseEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, testCallContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
+        assertListenerStatus();
+
+        //add ao1 with price overrides
+        final PlanPhaseSpecifier ao1Spec = new PlanPhaseSpecifier("standard-ao-monthly", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                                      NextEvent.PAYMENT);
+        PlanPhasePriceOverride planPhaseOverride = new DefaultPlanPhasePriceOverride("standard-ao-monthly-evergreen", Currency.USD, null, new BigDecimal(1.34), null);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(ao1Spec, null, null, UUID.randomUUID().toString(), List.of(planPhaseOverride)), null, null, false, Collections.emptyList(), testCallContext);
+        assertListenerStatus();
+
+        uploadCatalog("monthly-no-trial-with-addon-v2.xml");
+
+        //move to 2025-02-01 - v2 is active
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        //change plan to the same plan so it is associated with the new catalog
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
+        baseEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), clock.getUTCToday(), Collections.emptyList(), testCallContext);
+        assertListenerStatus();
+
+        //try to add new addon - test fails here if the plan change above is not done
+        final PlanPhaseSpecifier ao2Spec = new PlanPhaseSpecifier("standard-ao2-monthly", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                                      NextEvent.PAYMENT);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(ao2Spec, null, null, UUID.randomUUID().toString(), null), clock.getUTCToday(), clock.getUTCToday(), false, Collections.emptyList(), testCallContext);
+        assertListenerStatus();
+
+    }
+
 
 
 
