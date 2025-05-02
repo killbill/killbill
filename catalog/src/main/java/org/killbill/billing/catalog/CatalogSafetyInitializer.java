@@ -119,25 +119,20 @@ public class CatalogSafetyInitializer {
     }
 
     private static void initializeFieldWithValue(final Object obj, final Field f, final Object value) throws IllegalAccessException, ClassNotFoundException {
-        synchronized (perCatalogClassNonRequiredFields) {
-            f.setAccessible(true);
-            if (f.get(obj) == null) {
-                f.set(obj, value);
-            }
-            f.setAccessible(false);
+        f.setAccessible(true);
+        if (f.get(obj) == null) {
+            f.set(obj, value);
         }
+        f.setAccessible(false);
     }
 
     private static void initializeArrayIfNull(final Object obj, final Field f) throws IllegalAccessException, ClassNotFoundException {
-        synchronized (perCatalogClassNonRequiredFields) {
-            f.setAccessible(true);
-            if (f.get(obj) == null) {
-                f.set(obj, getZeroLengthArrayInitializer(f));
-            }
-            f.setAccessible(false);
+        f.setAccessible(true);
+        if (f.get(obj) == null) {
+            f.set(obj, getZeroLengthArrayInitializer(f));
         }
+        f.setAccessible(false);
     }
-
 
     private static Object[] getZeroLengthArrayInitializer(final Field f) throws ClassNotFoundException {
         // Yack... type erasure, why?
