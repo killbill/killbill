@@ -124,6 +124,7 @@ public class CatalogSafetyInitializer {
                 f.set(obj, value);
             }
         }
+        f.setAccessible(false);
     }
 
     private static void initializeArrayIfNull(final Object obj, final Field f) throws IllegalAccessException, ClassNotFoundException {
@@ -132,8 +133,8 @@ public class CatalogSafetyInitializer {
                 f.set(obj, getZeroLengthArrayInitializer(f));
             }
         }
+        f.setAccessible(false);
     }
-
 
     private static Object[] getZeroLengthArrayInitializer(final Field f) throws ClassNotFoundException {
         final String arrayClassName = f.getType().getCanonicalName();
