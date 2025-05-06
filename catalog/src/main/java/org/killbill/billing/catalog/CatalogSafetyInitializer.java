@@ -20,9 +20,8 @@ package org.killbill.billing.catalog;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -33,116 +32,166 @@ import org.killbill.billing.catalog.api.TierBlockPolicy;
 
 public class CatalogSafetyInitializer {
 
-
     public static final Integer DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE = -1;
     public static final Double DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE = (double) -1;
     public static final BigDecimal DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE = new BigDecimal("-1");
 
-    private static final Map<Class<?>, LinkedList<Field>> perCatalogClassNonRequiredFields = new HashMap<>();
+    // Cache of prototype instances with default values already set, avoids repeated reflection
+    private static final Map<String, Object> prototypeCache = new ConcurrentHashMap<>();
 
-    //
-    // Ensure that all uninitialized arrays for which there is neither a 'required' XmlElementWrapper or XmlElement annotation
-    // end up initialized with a default zero length array (allowing to safely get the length and iterate over (0) element.
-    //
+    // Cache for zero-length arrays
+    private static final Map<Class<?>, Object> zeroLengthArrayCache = new ConcurrentHashMap<>();
+
     public static void initializeNonRequiredNullFieldsWithDefaultValue(final Object obj) {
-        LinkedList<Field> fields = perCatalogClassNonRequiredFields.get(obj.getClass());
-        if (fields == null) {
-            fields = initializeNonRequiredFields(obj.getClass());
-            perCatalogClassNonRequiredFields.put(obj.getClass(), fields);
-        }
+        final Class<?> clazz = obj.getClass();
+
         try {
-            for (final Field f : fields) {
-                if (f.getType().isArray()) {
-                    initializeArrayIfNull(obj, f);
-                } else if (!f.getType().isPrimitive()) {
-                    if (f.getType().isEnum()) {
-                        if (FixedType.class.equals(f.getType())) {
-                            initializeFieldWithValue(obj, f, FixedType.ONE_TIME);
-                        } else if (BlockType.class.equals(f.getType())) {
-                            initializeFieldWithValue(obj, f, BlockType.VANILLA);
-                        } else if (TierBlockPolicy.class.equals(f.getType())) {
-                            initializeFieldWithValue(obj, f, TierBlockPolicy.ALL_TIERS);
-                        }
-                    } else if (Integer.class.equals(f.getType())) {
-                        initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
-                    } else if (Double.class.equals(f.getType())) {
-                        initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE);
-                    } else if (BigDecimal.class.equals(f.getType())) {
-                        initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE);
+            Object prototype = prototypeCache.get(clazz.getName());
+
+            if (prototype == null) {
+                // Create and cache a fully initialized prototype to reduce reflection overhead
+                prototype = createInitializedPrototype(clazz);
+            }
+
+            applyPrototypeValues(prototype, obj);
+        } catch (Exception e) {
+            // Fall back to the old field-by-field method if prototype approach fails
+            legacyFieldByFieldInitialization(obj);
+        }
+    }
+
+    /**
+     * Creates a fully initialized prototype object for the given class.
+     */
+    private static Object createInitializedPrototype(Class<?> clazz) throws Exception {
+        final Object prototype = clazz.getDeclaredConstructor().newInstance();
+
+        // Initialize all non-required fields with default values
+        for (final Field field : clazz.getDeclaredFields()) {
+            if (!field.trySetAccessible()) {
+                continue;
+            }
+
+            if (shouldInitializeField(field)) {
+                if (field.getType().isArray()) {
+                    field.set(prototype, getZeroLengthArray(field.getType().getComponentType()));
+                } else {
+                    handleEnumInitialization(prototype, field);
+                }
+            }
+        }
+
+        // Cache the prototype
+        final Object existingPrototype = prototypeCache.putIfAbsent(clazz.getName(), prototype);
+        return existingPrototype != null ? existingPrototype : prototype;
+    }
+
+    private static void handleEnumInitialization(final Object prototype, final Field field) throws IllegalAccessException {
+        if (field.getType().isEnum()) {
+            setDefaultEnumValue(prototype, field);
+        } else if (Integer.class.equals(field.getType())) {
+            field.set(prototype, DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
+        } else if (Double.class.equals(field.getType())) {
+            field.set(prototype, DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE);
+        } else if (BigDecimal.class.equals(field.getType())) {
+            field.set(prototype, DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE);
+        }
+    }
+
+    /**
+     * Determines if a field should be initialized based on annotations.
+     */
+    private static boolean shouldInitializeField(final Field field) {
+        // Don't initialize primitive types
+        if (field.getType().isPrimitive()) {
+            return false;
+        }
+
+        // Check for array types
+        if (field.getType().isArray()) {
+            final XmlElementWrapper xmlElementWrapper =
+                    field.getAnnotation(XmlElementWrapper.class);
+            if (xmlElementWrapper != null) {
+                return !xmlElementWrapper.required();
+            }
+
+            final XmlElement xmlElement = field.getAnnotation(XmlElement.class);
+            return xmlElement != null && !xmlElement.required();
+        }
+
+        return field.getType().isEnum() ||
+               Integer.class.equals(field.getType()) ||
+               Double.class.equals(field.getType()) ||
+               BigDecimal.class.equals(field.getType());
+    }
+
+    /**
+     * Sets the default enum value for a field.
+     */
+    private static void setDefaultEnumValue(Object obj, Field field) throws IllegalAccessException {
+        if (FixedType.class.equals(field.getType())) {
+            field.set(obj, FixedType.ONE_TIME);
+        } else if (BlockType.class.equals(field.getType())) {
+            field.set(obj, BlockType.VANILLA);
+        } else if (TierBlockPolicy.class.equals(field.getType())) {
+            field.set(obj, TierBlockPolicy.ALL_TIERS);
+        }
+    }
+
+    /**
+     * Applies values from the prototype to null fields in the target object for minimal reflection usage.
+     */
+    private static void applyPrototypeValues(Object prototype, Object target) throws IllegalAccessException {
+        for (final Field field : target.getClass().getDeclaredFields()) {
+            if (!field.trySetAccessible()) {
+                continue;
+            }
+
+            if (field.get(target) == null && shouldInitializeField(field)) {
+                field.set(target, field.get(prototype));
+            }
+        }
+    }
+
+    /**
+     * Gets or creates a zero-length array of the specified component type.
+     */
+    private static Object getZeroLengthArray(Class<?> componentType) {
+        Object array = zeroLengthArrayCache.get(componentType);
+        if (array == null) {
+            array = Array.newInstance(componentType, 0);
+            final Object existing = zeroLengthArrayCache.putIfAbsent(componentType, array);
+            if (existing != null) {
+                array = existing;
+            }
+        }
+        return array;
+    }
+
+    /**
+     * Legacy field-by-field initialization method as fallback, used when prototype creation fails.
+     */
+    private static void legacyFieldByFieldInitialization(Object obj) {
+        try {
+            for (final Field field : obj.getClass().getDeclaredFields()) {
+                if (!field.trySetAccessible()) {
+                    continue;
+                }
+
+                if (field.get(obj) != null) {
+                    continue;
+                }
+
+                if (field.getType().isArray()) {
+                    if (shouldInitializeField(field)) {
+                        field.set(obj, getZeroLengthArray(field.getType().getComponentType()));
                     }
+                } else if (!field.getType().isPrimitive()) {
+                    handleEnumInitialization(obj, field);
                 }
             }
         } catch (final IllegalAccessException e) {
-            throw new RuntimeException("Failed during catalog initialization : ", e);
-        } catch (final ClassNotFoundException e) {
-            throw new RuntimeException("Failed during catalog initialization : ", e);
+            throw new RuntimeException("Failed during catalog initialization", e);
         }
-    }
-
-    // For each type of catalog object we keep the 'Field' associated to non required attribute fields
-    private static LinkedList<Field> initializeNonRequiredFields(final Class<?> aClass) {
-
-        final LinkedList<Field> result = new LinkedList<>();
-        final Field[] fields = aClass.getDeclaredFields();
-        for (final Field f : fields) {
-            if (f.getType().isArray()) {
-                final XmlElementWrapper xmlElementWrapper = f.getAnnotation(XmlElementWrapper.class);
-                if (xmlElementWrapper != null) {
-                    if (!xmlElementWrapper.required()) {
-                        result.add(f);
-                    }
-                } else {
-                    final XmlElement xmlElement = f.getAnnotation(XmlElement.class);
-                    if (xmlElement != null && !xmlElement.required()) {
-                        result.add(f);
-                    }
-                }
-            } else if (!f.getType().isPrimitive()) {
-                if (f.getType().isEnum()) {
-                    if (FixedType.class.equals(f.getType())) {
-                        result.add(f);
-                    } else if (BlockType.class.equals(f.getType())) {
-                        result.add(f);
-                    } else if (TierBlockPolicy.class.equals(f.getType())) {
-                        result.add(f);
-                    }
-                } else if (Integer.class.equals(f.getType())) {
-                    result.add(f);
-                } else if (Double.class.equals(f.getType())) {
-                    result.add(f);
-                } else if (BigDecimal.class.equals(f.getType())) {
-                    result.add(f);
-                }
-            }
-        }
-        return result;
-    }
-
-    private static void initializeFieldWithValue(final Object obj, final Field f, final Object value) throws IllegalAccessException, ClassNotFoundException {
-        synchronized (perCatalogClassNonRequiredFields) {
-            f.setAccessible(true);
-            if (f.get(obj) == null) {
-                f.set(obj, value);
-            }
-            f.setAccessible(false);
-        }
-    }
-
-    private static void initializeArrayIfNull(final Object obj, final Field f) throws IllegalAccessException, ClassNotFoundException {
-        synchronized (perCatalogClassNonRequiredFields) {
-            f.setAccessible(true);
-            if (f.get(obj) == null) {
-                f.set(obj, getZeroLengthArrayInitializer(f));
-            }
-            f.setAccessible(false);
-        }
-    }
-
-
-    private static Object[] getZeroLengthArrayInitializer(final Field f) throws ClassNotFoundException {
-        // Yack... type erasure, why?
-        final String arrayClassName = f.getType().getCanonicalName();
-        final Class<?> type = Class.forName(arrayClassName.substring(0, arrayClassName.length() - 2));
-        return (Object[]) Array.newInstance(type, 0);
     }
 }
