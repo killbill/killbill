@@ -40,7 +40,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.config.definition.OverdueConfig;
 import org.killbill.billing.util.glue.KillBillModule;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 
@@ -67,7 +67,7 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
         installOverdueService();
         installOverdueWrapperFactory();
 
-        final OverdueProperties config = new ConfigurationObjectFactory(skifeConfigSource).build(OverdueProperties.class);
+        final OverdueProperties config = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
 
         bind(OverdueListener.class).asEagerSingleton();
@@ -80,7 +80,7 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
     }
 
     protected void installConfig() {
-        installConfig(new ConfigurationObjectFactory(skifeConfigSource).build(OverdueConfig.class));
+        installConfig(new AugmentedConfigurationObjectFactory(skifeConfigSource).build(OverdueConfig.class));
     }
     protected void installConfig(final OverdueConfig staticOverdueConfig) {
         bind(OverdueConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(staticOverdueConfig);
