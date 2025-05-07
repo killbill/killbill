@@ -20,9 +20,11 @@ package org.killbill.billing.catalog;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -33,23 +35,23 @@ import org.killbill.billing.catalog.api.TierBlockPolicy;
 
 public class CatalogSafetyInitializer {
 
-
     public static final Integer DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE = -1;
     public static final Double DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE = (double) -1;
     public static final BigDecimal DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE = new BigDecimal("-1");
 
-    private static final Map<Class<?>, LinkedList<Field>> perCatalogClassNonRequiredFields = new HashMap<>();
+    private static final Map<Class<?>, LinkedList<Field>> perCatalogClassNonRequiredFields = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Object> zeroLengthArrayCache = new ConcurrentHashMap<>();
 
     //
-    // Ensure that all uninitialized arrays for which there is neither a 'required' XmlElementWrapper or XmlElement annotation
-    // end up initialized with a default zero length array (allowing to safely get the length and iterate over (0) element.
+    // Ensure that all uninitialized arrays for which there is neither a 'required' XmlElementWrapper nor XmlElement annotation
+    // end up initialized with a default zero length array (allowing to safely get the length and iterate over (0) element).
     //
     public static void initializeNonRequiredNullFieldsWithDefaultValue(final Object obj) {
-        LinkedList<Field> fields = perCatalogClassNonRequiredFields.get(obj.getClass());
-        if (fields == null) {
-            fields = initializeNonRequiredFields(obj.getClass());
-            perCatalogClassNonRequiredFields.put(obj.getClass(), fields);
-        }
+
+        final LinkedList<Field> fields =
+                perCatalogClassNonRequiredFields.computeIfAbsent(
+                        obj.getClass(), CatalogSafetyInitializer::initializeNonRequiredFields);
+
         try {
             for (final Field f : fields) {
                 if (f.getType().isArray()) {
@@ -72,9 +74,7 @@ public class CatalogSafetyInitializer {
                     }
                 }
             }
-        } catch (final IllegalAccessException e) {
-            throw new RuntimeException("Failed during catalog initialization : ", e);
-        } catch (final ClassNotFoundException e) {
+        } catch (final IllegalAccessException | ClassNotFoundException e) {
             throw new RuntimeException("Failed during catalog initialization : ", e);
         }
     }
@@ -119,30 +119,29 @@ public class CatalogSafetyInitializer {
     }
 
     private static void initializeFieldWithValue(final Object obj, final Field f, final Object value) throws IllegalAccessException, ClassNotFoundException {
-        synchronized (perCatalogClassNonRequiredFields) {
-            f.setAccessible(true);
+        if (f.trySetAccessible()) {
             if (f.get(obj) == null) {
                 f.set(obj, value);
             }
-            f.setAccessible(false);
         }
+        f.setAccessible(false);
     }
 
     private static void initializeArrayIfNull(final Object obj, final Field f) throws IllegalAccessException, ClassNotFoundException {
-        synchronized (perCatalogClassNonRequiredFields) {
-            f.setAccessible(true);
+        if (f.trySetAccessible()) {
             if (f.get(obj) == null) {
                 f.set(obj, getZeroLengthArrayInitializer(f));
             }
-            f.setAccessible(false);
         }
+        f.setAccessible(false);
     }
 
-
     private static Object[] getZeroLengthArrayInitializer(final Field f) throws ClassNotFoundException {
-        // Yack... type erasure, why?
         final String arrayClassName = f.getType().getCanonicalName();
-        final Class<?> type = Class.forName(arrayClassName.substring(0, arrayClassName.length() - 2));
-        return (Object[]) Array.newInstance(type, 0);
+        final Class<?> componentType = Class.forName(arrayClassName.substring(0, arrayClassName.length() - 2));
+
+        // Return cached zero-length array if available
+        return (Object[]) zeroLengthArrayCache
+                .computeIfAbsent(componentType, key -> Array.newInstance(key, 0));
     }
 }
