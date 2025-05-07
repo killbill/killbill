@@ -24,7 +24,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.glue.KillBillModule;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 public class DefaultJaxrsModule extends KillBillModule {
 
@@ -34,7 +34,7 @@ public class DefaultJaxrsModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
         bind(JaxrsConfig.class).toInstance(jaxrsConfig);
         bind(JaxrsUriBuilder.class).asEagerSingleton();

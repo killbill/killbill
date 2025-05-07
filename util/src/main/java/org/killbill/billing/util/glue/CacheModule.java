@@ -44,7 +44,7 @@ import org.killbill.billing.util.config.definition.CacheConfig;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.redisson.api.RedissonClient;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
@@ -60,13 +60,13 @@ public class CacheModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final CacheConfig cacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(CacheConfig.class);
+        final CacheConfig cacheConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(CacheConfig.class);
         bind(CacheConfig.class).toInstance(cacheConfig);
 
-        final EhCacheConfig ehCacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
+        final EhCacheConfig ehCacheConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
         bind(EhCacheConfig.class).toInstance(ehCacheConfig);
 
-        final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(RedisCacheConfig.class);
+        final RedisCacheConfig redisCacheConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(RedisCacheConfig.class);
         bind(RedisCacheConfig.class).toInstance(redisCacheConfig);
 
         if (redisCacheConfig.isRedisCachingEnabled()) {

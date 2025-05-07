@@ -22,7 +22,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.api.ExportUserApi;
 import org.killbill.billing.util.config.definition.ExportConfig;
 import org.killbill.billing.util.export.api.DefaultExportUserApi;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 public class ExportModule extends KillBillModule {
 
@@ -41,7 +41,7 @@ public class ExportModule extends KillBillModule {
     }
 
     protected void installConfig() {
-        final ExportConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(ExportConfig.class);
+        final ExportConfig config = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(ExportConfig.class);
         bind(ExportConfig.class).toInstance(config);
     }
 
