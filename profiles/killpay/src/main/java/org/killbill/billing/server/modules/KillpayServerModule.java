@@ -52,7 +52,7 @@ import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 public class KillpayServerModule extends KillbillServerModule {
 
@@ -77,7 +77,7 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new GlobalLockerModule(configSource));
         install(new KillBillShiroAopModule(configSource));
 
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
         install(new KillbillApiAopModule(jaxrsConfig));
         install(new JaxRSAopModule(jaxrsConfig));

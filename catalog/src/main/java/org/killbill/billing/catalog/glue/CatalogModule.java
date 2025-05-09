@@ -45,7 +45,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.killbill.billing.util.glue.KillBillModule;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
@@ -64,7 +64,7 @@ public class CatalogModule extends KillBillModule {
     }
 
     protected void installConfig() {
-        final CatalogConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(CatalogConfig.class);
+        final CatalogConfig config = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(CatalogConfig.class);
         bind(CatalogConfig.class).toInstance(config);
     }
 
