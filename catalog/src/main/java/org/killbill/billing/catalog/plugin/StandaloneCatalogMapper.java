@@ -45,6 +45,7 @@ import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
+import org.killbill.billing.catalog.PriceListDefault;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -309,7 +310,7 @@ public class StandaloneCatalogMapper {
 
     private DefaultPriceList toDefaultPriceList(@Nullable final PriceList input) {
         if (input == null) {
-            return null;
+            return new PriceListDefault();
         }
 
         DefaultPriceList result = tmpDefaultPriceListMap.get(input.getName());
