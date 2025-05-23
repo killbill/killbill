@@ -54,7 +54,7 @@ public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
         final StandaloneCatalogMapper mapper = new StandaloneCatalogMapper(inputCatalog.getCatalogName());
         final StandaloneCatalog output = mapper.toStandaloneCatalog(pluginCatalog);
         output.setRecurringBillingMode(inputCatalog.getRecurringBillingMode());
-        Assert.assertEquals(output.getPriceLists().getDefaultPricelist(), new PriceListDefault());
+        Assert.assertEquals(output.getPriceLists().getDefaultPricelist().getName(), new PriceListDefault().getName());
     }
 
     @Test(groups = "fast")

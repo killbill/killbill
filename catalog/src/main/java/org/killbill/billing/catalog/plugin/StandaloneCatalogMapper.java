@@ -109,7 +109,9 @@ public class StandaloneCatalogMapper {
         result.setEffectiveDate(pluginCatalog.getEffectiveDate().toDate());
         result.setProducts(toDefaultProducts(pluginCatalog.getProducts()));
         result.setPlans(toDefaultPlans(result, pluginCatalog.getPlans()));
-        result.setPriceLists(toDefaultPriceListSet(pluginCatalog.getDefaultPriceList(), pluginCatalog.getChildrenPriceList()));
+        // If plugin does not specify a default pricelist , we include it - see #2124
+        final PriceList defaultPriceList = pluginCatalog.getDefaultPriceList() == null ? new PriceListDefault() : toDefaultPriceList(pluginCatalog.getDefaultPriceList());
+        result.setPriceLists(toDefaultPriceListSet(defaultPriceList, pluginCatalog.getChildrenPriceList()));
         result.setSupportedCurrencies(toArray(pluginCatalog.getCurrencies()));
         result.setUnits(toDefaultUnits(pluginCatalog.getUnits()));
         result.setPlanRules(toDefaultPlanRules(pluginCatalog.getPlanRules()));
@@ -310,7 +312,7 @@ public class StandaloneCatalogMapper {
 
     private DefaultPriceList toDefaultPriceList(@Nullable final PriceList input) {
         if (input == null) {
-            return new PriceListDefault();
+            return null;
         }
 
         DefaultPriceList result = tmpDefaultPriceListMap.get(input.getName());
