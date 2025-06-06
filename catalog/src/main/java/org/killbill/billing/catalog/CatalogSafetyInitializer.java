@@ -20,8 +20,6 @@ package org.killbill.billing.catalog;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.Deque;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,7 +122,6 @@ public class CatalogSafetyInitializer {
                 f.set(obj, value);
             }
         }
-        f.setAccessible(false);
     }
 
     private static void initializeArrayIfNull(final Object obj, final Field f) throws IllegalAccessException, ClassNotFoundException {
@@ -133,7 +130,6 @@ public class CatalogSafetyInitializer {
                 f.set(obj, getZeroLengthArrayInitializer(f));
             }
         }
-        f.setAccessible(false);
     }
 
     private static Object[] getZeroLengthArrayInitializer(final Field f) throws ClassNotFoundException {
