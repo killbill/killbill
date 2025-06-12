@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -45,8 +46,12 @@ import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.killbill.commons.utils.Strings;
 import org.killbill.commons.utils.io.IOUtils;
 import org.killbill.xmlloader.UriAccessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HtmlInvoiceGenerator {
+
+    private static final Logger log = LoggerFactory.getLogger(HtmlInvoiceGenerator.class);
 
     private final InvoiceFormatterFactory builtInInvoiceFormatterFactory;
     private final OSGIServiceRegistration<InvoiceFormatterFactory> invoiceFormatterFactoryPluginRegistry;
@@ -94,8 +99,11 @@ public class HtmlInvoiceGenerator {
         data.put("text", invoiceTranslator);
         data.put("account", account);
 
-        final String invoiceFormatterFactoryPluginName = config.getInvoiceFormatterFactoryPluginName();
-        final InvoiceFormatterFactory invoiceFormatterFactory = invoiceFormatterFactoryPluginName == null ? builtInInvoiceFormatterFactory : invoiceFormatterFactoryPluginRegistry.getServiceForName(invoiceFormatterFactoryPluginName);
+        final Set<String> services = invoiceFormatterFactoryPluginRegistry.getAllServices();
+        final InvoiceFormatterFactory invoiceFormatterFactory = services.size() == 1 ? invoiceFormatterFactoryPluginRegistry.getServiceForName(services.iterator().next()) : builtInInvoiceFormatterFactory;
+        if(services.size() > 1) {
+            log.warn("More than one InvoiceFormatter is configured, so using built-in InvoiceFormatter");
+        }
         final ResourceBundle bundle = bundleFactory.createBundle(locale, config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
         final ResourceBundle defaultBundle = bundleFactory.createBundle(LocaleUtils.toLocale(config.getDefaultLocale()), config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
         final InvoiceFormatter formattedInvoice = invoiceFormatterFactory.createInvoiceFormatter(config.getDefaultLocale(), config.getCatalogBundlePath(), invoice, locale, currencyConversionApi, bundle, defaultBundle);
