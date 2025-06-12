@@ -25,7 +25,7 @@ import org.killbill.billing.util.broadcast.DefaultBroadcastService;
 import org.killbill.billing.util.broadcast.dao.BroadcastDao;
 import org.killbill.billing.util.broadcast.dao.DefaultBroadcastDao;
 import org.killbill.billing.util.config.definition.BroadcastConfig;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 public class BroadcastModule extends KillBillModule {
 
@@ -45,7 +45,7 @@ public class BroadcastModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final BroadcastConfig broadcastConfig = factory.build(BroadcastConfig.class);
         bind(BroadcastConfig.class).toInstance(broadcastConfig);
         installDaos();

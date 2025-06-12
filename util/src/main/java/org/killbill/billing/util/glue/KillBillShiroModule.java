@@ -42,7 +42,7 @@ import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
@@ -89,7 +89,7 @@ public class KillBillShiroModule extends ShiroModule {
     }
 
     protected void configureShiro() {
-        final RbacConfig config = new ConfigurationObjectFactory(new ConfigSource() {
+        final RbacConfig config = new AugmentedConfigurationObjectFactory(new ConfigSource() {
             @Override
             public String getString(final String propertyName) {
                 return configSource.getString(propertyName);
@@ -99,7 +99,7 @@ public class KillBillShiroModule extends ShiroModule {
 
         bind(RbacConfig.class).toInstance(config);
 
-        final SecurityConfig securityConfig = new ConfigurationObjectFactory(skifeConfigSource).build(SecurityConfig.class);
+        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(SecurityConfig.class);
         final Collection<Realm> realms = defaultSecurityManager.getRealms() != null ? defaultSecurityManager.getRealms() :
                                          List.of(new IniRealm(securityConfig.getShiroResourcePath())); // Mainly for testing
         for (final Realm realm : realms) {
@@ -144,7 +144,7 @@ public class KillBillShiroModule extends ShiroModule {
         //super.bindSecurityManager(bind);
         bind.toInstance(defaultSecurityManager);
 
-        final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(new ConfigSource() {
+        final RedisCacheConfig redisCacheConfig = new AugmentedConfigurationObjectFactory(new ConfigSource() {
             @Override
             public String getString(final String propertyName) {
                 return configSource.getString(propertyName);
