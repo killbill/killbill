@@ -99,10 +99,17 @@ public class HtmlInvoiceGenerator {
         data.put("text", invoiceTranslator);
         data.put("account", account);
 
-        final Set<String> services = invoiceFormatterFactoryPluginRegistry.getAllServices();
-        final InvoiceFormatterFactory invoiceFormatterFactory = services.size() == 1 ? invoiceFormatterFactoryPluginRegistry.getServiceForName(services.iterator().next()) : builtInInvoiceFormatterFactory;
-        if(services.size() > 1) {
-            log.warn("More than one InvoiceFormatter is configured, so using built-in InvoiceFormatter");
+        final InvoiceFormatterFactory invoiceFormatterFactory;
+        final String invoiceFormatterFactoryPluginName = config.getInvoiceFormatterFactoryPluginName();
+        if (!Strings.isNullOrEmpty(invoiceFormatterFactoryPluginName)) {
+            invoiceFormatterFactory = invoiceFormatterFactoryPluginRegistry.getServiceForName(invoiceFormatterFactoryPluginName);
+        } else {
+            final Set<String> services = invoiceFormatterFactoryPluginRegistry.getAllServices();
+            invoiceFormatterFactory = services.size() == 1 ? invoiceFormatterFactoryPluginRegistry.getServiceForName(services.iterator().next()) : builtInInvoiceFormatterFactory;
+            if (services.size() > 1) {
+                log.warn("More than one InvoiceFormatter is configured, so using built-in InvoiceFormatter");
+            }
+
         }
         final ResourceBundle bundle = bundleFactory.createBundle(locale, config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
         final ResourceBundle defaultBundle = bundleFactory.createBundle(LocaleUtils.toLocale(config.getDefaultLocale()), config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
