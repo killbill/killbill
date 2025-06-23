@@ -168,18 +168,11 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
 
         //add new addon on 2025-05-30
         today = clock.getUTCToday();
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT); //invoice generated here, this is unexpected
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final EntitlementSpecifier addOnEntitlementSpecifier = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("premium-support-addon2-monthly-notrial"));
         final UUID addon2EntId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnEntitlementSpecifier, today, today, false, Collections.emptyList(), callContext);
         final Entitlement addOnEntitlement2 = entitlementApi.getEntitlementForId(addon2EntId, false, callContext);
         assertListenerStatus();
-
-        //this invoice is unexpected, shouldn't this invoice be generated on 5/31? Also, this invoice does not include usage item
-        expectedInvoices.clear();
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base recurring
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring
-        invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(1);
-        invoiceChecker.checkInvoice(invoice.getId(), callContext, expectedInvoices);
 
         //schedule EOT upgrade for ao1
         final LocalDate changeDate = today.plusDays(1); //2025-05-31
@@ -191,11 +184,12 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
         clock.setDay(changeDate);
         assertListenerStatus();
 
-        //invoice includes usage item for ao1 - again this is unexpected.
         expectedInvoices.clear();
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("9.68"))); //ao2 recurring as expected
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.USAGE, new BigDecimal("10"))); //ao1 usage - unexpected, should'nt this be in the previous invoice?
-        invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(2);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base recurring
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.USAGE, new BigDecimal("10"))); //ao1 usage -
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("9.68"))); //ao2 usage -
+        invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(1);
         invoiceChecker.checkInvoice(invoice.getId(), callContext, expectedInvoices);
 
     }

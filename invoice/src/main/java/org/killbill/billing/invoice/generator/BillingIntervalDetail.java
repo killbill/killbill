@@ -161,17 +161,16 @@ public class BillingIntervalDetail {
         int numberOfPeriods = 0;
         LocalDate proposedDate = firstBillingCycleDate;
         LocalDate nextProposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
-
         while (!nextProposedDate.isAfter(targetDate)) {
             proposedDate = nextProposedDate;
             nextProposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
+            nextProposedDate = BillCycleDayCalculator.alignProposedBillCycleDate(nextProposedDate, billingCycleDay, billingPeriod);
             numberOfPeriods += 1;
         }
 
         if (inArrearGreedy && !proposedDate.isEqual(targetDate)) {
             proposedDate = nextProposedDate;
         }
-        proposedDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, billingCycleDay, billingPeriod);
 
         final LocalDate cutoffEndDt = inArrearGreedy ? nextProposedDate : targetDate;
         // We honor the endDate as long as it does not go beyond our targetDate (by construction this cannot be after the nextProposedDate neither.
