@@ -26,7 +26,7 @@ import org.killbill.billing.util.security.api.DefaultSecurityService;
 import org.killbill.billing.util.security.api.SecurityService;
 import org.killbill.billing.util.security.shiro.dao.DefaultUserDao;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 public class SecurityModule extends KillBillModule {
 
@@ -46,7 +46,7 @@ public class SecurityModule extends KillBillModule {
     }
 
     private void installConfig() {
-        final SecurityConfig securityConfig = new ConfigurationObjectFactory(skifeConfigSource).build(SecurityConfig.class);
+        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(SecurityConfig.class);
         bind(SecurityConfig.class).toInstance(securityConfig);
     }
 
