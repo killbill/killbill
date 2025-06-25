@@ -155,7 +155,7 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 3, 31), new LocalDate(2025, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 3, 31), new LocalDate(2025, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 3, 31), new LocalDate(2025, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("950"))); //ao1 recurring
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 3, 31), new LocalDate(2025, 4, 30), InvoiceItemType.USAGE, new BigDecimal("0"))); //ao1 usage
 
         Invoice invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(0);
@@ -186,7 +186,7 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
         //invoice includes recurring+usage item for ao1
         expectedInvoices.clear();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base recurring
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("950"))); //ao1 recurring
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.USAGE, new BigDecimal("10"))); //ao1 usage
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("9.68"))); //ao2 prorated recurring
         invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(1);
@@ -199,7 +199,7 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
 
         expectedInvoices.clear();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 31), new LocalDate(2025, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base recurring
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 31), new LocalDate(2025, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("950"))); //ao1 recurring, updated addon plan does not have usages
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 31), new LocalDate(2025, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring, updated addon plan does not have usages
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 31), new LocalDate(2025, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("300"))); //ao2 recurring
         invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(2);
         invoiceChecker.checkInvoice(invoice.getId(), callContext, expectedInvoices);
