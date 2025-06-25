@@ -128,7 +128,7 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/2133")
     public void testCreateSubOnLastDayAndAddNewAddon() throws Exception {
         LocalDate today = new LocalDate(2025, 3, 31);
         clock.setDay(today);
@@ -148,11 +148,11 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(allEntitlements.get(0), false, callContext);
         final Entitlement addOnEntitlement1 = entitlementApi.getEntitlementForId(allEntitlements.get(1), false, callContext);
 
+        //2025-04-30
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        clock.addMonths(1); //2025-04-30
+        clock.addMonths(1);
         assertListenerStatus();
 
-        //invoice generated as expected
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 3, 31), new LocalDate(2025, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 3, 31), new LocalDate(2025, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring
@@ -166,23 +166,15 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
 
         clock.addMonths(1); //2025-05-30
 
-        //add new addon on 2025-05-30
-        today = clock.getUTCToday();
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT); //invoice generated here, this is unexpected
-        final EntitlementSpecifier addOnEntitlementSpecifier = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("premium-support-addon2-monthly-notrial"));
-        final UUID addon2EntId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnEntitlementSpecifier, today, today, false, Collections.emptyList(), callContext);
+        //add new addon on 2025-05-30 - no invoice
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("premium-support-addon2-monthly-notrial"));
+        final UUID addon2EntId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnEntitlementSpecifier2, clock.getUTCToday(), clock.getUTCToday(), false, Collections.emptyList(), callContext);
         final Entitlement addOnEntitlement2 = entitlementApi.getEntitlementForId(addon2EntId, false, callContext);
         assertListenerStatus();
 
-        //this invoice is unexpected, shouldn't this invoice be generated on 5/31? Also, this invoice does not include usage item
-        expectedInvoices.clear();
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base recurring
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring
-        invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(1);
-        invoiceChecker.checkInvoice(invoice.getId(), callContext, expectedInvoices);
-
         //schedule EOT upgrade for ao1
-        final LocalDate changeDate = today.plusDays(1); //2025-05-31
+        final LocalDate changeDate = clock.getUTCToday().plusDays(1); //2025-05-31
         final EntitlementSpecifier aoSpec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("premium-support-addon-monthly-notrial"));
         addOnEntitlement1.changePlanWithDate(aoSpec, changeDate, Collections.emptyList(), callContext);
 
@@ -191,10 +183,24 @@ public class TestInArrearChangeCancel extends TestIntegrationBase {
         clock.setDay(changeDate);
         assertListenerStatus();
 
-        //invoice includes usage item for ao1 - again this is unexpected.
+        //invoice includes recurring+usage item for ao1
         expectedInvoices.clear();
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("9.68"))); //ao2 recurring as expected
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.USAGE, new BigDecimal("10"))); //ao1 usage - unexpected, should'nt this be in the previous invoice?
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base recurring
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("900"))); //ao1 recurring
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 4, 30), new LocalDate(2025, 5, 31), InvoiceItemType.USAGE, new BigDecimal("10"))); //ao1 usage
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 30), new LocalDate(2025, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("9.68"))); //ao2 prorated recurring
+        invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(1);
+        invoiceChecker.checkInvoice(invoice.getId(), callContext, expectedInvoices);
+
+        //move to 2025-06-30 - ao1 is on new plan
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        expectedInvoices.clear();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 31), new LocalDate(2025, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("1000"))); //base recurring
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 31), new LocalDate(2025, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("950"))); //ao1 recurring, updated addon plan does not have usages
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2025, 5, 31), new LocalDate(2025, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("300"))); //ao2 recurring
         invoice = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).get(2);
         invoiceChecker.checkInvoice(invoice.getId(), callContext, expectedInvoices);
 

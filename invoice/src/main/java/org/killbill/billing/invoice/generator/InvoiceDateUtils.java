@@ -103,6 +103,9 @@ public class InvoiceDateUtils {
         for (int i = 0; i < nbPeriods; i++) {
             proposedDate = proposedDate.plus(billingPeriod.getPeriod());
         }
+        if (isLastDayOfMonth(initialDate) && isBillingPeriodMonthBased(billingPeriod)) {
+            proposedDate = proposedDate.dayOfMonth().withMaximumValue();
+        }
         return proposedDate;
     }
 
@@ -111,6 +114,28 @@ public class InvoiceDateUtils {
         for (int i = 0; i < nbPeriods; i++) {
             proposedDate = proposedDate.minus(billingPeriod.getPeriod());
         }
+        if (isLastDayOfMonth(initialDate) && isBillingPeriodMonthBased(billingPeriod)) {
+            proposedDate = proposedDate.dayOfMonth().withMaximumValue();
+        }
         return proposedDate;
     }
+
+    @VisibleForTesting
+    static boolean isLastDayOfMonth(final LocalDate initialDate) {
+        return initialDate.isEqual(initialDate.dayOfMonth().withMaximumValue());
+    }
+
+    @VisibleForTesting
+    static boolean isBillingPeriodMonthBased(final BillingPeriod billingPeriod) {
+        return billingPeriod == BillingPeriod.MONTHLY ||
+               billingPeriod == BillingPeriod.BIMESTRIAL ||
+               billingPeriod == BillingPeriod.QUARTERLY ||
+               billingPeriod == BillingPeriod.TRIANNUAL ||
+               billingPeriod == BillingPeriod.BIANNUAL ||
+               billingPeriod == BillingPeriod.ANNUAL ||
+               billingPeriod == BillingPeriod.SESQUIENNIAL ||
+               billingPeriod == BillingPeriod.BIENNIAL ||
+               billingPeriod == BillingPeriod.TRIENNIAL;
+    }
+
 }

@@ -82,6 +82,23 @@ public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testAdvanceByNPeriodsEndOfMonth() throws Exception {
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 3, 31), BillingPeriod.MONTHLY, 1), new LocalDate(2025, 4, 30));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 3, 31), BillingPeriod.MONTHLY, 2), new LocalDate(2025, 5, 31));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 4, 30), BillingPeriod.MONTHLY, 1), new LocalDate(2025, 5, 31));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 2, 28), BillingPeriod.MONTHLY, 1), new LocalDate(2025, 3, 31));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 2, 28), BillingPeriod.MONTHLY, 2), new LocalDate(2025, 4, 30));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2024, 2, 29), BillingPeriod.MONTHLY, 2), new LocalDate(2024, 4, 30));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2024, 2, 29), BillingPeriod.MONTHLY, 3), new LocalDate(2024, 5, 31));
+
+        //non-monthly
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 3, 31), BillingPeriod.WEEKLY, 1), new LocalDate(2025, 4, 7));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 4, 30), BillingPeriod.QUARTERLY, 1), new LocalDate(2025, 7, 31));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2025, 2, 28), BillingPeriod.BIANNUAL, 1), new LocalDate(2025, 8, 31));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2023, 2, 28), BillingPeriod.ANNUAL, 1), new LocalDate(2024, 2, 29));
+    }
+
+    @Test(groups = "fast")
     public void testRecedeByNPeriods() throws Exception {
         Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 7), new LocalDate(2016, 4, 8));
         Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 6), new LocalDate(2016, 5, 8));
@@ -110,4 +127,32 @@ public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 1), new LocalDate(2016, 5, 20));
         Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 0), new LocalDate(2016, 5, 27));
     }
+
+    @Test(groups = "fast")
+    public void testRecedeByNPeriodsEndOfMonth() throws Exception {
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 5, 31), BillingPeriod.MONTHLY, 1), new LocalDate(2025, 4, 30));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 5, 31), BillingPeriod.MONTHLY, 2), new LocalDate(2025, 3, 31));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 5, 31), BillingPeriod.MONTHLY, 3), new LocalDate(2025, 2, 28));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2024, 5, 31), BillingPeriod.MONTHLY, 3), new LocalDate(2024, 2, 29));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 2, 28), BillingPeriod.MONTHLY, 1), new LocalDate(2025, 1, 31));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 2, 28), BillingPeriod.MONTHLY, 2), new LocalDate(2024, 12, 31));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 2, 28), BillingPeriod.MONTHLY, 3), new LocalDate(2024, 11, 30));
+
+        //non-monthly
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 4, 30), BillingPeriod.WEEKLY, 1), new LocalDate(2025, 4, 23));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 6, 30), BillingPeriod.QUARTERLY, 1), new LocalDate(2025, 3, 31));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 6, 30), BillingPeriod.BIANNUAL, 1), new LocalDate(2024, 12, 31));
+        Assert.assertEquals(InvoiceDateUtils.recedeByNPeriods(new LocalDate(2025, 2, 28), BillingPeriod.ANNUAL, 1), new LocalDate(2024, 2, 29));
+    }
+
+    @Test(groups = "fast")
+    public void testIsLastDayOfMonth() {
+        Assert.assertFalse(InvoiceDateUtils.isLastDayOfMonth(new LocalDate(2025, 5, 30)));
+        Assert.assertTrue(InvoiceDateUtils.isLastDayOfMonth(new LocalDate(2025, 5, 31)));
+        Assert.assertTrue(InvoiceDateUtils.isLastDayOfMonth(new LocalDate(2025, 4, 30)));
+        Assert.assertTrue(InvoiceDateUtils.isLastDayOfMonth(new LocalDate(2025, 2, 28)));
+        Assert.assertFalse(InvoiceDateUtils.isLastDayOfMonth(new LocalDate(2024, 2, 28)));
+        Assert.assertTrue(InvoiceDateUtils.isLastDayOfMonth(new LocalDate(2024, 2, 29)));
+    }
+
 }
