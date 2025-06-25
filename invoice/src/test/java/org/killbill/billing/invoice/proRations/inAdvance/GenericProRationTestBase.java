@@ -116,6 +116,9 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
             LocalDate oneCycleLater = startDate;
             for (int j = 0; j < i; j++) {
                 oneCycleLater = oneCycleLater.plus(getBillingPeriod().getPeriod());
+                if(getBillingPeriod().getPeriod().getMonths() != 0 || getBillingPeriod().getPeriod().getYears() != 0) { //month based
+                    oneCycleLater = oneCycleLater.dayOfMonth().withMaximumValue();
+                }
             }
             // test just before the billing cycle day
             testCalculateNumberOfBillingCycles(startDate, oneCycleLater.plusDays(-1), 31, expectedValue);
