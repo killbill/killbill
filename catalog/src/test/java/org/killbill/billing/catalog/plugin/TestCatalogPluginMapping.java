@@ -21,6 +21,8 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
+import org.killbill.billing.catalog.DefaultPriceListSet;
+import org.killbill.billing.catalog.PriceListDefault;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Duration;
@@ -42,6 +44,19 @@ import org.testng.annotations.Test;
 
 public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
 
+
+    @Test(groups = "fast", description="Fix NPE. See https://github.com/killbill/killbill/issues/2124")
+    public void testEmptyCatalog() throws Exception {
+        final StandaloneCatalog inputCatalog = getCatalog("Empty.xml");
+        inputCatalog.setPriceLists(new DefaultPriceListSet(null, null));
+        final StandalonePluginCatalog pluginCatalog = buildStandalonePluginCatalog(inputCatalog);
+
+        final StandaloneCatalogMapper mapper = new StandaloneCatalogMapper(inputCatalog.getCatalogName());
+        final StandaloneCatalog output = mapper.toStandaloneCatalog(pluginCatalog);
+        output.setRecurringBillingMode(inputCatalog.getRecurringBillingMode());
+        Assert.assertEquals(output.getPriceLists().getDefaultPricelist().getName(), new PriceListDefault().getName());
+    }
+
     @Test(groups = "fast")
     public void testMappingFromExistingCatalog() throws Exception {
         final StandaloneCatalog inputCatalog = getCatalog("SpyCarAdvanced.xml");
@@ -52,7 +67,6 @@ public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
         final StandaloneCatalog output = mapper.toStandaloneCatalog(pluginCatalog);
         output.setRecurringBillingMode(inputCatalog.getRecurringBillingMode());
         Assert.assertEquals(output, inputCatalog);
-
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1944")
@@ -122,14 +136,13 @@ public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
             }
         }
         final TestModelStandalonePluginCatalog result = new TestModelStandalonePluginCatalog(new DateTime(inputCatalog.getEffectiveDate()),
-                                                                                   List.of(inputCatalog.getSupportedCurrencies()),
-                                                                                   List.copyOf(inputCatalog.getProducts()),
-                                                                                   List.copyOf(inputCatalog.getPlans()),
-                                                                                   inputCatalog.getPriceLists().getDefaultPricelist(),
-                                                                                   List.of(inputCatalog.getPriceLists().getChildPriceLists()),
-                                                                                   rules,
-                                                                                   List.of(inputCatalog.getUnits()));
+                                                                                             List.of(inputCatalog.getSupportedCurrencies()),
+                                                                                             List.copyOf(inputCatalog.getProducts()),
+                                                                                             List.copyOf(inputCatalog.getPlans()),
+                                                                                             inputCatalog.getPriceLists().getDefaultPricelist(),
+                                                                                             List.of(inputCatalog.getPriceLists().getChildPriceLists()),
+                                                                                             rules,
+                                                                                             List.of(inputCatalog.getUnits()));
         return result;
     }
-
 }
