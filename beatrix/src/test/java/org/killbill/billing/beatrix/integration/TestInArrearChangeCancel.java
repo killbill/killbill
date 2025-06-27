@@ -30,7 +30,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
