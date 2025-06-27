@@ -163,8 +163,8 @@ public class BillingIntervalDetail {
         LocalDate nextProposedDate = getFutureBillingDateFor(numberOfPeriods);
         while (!nextProposedDate.isAfter(targetDate)) {
             proposedDate = nextProposedDate;
-            nextProposedDate = getFutureBillingDateFor(numberOfPeriods);
             numberOfPeriods += 1;
+            nextProposedDate = getFutureBillingDateFor(numberOfPeriods);
         }
 
         if (inArrearGreedy && !proposedDate.isEqual(targetDate)) {
