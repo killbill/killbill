@@ -257,10 +257,10 @@ public class DatabaseExportDao {
         boolean accountIdColPresent = false;
         boolean tenantIdColPresent = false;
         for(ColumnInfo column : columnsForTable) {
-            if(!tenantIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equals(tableType.getTenantRecordIdColumnName())) {
+            if(!tenantIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equalsIgnoreCase(tableType.getTenantRecordIdColumnName())) {
                 tenantIdColPresent = true;
             }
-            if(!accountIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equals(tableType.getAccountRecordIdColumnName())) {
+            if(!accountIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equalsIgnoreCase(tableType.getAccountRecordIdColumnName())) {
                 accountIdColPresent = true;
             }
         }
