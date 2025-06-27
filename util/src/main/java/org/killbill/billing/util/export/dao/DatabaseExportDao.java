@@ -147,6 +147,10 @@ public class DatabaseExportDao {
             tableType = TableType.EXTRA;
         }
 
+        if(tableType == TableType.EXTRA && !areAccountIdTenantIdColsPresent(columnsForTable, tableType)) {
+            return;
+        }
+
         boolean firstColumn = true;
         final StringBuilder queryBuilder = new StringBuilder("select ");
         for (final ColumnInfo column : columnsForTable) {
@@ -174,6 +178,7 @@ public class DatabaseExportDao {
         }
 
         if (tableType == TableType.EXTRA) {
+
             queryBuilder.append(" from ")
                         .append(tableName)
                         .append(" where ")
@@ -246,5 +251,18 @@ public class DatabaseExportDao {
         });
     }
 
+    private boolean areAccountIdTenantIdColsPresent(List<ColumnInfo> columnsForTable, TableType tableType) {
+        boolean accountIdColPresent = false;
+        boolean tenantIdColPresent = false;
+        for(ColumnInfo column : columnsForTable) {
+            if(!tenantIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equals(tableType.getTenantRecordIdColumnName())) {
+                tenantIdColPresent = true;
+            }
+            if(!accountIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equals(tableType.getAccountRecordIdColumnName())) {
+                accountIdColPresent = true;
+            }
+        }
+        return accountIdColPresent && tenantIdColPresent;
+    }
 
 }
