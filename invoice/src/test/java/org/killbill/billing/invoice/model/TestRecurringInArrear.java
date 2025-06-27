@@ -173,6 +173,18 @@ public class TestRecurringInArrear extends InvoiceTestSuiteNoDB {
         verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
+    @Test(groups = "fast", description="https://github.com/killbill/killbill/issues/2133")
+    public void testWithBCDEndOfMonthPriorTargetDate() throws Exception {
+        final LocalDate startDate = new LocalDate(2025, 3, 31);
+        final LocalDate endDate = null;
+        final LocalDate targetDate = new LocalDate(2025, 5, 30);
+        final int billingCycleDayLocal = 31;
+
+        final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
+        expectedDates.put(new LocalDate(2025, 3, 31), new LocalDate(2025, 4, 30));
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+    }
+
 
     private void verifyInvoiceItems(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate,
                                     final int billingCycleDayLocal, final BillingPeriod billingPeriod,
