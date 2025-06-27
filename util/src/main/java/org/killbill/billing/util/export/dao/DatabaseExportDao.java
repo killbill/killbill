@@ -137,7 +137,7 @@ public class DatabaseExportDao {
 
         TableType tableType = TableType.OTHER;
         final String tableName = columnsForTable.get(0).getTableName();
-
+        System.out.println("exportDataForAccountAndTable for table "+tableName);
         // Ignore casing (for H2)
         if (TableName.ACCOUNT.getTableName().equalsIgnoreCase(tableName)) {
             tableType = TableType.KB_ACCOUNT;
@@ -174,7 +174,10 @@ public class DatabaseExportDao {
         }
 
         if(tableType == TableType.EXTRA && !areAccountIdTenantIdColsPresent(columnsForTable, tableType)) {
+            System.out.println("Ignoring table "+tableName);
             return;
+        } else {
+            System.out.println("Exporting table "+tableName);
         }
 
         if (tableType == TableType.EXTRA) {
