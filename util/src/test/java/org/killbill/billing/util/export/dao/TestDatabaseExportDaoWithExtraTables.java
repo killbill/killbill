@@ -77,6 +77,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                                "account_id varchar(36)," +
                                "tenant_id varchar(36) not null," +
                                "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameD);
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
@@ -137,7 +138,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                                "account_id varchar(36)," +
                                "tenant_id varchar(36) not null," +
                                "primary key(record_id));");
-
+                handle.execute("drop table if exists " + tableNameD);
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
@@ -193,7 +194,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                                "account_id varchar(36)," +
                                "tenant_id varchar(36) not null," +
                                "primary key(record_id));");
-
+                handle.execute("drop table if exists " + tableNameD);
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
@@ -246,7 +247,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                                "account_id varchar(36)," +
                                "tenant_id varchar(36) not null," +
                                "primary key(record_id));");
-
+                handle.execute("drop table if exists " + tableNameD);
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
@@ -309,6 +310,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                                "name varchar(36) default 'plana'," +
                                "tenant_id varchar(36) not null," +
                                "primary key(record_id));");
+                handle.execute("drop table if exists " + tableNameD);
                 handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
                                properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
