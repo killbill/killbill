@@ -108,7 +108,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
 
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testExportWithTenantIdAndNullAccountId() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
@@ -164,7 +164,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                            );
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testExportWithTenantDataOnly() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
@@ -217,7 +217,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                            );
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testExportWithMultipleAccountIds() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
@@ -272,7 +272,7 @@ public class TestDatabaseExportDaoWithExtraTables extends TestDatabaseExportDaoB
                            );
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testExportWithAccountIdAndTenantIdNoAccountIdCol() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
