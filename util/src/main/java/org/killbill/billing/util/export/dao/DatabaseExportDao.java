@@ -171,7 +171,7 @@ public class DatabaseExportDao {
             }
         }
 
-        if(tableType == TableType.EXTRA && !areAccountIdTenantIdColsPresent(columnsForTable, tableType)) {
+        if(!areAccountIdTenantIdColsPresent(columnsForTable, tableType)) {
             return;
         }
         // Don't export non-account specific tables
@@ -257,10 +257,10 @@ public class DatabaseExportDao {
         boolean accountIdColPresent = false;
         boolean tenantIdColPresent = false;
         for(ColumnInfo column : columnsForTable) {
-            if(!tenantIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equalsIgnoreCase(tableType.getTenantRecordIdColumnName())) {
+            if(!tenantIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getTenantRecordIdColumnName())) {
                 tenantIdColPresent = true;
             }
-            if(!accountIdColPresent && tableType == TableType.EXTRA && column.getColumnName().equalsIgnoreCase(tableType.getAccountRecordIdColumnName())) {
+            if(!accountIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getAccountRecordIdColumnName())) {
                 accountIdColPresent = true;
             }
         }
