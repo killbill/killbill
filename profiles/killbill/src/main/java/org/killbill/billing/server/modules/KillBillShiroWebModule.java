@@ -60,7 +60,7 @@ import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.Key;
 import com.google.inject.Provider;
@@ -82,7 +82,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
     @Override
     protected void configureShiroWeb() {
-        final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(new ConfigSource() {
+        final RedisCacheConfig redisCacheConfig = new AugmentedConfigurationObjectFactory(new ConfigSource() {
             @Override
             public String getString(final String propertyName) {
                 return configSource.getString(propertyName);
@@ -96,7 +96,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
             bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
         }
 
-        final SecurityConfig securityConfig = new ConfigurationObjectFactory(configSource).build(SecurityConfig.class);
+        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(configSource).build(SecurityConfig.class);
         final Collection<Realm> realms = defaultSecurityManager.getRealms() != null ? defaultSecurityManager.getRealms() :
                                          Set.of(new IniRealm(securityConfig.getShiroResourcePath())); // Mainly for testing
         for (final Realm realm : realms) {
@@ -111,7 +111,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
     }
 
     private void configureShiroForRBAC() {
-        final RbacConfig config = new ConfigurationObjectFactory(configSource).build(RbacConfig.class);
+        final RbacConfig config = new AugmentedConfigurationObjectFactory(configSource).build(RbacConfig.class);
         bind(RbacConfig.class).toInstance(config);
 
         bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();

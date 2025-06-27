@@ -70,7 +70,7 @@ import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallba
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
@@ -143,7 +143,7 @@ public class PaymentModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
         bind(PaymentConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(paymentConfig);
         bind(PaymentConfig.class).to(MultiTenantPaymentConfig.class).asEagerSingleton();
