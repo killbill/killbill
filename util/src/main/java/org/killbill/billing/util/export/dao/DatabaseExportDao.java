@@ -158,7 +158,7 @@ public class DatabaseExportDao {
 
             queryBuilder.append(column.getColumnName());
 
-            if (tableType == TableType.OTHER) {
+            if (tableType == TableType.OTHER || tableType == TableType.EXTRA) {
                 // Ignore casing (for H2)
                 if (column.getColumnName().equalsIgnoreCase(TableType.KB_PER_ACCOUNT.getAccountRecordIdColumnName())) {
                     tableType = TableType.KB_PER_ACCOUNT;
@@ -168,12 +168,16 @@ public class DatabaseExportDao {
             }
         }
 
+        if(!areAccountIdTenantIdColsPresent(columnsForTable, tableType)) {
+            return;
+        }
         // Don't export non-account specific tables
         if (tableType == TableType.OTHER) {
             return;
         }
 
         if (tableType == TableType.EXTRA) {
+
             queryBuilder.append(" from ")
                         .append(tableName)
                         .append(" where ")
@@ -246,5 +250,18 @@ public class DatabaseExportDao {
         });
     }
 
+    private boolean areAccountIdTenantIdColsPresent(List<ColumnInfo> columnsForTable, TableType tableType) {
+        boolean accountIdColPresent = false;
+        boolean tenantIdColPresent = false;
+        for(ColumnInfo column : columnsForTable) {
+            if(!tenantIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getTenantRecordIdColumnName())) {
+                tenantIdColPresent = true;
+            }
+            if(!accountIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getAccountRecordIdColumnName())) {
+                accountIdColPresent = true;
+            }
+        }
+        return accountIdColPresent && tenantIdColPresent;
+    }
 
 }
