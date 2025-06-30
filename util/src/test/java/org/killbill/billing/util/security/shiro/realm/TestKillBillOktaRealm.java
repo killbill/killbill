@@ -26,7 +26,7 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 import org.testng.annotations.Test;
 
@@ -42,7 +42,7 @@ public class TestKillBillOktaRealm extends UtilTestSuiteNoDB {
                                                                            "finance-group: invoice:*, payment:*\n" +
                                                                            "ops-group: *:*");
         final ConfigSource customConfigSource = new SimplePropertyConfigSource(props);
-        final SecurityConfig securityConfig = new ConfigurationObjectFactory(customConfigSource).build(SecurityConfig.class);
+        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(customConfigSource).build(SecurityConfig.class);
         final KillBillOktaRealm oktaRealm = new KillBillOktaRealm(securityConfig);
 
         final String username = "pierre";

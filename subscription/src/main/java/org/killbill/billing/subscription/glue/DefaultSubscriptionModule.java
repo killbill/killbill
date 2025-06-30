@@ -39,7 +39,7 @@ import org.killbill.billing.subscription.engine.dao.DefaultSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.util.config.definition.SubscriptionConfig;
 import org.killbill.billing.util.glue.KillBillModule;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 
@@ -50,7 +50,7 @@ public class DefaultSubscriptionModule extends KillBillModule implements Subscri
     }
 
     protected void installConfig() {
-        installConfig(new ConfigurationObjectFactory(skifeConfigSource).build(SubscriptionConfig.class));
+        installConfig(new AugmentedConfigurationObjectFactory(skifeConfigSource).build(SubscriptionConfig.class));
     }
 
     protected void installConfig(final SubscriptionConfig staticInvoiceConfig) {

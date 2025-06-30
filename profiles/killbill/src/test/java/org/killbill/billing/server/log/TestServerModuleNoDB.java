@@ -27,7 +27,7 @@ import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.clock.ClockMock;
 import org.killbill.commons.metrics.api.MetricRegistry;
 import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.util.Providers;
 
@@ -47,7 +47,7 @@ public class TestServerModuleNoDB extends KillBillModule {
         install(new MockNonEntityDaoModule(configSource));
         install(new MockAccountModule(configSource));
         bind(CacheControllerDispatcher.class).toProvider(Providers.<CacheControllerDispatcher>of(null));
-        final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
+        final EventConfig eventConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
         bind(EventConfig.class).toInstance(eventConfig);
 
         bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();

@@ -81,7 +81,7 @@ import org.killbill.billing.util.optimizer.BusOptimizerOn;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.tweak.ArgumentFactory;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -203,7 +203,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new GlobalLockerModule(configSource));
         install(new KillBillShiroAopModule(configSource));
 
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
         install(new KillbillApiAopModule(jaxrsConfig));
         install(new JaxRSAopModule(jaxrsConfig));
@@ -230,7 +230,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
     }
 
     protected void configurePushNotification() {
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final NotificationConfig notificationConfig = factory.build(NotificationConfig.class);
         bind(NotificationConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(notificationConfig);
         bind(NotificationConfig.class).to(MultiTenantNotificationConfig.class).asEagerSingleton();

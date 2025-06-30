@@ -58,7 +58,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
@@ -87,7 +87,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     }
 
     protected void installConfig() {
-        installConfig(new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class));
+        installConfig(new AugmentedConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class));
     }
 
     protected void installConfig(final InvoiceConfig staticInvoiceConfig) {
@@ -108,7 +108,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-        final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
+        final TranslatorConfig config = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
     }

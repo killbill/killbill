@@ -24,7 +24,7 @@ import org.joda.time.Period;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.queue.QueueRetryException;
 import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -82,7 +82,7 @@ public class TestTimeSpanConverter {
                 }
             }
         };
-        final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(configSource).build(InvoiceConfig.class);
+        final InvoiceConfig invoiceConfig = new AugmentedConfigurationObjectFactory(configSource).build(InvoiceConfig.class);
 
         final List<TimeSpan> retryIntervals = invoiceConfig.getRescheduleIntervalOnLock();
         Assert.assertEquals(0, retryIntervals.size());
