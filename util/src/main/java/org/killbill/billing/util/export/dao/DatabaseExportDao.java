@@ -158,16 +158,13 @@ public class DatabaseExportDao {
 
             queryBuilder.append(column.getColumnName());
 
-            if (tableType == TableType.OTHER) {
+            if (tableType == TableType.OTHER || tableType == TableType.EXTRA) {
                 // Ignore casing (for H2)
                 if (column.getColumnName().equalsIgnoreCase(TableType.KB_PER_ACCOUNT.getAccountRecordIdColumnName())) {
                     tableType = TableType.KB_PER_ACCOUNT;
                 } else if (column.getColumnName().equalsIgnoreCase(TableType.NOTIFICATION.getAccountRecordIdColumnName())) {
                     tableType = TableType.NOTIFICATION;
                 }
-            }
-            if(tableType == TableType.EXTRA && column.getColumnName().equalsIgnoreCase(TableType.NOTIFICATION.getAccountRecordIdColumnName())) { //for aviate_notifications
-                tableType = TableType.NOTIFICATION;
             }
         }
 
