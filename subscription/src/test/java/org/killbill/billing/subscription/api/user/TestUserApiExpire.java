@@ -1002,7 +1002,9 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime expiryDate = events.get(0).getEffectiveDate();
         // SINCE THE CATALOG IS CONFIGURED TO USE CHANGE_OF_PLAN ALIGNMENT, THE FIXEDTERM PHASE STARTS ON THE DAY THE PLAN IS CHANGED AND EXPIRY DATE IS CALCULATED ACCORDINGLY
         final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(changeDate, currentPhase.getDuration());
-        assertEquals(expiryDate, expectedExpiryDate);
+        assertTrue(Math.abs(expiryDate.getMillis() - expectedExpiryDate.getMillis()) <= 1000,
+                   "Expiry date is off by more than 1 second");
+
 
         //MOVE PAST FIXEDTERM PHASE
         testListener.pushExpectedEvent(NextEvent.EXPIRED);

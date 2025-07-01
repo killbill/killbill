@@ -59,6 +59,9 @@
                 <addonProduct>Refurbish-Maintenance</addonProduct>
             </available>
         </product>
+        <product name="Gold">
+            <category>BASE</category>
+        </product>
         <product name="Shotgun">
             <category>BASE</category>
             <included>
@@ -268,7 +271,36 @@
                 </recurring>
             </finalPhase>
         </plan>
-        
+        <plan name="gold-monthly">
+            <effectiveDateForExistingSubscriptions>2011-02-14T00:00:00+00:00</effectiveDateForExistingSubscriptions>
+            <product>Gold</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="blowdart-monthly-notrial">
             <product>Blowdart</product>
             <finalPhase type="EVERGREEN">
@@ -618,7 +650,7 @@
                 </recurring>
             </finalPhase>
         </plan>
-  		<plan name="pistol-monthly-discount-and-fixedterm">
+        <plan name="pistol-monthly-discount-and-fixedterm">
             <product>Pistol</product>
             <initialPhases>
                 <phase type="TRIAL">
@@ -678,8 +710,8 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-        </plan>    
-  		<plan name="pistol-monthly-fixedterm-and-evergreen">
+        </plan>
+        <plan name="pistol-monthly-fixedterm-and-evergreen">
             <product>Pistol</product>
             <initialPhases>
                 <phase type="TRIAL">
@@ -739,7 +771,7 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-        </plan>        
+        </plan>
         <plan name="shotgun-monthly" prettyName="Shotgun Monthly">
             <product>Shotgun</product>
             <initialPhases>
@@ -761,6 +793,44 @@
                 </duration>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>249.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>149.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>169.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="shotgun-quarterly">
+            <product>Shotgun</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>QUARTERLY</billingPeriod>
                     <recurringPrice>
                         <price>
                             <currency>USD</currency>
@@ -992,27 +1062,27 @@
                 </recurring>
             </finalPhase>
         </plan>
-	    <plan name="pistol-biennial-fixedterm">
-			<product>Pistol</product>
-			<recurringBillingMode>IN_ADVANCE</recurringBillingMode>
-			<initialPhases>
-			</initialPhases>
-			<finalPhase type="FIXEDTERM">
-				<duration>
-					<unit>MONTHS</unit>
-					<number>36</number>
-				</duration>
-				<recurring>
-					<billingPeriod>BIENNIAL</billingPeriod>
-					<recurringPrice>
-						<price>
-							<currency>USD</currency>
-							<value>40</value>
-						</price>
-					</recurringPrice>
-				</recurring>
-			</finalPhase>
-		</plan>        
+        <plan name="pistol-biennial-fixedterm">
+            <product>Pistol</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>36</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>BIENNIAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>40</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="pistol-annual-gunclub-discount">
             <product>Pistol</product>
             <initialPhases>
@@ -1562,7 +1632,7 @@
                 </recurring>
             </finalPhase>
         </plan>
-     	<plan name="refurbish-maintenance-6-months">
+        <plan name="refurbish-maintenance-6-months">
             <product>Refurbish-Maintenance</product>
             <finalPhase type="FIXEDTERM">
                 <duration>
@@ -1603,8 +1673,8 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-        </plan> 
-     	<plan name="refurbish-maintenance-15-months">
+        </plan>
+        <plan name="refurbish-maintenance-15-months">
             <product>Refurbish-Maintenance</product>
             <finalPhase type="FIXEDTERM">
                 <duration>
@@ -1645,7 +1715,7 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-        </plan>        
+        </plan>
         <plan name="bullets-usage-in-arrear" prettyName="Bullet Monthly Plan">
             <product>Bullets</product>
             <finalPhase type="EVERGREEN" prettyName="Bullet Monthly Plan Evergreen">
@@ -1804,8 +1874,10 @@
                 <plan>pistol-weekly</plan>
                 <plan>pistol-thirty-days</plan>
                 <plan>blowdart-monthly</plan>
+                <plan>gold-monthly</plan>
                 <plan>pistol-monthly</plan>
                 <plan>shotgun-monthly</plan>
+                <plan>shotgun-quarterly</plan>
                 <plan>shotgun-free</plan>
                 <plan>assault-rifle-monthly</plan>
                 <plan>pistol-annual</plan>
@@ -1846,7 +1918,7 @@
         </childPriceList>
         <childPriceList name="fixedTerm">
             <plans>
-            	<plan>pistol-monthly-fixedterm</plan>
+                <plan>pistol-monthly-fixedterm</plan>
                 <plan>pistol-biennial-fixedterm</plan>
                 <plan>pistol-monthly-discount-and-fixedterm</plan>
                 <plan>pistol-monthly-fixedterm-and-evergreen</plan>

@@ -74,7 +74,6 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         return getConfigSource(null, allExtraProperties);
     }
 
-
     @Test(groups = "fast")
     public void testWithCancelation_Before_EffSubDtV2() throws Exception {
 

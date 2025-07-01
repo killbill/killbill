@@ -38,7 +38,7 @@ import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.mockito.Mockito;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -55,7 +55,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
         }
 
         super.beforeClass();
-        final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
+        final TranslatorConfig config = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
         final InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();
         g = new HtmlInvoiceGenerator(factory, invoiceFormatterFactoryPluginRegistry, templateEngine, config, null, resourceBundleFactory, null);

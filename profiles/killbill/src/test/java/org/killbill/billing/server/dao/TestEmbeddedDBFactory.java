@@ -24,7 +24,7 @@ import org.killbill.billing.KillbillTestSuite;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.embeddeddb.EmbeddedDB.DBEngine;
 import org.killbill.commons.jdbi.guice.DaoConfig;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -60,6 +60,6 @@ public class TestEmbeddedDBFactory extends KillbillTestSuite {
         properties.put("org.killbill.dao.url", url);
         properties.put("org.killbill.dao.user", user);
         properties.put("org.killbill.dao.password", password);
-        return new ConfigurationObjectFactory(properties).build(DaoConfig.class);
+        return new AugmentedConfigurationObjectFactory(properties).build(DaoConfig.class);
     }
 }

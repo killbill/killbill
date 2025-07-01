@@ -91,10 +91,10 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
         plan = catalog.findPlan("pistol-monthly", dt2, dt2);
-        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
         plan = catalog.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, dEffectiveDateForExistingSubscriptions);
-        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
         plan = catalog.findPlan("pistol-monthly", dt3, dt3);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));

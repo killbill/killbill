@@ -38,7 +38,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.TenantConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.glue.NoCachingInternalCallContextFactoryProvider;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 
@@ -51,7 +51,7 @@ public class DefaultTenantModule extends KillBillModule implements TenantModule 
     }
 
     private void installConfig() {
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final TenantConfig tenantConfig = factory.build(TenantConfig.class);
         bind(TenantConfig.class).toInstance(tenantConfig);
     }

@@ -98,7 +98,7 @@ import org.killbill.commons.utils.io.Resources;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -366,10 +366,10 @@ public class TestJaxrsBase extends KillbillClient {
                 return configSource.getString(propertyName);
             }
         };
-        final KillbillServerConfig serverConfig = new ConfigurationObjectFactory(skifeConfigSource).build(KillbillServerConfig.class);
+        final KillbillServerConfig serverConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(KillbillServerConfig.class);
         listener = new TestKillbillGuiceListener(serverConfig, configSource);
 
-        config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
+        config = new AugmentedConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
         server = new HttpServer();
         server.configure(config, getListeners(), getFilters());
         server.start();
