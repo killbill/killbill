@@ -51,7 +51,7 @@ jobs:
       - name: Set up Maven
         run: mvn --errors --batch-mode --show-version wrapper:wrapper "-Dmaven=${{ matrix.maven_version }}"
       - name: Build Kill Bill
-        run: ./mvnw --errors --batch-mode --show-version clean install -DskipTests=true -Dcheck.skip-dependency=true -Dcheck.skip-dependency-scope=true -Dcheck.skip-dependency-versions=true -Dcheck.skip-duplicate-finder=true -Dcheck.skip-enforcer=true -Dcheck.skip-rat=true -Dcheck.skip-spotbugs=true
+        run: ./mvnw --errors --batch-mode --show-version clean install -U -DskipTests=true -Dcheck.skip-dependency=true -Dcheck.skip-dependency-scope=true -Dcheck.skip-dependency-versions=true -Dcheck.skip-duplicate-finder=true -Dcheck.skip-enforcer=true -Dcheck.skip-rat=true -Dcheck.skip-spotbugs=true
       - name: Wait for MySQL
         if: ${{ matrix.database == 'mysql' }}
         run: |
