@@ -9,7 +9,7 @@ jobs:
   ci:
     uses: killbill/gh-actions-shared/.github/workflows/ci.yml@main
     with:
-      ff-goal: '-U clean test verify'
+      ff-goal: '-Dsurefire.parallel=none -U clean test verify'
   e2e:
     runs-on: ubuntu-latest
     services:
