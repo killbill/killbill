@@ -146,6 +146,8 @@ public class DatabaseExportDao {
         } else if(exportConfig.getExtraTablesPrefix() != null && !exportConfig.getExtraTablesPrefix().isEmpty() && exportConfig.getExtraTablesPrefix().stream().anyMatch(prefix -> tableName.toLowerCase().startsWith(prefix))) {
             tableType = TableType.EXTRA;
         }
+        boolean accountIdColPresent = false;
+        boolean tenantIdColPresent = false;
 
         boolean firstColumn = true;
         final StringBuilder queryBuilder = new StringBuilder("select ");
@@ -166,9 +168,16 @@ public class DatabaseExportDao {
                     tableType = TableType.NOTIFICATION;
                 }
             }
+
+            if(!tenantIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getTenantRecordIdColumnName())) {
+                tenantIdColPresent = true;
+            }
+            if(!accountIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getAccountRecordIdColumnName())) {
+                accountIdColPresent = true;
+            }
         }
 
-        if(!areAccountIdTenantIdColsPresent(columnsForTable, tableType)) {
+        if(!accountIdColPresent || !tenantIdColPresent) {
             return;
         }
         // Don't export non-account specific tables
@@ -249,19 +258,4 @@ public class DatabaseExportDao {
             }
         });
     }
-
-    private boolean areAccountIdTenantIdColsPresent(List<ColumnInfo> columnsForTable, TableType tableType) {
-        boolean accountIdColPresent = false;
-        boolean tenantIdColPresent = false;
-        for(ColumnInfo column : columnsForTable) {
-            if(!tenantIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getTenantRecordIdColumnName())) {
-                tenantIdColPresent = true;
-            }
-            if(!accountIdColPresent && column.getColumnName().equalsIgnoreCase(tableType.getAccountRecordIdColumnName())) {
-                accountIdColPresent = true;
-            }
-        }
-        return accountIdColPresent && tenantIdColPresent;
-    }
-
 }
