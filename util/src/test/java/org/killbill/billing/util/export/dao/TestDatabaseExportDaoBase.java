@@ -28,6 +28,7 @@ public class TestDatabaseExportDaoBase extends UtilTestSuiteWithEmbeddedDB {
     protected final String tableNameA = "test_database_export_dao_a";
     protected final String tableNameB = "test_database_export_dao_b";
     protected final String tableNameC = "aviate_catalog_a";
+    protected final String tableNameD = "aviate_notifications";
 
 
 
