@@ -37,8 +37,17 @@ import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleNoDB;
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
 import static org.killbill.billing.subscription.events.user.ApiEventType.CREATE;
 
@@ -68,16 +77,37 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
     private static final DateTime EFF_SUB_DT_V4 = new DateTime("2011-03-14T00:00:00+00:00");
 
     @Override
+    @BeforeClass(groups = "fast")
+    public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
+        System.setProperty("org.killbill.catalog.uri", "catalogs/subscriptionBillingEvents");
+
+        // Force Guice to use the catalogUri from child’s config
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleNoDB(configSource, clock));
+        g.injectMembers(this);
+
+        // For TestApiListener#isCompleted
+        Mockito.doReturn(0L).when(idbi).withHandle(Mockito.<HandleCallback<Long>>any());
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void afterClass() {
+        // Restore the previous value
+        System.setProperty("org.killbill.catalog.uri", super.getCatalogUri());
+    }
+
+    @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
         allExtraProperties.put("org.killbill.catalog.uri", "catalogs/subscriptionBillingEvents");
         return getConfigSource(null, allExtraProperties);
     }
 
-
     @Test(groups = "fast")
     public void testWithCancelation_Before_EffSubDtV2() throws Exception {
-
 
         final DateTime createDate = new DateTime(2011, 1, 2, 0, 0, DateTimeZone.UTC);
         final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate), subscriptionBaseApiService, clock);
@@ -123,8 +153,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(),internalCallContext);
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
 
         Assert.assertEquals(result.size(), 3);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
@@ -295,7 +324,6 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         // We should not see any catalog CHANGE events
     }
 
-
     @Test(groups = "fast")
     public void testWithChange_After_EffSubDtV3() throws Exception {
 
@@ -343,7 +371,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(),internalCallContext);
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
 
         Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
@@ -376,8 +404,6 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
 
         // We should not see any more catalog CHANGE events
     }
-
-
 
     private static DateTime toDateTime(Date input) {
         return new DateTime(input).toDateTime(DateTimeZone.UTC);

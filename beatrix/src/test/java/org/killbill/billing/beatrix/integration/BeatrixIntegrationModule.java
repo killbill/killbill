@@ -88,6 +88,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Providers;
 
+import static org.mockito.Mockito.mock;
+
 public class BeatrixIntegrationModule extends KillBillModule {
 
     public static final String NON_OSGI_PLUGIN_NAME = "yoyo";
@@ -170,7 +172,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         // killbill-platform-test have this one (and most of other deps), but it's test classes.
         OptionalBinder.newOptionalBinder(binder(), new TypeLiteral<OSGIServiceRegistration<ServiceDiscoveryRegistry>>() {}).setDefault().toProvider(Providers.of(null));
         OptionalBinder.newOptionalBinder(binder(), new TypeLiteral<OSGISingleServiceRegistration<MetricRegistry>>() {}).setDefault().toProvider(Providers.of(null));
-        OptionalBinder.newOptionalBinder(binder(), HealthCheckRegistry.class).setDefault().toProvider(Providers.of(null));
+        OptionalBinder.newOptionalBinder(binder(), HealthCheckRegistry.class).setDefault().toInstance(mock(HealthCheckRegistry.class));
     }
 
     private final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {

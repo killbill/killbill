@@ -23,6 +23,7 @@ import static org.killbill.billing.invoice.TestInvoiceHelper.*;
 import java.math.BigDecimal;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
@@ -116,6 +117,8 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
             LocalDate oneCycleLater = startDate;
             for (int j = 0; j < i; j++) {
                 oneCycleLater = oneCycleLater.plus(getBillingPeriod().getPeriod());
+                // The correct alignment needs to take into consideration the BCD - i.e. if we start on 31 and end up on a month with 31 days, we should end on the 31st
+                oneCycleLater = BillCycleDayCalculator.alignProposedBillCycleDate(oneCycleLater, 31, getBillingPeriod());
             }
             // test just before the billing cycle day
             testCalculateNumberOfBillingCycles(startDate, oneCycleLater.plusDays(-1), 31, expectedValue);

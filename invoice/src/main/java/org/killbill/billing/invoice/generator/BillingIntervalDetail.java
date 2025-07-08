@@ -160,18 +160,16 @@ public class BillingIntervalDetail {
 
         int numberOfPeriods = 0;
         LocalDate proposedDate = firstBillingCycleDate;
-        LocalDate nextProposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
-
+        LocalDate nextProposedDate = getFutureBillingDateFor(numberOfPeriods);
         while (!nextProposedDate.isAfter(targetDate)) {
             proposedDate = nextProposedDate;
-            nextProposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
             numberOfPeriods += 1;
+            nextProposedDate = getFutureBillingDateFor(numberOfPeriods);
         }
 
         if (inArrearGreedy && !proposedDate.isEqual(targetDate)) {
             proposedDate = nextProposedDate;
         }
-        proposedDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, billingCycleDay, billingPeriod);
 
         final LocalDate cutoffEndDt = inArrearGreedy ? nextProposedDate : targetDate;
         // We honor the endDate as long as it does not go beyond our targetDate (by construction this cannot be after the nextProposedDate neither.
@@ -199,7 +197,7 @@ public class BillingIntervalDetail {
         LocalDate proposedDate = firstBillingCycleDate;
 
         while (!proposedDate.isAfter(targetDate)) {
-            proposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
+            proposedDate = getFutureBillingDateFor(numberOfPeriods);
             numberOfPeriods += 1;
         }
         proposedDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, billingCycleDay, billingPeriod);
@@ -224,7 +222,7 @@ public class BillingIntervalDetail {
         LocalDate proposedDate = firstBillingCycleDate;
         int numberOfPeriods = 0;
         while (!proposedDate.isAfter(effectiveEndDate)) {
-            proposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
+            proposedDate = getFutureBillingDateFor(numberOfPeriods);
             numberOfPeriods += 1;
         }
 

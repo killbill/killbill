@@ -27,6 +27,7 @@
     </currencies>
 
     <units>
+        <unit name="bullets"/>
     </units>
 
     <products>
@@ -92,7 +93,7 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-			 </plan>       
+       </plan>
        <plan name="premium-support-addon2-monthly-notrial">
             <product>PremiumSupportAddOn2</product>
             <finalPhase type="EVERGREEN">
@@ -109,8 +110,46 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
-			
-        </plan>        
+        </plan>
+        <plan name="premium-support-addon-monthly-with-usage">
+            <product>PremiumSupportAddOn</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>900.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage name="premium-support-addon-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>bullets</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>1</value>
+                                            </price>
+                                        </prices>
+                                        <max>1000</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -118,6 +157,7 @@
                 <plan>premium-support-monthly-notrial</plan>
                 <plan>premium-support-addon-monthly-notrial</plan>
 				<plan>premium-support-addon2-monthly-notrial</plan>
+                <plan>premium-support-addon-monthly-with-usage</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
