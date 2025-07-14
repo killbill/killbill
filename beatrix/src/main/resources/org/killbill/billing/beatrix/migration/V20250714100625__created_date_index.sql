@@ -1,0 +1,2 @@
+create index bus_ext_events_created_date ON bus_ext_events(created_date);
+create index bus_ext_events_history_created_date ON bus_ext_events_history(created_date);
