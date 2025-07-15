@@ -19,7 +19,6 @@ CREATE TABLE bus_ext_events (
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX idx_bus_ext_where ON bus_ext_events (processing_state, processing_owner, processing_available_date);
 CREATE INDEX bus_ext_events_tenant_account_record_id ON bus_ext_events(search_key2, search_key1);
-create index bus_ext_events_created_date ON bus_ext_events(created_date);
 
 DROP TABLE IF EXISTS bus_ext_events_history;
 CREATE TABLE bus_ext_events_history (
