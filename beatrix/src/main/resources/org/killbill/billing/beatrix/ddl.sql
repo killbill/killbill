@@ -38,3 +38,4 @@ CREATE TABLE bus_ext_events_history (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX bus_ext_events_history_tenant_account_record_id ON bus_ext_events_history(search_key2, search_key1);
+create index bus_ext_events_history_created_date ON bus_ext_events_history(created_date);
