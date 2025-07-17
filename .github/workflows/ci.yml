@@ -7,7 +7,7 @@ on:
 
 jobs:
   ci:
-    uses: killbill/gh-actions-shared/.github/workflows/ci.yml@main   
+    uses: killbill/gh-actions-shared/.github/workflows/ci.yml@main
   e2e:
     runs-on: ubuntu-latest
     services:

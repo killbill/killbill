@@ -55,7 +55,6 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
-import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
@@ -82,11 +81,14 @@ import org.killbill.clock.ClockMock;
 import org.killbill.commons.health.api.HealthCheckRegistry;
 import org.killbill.commons.metrics.api.MetricRegistry;
 import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
-import org.skife.config.ConfigurationObjectFactory;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Providers;
+
+import static org.mockito.Mockito.mock;
 
 public class BeatrixIntegrationModule extends KillBillModule {
 
@@ -142,7 +144,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new KillBillShiroModuleOnlyIniRealm(configSource));
         install(new BeatrixModule(configSource));
 
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final AugmentedConfigurationObjectFactory factory = new AugmentedConfigurationObjectFactory(skifeConfigSource);
         final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
         install(new KillbillApiAopModule(jaxrsConfig));
 
@@ -170,7 +172,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         // killbill-platform-test have this one (and most of other deps), but it's test classes.
         OptionalBinder.newOptionalBinder(binder(), new TypeLiteral<OSGIServiceRegistration<ServiceDiscoveryRegistry>>() {}).setDefault().toProvider(Providers.of(null));
         OptionalBinder.newOptionalBinder(binder(), new TypeLiteral<OSGISingleServiceRegistration<MetricRegistry>>() {}).setDefault().toProvider(Providers.of(null));
-        OptionalBinder.newOptionalBinder(binder(), HealthCheckRegistry.class).setDefault().toProvider(Providers.of(null));
+        OptionalBinder.newOptionalBinder(binder(), HealthCheckRegistry.class).setDefault().toInstance(mock(HealthCheckRegistry.class));
     }
 
     private final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {

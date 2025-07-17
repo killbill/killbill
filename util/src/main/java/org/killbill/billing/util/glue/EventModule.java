@@ -25,7 +25,7 @@ import org.killbill.billing.util.config.definition.EventConfig;
 import org.killbill.billing.util.config.definition.MultiTenantEventConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.PerTenantConfigInvalidationCallback;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 
@@ -38,7 +38,7 @@ public class EventModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
+        final EventConfig eventConfig = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
         bind(EventConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(eventConfig);
         bind(EventConfig.class).to(MultiTenantEventConfig.class).asEagerSingleton();
 

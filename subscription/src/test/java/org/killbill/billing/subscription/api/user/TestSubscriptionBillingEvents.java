@@ -124,7 +124,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
 
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(),internalCallContext);
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
 
         Assert.assertEquals(result.size(), 3);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
@@ -343,7 +343,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(),internalCallContext);
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
 
         Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);

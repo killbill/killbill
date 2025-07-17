@@ -37,7 +37,7 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.util.LocaleUtils;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
-import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -55,7 +55,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
         }
 
         super.beforeClass();
-        config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
+        config = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
     }
 
