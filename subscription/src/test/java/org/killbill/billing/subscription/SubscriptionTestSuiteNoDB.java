@@ -125,18 +125,11 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected AccountData accountData;
     protected SubscriptionBaseBundle bundle;
 
-    protected String getCatalogUri() {
-        return "org/killbill/billing/catalog/catalogTest.xml";
-    }
-
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-
-        allExtraProperties.put("org.killbill.catalog.uri", getCatalogUri());
-
-        return getConfigSource(null, allExtraProperties);
-    }
+        allExtraProperties.put("org.killbill.catalog.uri", "org/killbill/billing/catalog/catalogTest.xml");
+        return getConfigSource(null, allExtraProperties);    }
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {

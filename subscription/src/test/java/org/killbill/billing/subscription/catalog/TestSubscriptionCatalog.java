@@ -29,18 +29,9 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
-import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleNoDB;
-import org.mockito.Mockito;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 
 public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
 
@@ -54,29 +45,6 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
     final DateTime dEffectiveDateForExistingSubscriptions = new DateTime("2011-02-14T00:01:00+00:00");
     // WeaponsHireSmall-3.xml
     final DateTime dt3 = new DateTime("2011-03-03T00:01:00+00:00");
-
-    @Override
-    @BeforeClass(groups = "fast")
-    public void beforeClass() throws Exception {
-        if (hasFailed()) {
-            return;
-        }
-
-        System.setProperty("org.killbill.catalog.uri", "catalogs/subscriptionCatalog");
-
-        // Force Guice to use the catalogUri from child’s config
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleNoDB(configSource, clock));
-        g.injectMembers(this);
-
-        // For TestApiListener#isCompleted
-        Mockito.doReturn(0L).when(idbi).withHandle(Mockito.<HandleCallback<Long>>any());
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() {
-        // Restore the previous value
-        System.setProperty("org.killbill.catalog.uri", super.getCatalogUri());
-    }
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
