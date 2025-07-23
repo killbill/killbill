@@ -99,10 +99,13 @@ public class HtmlInvoiceGenerator {
         data.put("text", invoiceTranslator);
         data.put("account", account);
 
-        final InvoiceFormatterFactory invoiceFormatterFactory;
+        InvoiceFormatterFactory invoiceFormatterFactory;
         final String invoiceFormatterFactoryPluginName = config.getInvoiceFormatterFactoryPluginName();
         if (!Strings.isNullOrEmpty(invoiceFormatterFactoryPluginName)) {
             invoiceFormatterFactory = invoiceFormatterFactoryPluginRegistry.getServiceForName(invoiceFormatterFactoryPluginName);
+            if(invoiceFormatterFactory == null) {
+                invoiceFormatterFactory = builtInInvoiceFormatterFactory;
+            }
         } else {
             final Set<String> services = invoiceFormatterFactoryPluginRegistry.getAllServices();
             invoiceFormatterFactory = services.size() == 1 ? invoiceFormatterFactoryPluginRegistry.getServiceForName(services.iterator().next()) : builtInInvoiceFormatterFactory;
