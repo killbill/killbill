@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2020-2020 Equinix, Inc
+  ~ Copyright 2014-2020 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<catalog>
+    <effectiveDate>2025-01-01T00:00:00Z</effectiveDate>
+    <catalogName>FAMILY</catalogName>
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+    <units/>
+    <products>
+        <product name="VOIP_ACTIVATION" prettyName="VOIP_ACTIVATION">
+            <category>ADD_ON</category>
+            <included/>
+            <available/>
+            <limits/>
+        </product>
+        <product name="HOME100MB" prettyName="HOME100MB">
+            <category>BASE</category>
+            <included>
+                <addonProduct>ROUTER</addonProduct>
+            </included>
+            <available>
+                <addonProduct>VOIP_ACTIVATION</addonProduct>
+                <addonProduct>VOIP</addonProduct>
+            </available>
+            <limits/>
+        </product>
+        <product name="HOME20MB" prettyName="HOME20MB">
+            <category>BASE</category>
+            <included>
+                <addonProduct>ROUTER</addonProduct>
+            </included>
+            <available>
+                <addonProduct>VOIP_ACTIVATION</addonProduct>
+                <addonProduct>VOIP</addonProduct>
+            </available>
+            <limits/>
+        </product>
+        <product name="ROUTER" prettyName="ROUTER">
+            <category>ADD_ON</category>
+            <included/>
+            <available/>
+            <limits/>
+        </product>
+        <product name="VOIP" prettyName="VOIP">
+            <category>ADD_ON</category>
+            <included/>
+            <available/>
+            <limits/>
+        </product>
+    </products>
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment/>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <productCategory>ADD_ON</productCategory>
+                <alignment>BUNDLE</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <alignment>SUBSCRIPTION</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList/>
+    </rules>
+    <plans>
+        <plan name="VOIP_ACTIVATION_PLAN" prettyName="VOIP_ACTIVATION_PLAN">
+            <product>VOIP_ACTIVATION</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases/>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <fixed type="ONE_TIME">
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>10</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <usages/>
+            </finalPhase>
+        </plan>
+        <plan name="HOME100MB_ANNUAL_PLAN" prettyName="HOME100MB_ANNUAL_PLAN">
+            <product>HOME100MB</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases/>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <fixed type="ONE_TIME">
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>20</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>160</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages/>
+            </finalPhase>
+        </plan>
+        <plan name="HOME20MB_ANNUAL_PLAN" prettyName="HOME20MB_ANNUAL_PLAN">
+            <product>HOME20MB</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases/>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <fixed type="ONE_TIME">
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>10</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages/>
+            </finalPhase>
+        </plan>
+        <plan name="ROUTER_PLAN" prettyName="ROUTER_PLAN">
+            <product>ROUTER</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases/>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <fixed type="ONE_TIME">
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <usages/>
+            </finalPhase>
+        </plan>
+        <plan name="VOIP_ANNUAL_PLAN" prettyName="VOIP_ANNUAL_PLAN">
+            <product>VOIP</product>
+            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+            <initialPhases/>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>80</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages/>
+            </finalPhase>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT" prettyName="DEFAULT">
+            <plans>
+                <plan>VOIP_ACTIVATION_PLAN</plan>
+                <plan>HOME100MB_ANNUAL_PLAN</plan>
+                <plan>HOME20MB_ANNUAL_PLAN</plan>
+                <plan>ROUTER_PLAN</plan>
+                <plan>VOIP_ANNUAL_PLAN</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>
