@@ -131,15 +131,22 @@ public class BlockingCalculator {
                 }
 
                 final List<BlockingState> subscriptionBlockingEvents = perSubscriptionBlockingEvents.get(subscription.getId()) != null ? perSubscriptionBlockingEvents.get(subscription.getId()) : Collections.emptyList();
-                final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(subscription.getEndDate(), subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
-                final List<DisabledDuration> accountBlockingDurations = createBlockingDurations(aggregateSubscriptionBlockingEvents);
-
                 final SortedSet<BillingEvent> subscriptionBillingEvents = perSubscriptionBillingEvents.getOrDefault(subscription.getId(), Collections.emptySortedSet());
+                // Subscription#getEndDate() is only set for CANCELLED subscriptions, so we need to use the last billing event to determine the termination date
+                final BillingEvent lastBillingEvent = !subscriptionBillingEvents.isEmpty() ? subscriptionBillingEvents.last() : null;
+                final DateTime terminationDate = lastBillingEvent != null &&
+                                                 (lastBillingEvent.getTransitionType() == SubscriptionBaseTransitionType.CANCEL ||
+                                                 lastBillingEvent.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED)
+                                                 ? lastBillingEvent.getEffectiveDate() : null;
 
-                final SortedSet<BillingEvent> newEvents = createNewEvents(accountBlockingDurations, subscriptionBillingEvents, context);
+                final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(terminationDate, subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
+                final List<DisabledDuration> aggregateBlockingDurations = createBlockingDurations(aggregateSubscriptionBlockingEvents);
+
+
+                final SortedSet<BillingEvent> newEvents = createNewEvents(aggregateBlockingDurations, subscriptionBillingEvents, context);
                 billingEventsToAdd.addAll(newEvents);
 
-                final SortedSet<BillingEvent> removedEvents = eventsToRemove(accountBlockingDurations, subscriptionBillingEvents);
+                final SortedSet<BillingEvent> removedEvents = eventsToRemove(aggregateBlockingDurations, subscriptionBillingEvents);
                 billingEventsToRemove.addAll(removedEvents);
             }
         }

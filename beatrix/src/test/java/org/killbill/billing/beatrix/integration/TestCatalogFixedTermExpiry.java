@@ -26,9 +26,12 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
@@ -332,6 +335,50 @@ public class TestCatalogFixedTermExpiry extends TestIntegrationBase {
         assertEquals(entitlement.getState(), EntitlementState.EXPIRED);
 
         checkNoMoreInvoiceToGenerate(account.getId(), callContext);
+    }
 
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2150")
+    public void testUnblockExpiredSusbscription() throws Exception {
+
+        final LocalDate today = new LocalDate(2025, 3, 21);
+        clock.setDay(today);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(21));
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-3-months");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1); // 2025-04-21
+        assertListenerStatus();
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
+        final BlockingState blockingState1 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "BLOCK", "SERVICE", true, true, true, null);
+        subscriptionApi.addBlockingState(blockingState1, new LocalDate(2025, 4, 21), Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(1); // 2025-05-21
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.EXPIRED);
+        clock.addMonths(1); // 2025-06-21
+        assertListenerStatus();
+
+        clock.setDay(new LocalDate(2025, 8, 18)); // 2025-08-18
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final BlockingState blockingState4 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "UNBLOCK", "SERVICE", false, false, false, null);
+        subscriptionApi.addBlockingState(blockingState4, new LocalDate(2025, 8, 18), Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.EXPIRED);
+        checkNoMoreInvoiceToGenerate(account.getId(), callContext);
     }
 }
