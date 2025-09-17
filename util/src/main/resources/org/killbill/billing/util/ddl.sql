@@ -21,6 +21,7 @@ CREATE UNIQUE INDEX custom_fields_id ON custom_fields(id);
 CREATE INDEX custom_fields_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE INDEX custom_fields_tenant_account_record_id ON custom_fields(tenant_record_id, account_record_id);
 CREATE INDEX custom_fields_name_value ON custom_fields(field_name, field_value);
+CREATE INDEX idx_custom_fields_tenant_record ON custom_fields (tenant_record_id, record_id);
 
 
 DROP TABLE IF EXISTS custom_field_history;
@@ -45,6 +46,7 @@ CREATE TABLE custom_field_history (
 CREATE INDEX custom_field_history_target_record_id ON custom_field_history(target_record_id);
 CREATE INDEX custom_field_history_object_id_object_type ON custom_field_history(object_id, object_type);
 CREATE INDEX custom_field_history_tenant_account_record_id ON custom_field_history(tenant_record_id, account_record_id);
+CREATE INDEX idx_custom_field_history_tenant_record ON custom_field_history (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS tag_definitions;
 CREATE TABLE tag_definitions (
@@ -107,6 +109,7 @@ CREATE TABLE tags (
 CREATE UNIQUE INDEX tags_id ON tags(id);
 CREATE INDEX tags_by_object ON tags(object_id);
 CREATE INDEX tags_tenant_account_record_id ON tags(tenant_record_id, account_record_id);
+CREATE INDEX idx_tags_tenant_record ON tags (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS tag_history;
 CREATE TABLE tag_history (
@@ -129,6 +132,7 @@ CREATE TABLE tag_history (
 CREATE INDEX tag_history_target_record_id ON tag_history(target_record_id);
 CREATE INDEX tag_history_by_object ON tag_history(object_id);
 CREATE INDEX tag_history_tenant_account_record_id ON tag_history(tenant_record_id, account_record_id);
+CREATE INDEX idx_tag_history_tenant_record ON tag_history (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS audit_log;
 CREATE TABLE audit_log (

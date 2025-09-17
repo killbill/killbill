@@ -799,4 +799,31 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(invoicesList.get(0).getBalance());
         Assert.assertEquals(invoicesList.get(0).getBalance().compareTo(BigDecimal.TEN), 0);
     }
+
+    @Test(groups = "slow")
+    public void testRetrieveInvoices() throws Exception {
+
+        final Account account = invoiceUtil.createAccount(callContext);
+        final Long count = 105L;
+        final Long limit = 10L;
+        for(int i = 0; i < count; i++) {
+            final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, UUID.randomUUID().toString(), clock.getUTCToday(), null, BigDecimal.ZERO, accountCurrency, null);
+            invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), List.of(externalCharge), true, null, callContext);
+        }
+
+        //retrieve invoices
+        Pagination<Invoice> invoices = invoiceUserApi.getInvoices(0L, limit, callContext);
+        assertEquals(invoices.getTotalNbRecords(), count);
+        Assert.assertEquals(invoices.getMaxNbRecords(), count);
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertEquals(invoices.getNextOffset(), limit);
+
+        //retrieve invoices by account
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), 0L, limit, callContext);
+        assertEquals(invoices.getTotalNbRecords(), count);
+        Assert.assertEquals(invoices.getMaxNbRecords(), count);
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertEquals(invoices.getNextOffset(), limit);
+    }
+
 }

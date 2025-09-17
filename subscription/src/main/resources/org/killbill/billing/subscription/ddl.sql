@@ -127,6 +127,7 @@ CREATE UNIQUE INDEX bundles_id ON bundles(id);
 CREATE UNIQUE INDEX bundles_external_key ON bundles(external_key, tenant_record_id);
 CREATE INDEX bundles_account ON bundles(account_id);
 CREATE INDEX bundles_tenant_account_record_id ON bundles(tenant_record_id, account_record_id);
+CREATE INDEX idx_bundles_tenant_record ON bundles (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS bundle_history;
 CREATE TABLE bundle_history (
@@ -148,3 +149,4 @@ CREATE TABLE bundle_history (
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX bundle_history_target_record_id ON bundle_history(target_record_id);
 CREATE INDEX bundle_history_tenant_record_id ON bundle_history(tenant_record_id);
+CREATE INDEX idx_bundle_history_tenant_record ON bundle_history (tenant_record_id, record_id);

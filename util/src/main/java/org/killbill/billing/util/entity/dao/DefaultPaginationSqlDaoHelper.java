@@ -106,7 +106,7 @@ public class DefaultPaginationSqlDaoHelper {
             // The count to get maxNbRecords can be expensive on very large datasets. As a heuristic to check how large that number is,
             // we retrieve 1 record at offset simplePaginationThreshold (pretty fast). If we've found a record, that means the count is larger
             // than this threshold and we don't issue the full count query
-            final Long recordIdAtSimplePaginationOffset = withAccountRecordId ? sqlDao.getRecordIdAtOffsetWithAccountRecordId(simplePaginationThreshold, context) : sqlDao.getRecordIdAtOffset(simplePaginationThreshold);
+            final Long recordIdAtSimplePaginationOffset = withAccountRecordId ? sqlDao.getRecordIdAtOffsetWithAccountRecordId(simplePaginationThreshold, context) : sqlDao.getRecordIdAtOffset(simplePaginationThreshold, context);
             final boolean veryLargeDataSet = recordIdAtSimplePaginationOffset != null;
 
             if (veryLargeDataSet) {
