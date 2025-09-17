@@ -65,6 +65,7 @@ CREATE TABLE tag_definitions (
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX tag_definitions_id ON tag_definitions(id);
 CREATE INDEX tag_definitions_tenant_record_id ON tag_definitions(tenant_record_id);
+CREATE INDEX idx_tag_definitions_tenant_record ON tag_definitions (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS tag_definition_history;
 CREATE TABLE tag_definition_history (
@@ -89,6 +90,7 @@ CREATE INDEX tag_definition_history_id ON tag_definition_history(id);
 CREATE INDEX tag_definition_history_target_record_id ON tag_definition_history(target_record_id);
 CREATE INDEX tag_definition_history_name ON tag_definition_history(name);
 CREATE INDEX tag_definition_history_tenant_record_id ON tag_definition_history(tenant_record_id);
+CREATE INDEX idx_tag_definition_history_tenant_record ON tag_definition_history (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS tags;
 CREATE TABLE tags (
