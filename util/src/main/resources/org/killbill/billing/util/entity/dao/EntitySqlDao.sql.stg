@@ -134,6 +134,8 @@ allHistoryTableValues() ::= <<
 CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
 
+indexHint() ::= <</*! FORCE INDEX (idx_<tableName()>_tenant_record) */>>
+
 getAll() ::= <<
 select
 <allTableFields("t.")>
@@ -162,7 +164,8 @@ order by t.<orderBy> <ordering>
 
 getRecordIdAtOffset(offset) ::= <<
 select <recordIdField("")>
-from <tableName()>
+from <tableName()> <indexHint()>
+where <CHECK_TENANT("")>
 order by <recordIdField("")> ASC
 limit 1 offset :offset
 ;
@@ -170,8 +173,9 @@ limit 1 offset :offset
 
 getRecordIdAtOffsetWithAccountRecordId(offset) ::= <<
 select <recordIdField("")>
-from <tableName()>
+from <tableName()> <indexHint()>
 where <accountRecordIdField("")> = :accountRecordId
+<AND_CHECK_TENANT("")>
 order by <recordIdField("")> ASC
 limit 1 offset :offset
 ;

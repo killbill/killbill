@@ -158,6 +158,31 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(Iterables.toUnmodifiableList(search12).size(), 0);
     }
 
+    @Test(groups = "slow", description = "Test Account Pagination")
+    public void testRetrieveAccounts() throws Exception {
+        final MutableAccountData mutableAccountData1 = createAccountData();
+        mutableAccountData1.setEmail("john@acme.com");
+        mutableAccountData1.setCompanyName("Acme, Inc.");
+        final AccountModelDao account1ModelDao = new AccountModelDao(UUID.randomUUID(), mutableAccountData1);
+        final AccountData accountData1 = new DefaultAccount(account1ModelDao);
+        accountUserApi.createAccount(accountData1, callContext);
+
+        final MutableAccountData mutableAccountData2 = createAccountData();
+        mutableAccountData2.setEmail("bob@gmail.com");
+        mutableAccountData2.setCompanyName("Acme, Inc.");
+        final AccountModelDao account2ModelDao = new AccountModelDao(UUID.randomUUID(), mutableAccountData2);
+        final AccountData accountData2 = new DefaultAccount(account2ModelDao);
+        accountUserApi.createAccount(accountData2, callContext);
+
+        final Long count = 2L;
+        final Long limit = 10L;
+
+        Pagination<Account> accounts = accountUserApi.getAccounts(0L, limit, callContext);
+        assertEquals(accounts.getTotalNbRecords(), count);
+        Assert.assertEquals(accounts.getMaxNbRecords(), count);
+        Assert.assertEquals(accounts.getCurrentOffset(), (Long) 0L);
+    }
+
     @Test(groups = "slow", description = "Test Account creation generates an event")
     public void testBusEvents() throws Exception {
         final AccountEventHandler eventHandler = new AccountEventHandler();
