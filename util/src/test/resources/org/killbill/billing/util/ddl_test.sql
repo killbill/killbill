@@ -156,6 +156,8 @@ CREATE TABLE kombucha (
     PRIMARY KEY(record_id)
 );
 
+CREATE INDEX idx_kombucha_tenant_record ON kombucha (tenant_record_id, record_id);
+
 DROP TABLE IF EXISTS full_of_dates;
 CREATE TABLE full_of_dates (
     record_id serial unique,

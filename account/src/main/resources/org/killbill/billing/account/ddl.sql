@@ -40,7 +40,7 @@ CREATE INDEX accounts_tenant_record_id ON accounts(tenant_record_id);
 CREATE INDEX accounts_email_tenant_record_id ON accounts(email, tenant_record_id);
 CREATE INDEX accounts_company_name_tenant_record_id ON accounts(company_name, tenant_record_id);
 CREATE INDEX accounts_name_tenant_record_id ON accounts(name, tenant_record_id);
-
+CREATE INDEX idx_accounts_tenant_record ON accounts (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
@@ -79,6 +79,7 @@ CREATE TABLE account_history (
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX account_history_target_record_id ON account_history(target_record_id);
 CREATE INDEX account_history_tenant_record_id ON account_history(tenant_record_id);
+CREATE INDEX idx_account_history_tenant_record ON account_history (tenant_record_id, record_id);
 
 DROP TABLE IF EXISTS account_emails;
 CREATE TABLE account_emails (
