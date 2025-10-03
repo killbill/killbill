@@ -407,8 +407,6 @@ public class TestCatalogFixedTermExpiry extends TestIntegrationBase {
         clock.addMonths(1); // 2025-05-21
         assertListenerStatus();
 
-
-        // Set next BCD to be the 10
         subscriptionBaseInternalApiApi.updateBCD(entitlement.getId(), 21,  new LocalDate(2025, 6, 21), internalCallContext);
         Thread.sleep(1000);
         assertListenerStatus();
