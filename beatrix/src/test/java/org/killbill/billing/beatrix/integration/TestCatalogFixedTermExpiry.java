@@ -381,4 +381,43 @@ public class TestCatalogFixedTermExpiry extends TestIntegrationBase {
         assertEquals(entitlement.getState(), EntitlementState.EXPIRED);
         checkNoMoreInvoiceToGenerate(account.getId(), callContext);
     }
+
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2163")
+    public void testBcdUpdateAfterExpiration() throws Exception {
+
+        final LocalDate today = new LocalDate(2025, 3, 21);
+        clock.setDay(today);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(21));
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-3-months");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1); // 2025-04-21
+        assertListenerStatus();
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1); // 2025-05-21
+        assertListenerStatus();
+
+        subscriptionBaseInternalApiApi.updateBCD(entitlement.getId(), 21,  new LocalDate(2025, 6, 21), internalCallContext);
+        Thread.sleep(1000);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.EXPIRED, NextEvent.NULL_INVOICE);
+        clock.addMonths(1); // 2025-06-21
+        assertListenerStatus();
+
+
+        entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.EXPIRED);
+        checkNoMoreInvoiceToGenerate(account.getId(), callContext);
+    }
 }
