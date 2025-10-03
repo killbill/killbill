@@ -632,8 +632,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<>();
             boolean foundInitialEvent = false;
 
+            boolean canceledOrExpired = false;
             SubscriptionBaseTransitionData lastPlanTransition = null;
             while (it.hasNext()) {
+                // Do not insert any transitions that happen after a CANCEL or EXPIRED event
+                if (canceledOrExpired) {
+                    break;
+                }
 
                 final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
                 final boolean isCreateOrTransfer = cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
@@ -641,6 +646,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 final boolean isChangeEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE;
                 final boolean isPhaseEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.PHASE;
                 final boolean isCancelEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CANCEL;
+                final boolean isExpiredEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED;
+
+                canceledOrExpired = isCancelEvent || isExpiredEvent;
 
                 if (!foundInitialEvent) {
                     foundInitialEvent = isCreateOrTransfer;
@@ -662,7 +670,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
                     }
 
-                    if (isChangeEvent || isCancelEvent || isPhaseEvent) {
+                    if (isChangeEvent || isCancelEvent || isPhaseEvent || isExpiredEvent) {
                         candidatesCatalogChangeEvents.clear();
                     } else if (prevCandidateForCatalogChangeEvents != null) {
                         candidatesCatalogChangeEvents.add(prevCandidateForCatalogChangeEvents);
@@ -974,7 +982,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final NextBillingCycleDayLocal nextBillingCycleDayLocal = new NextBillingCycleDayLocal(inputEvents);
 
         for (final SubscriptionBaseEvent cur : inputEvents) {
-
             nextBcdLocal = nextBillingCycleDayLocal.getNextBillingCycleDayLocal(cur.getEffectiveDate());
             nextQuantity = nextBillingCycleDayLocal.getNextQuantity(cur.getEffectiveDate());
 
@@ -1082,16 +1089,17 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     }
 
-    // Skip any event after a CANCEL event:
+    // Skip any event after a CANCELor EXPIRED event:
     //
     //  * DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
     //  * Hardening against data integrity issues where we have multiple active CANCEL (https://github.com/killbill/killbill/issues/619)
     //
     private void removeEverythingPastCancelEvent(final List<SubscriptionBaseEvent> inputEvents) {
-        final SubscriptionBaseEvent cancellationEvent = inputEvents.stream()
-                                                                   .filter(input -> input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL)
+        final SubscriptionBaseEvent canceledOrExpiredEvent = inputEvents.stream()
+                                                                   .filter(input -> input.getType() == EventType.EXPIRED ||
+                                                                                    (input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL))
                                                                    .findFirst().orElse(null);
-        if (cancellationEvent == null) {
+        if (canceledOrExpiredEvent == null) {
             return;
         }
 
@@ -1102,11 +1110,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 continue;
             }
 
-            if (input.getId().compareTo(cancellationEvent.getId()) == 0) {
+            if (input.getId().compareTo(canceledOrExpiredEvent.getId()) == 0) {
                 // Keep the cancellation event
             } else if (input.getType() == EventType.API_USER && (((ApiEvent) input).getApiEventType() == ApiEventType.TRANSFER || ((ApiEvent) input).getApiEventType() == ApiEventType.CREATE)) {
                 // Keep the initial event (SOT use-case)
-            } else if (input.getEffectiveDate().compareTo(cancellationEvent.getEffectiveDate()) >= 0) {
+            } else if (input.getEffectiveDate().compareTo(canceledOrExpiredEvent.getEffectiveDate()) >= 0) {
                 // Event to ignore past cancellation date
                 it.remove();
             }
