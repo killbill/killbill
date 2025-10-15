@@ -30,6 +30,7 @@ import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
+import org.killbill.billing.server.filters.EventStreamResponseFilter;
 import org.killbill.billing.server.filters.Jersey1BackwardCompatibleFilter;
 import org.killbill.billing.server.filters.KillbillMDCInsertingServletFilter;
 import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
@@ -72,6 +73,9 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
         // Jackson integration
         builder.addJerseyResourceClass(JacksonJsonProvider.class.getName());
+
+        // Event stream filter: Disable enableResponseBuffering() for event-stream
+        builder.addJerseyResourceClass(EventStreamResponseFilter.class.getName());
 
         // Set the per-thread RequestData first
         builder.addJerseyResourceClass(RequestDataFilter.class.getName());
