@@ -17,7 +17,7 @@
 
 package org.killbill.billing.catalog.dao;
 
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -125,19 +125,18 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
         // If we have some usage overrides, we need to create (or reuse) all the entries
         final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos = new CatalogOverrideUsageDefinitionModelDao[override.getUsagePriceOverrides().size()];
-         List<UsagePriceOverride> resolvedUsageOverrides = override.getUsagePriceOverrides();
-         // Loop through each usage override section (usually 1)
-          for (int i = 0; i < resolvedUsageOverrides.size(); i++) {
+        List<UsagePriceOverride> resolvedUsageOverrides = override.getUsagePriceOverrides();
+        // Loop through each usage override section (usually 1)
+        for (int i = 0; i < resolvedUsageOverrides.size(); i++) {
             final UsagePriceOverride curOverride = resolvedUsageOverrides.get(i);
-             if (curOverride != null) {
+            if (curOverride != null) {
                 Usage parentUsage = parentPlanPhase.getUsages()[i];
                 final CatalogOverrideUsageDefinitionModelDao createdOverrideUsageDefinitionModelDao = getOrCreateOverrideUsageDefinitionFromTransaction(parentUsage, currency, catalogEffectiveDate, curOverride, inTransactionHandle, context);
                 overrideUsageDefinitionModelDaos[i] = createdOverrideUsageDefinitionModelDao;
-             }
-          }
+            }
+        }
 
-        final Long phaseDefRecordId = getOverridePhaseDefinitionFromTransaction(overrideUsageDefinitionModelDaos, inTransactionHandle, context);
-        final List<Long> targetPhaseDefinitionRecordIds = phaseDefRecordId != null ? List.of(phaseDefRecordId) : Collections.emptyList();
+        final List<Long> targetPhaseDefinitionRecordIds = getOverridePhaseDefinitionFromTransaction(overrideUsageDefinitionModelDaos, inTransactionHandle, context);
 
         // Filter by recurring/fixed price attributes
         if (targetPhaseDefinitionRecordIds != null && !targetPhaseDefinitionRecordIds.isEmpty()) {
@@ -181,18 +180,18 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         return sqlDao.getByRecordId(recordId, context);
     }
 
-    //TODO_2168 - Shouldn't this method return a List?
-    private Long getOverridePhaseDefinitionFromTransaction(final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
+    private List<Long> getOverridePhaseDefinitionFromTransaction(final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverridePhaseUsageSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePhaseUsageSqlDao.class);
         if (overrideUsageDefinitionModelDaos.length == 0) {
             return null;
         }
+        List<Long> phaseDefIds = new LinkedList<>();
         for (int i = 0; i < overrideUsageDefinitionModelDaos.length; i++) {
             if (overrideUsageDefinitionModelDaos[i] != null) {
-                return sqlDao.getTargetPhaseDefinition(i, overrideUsageDefinitionModelDaos[i].getRecordId(), context);
+                phaseDefIds.add(sqlDao.getTargetPhaseDefinition(i, overrideUsageDefinitionModelDaos[i].getRecordId(), context));
             }
         }
-        return null;
+        return phaseDefIds;
     }
 
     private void createCatalogOverridePhaseUsageFromTransaction(final short usageNum, final CatalogOverrideUsageDefinitionModelDao usageDef, final CatalogOverridePhaseDefinitionModelDao phaseDef, final Handle inTransactionHandle, final InternalCallContext context) {
