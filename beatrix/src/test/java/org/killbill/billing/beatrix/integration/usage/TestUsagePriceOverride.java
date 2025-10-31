@@ -177,11 +177,70 @@ public class TestUsagePriceOverride extends TestIntegrationBase {
         final UUID entId2 = entitlementApi.createBaseEntitlement(account.getId(), usageAddOnEntitlementSpecifier, "something2", null, null, false, true, Collections.emptyList(), callContext);
         Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entId2, false, callContext);
 
-        //retrieve s2 - recurring price is that of s1
+        //retrieve s2 - both recurring and usage price is correct
         BigDecimal actualRecurringPrice2 = sub2.getLastActivePlan().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.USD);
-        //test fail here as recurring price is equal to s1 recurring price
         assertEquals(recurringPrice2.compareTo(actualRecurringPrice2), 0);
 
     }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2168")
+    public void testInArrearRecurringAndUsageOverrideWithPlanChange() throws Exception {
+        final LocalDate today = new LocalDate(2025, 9, 1);
+        clock.setDay(today);
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final BigDecimal recurringPrice1 = new BigDecimal("15");
+        final BigDecimal usagePrice = new BigDecimal("30");
+
+        //create subscription s1 with recurring price override ($15) and usage price override ($30)
+        TieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("hours", BigDecimal.valueOf(1), usagePrice, Currency.USD, BigDecimal.valueOf(-1));
+        TierPriceOverride tierPriceOverride = new DefaultTierPriceOverride(List.of(tieredBlockPriceOverride));
+        UsagePriceOverride usagePriceOverride = new DefaultUsagePriceOverride("cleaning-usage", UsageType.CONSUMABLE, List.of(tierPriceOverride));
+        PlanPhasePriceOverride planPhaseOverride = new DefaultPlanPhasePriceOverride("cleaning-monthly-evergreen", Currency.USD, null, recurringPrice1, List.of(usagePriceOverride));
+        EntitlementSpecifier usageAddOnEntitlementSpecifier = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("cleaning-monthly", PhaseType.EVERGREEN), null, null, null, List.of(planPhaseOverride));
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final UUID entId1 = entitlementApi.createBaseEntitlement(account.getId(), usageAddOnEntitlementSpecifier, "something", null, null, false, true, Collections.emptyList(), callContext);
+        Subscription sub1 = subscriptionApi.getSubscriptionForEntitlementId(entId1, false, callContext);
+        assertListenerStatus();
+
+        //retrieve s1 - both recurring and usage price is correct
+        BigDecimal actualRecurringPrice = sub1.getLastActivePlan().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.USD);
+        assertEquals(recurringPrice1.compareTo(actualRecurringPrice), 0);
+        BigDecimal actualUsagePrice = Arrays.stream(sub1.getLastActivePlan().getFinalPhase().getUsages()).filter(u -> u.getName().equals("cleaning-usage")).findFirst().get().getTiers()[0].getTieredBlocks()[0].getPrice().getPrice(Currency.USD);
+        assertEquals(usagePrice.compareTo(actualUsagePrice), 0);
+
+        //schedule plan change for s1 with recurring and usage price override
+        final BigDecimal recurringPrice2 = new BigDecimal("20");
+        tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("hours", BigDecimal.valueOf(1), usagePrice, Currency.USD, BigDecimal.valueOf(-1));
+        tierPriceOverride = new DefaultTierPriceOverride(List.of(tieredBlockPriceOverride));
+        usagePriceOverride = new DefaultUsagePriceOverride("cleaning-usage", UsageType.CONSUMABLE, List.of(tierPriceOverride));
+        planPhaseOverride = new DefaultPlanPhasePriceOverride("cleaning-monthly-evergreen", Currency.USD, null, recurringPrice2, List.of(usagePriceOverride));
+        usageAddOnEntitlementSpecifier = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("cleaning-monthly", PhaseType.EVERGREEN), null, null, null, List.of(planPhaseOverride));
+        sub1.changePlanWithDate(usageAddOnEntitlementSpecifier, today.plusMonths(1), Collections.emptyList(), callContext);
+
+        //still on old prices as plan change is not effective
+        sub1 = subscriptionApi.getSubscriptionForEntitlementId(entId1, false, callContext);
+        actualRecurringPrice = sub1.getLastActivePlan().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.USD);
+        assertEquals(recurringPrice1.compareTo(actualRecurringPrice), 0);
+        actualUsagePrice = Arrays.stream(sub1.getLastActivePlan().getFinalPhase().getUsages()).filter(u -> u.getName().equals("cleaning-usage")).findFirst().get().getTiers()[0].getTieredBlocks()[0].getPrice().getPrice(Currency.USD);
+        assertEquals(usagePrice.compareTo(actualUsagePrice), 0);
+
+        //plan change is effective
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        //now using new prices as plan change is effective
+        sub1 = subscriptionApi.getSubscriptionForEntitlementId(entId1, false, callContext);
+        actualRecurringPrice = sub1.getLastActivePlan().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.USD);
+        assertEquals(recurringPrice2.compareTo(actualRecurringPrice), 0);
+        actualUsagePrice = Arrays.stream(sub1.getLastActivePlan().getFinalPhase().getUsages()).filter(u -> u.getName().equals("cleaning-usage")).findFirst().get().getTiers()[0].getTieredBlocks()[0].getPrice().getPrice(Currency.USD);
+        assertEquals(usagePrice.compareTo(actualUsagePrice), 0);
+    }
+
 
 }
