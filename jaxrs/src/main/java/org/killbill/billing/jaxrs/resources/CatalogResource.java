@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -355,6 +356,9 @@ public class CatalogResource extends JaxRsResourceBase {
                                             context.createTenantContextNoAccountId(request);
 
         final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
+        if(catalog == null || catalog.getAvailableBasePlanListings() == null) {
+            return Response.status(Status.OK).entity(Collections.emptyList()).build();
+        }
         final List<Listing> listings = catalog.getAvailableBasePlanListings();
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
         for (final Listing listing : listings) {
