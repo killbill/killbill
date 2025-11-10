@@ -35,6 +35,7 @@
 	</currencies>
 	<units>
 		<unit name="bullets"/>
+		<unit name="hours"/>
 	</units>
 	<products>
 		<product name="Pistol">
@@ -45,6 +46,9 @@
 		</product>
 		<product name="Bullets">
 			<category>ADD_ON</category>
+		</product>
+		<product name="Cleaning">
+			<category>BASE</category>
 		</product>
 	</products>
 	<rules>
@@ -134,12 +138,52 @@
 			<plansAllowedInBundle>-1</plansAllowedInBundle>
 			<!-- arbitrary number of these (multipack) -->
 		</plan>
+		<plan name="cleaning-monthly">
+			<product>Cleaning</product>
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+				</duration>
+				<recurring>
+					<billingPeriod>MONTHLY</billingPeriod>
+					<recurringPrice>
+						<price>
+							<currency>USD</currency>
+							<value>10</value>
+						</price>
+					</recurringPrice>
+				</recurring>
+				<usages>
+					<usage name="cleaning-usage" prettyName="Cleaning Usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+						<billingPeriod>MONTHLY</billingPeriod>
+						<tiers>
+							<tier>
+								<blocks>
+									<tieredBlock>
+										<unit>hours</unit>
+										<size>1</size>
+										<prices>
+											<price>
+												<currency>USD</currency>
+												<value>25</value>
+											</price>
+										</prices>
+										<max>-1</max>
+									</tieredBlock>
+								</blocks>
+							</tier>
+						</tiers>
+					</usage>
+				</usages>
+			</finalPhase>
+		</plan>
 	</plans>
 	<priceLists>
 		<defaultPriceList name="DEFAULT">
 			<plans>
 				<plan>pistol-monthly</plan>
 				<plan>bullets-usage-in-arrear</plan>
+				<plan>cleaning-monthly</plan>
 			</plans>
 		</defaultPriceList>
 	</priceLists>
