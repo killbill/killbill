@@ -180,6 +180,9 @@ public class TestUsagePriceOverride extends TestIntegrationBase {
         //retrieve s2 - both recurring and usage price is correct
         BigDecimal actualRecurringPrice2 = sub2.getLastActivePlan().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.USD);
         assertEquals(recurringPrice2.compareTo(actualRecurringPrice2), 0);
+        final BigDecimal actualUsagePrice2 = Arrays.stream(sub2.getLastActivePlan().getFinalPhase().getUsages()).filter(u -> u.getName().equals("cleaning-usage")).findFirst().get().getTiers()[0].getTieredBlocks()[0].getPrice().getPrice(Currency.USD);
+        assertEquals(usagePrice.compareTo(actualUsagePrice2), 0);
+
 
     }
 
