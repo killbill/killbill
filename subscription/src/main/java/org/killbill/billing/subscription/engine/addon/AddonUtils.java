@@ -40,16 +40,17 @@ public class AddonUtils {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
-        final Plan currentOrPendingPlan = baseSubscription.getCurrentOrPendingPlan();
-        final Product baseProduct = currentOrPendingPlan.getProduct();
+        final Plan planAtRequestedDate = baseSubscription.getFuturePlanAt(requestedDate);
+        final Product baseProduct = planAtRequestedDate.getProduct();
+
         if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED,
-                                                   targetAddOnPlan.getName(), currentOrPendingPlan.getProduct().getName());
+                                                   targetAddOnPlan.getName(), baseProduct.getName());
         }
 
         if (!isAddonAvailable(baseProduct, targetAddOnPlan)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE,
-                                                   targetAddOnPlan.getName(), currentOrPendingPlan.getProduct().getName());
+                                                   targetAddOnPlan.getName(), baseProduct.getName());
         }
     }
 
