@@ -153,6 +153,7 @@ import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.config.AugmentedConfigurationObjectFactory;
+import org.skife.config.RuntimeConfigRegistry;
 import org.skife.config.TimeSpan;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -356,6 +357,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        RuntimeConfigRegistry.clear();
+
         if (hasFailed()) {
             return;
         }
@@ -409,13 +412,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @AfterClass(groups = "slow")
     public void afterClass() throws Exception {
-        // Because of the way the OSGI DataSource is created in ReferenceableDataSourceSpyProvider (required by DefaultOSGIService->KillbillActivator),
-        // a new instance is generated for each test class. We need to explicitly close it to avoid thread leaks (e.g. Hikari housekeeper).
-        if (osgiDataSource instanceof ReferenceableDataSourceSpy) {
-            final ReferenceableDataSourceSpy referenceableDataSourceSpy = (ReferenceableDataSourceSpy) this.osgiDataSource;
-            if (referenceableDataSourceSpy.getDataSource() instanceof HikariDataSource) {
-                ((HikariDataSource) (referenceableDataSourceSpy.getDataSource())).close();
+        try {
+            // Because of the way the OSGI DataSource is created in ReferenceableDataSourceSpyProvider (required by DefaultOSGIService->KillbillActivator),
+            // a new instance is generated for each test class. We need to explicitly close it to avoid thread leaks (e.g. Hikari housekeeper).
+            if (osgiDataSource instanceof ReferenceableDataSourceSpy) {
+                final ReferenceableDataSourceSpy referenceableDataSourceSpy = (ReferenceableDataSourceSpy) this.osgiDataSource;
+                if (referenceableDataSourceSpy.getDataSource() instanceof HikariDataSource) {
+                    ((HikariDataSource) (referenceableDataSourceSpy.getDataSource())).close();
+                }
             }
+        } finally {
+            RuntimeConfigRegistry.clear();
         }
     }
 
@@ -552,7 +559,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
         return builder.build();
     }
-    
+
     protected AccountData getAccountData(@Nullable final Integer billingDay, final DateTimeZone tz, final DateTime referenceTime) {
         final MockAccountBuilder builder = new MockAccountBuilder()
                 .name(UUID.randomUUID().toString().substring(1, 8))
@@ -568,7 +575,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             builder.billingCycleDayLocal(billingDay);
         }
         return builder.build();
-    }    
+    }
 
     protected AccountData getChildAccountData(final int billingDay, final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
@@ -761,9 +768,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         final List<PaymentTransaction> reversedPaymentTransactions = new ArrayList<>(payment.getTransactions());
         Collections.reverse(reversedPaymentTransactions);
         final PaymentTransaction chargeback = reversedPaymentTransactions.stream()
-                .filter(input -> TransactionType.CHARGEBACK.equals(input.getTransactionType()) &&
-                                 TransactionStatus.SUCCESS.equals(input.getTransactionStatus()))
-                .findFirst().get();
+                                                                         .filter(input -> TransactionType.CHARGEBACK.equals(input.getTransactionType()) &&
+                                                                                          TransactionStatus.SUCCESS.equals(input.getTransactionStatus()))
+                                                                         .findFirst().get();
 
         return createChargeBackReversalAndCheckForCompletion(account, payment, chargeback.getExternalKey(), events);
     }
@@ -1083,19 +1090,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     // Provide a backward compatible test method to record usage points using LocalDate
     // and transforming such date using account#referenceTime
     protected void recordUsageData(final UUID subscriptionId,
-            final String trackingId,
-            final String unitType,
-            final LocalDate startDate,
-            final BigDecimal amount,
-            final CallContext context) throws UsageApiException {
-    	final List<UsageRecord> usageRecords = new ArrayList<>();
-    	usageRecords.add(new UsageRecord(internalCallContext.toUTCDateTime(startDate), amount));
-    	final List<UnitUsageRecord> unitUsageRecords = new ArrayList<>();
-    	unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
-    	final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
-    	usageUserApi.recordRolledUpUsage(record, context);
-    }    
-
+                                   final String trackingId,
+                                   final String unitType,
+                                   final LocalDate startDate,
+                                   final BigDecimal amount,
+                                   final CallContext context) throws UsageApiException {
+        final List<UsageRecord> usageRecords = new ArrayList<>();
+        usageRecords.add(new UsageRecord(internalCallContext.toUTCDateTime(startDate), amount));
+        final List<UnitUsageRecord> unitUsageRecords = new ArrayList<>();
+        unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
+        final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
+        usageUserApi.recordRolledUpUsage(record, context);
+    }
 
     protected void recordUsageData(final SubscriptionUsageRecord usageRecord, final CallContext context) throws UsageApiException {
         usageUserApi.recordRolledUpUsage(usageRecord, context);
