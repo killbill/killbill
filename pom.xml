@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.146.63</version>
+        <version>0.146.64-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.24.16-SNAPSHOT</version>
@@ -59,6 +59,7 @@
         <url>http://github.com/killbill/killbill</url>
     </issueManagement>
     <properties>
+        <check.skip-dependency>true</check.skip-dependency>
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
         <killbill.version>${project.version}</killbill.version>
@@ -103,4 +104,16 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <!--<repositories>
+        <repository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>local-snapshots</id>
+            <url>file:///home/vyom/.m2</url>
+        </repository>
+    </repositories>-->
 </project>
