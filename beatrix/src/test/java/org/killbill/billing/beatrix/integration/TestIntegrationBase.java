@@ -552,7 +552,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
         return builder.build();
     }
-    
+
     protected AccountData getAccountData(@Nullable final Integer billingDay, final DateTimeZone tz, final DateTime referenceTime) {
         final MockAccountBuilder builder = new MockAccountBuilder()
                 .name(UUID.randomUUID().toString().substring(1, 8))
@@ -568,7 +568,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             builder.billingCycleDayLocal(billingDay);
         }
         return builder.build();
-    }    
+    }
 
     protected AccountData getChildAccountData(final int billingDay, final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
@@ -1094,7 +1094,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     	unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
     	final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
     	usageUserApi.recordRolledUpUsage(record, context);
-    }    
+    }
 
 
     protected void recordUsageData(final SubscriptionUsageRecord usageRecord, final CallContext context) throws UsageApiException {

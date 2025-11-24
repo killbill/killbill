@@ -45,12 +45,14 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.redisson.api.RedissonClient;
 import org.skife.config.ConfigSource;
+import org.skife.config.RuntimeConfigRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.IHookCallBack;
 import org.testng.IHookable;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
@@ -242,6 +244,8 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeClass(alwaysRun = true)
     public void globalBeforeTest() {
+        RuntimeConfigRegistry.clear();
+
         configSource = getConfigSource(extraPropertiesForTestSuite);
         skifeConfigSource = new ConfigSource() {
             @Override
@@ -269,6 +273,11 @@ public class GuicyKillbillTestSuite implements IHookable {
                                      return answer;
                                  }
                              });
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void globalAfterTest() {
+        RuntimeConfigRegistry.clear();
     }
 
     @AfterSuite(alwaysRun = true)
