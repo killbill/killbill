@@ -21,8 +21,7 @@ package org.killbill.billing.jaxrs;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
+import java.time.ZonedDateTime;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.gen.Account;

@@ -31,8 +31,8 @@ import java.util.UUID;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -116,7 +116,7 @@ public class TestCatalog extends TestJaxrsBase {
         final Catalogs catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
 
         Assert.assertEquals(catalogsJson.get(0).getName(), "Firearms");
-        Assert.assertEquals(catalogsJson.get(0).getEffectiveDate().toLocalDate(), new LocalDate("2011-01-01"));
+        Assert.assertEquals(catalogsJson.get(0).getEffectiveDate().toLocalDate(), LocalDate.parse("2011-01-01"));
         Assert.assertEquals(catalogsJson.get(0).getCurrencies().size(), 3);
         Assert.assertEquals(catalogsJson.get(0).getProducts().size(), 15);
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(), 7);
