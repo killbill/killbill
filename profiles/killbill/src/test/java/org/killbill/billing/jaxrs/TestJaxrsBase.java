@@ -43,7 +43,7 @@ import javax.sql.DataSource;
 
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.eclipse.jetty.servlet.FilterHolder;
-import org.joda.time.LocalDate;
+import java.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
@@ -284,7 +284,8 @@ public class TestJaxrsBase extends KillbillClient {
         callbackServlet.reset();
 
         clock.resetDeltaFromReality();
-        clock.setDay(new LocalDate(2012, 8, 25));
+        // Convert Java Time LocalDate to Joda Time LocalDate for ClockMock
+        clock.setDay(new org.joda.time.LocalDate(2012, 8, 25));
 
         // Make sure to re-generate the api key and secret (could be cached by Shiro)
         DEFAULT_API_KEY = UUID.randomUUID().toString();
@@ -461,5 +462,15 @@ public class TestJaxrsBase extends KillbillClient {
             dump.append("\n\n");
         }
         log.warn(dump.toString());
+    }
+
+    /**
+     * Helper method to convert Java Time ZonedDateTime to Joda Time DateTime for use with InternalCallContext.toLocalDate()
+     */
+    protected org.joda.time.DateTime toJodaDateTime(final java.time.ZonedDateTime zonedDateTime) {
+        if (zonedDateTime == null) {
+            return null;
+        }
+        return new org.joda.time.DateTime(zonedDateTime.toInstant().toEpochMilli());
     }
 }

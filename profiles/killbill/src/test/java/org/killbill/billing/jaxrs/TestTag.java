@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
+import java.time.ZonedDateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -106,8 +106,8 @@ public class TestTag extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can search all tags for an account")
     public void testGetAllTagsByType() throws Exception {
 
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account account = createAccountWithDefaultPaymentMethod();
 

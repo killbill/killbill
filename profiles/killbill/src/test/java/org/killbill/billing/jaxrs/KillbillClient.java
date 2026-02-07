@@ -26,7 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.LocalDate;
+import java.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;

@@ -28,9 +28,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.awaitility.Awaitility;
-import org.joda.time.DateTime;
-import org.joda.time.Interval;
-import org.joda.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -76,8 +76,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can change plan and cancel a subscription")
     public void testEntitlementInTrialOk() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -135,7 +135,9 @@ public class TestEntitlement extends TestJaxrsBase {
         // Retrieves to check EndDate
         subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         assertNotNull(subscription.getCancelledDate());
-        assertEquals(internalCallContext.toLocalDate(subscription.getCancelledDate()).compareTo(new LocalDate(clock.getUTCNow())), 0);
+        // Convert ZonedDateTime to Joda DateTime for toLocalDate() method
+        final org.joda.time.DateTime cancelledDateTime = new org.joda.time.DateTime(subscription.getCancelledDate().toInstant().toEpochMilli());
+        assertEquals(internalCallContext.toLocalDate(cancelledDateTime).compareTo(LocalDate.now()), 0);
 
         final Bundles accountBundles = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundles.size(), 1);
@@ -155,8 +157,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can cancel and uncancel a subscription")
     public void testEntitlementUncancel() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -239,8 +241,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can override billing policy on change")
     public void testOverridePolicy() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -275,8 +277,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can override a price when creating a subscription")
     public void testOverridePrice() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -380,8 +382,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Create a base entitlement and also addOns entitlements under the same bundle")
     public void testEntitlementWithAddOnsWithWRITTEN_OFF() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final String bundleExternalKey = "bundleKey12346542";
 
@@ -466,8 +468,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction")
     public void testCreateEntitlementsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception { //TODO_1739 - Test disabled due to behavior change, revisit
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccount();
 
@@ -582,8 +584,8 @@ public class TestEntitlement extends TestJaxrsBase {
     @Test(groups = "slow", description = "Create a bulk of base entitlements and addOns under the same transaction",
             expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "SubscriptionJson productName needs to be set when no planName is specified")
     public void testCreateSubscriptionsWithoutBase() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -635,8 +637,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Create addOns in a bundle where BP subscription already exist")
     public void testEntitlementsWithAddOnsAndAlreadyExistingBP() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -686,8 +688,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create an entitlement with a future entitlement date")
     public void testCreateSubscriptionEntitlementInTheFuture() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -711,8 +713,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.PENDING);
         Assert.assertEquals(entitlementJson.getChargedThroughDate(), initialDate.plusMonths(1).toLocalDate());
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate());
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate().plusMonths(1));
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate.toLocalDate().plusMonths(1));
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -732,8 +734,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create an entitlement with a future billing date")
     public void testCreateSubscriptionBillingInTheFuture() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -757,8 +759,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
         Assert.assertNull(entitlementJson.getChargedThroughDate());
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate().plusMonths(1));
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate.toLocalDate().plusMonths(1));
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -779,13 +781,13 @@ public class TestEntitlement extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can create an entitlement with a future billing date v2 -- see https://github.com/killbill/killbill/pull/1234#discussion_r332148759")
     public void testCreateSubscriptionBillingInTheFutureV2() throws Exception {
         // 2012-04-25T00:03:42.000Z
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
         // Move clock back to 2012-04-25T00:01:42.000Z (we want a reference time in the future)
-        clock.setTime(new DateTime(2012, 4, 25, 0, 1, 42, 0));
+        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 1, 42, 0, ZoneId.systemDefault()));
 
         final Subscription input = new Subscription();
         input.setAccountId(accountJson.getAccountId());
@@ -796,7 +798,7 @@ public class TestEntitlement extends TestJaxrsBase {
         // Verify callCompletion works (related to https://github.com/killbill/killbill/issues/1193)
         final Subscription entitlementJson = subscriptionApi.createSubscription(input,
                                                                                 null,
-                                                                                new LocalDate(2012, 4, 25),
+                                                                                LocalDate.of(2012, 4, 25),
                                                                                 false,
                                                                                 false,
                                                                                 false,
@@ -807,8 +809,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
         Assert.assertNull(entitlementJson.getChargedThroughDate());
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate());
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -830,8 +832,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create an entitlement with a past billing date")
     public void testCreateSubscriptionBillingInThePast() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -855,9 +857,9 @@ public class TestEntitlement extends TestJaxrsBase {
 
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        verifyChargedThroughDate(entitlementJson.getSubscriptionId(), new LocalDate("2012-05-24"));
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate().minusMonths(1));
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate());
+        verifyChargedThroughDate(entitlementJson.getSubscriptionId(), LocalDate.parse("2012-05-24"));
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate.toLocalDate().minusMonths(1));
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -1157,8 +1159,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
     public void testOverwriteEntitlementBCDOnCreate() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1185,8 +1187,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription when changing plan")
     public void testOverwriteEntitlementBCDOnChange() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1215,20 +1217,20 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setBillCycleDayLocal(28);
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,  ExtBusEventType.SUBSCRIPTION_CHANGE, ExtBusEventType.SUBSCRIPTION_BCD_CHANGE, ExtBusEventType.INVOICE_CREATION);
-        subscriptionApi.changeSubscriptionPlan(subscription.getSubscriptionId(), newInput, new LocalDate(2012, 5, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(subscription.getSubscriptionId(), newInput, LocalDate.of(2012, 5, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
 
         Subscription refreshedSubscription = subscriptionApi.getSubscription(subscription.getSubscriptionId(), requestOptions);
         Assert.assertNotNull(refreshedSubscription);
 
         // We charged a full period 2012-05-28 - 2012-06-28 based on the new BCD
-        verifyChargedThroughDate(refreshedSubscription.getSubscriptionId(), new LocalDate(2012, 6, 28));
+        verifyChargedThroughDate(refreshedSubscription.getSubscriptionId(), LocalDate.of(2012, 6, 28));
     }
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
     public void testMoveEntitlementBCD() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1264,8 +1266,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Verify we can update the quantity associated with the subscription")
     public void testUpdateEntitlementQuantity() throws Exception {
-        final DateTime initialDate = new DateTime(2022, 11, 28, 15, 7, 00, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2022, 11, 28, 15, 7, 00, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1290,8 +1292,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create subscription and change plan using planName")
     public void testEntitlementUsingPlanName() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1329,8 +1331,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can changePlan and undo changePlan on a subscription")
     public void testEntitlementUndoChangePlan() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1352,7 +1354,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setPriceList(entitlementJson.getPriceList());
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE);
-        subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, new LocalDate(2012, 4, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, LocalDate.of(2012, 4, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
         Subscription refreshedSubscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         callbackServlet.assertListenerStatus();
         Assert.assertNotNull(refreshedSubscription);
@@ -1402,8 +1404,8 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertNotNull(catalog2);
 
 
-        final DateTime initialDate = new DateTime(2014, 1, 2, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2014, 1, 2, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1464,7 +1466,7 @@ public class TestEntitlement extends TestJaxrsBase {
     
     @Test(groups = "slow")
     public void testCreateSubscriptionWithDate() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1490,8 +1492,8 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.PENDING); // Still PENDING since creationDate is not reached
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), creationDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), creationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), creationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), creationDate);
 
         clock.setDay(creationDate);
 
@@ -1502,7 +1504,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithDateTime() throws Exception {
-        final DateTime initialDateTime = new DateTime(2012, 4, 25, 10, 30);
+        final ZonedDateTime initialDateTime = ZonedDateTime.of(2012, 4, 25, 10, 30, 0, 0, ZoneId.systemDefault());
         clock.setTime(initialDateTime);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1514,7 +1516,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final DateTime futureDateTime = new DateTime(2012, 4, 30, 11, 30);
+        final ZonedDateTime futureDateTime = ZonedDateTime.of(2012, 4, 30, 11, 30, 0, 0, ZoneId.systemDefault());
 
         final Subscription entitlementJson = subscriptionApi.createSubscription(input,
                                                                                 futureDateTime,
@@ -1540,7 +1542,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithDateTimeDifferentDatesForBillingAndEntitlement() throws Exception {
-        final DateTime initialDateTime = new DateTime(2012, 4, 25, 10, 30);
+        final ZonedDateTime initialDateTime = ZonedDateTime.of(2012, 4, 25, 10, 30, 0, 0, ZoneId.systemDefault());
         clock.setTime(initialDateTime);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1552,8 +1554,8 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final DateTime billingDateTime = new DateTime(2012, 4, 28, 11, 30);
-        final DateTime entitlementDateTime = new DateTime(2012, 4, 30, 8, 45);
+        final ZonedDateTime billingDateTime = ZonedDateTime.of(2012, 4, 28, 11, 30, 0, 0, ZoneId.systemDefault());
+        final ZonedDateTime entitlementDateTime = ZonedDateTime.of(2012, 4, 30, 8, 45, 0, 0, ZoneId.systemDefault());
 
         final Subscription entitlementJson = subscriptionApi.createSubscription(input,
                                                                                 entitlementDateTime,
@@ -1584,7 +1586,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCancelSubscriptionWithDate() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1607,8 +1609,8 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
 
         final LocalDate cancelDate = clock.getUTCToday().plusDays(5);
 
@@ -1624,13 +1626,13 @@ public class TestEntitlement extends TestJaxrsBase {
         subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
 
         Assert.assertEquals(subscription.getState(), EntitlementState.CANCELLED);
-        Assert.assertEquals(internalCallContext.toLocalDate(subscription.getCancelledDate()), cancelDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()), initialDate.plusMonths(1));  //since default billing policy is EOT, billing end date is 1 month from start date
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(subscription.getCancelledDate())), cancelDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(subscription.getBillingEndDate())), initialDate.plusMonths(1));  //since default billing policy is EOT, billing end date is 1 month from start date
     }
 
     @Test(groups = "slow")
     public void testCancelSubscriptionWithDateTime() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1653,10 +1655,10 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
 
-        final DateTime cancelDateTime = new DateTime(2012, 4, 30, 11, 30);
+        final ZonedDateTime cancelDateTime = ZonedDateTime.of(2012, 4, 30, 11, 30, 0, 0, ZoneId.systemDefault());
 
         subscriptionApi.cancelSubscriptionPlan(entitlementJson.getSubscriptionId(), cancelDateTime, null, null, NULL_PLUGIN_PROPERTIES, requestOptions); // Unlike cancelWithDate, in this case, the cancelDateTime is used for both entitlement and billing
 
@@ -1676,7 +1678,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testChangeSubscriptionPlanWithDate() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1699,8 +1701,8 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
 
         final LocalDate changeDate = clock.getUTCToday().plusDays(5);
@@ -1725,13 +1727,13 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(events.get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getEventType(), SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getEventType(), SubscriptionEventType.CHANGE);
-        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()), changeDate);  
+        assertEquals(internalCallContext.toLocalDate(toJodaDateTime(events.get(2).getEffectiveDate())), changeDate);  
         
     }
 
     @Test(groups = "slow")
     public void testChangeSubscriptionPlanWithDateTime() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1754,11 +1756,11 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
 
-        final DateTime changeDateTime = new DateTime(2012, 4, 25, 10, 50);
+        final ZonedDateTime changeDateTime = ZonedDateTime.of(2012, 4, 25, 10, 50, 0, 0, ZoneId.systemDefault());
 
         final Subscription newSubscriptionPlan = new Subscription();
         newSubscriptionPlan.setSubscriptionId(entitlementJson.getSubscriptionId());
@@ -1785,8 +1787,9 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testBlockBundleWithDate() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
-        clock.setDay(initialDate);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
+        // Convert Java Time LocalDate to Joda Time LocalDate for ClockMock.setDay()
+        clock.setDay(new org.joda.time.LocalDate(initialDate.getYear(), initialDate.getMonthValue(), initialDate.getDayOfMonth()));
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
@@ -1808,8 +1811,8 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
 
         final LocalDate blockDate = clock.getUTCToday().plusDays(5);
 
@@ -1848,7 +1851,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testBlockBundleWithDateTime() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1871,10 +1874,10 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
 
-        final DateTime blockDateTime = new DateTime(2012, 4, 30, 11, 45);
+        final ZonedDateTime blockDateTime = ZonedDateTime.of(2012, 4, 30, 11, 45, 0, 0, ZoneId.systemDefault());
 
         BlockingState state = new BlockingState();
         state.setIsBlockBilling(true);
@@ -1909,7 +1912,7 @@ public class TestEntitlement extends TestJaxrsBase {
     
     @Test(groups = "slow")
     public void testBlockSubscriptionWithDate() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1932,8 +1935,8 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
 
         final LocalDate blockDate = clock.getUTCToday().plusDays(5);
 
@@ -1976,7 +1979,7 @@ public class TestEntitlement extends TestJaxrsBase {
     
     @Test(groups = "slow")
     public void testBlockSubscriptionWithDateTime() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -1999,10 +2002,10 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 requestOptions);
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getBillingStartDate())), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(entitlementJson.getStartDate())), initialDate);
 
-        final DateTime blockDateTime = new DateTime(2012, 4, 30, 11, 45);
+        final ZonedDateTime blockDateTime = ZonedDateTime.of(2012, 4, 30, 11, 45, 0, 0, ZoneId.systemDefault());
 
         BlockingState state = new BlockingState();
         state.setIsBlockBilling(true);
@@ -2055,7 +2058,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithEmptyOverrides() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -2090,7 +2093,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithOnlyUsageOverrides() throws Exception {
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
