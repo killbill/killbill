@@ -29,10 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.format.ISODateTimeFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.JaxrsResource;
@@ -72,8 +72,8 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve invoices with and without items")
     public void testInvoiceOk() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -102,7 +102,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceItem.getPrettyPhaseName(), "shotgun-monthly-trial");
 
         // Check item is correctly returned with catalog effective date
-        assertEquals(invoiceItem.getCatalogEffectiveDate().compareTo(ISODateTimeFormat.dateTimeParser().parseDateTime("2011-01-01T00:00:00+00:00")), 0);
+        assertEquals(invoiceItem.getCatalogEffectiveDate().compareTo(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2011-01-01T00:00:00+00:00", java.time.temporal.TemporalAccessor::from)), 0);
 
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
@@ -211,10 +211,10 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), null, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(dryRunInvoice.getBalance(), new BigDecimal("249.95"));
-        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2012, 6, 25));
+        assertEquals(dryRunInvoice.getTargetDate(), LocalDate.of(2012, 6, 25));
         assertEquals(dryRunInvoice.getItems().size(), 1);
-        assertEquals(dryRunInvoice.getItems().get(0).getStartDate(), new LocalDate(2012, 6, 25));
-        assertEquals(dryRunInvoice.getItems().get(0).getEndDate(), new LocalDate(2012, 7, 25));
+        assertEquals(dryRunInvoice.getItems().get(0).getStartDate(), LocalDate.of(2012, 6, 25));
+        assertEquals(dryRunInvoice.getItems().get(0).getEndDate(), LocalDate.of(2012, 7, 25));
         assertEquals(dryRunInvoice.getItems().get(0).getAmount(), new BigDecimal("249.95"));
 
         final LocalDate futureDate = dryRunInvoice.getTargetDate();
@@ -228,8 +228,8 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testGetInvoicesWithFilters() throws Exception {
-        final DateTime initialDate = new DateTime(2021, 4, 18, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2021, 4, 18, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -240,19 +240,19 @@ public class TestInvoice extends TestJaxrsBase {
         final String invoiceId2 = invoices.get(1).getInvoiceId().toString();
 
         // Filter on dates only
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 18), false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 18), LocalDate.of(2021, 5, 18), false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 2);
 
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 18), LocalDate.of(2021, 5, 17), false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
 
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 18), false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 19), LocalDate.of(2021, 5, 18), false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
 
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 17), false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 19), LocalDate.of(2021, 5, 17), false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 0);
 
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 17), false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 19), LocalDate.of(2021, 5, 17), false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 0);
 
         // Filter on invoiceIds only
@@ -266,15 +266,15 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Dates and id filter
         idFilter = Strings.join(",", new String[]{invoiceId1, invoiceId2});
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, true, idFilter, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 18), LocalDate.of(2021, 5, 17), false, false, false, true, idFilter, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
 
         idFilter = invoiceId1;
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, true, idFilter, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 18), LocalDate.of(2021, 5, 17), false, false, false, true, idFilter, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
 
         idFilter = invoiceId2;
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, true, idFilter, AuditLevel.FULL, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), LocalDate.of(2021, 4, 18), LocalDate.of(2021, 5, 17), false, false, false, true, idFilter, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 0);
 
 
@@ -282,12 +282,12 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a subscription in dryRun mode and get an invoice back")
     public void testDryRunSubscriptionCreate() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         // "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE,
         final Account accountJson = createAccountWithDefaultPaymentMethod();
-        final LocalDate effDt = new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone()));
+        final LocalDate effDt = initialDate.withZoneSameInstant(ZoneId.of(accountJson.getTimeZone())).toLocalDate();
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.SUBSCRIPTION_ACTION, SubscriptionEventType.START_BILLING,
                                                           null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, effDt, null, null, null);
 
@@ -304,7 +304,7 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can retrieve invoice payments")
     public void testInvoicePayments() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault()));
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -324,7 +324,7 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create an insta-payment")
     public void testInvoiceCreatePayment() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault()));
 
         // STEPH MISSING SET ACCOUNT AUTO_PAY_OFF
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -728,7 +728,7 @@ public class TestInvoice extends TestJaxrsBase {
         // Migrate an invoice with one external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
         final InvoiceItem externalCharge = new InvoiceItem();
-        externalCharge.setStartDate(new LocalDate());
+        externalCharge.setStartDate(LocalDate.now());
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
         externalCharge.setItemType(InvoiceItemType.EXTERNAL_CHARGE);
@@ -812,8 +812,8 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve parent and children invoices with and without children items")
     public void testParentInvoiceWithChildItems() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account parentAccount = createAccount();
         final Account childAccount1 = createAccount(parentAccount.getAccountId());
@@ -927,8 +927,8 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Test invoice grouping api")
     public void testInvoiceGroupApi() throws Exception {
-        final DateTime initialDate = new DateTime(2022, 5, 5, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2022, 5, 5, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -937,7 +937,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Follow location to return the list of invoices
         final Invoices invoices2 = invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(),
-                                                                       new LocalDate(2022, 7, 4),
+                                                                       LocalDate.of(2022, 7, 4),
                                                                        NULL_PLUGIN_PROPERTIES,
                                                                        requestOptions.extend()
                                                                                      .withQueryParamsForFollow(Map.of(JaxrsResource.QUERY_ACCOUNT_ID, List.of(accountJson.getAccountId().toString())))
@@ -946,7 +946,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoices2.size(), 1);
 
         // Do it again for following month but without any follow up
-        invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 8, 4), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), LocalDate.of(2022, 8, 4), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final Invoices accountInvoices2 = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(accountInvoices2.size(), 4);
@@ -1195,7 +1195,7 @@ public class TestInvoice extends TestJaxrsBase {
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1340")
     public void testInvoiceDryRunStopBilling() throws Exception {
 
-        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        final LocalDate initialDate = LocalDate.of(2012, 4, 25);
         clock.setDay(initialDate);
 
         final Account account = createAccountNoPMBundleAndSubscription(); // create account with subscription to shotgun-monthly plan

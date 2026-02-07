@@ -24,8 +24,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.gen.Account;
@@ -52,7 +52,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can retrieve the timeline without audits")
     public void testAccountTimeline() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault()));
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -65,11 +65,11 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertNotNull(timeline.getInvoices().get(0).getBundleKeys());
 
         final List<EventSubscription> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
-        Assert.assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()), LocalDate.of(2012, 4, 25));
         Assert.assertEquals(events.get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
-        Assert.assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()), LocalDate.of(2012, 4, 25));
         Assert.assertEquals(events.get(1).getEventType(), SubscriptionEventType.START_BILLING);
-        Assert.assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()), new LocalDate(2012, 5, 25));
+        Assert.assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()), LocalDate.of(2012, 5, 25));
         Assert.assertEquals(events.get(2).getEventType(), SubscriptionEventType.PHASE);
     }
 

@@ -26,7 +26,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
+import java.time.ZonedDateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -77,7 +77,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
     }
     @Test(groups = "slow", description = "Trigger payments for account with no unpaid invoices")
     public void testPayZeroInvoice() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault()));
         // No payment method
         final Account accountJson = createAccountWithExternalPaymentMethod();
         // Pay all invoices - nothing to pay
@@ -87,7 +87,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can pay invoices")
     public void testPayAllInvoices() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault()));
 
         // No payment method
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -318,8 +318,8 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
 
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
