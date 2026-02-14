@@ -473,4 +473,18 @@ public class TestJaxrsBase extends KillbillClient {
         }
         return new org.joda.time.DateTime(zonedDateTime.toInstant().toEpochMilli());
     }
+
+    protected java.time.ZonedDateTime toJavaZonedDateTime(final org.joda.time.DateTime jodaDateTime) {
+        if (jodaDateTime == null) {
+            return null;
+        }
+        return java.time.Instant.ofEpochMilli(jodaDateTime.getMillis()).atZone(java.time.ZoneId.of(jodaDateTime.getZone().getID()));
+    }
+
+    protected java.time.LocalDate toJavaLocalDate(final org.joda.time.LocalDate jodaDate) {
+        if (jodaDate == null) {
+            return null;
+        }
+        return java.time.LocalDate.of(jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth());
+    }
 }
