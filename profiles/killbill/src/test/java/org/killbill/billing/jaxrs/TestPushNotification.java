@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.awaitility.Awaitility;
-import java.time.ZonedDateTime;
+import org.joda.time.DateTime;
 import org.killbill.CreatorName;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;

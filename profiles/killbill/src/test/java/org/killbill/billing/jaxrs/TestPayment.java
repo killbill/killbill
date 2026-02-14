@@ -131,7 +131,7 @@ public class TestPayment extends TestJaxrsBase {
         final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                                           NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
-        assertEquals(paymentTransaction.getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(paymentTransaction.getEffectiveDate().toInstant(), effectiveDate.toInstant());
     }
 
     @Test(groups = "slow")

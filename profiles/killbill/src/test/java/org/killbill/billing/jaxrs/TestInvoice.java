@@ -73,7 +73,7 @@ public class TestInvoice extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can search and retrieve invoices with and without items")
     public void testInvoiceOk() throws Exception {
         final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
-        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -102,7 +102,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceItem.getPrettyPhaseName(), "shotgun-monthly-trial");
 
         // Check item is correctly returned with catalog effective date
-        assertEquals(invoiceItem.getCatalogEffectiveDate().compareTo(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2011-01-01T00:00:00+00:00", java.time.temporal.TemporalAccessor::from)), 0);
+        assertEquals(invoiceItem.getCatalogEffectiveDate().toInstant(), java.time.Instant.parse("2011-01-01T00:00:00Z"));
 
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
@@ -229,7 +229,7 @@ public class TestInvoice extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testGetInvoicesWithFilters() throws Exception {
         final ZonedDateTime initialDate = ZonedDateTime.of(2021, 4, 18, 0, 3, 42, 0, ZoneId.systemDefault());
-        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -283,7 +283,7 @@ public class TestInvoice extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can create a subscription in dryRun mode and get an invoice back")
     public void testDryRunSubscriptionCreate() throws Exception {
         final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
-        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         // "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE,
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -304,7 +304,7 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can retrieve invoice payments")
     public void testInvoicePayments() throws Exception {
-        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault()));
+        clock.setTime(new org.joda.time.DateTime(2012, 4, 25, 0, 3, 42, org.joda.time.DateTimeZone.getDefault()));
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -324,7 +324,7 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create an insta-payment")
     public void testInvoiceCreatePayment() throws Exception {
-        clock.setTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault()));
+        clock.setTime(new org.joda.time.DateTime(2012, 4, 25, 0, 3, 42, org.joda.time.DateTimeZone.getDefault()));
 
         // STEPH MISSING SET ACCOUNT AUTO_PAY_OFF
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -509,7 +509,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setItemDetails("Item Details");
         externalCharge.setLinkedInvoiceItemId(firstInvoiceItemId);
 
-        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate startDate = toJavaLocalDate(clock.getUTCToday());
         externalCharge.setStartDate(startDate);
         final LocalDate endDate = startDate.plusDays(10);
         externalCharge.setEndDate(endDate);
@@ -517,7 +517,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItems itemsForCharge = new InvoiceItems();
         itemsForCharge.add(externalCharge);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, toJavaLocalDate(clock.getUTCToday()), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), false, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
@@ -561,7 +561,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, toJavaLocalDate(clock.getUTCToday()), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
@@ -596,7 +596,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, toJavaLocalDate(clock.getUTCToday()), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
@@ -619,7 +619,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setBundleId(bundleId);
         final InvoiceItems input = new InvoiceItems();
         input.add(externalCharge);
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), input, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), input, toJavaLocalDate(clock.getUTCToday()), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), null, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
@@ -647,7 +647,7 @@ public class TestInvoice extends TestJaxrsBase {
         taxItem.setBundleId(bundleId);
         final InvoiceItems input = new InvoiceItems();
         input.add(taxItem);
-        final List<InvoiceItem> createdTaxItems = invoiceApi.createTaxItems(accountJson.getAccountId(), input, true, clock.getUTCToday(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> createdTaxItems = invoiceApi.createTaxItems(accountJson.getAccountId(), input, true, toJavaLocalDate(clock.getUTCToday()), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdTaxItems.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdTaxItems.get(0).getInvoiceId(), null, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(taxAmount), 0);
@@ -812,8 +812,8 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve parent and children invoices with and without children items")
     public void testParentInvoiceWithChildItems() throws Exception {
-        final DateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
-        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
+        final org.joda.time.DateTime initialDate = new org.joda.time.DateTime(2012, 4, 25, 0, 3, 42, org.joda.time.DateTimeZone.getDefault());
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account parentAccount = createAccount();
         final Account childAccount1 = createAccount(parentAccount.getAccountId());
@@ -928,7 +928,7 @@ public class TestInvoice extends TestJaxrsBase {
     @Test(groups = "slow", description = "Test invoice grouping api")
     public void testInvoiceGroupApi() throws Exception {
         final ZonedDateTime initialDate = ZonedDateTime.of(2022, 5, 5, 0, 3, 42, 0, ZoneId.systemDefault());
-        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().toInstant().toEpochMilli());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -1001,7 +1001,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertNotNull(subscriptionJson);
         callbackServlet.assertListenerStatus();
 
-        final LocalDate futureDate = clock.getUTCToday();
+        final LocalDate futureDate = toJavaLocalDate(clock.getUTCToday());
         final Map<String, String> properties = new HashMap<>();
         properties.put("KB_REUSE_DRAFT_INVOICING_ID", invoiceId.toString());
 
@@ -1196,7 +1196,7 @@ public class TestInvoice extends TestJaxrsBase {
     public void testInvoiceDryRunStopBilling() throws Exception {
 
         final LocalDate initialDate = LocalDate.of(2012, 4, 25);
-        clock.setDay(initialDate);
+        clock.setDay(new org.joda.time.LocalDate(initialDate.getYear(), initialDate.getMonthValue(), initialDate.getDayOfMonth()));
 
         final Account account = createAccountNoPMBundleAndSubscription(); // create account with subscription to shotgun-monthly plan
         final Subscription subscription = accountApi.getAccountBundles(account.getAccountId(), null, null, requestOptions).get(0).getSubscriptions().get(0);
