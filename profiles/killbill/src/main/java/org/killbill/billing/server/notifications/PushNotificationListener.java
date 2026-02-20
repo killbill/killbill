@@ -129,6 +129,24 @@ public class PushNotificationListener {
     private boolean doPost(final UUID tenantId, final String url, final String body, final NotificationJson notification,
                            final int timeoutSec, final int attemptRetryNumber) {
         log.info("Sending push notification url='{}', body='{}', attemptRetryNumber='{}'", url, body, attemptRetryNumber);
+
+        // Defense in depth: validate URL even though registration should have caught this
+        final java.net.URI targetUri = URI.create(url);
+        final String host = targetUri.getHost();
+        if (host != null) {
+            try {
+                final java.net.InetAddress addr = java.net.InetAddress.getByName(host);
+                if (addr.isLoopbackAddress() || addr.isLinkLocalAddress() ||
+                    addr.isSiteLocalAddress() || addr.isAnyLocalAddress()) {
+                    log.warn("Blocked push notification to internal address url='{}', tenantId='{}'", url, tenantId);
+                    return false;
+                }
+            } catch (final java.net.UnknownHostException e) {
+                log.warn("Cannot resolve push notification host url='{}', tenantId='{}'", url, tenantId);
+                return false;
+            }
+        }
+
         final HttpRequest request = HttpRequest.newBuilder()
                                                .uri(URI.create(url))
                                                .header("User-Agent", USER_AGENT)
