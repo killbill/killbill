@@ -478,7 +478,8 @@ public class TestJaxrsBase extends KillbillClient {
         if (jodaDateTime == null) {
             return null;
         }
-        return java.time.Instant.ofEpochMilli(jodaDateTime.getMillis()).atZone(java.time.ZoneId.of(jodaDateTime.getZone().getID()));
+        final int offsetSeconds = jodaDateTime.getZone().getOffset(jodaDateTime.getMillis()) / 1000;
+        return java.time.Instant.ofEpochMilli(jodaDateTime.getMillis()).atZone(java.time.ZoneOffset.ofTotalSeconds(offsetSeconds));
     }
 
     protected java.time.LocalDate toJavaLocalDate(final org.joda.time.LocalDate jodaDate) {
