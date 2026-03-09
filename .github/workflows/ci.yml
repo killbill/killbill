@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - ruby-version: '2.5.0'
+          - ruby-version: '2.7'
             ref: refs/heads/master
             database-adapter: 'mysql2'
             database-user: 'root'
