@@ -326,10 +326,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private int calculateBcdForTransition(final BillingAlignment realBillingAlignment, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final int accountBillCycleDayLocal, final InternalTenantContext internalTenantContext) {
-        BillingAlignment alignment = realBillingAlignment;
-        if (alignment == BillingAlignment.ACCOUNT && accountBillCycleDayLocal == 0) {
-            alignment = BillingAlignment.SUBSCRIPTION;
-        }
+        final BillingAlignment alignment = BillCycleDayCalculator.resolveEffectiveBillingAlignment(realBillingAlignment, accountBillCycleDayLocal);
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 

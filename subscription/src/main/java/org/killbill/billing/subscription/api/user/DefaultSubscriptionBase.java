@@ -750,12 +750,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return null;
         }
 
-        BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
-                                                                     curTransitionDate, prevTransitionDate);
+        final BillingAlignment rawBillingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
+                                                                              curTransitionDate, prevTransitionDate);
         final int accountBillCycleDayLocal = apiService.getAccountBCD(context);
-        if (billingAlignment == BillingAlignment.ACCOUNT && accountBillCycleDayLocal == 0) {
-            billingAlignment = BillingAlignment.SUBSCRIPTION;
-        }
+        final BillingAlignment billingAlignment = BillCycleDayCalculator.resolveEffectiveBillingAlignment(rawBillingAlignment, accountBillCycleDayLocal);
         Integer bcd = bcdLocal;
         if (bcd == null) {
             // TODO If we have an add-on subscription with a BUNDLE alignment, this is incorrect as we need access to the base subscription

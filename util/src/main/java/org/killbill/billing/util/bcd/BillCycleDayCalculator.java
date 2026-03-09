@@ -36,6 +36,24 @@ public abstract class BillCycleDayCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
+    /**
+     * Resolves the effective {@link BillingAlignment} to use for BCD calculation.
+     * <p>
+     * When the alignment is {@code ACCOUNT} but no account BCD has been set yet ({@code accountBillCycleDayLocal == 0}),
+     * the account BCD will be computed later -- fall back to {@code SUBSCRIPTION} alignment so BCD can still be
+     * derived from the subscription start date in the interim.
+     *
+     * @param alignment                the raw billing alignment from the catalog
+     * @param accountBillCycleDayLocal the current account BCD (0 if not yet set)
+     * @return the alignment to use for BCD calculation
+     */
+    public static BillingAlignment resolveEffectiveBillingAlignment(final BillingAlignment alignment, final int accountBillCycleDayLocal) {
+        if (alignment == BillingAlignment.ACCOUNT && accountBillCycleDayLocal == 0) {
+            return BillingAlignment.SUBSCRIPTION;
+        }
+        return alignment;
+    }
+
     public static int calculateBcdForAlignment(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final InternalTenantContext internalTenantContext, final int accountBillCycleDayLocal) {
         int result = 0;
         switch (alignment) {
