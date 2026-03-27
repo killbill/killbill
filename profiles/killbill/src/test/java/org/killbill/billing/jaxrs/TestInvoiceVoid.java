@@ -25,7 +25,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -88,7 +87,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         // After invoice was voided verify the subscription is re-invoiced on a new invoice
         // trigger an invoice generation
         callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
-        invoiceApi.createFutureInvoice(accountJson.getAccountId(), clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoiceApi.createFutureInvoice(accountJson.getAccountId(), toJavaLocalDate(clock.getToday(DateTimeZone.forID(accountJson.getTimeZone()))), NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
 
         // Get the invoices excluding voided
@@ -151,8 +150,8 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Void a child invoice")
     public void testChildVoidInvoice() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault());
+        final java.time.LocalDate triggeredDate = java.time.LocalDate.of(2012, 5, 26);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account parentAccount = createAccount();
@@ -203,8 +202,8 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Void a parent invoice")
     public void testParentVoidInvoice() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault());
+        final java.time.LocalDate triggeredDate = java.time.LocalDate.of(2012, 5, 26);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account parentAccount = createAccount();

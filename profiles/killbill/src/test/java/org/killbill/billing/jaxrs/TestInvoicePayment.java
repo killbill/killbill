@@ -27,6 +27,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -77,7 +78,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
     }
     @Test(groups = "slow", description = "Trigger payments for account with no unpaid invoices")
     public void testPayZeroInvoice() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault()));
         // No payment method
         final Account accountJson = createAccountWithExternalPaymentMethod();
         // Pay all invoices - nothing to pay
@@ -87,7 +88,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can pay invoices")
     public void testPayAllInvoices() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault()));
 
         // No payment method
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -318,7 +319,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
 
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault());
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
@@ -436,7 +437,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         Assert.assertEquals(refund.getCurrency(), DEFAULT_CURRENCY);
         Assert.assertEquals(refund.getStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(refund.getEffectiveDate().getYear(), clock.getUTCNow().getYear());
-        Assert.assertEquals(refund.getEffectiveDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());
+        Assert.assertEquals(refund.getEffectiveDate().getMonthValue(), clock.getUTCNow().getMonthOfYear());
         Assert.assertEquals(refund.getEffectiveDate().getDayOfMonth(), clock.getUTCNow().getDayOfMonth());
 
         // Verify the refund via the payment API

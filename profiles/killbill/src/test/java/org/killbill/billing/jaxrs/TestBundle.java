@@ -101,7 +101,7 @@ public class TestBundle extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can transfer bundle")
     public void testBundleTransfer() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault());
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -162,7 +162,7 @@ public class TestBundle extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Block a bundle")
     public void testBlockBundle() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault());
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
@@ -181,7 +181,7 @@ public class TestBundle extends TestJaxrsBase {
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
 
         final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        bundleApi.addBundleBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), Collections.emptyMap(), requestOptions);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), blockingState, toJavaLocalDate(clock.getToday(DateTimeZone.forID(accountJson.getTimeZone()))), Collections.emptyMap(), requestOptions);
 
         final Subscription subscription = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription.getState(), EntitlementState.BLOCKED);
@@ -189,7 +189,7 @@ public class TestBundle extends TestJaxrsBase {
         clock.addDays(1);
 
         final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        bundleApi.addBundleBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), Collections.emptyMap(), requestOptions);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), unblockingState, toJavaLocalDate(clock.getToday(DateTimeZone.forID(accountJson.getTimeZone()))), Collections.emptyMap(), requestOptions);
 
         final Subscription subscription2 = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
