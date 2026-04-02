@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - java2x
   pull_request:
   workflow_dispatch:
 
