@@ -61,13 +61,20 @@
     <properties>
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
+        <!-- killbill-oss-parent still brings extra-enforcer-rules 1.6.1, which rejects Java 21 as
+             an unknown target. Keep this local override until the parent is updated. -->
+        <extra-enforcer-rules.version>1.12.0</extra-enforcer-rules.version>
         <!-- Align with killbill-commons 0.27.0 Jakarta baseline -->
         <guice.version>7.0.0</guice.version>
         <hk2.version>3.0.6</hk2.version>
         <jackson.jakarta.rs.version>${jackson.version}</jackson.jakarta.rs.version>
+        <jakarta.activation-api.version>2.1.0</jakarta.activation-api.version>
+        <jakarta.annotation-api.version>2.1.1</jakarta.annotation-api.version>
         <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
         <jakarta.servlet-api.version>5.0.0</jakarta.servlet-api.version>
+        <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
         <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
+        <javassist.version>3.30.2-GA</javassist.version>
         <jaxb-api.version>4.0.0</jaxb-api.version>
         <jaxb-runtime.version>4.0.0</jaxb-runtime.version>
         <jersey.version>3.0.18</jersey.version>
@@ -76,6 +83,10 @@
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
         <project.build.targetJdk>21</project.build.targetJdk>
+        <!-- Upgrade Shiro to 2.x for Jakarta Servlet compatibility. The jakarta classifier
+             is required for shiro-web and shiro-guice to get the jakarta.servlet build. -->
+        <shiro.version>2.0.2</shiro.version>
+        <slf4j.version>2.0.16</slf4j.version>
         <!-- killbill-oss-parent still brings SpotBugs 4.7.2.1, whose ASM stack cannot parse
              Java 21 class files. Keep this local override until the parent moves to a
              Java-21-capable SpotBugs line. -->
@@ -97,6 +108,11 @@
                 <version>${netty.version}</version>
             </dependency>
             <dependency>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <version>${jakarta.activation-api.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>jakarta.inject</groupId>
                 <artifactId>jakarta.inject-api</artifactId>
                 <version>${jakarta.inject-api.version}</version>
@@ -111,6 +127,60 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-api</artifactId>
                 <version>2.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-cache</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-config-core</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-crypto-core</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-crypto-hash</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-guice</artifactId>
+                <version>${shiro.version}</version>
+                <classifier>jakarta</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-lang</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-web</artifactId>
+                <version>${shiro.version}</version>
+                <classifier>jakarta</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jaxb</groupId>
+                <artifactId>jaxb-runtime</artifactId>
+                <version>${jaxb-runtime.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- We use jakarta.activation:jakarta.activation-api instead -->
+                        <groupId>com.sun.activation</groupId>
+                        <artifactId>jakarta.activation</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>${javassist.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
@@ -137,6 +207,19 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs-maven-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <dependencies>
+                    <!-- Only the helper dependency version changes here; the inherited Enforcer
+                         rules/executions stay intact. -->
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>extra-enforcer-rules</artifactId>
+                        <version>${extra-enforcer-rules.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
