@@ -63,6 +63,10 @@
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
+        <!-- killbill-oss-parent still brings SpotBugs 4.7.2.1, whose ASM stack cannot parse
+             Java 21 class files. Keep this local override until the parent moves to a
+             Java-21-capable SpotBugs line. -->
+        <spotbugs-maven-plugin.version>4.9.8.3</spotbugs-maven-plugin.version>
         <!-- Temporary until upgrade to 2.x -->
         <swagger.version>1.6.2</swagger.version>
     </properties>
@@ -103,4 +107,13 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs-maven-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
