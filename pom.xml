@@ -81,6 +81,9 @@
         <jetty.version>11.0.24</jetty.version>
         <killbill-commons.version>0.27.0</killbill-commons.version>
         <killbill.version>${project.version}</killbill.version>
+        <!-- logback 1.4.x uses jakarta.servlet (matching our Jakarta migration);
+             1.3.x used javax.servlet. -->
+        <logback-classic.version>1.4.14</logback-classic.version>
         <main.basedir>${project.basedir}</main.basedir>
         <project.build.targetJdk>21</project.build.targetJdk>
         <!-- Upgrade Shiro to 2.x for Jakarta Servlet compatibility. The jakarta classifier
