@@ -17,7 +17,7 @@
 
 package org.killbill.billing.server.modules;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 import javax.sql.DataSource;
 
 import org.apache.shiro.cache.CacheManager;

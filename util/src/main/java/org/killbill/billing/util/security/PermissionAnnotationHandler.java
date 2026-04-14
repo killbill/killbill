@@ -22,7 +22,7 @@ package org.killbill.billing.util.security;
 import java.lang.annotation.Annotation;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.aop.AuthorizingAnnotationHandler;

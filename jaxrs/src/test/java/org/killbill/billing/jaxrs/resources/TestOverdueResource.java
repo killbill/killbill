@@ -17,8 +17,8 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import javax.servlet.ServletRequest;
-import javax.ws.rs.core.Response;
+import jakarta.servlet.ServletRequest;
+import jakarta.ws.rs.core.Response;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;

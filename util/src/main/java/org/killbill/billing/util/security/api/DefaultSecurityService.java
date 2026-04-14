@@ -18,7 +18,7 @@
 
 package org.killbill.billing.util.security.api;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.SecurityManager;

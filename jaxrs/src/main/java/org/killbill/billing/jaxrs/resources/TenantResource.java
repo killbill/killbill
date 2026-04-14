@@ -25,22 +25,22 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -73,8 +73,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.TENANTS_PATH)
@@ -135,8 +135,8 @@ public class TenantResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request,
-                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException, CatalogApiException {
+                                 @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                 @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException, CatalogApiException {
         verifyNonNullOrEmpty(json, "TenantJson body should be specified");
         verifyNonNullOrEmpty(json.getApiKey(), "TenantJson apiKey needs to be set",
                              json.getApiSecret(), "TenantJson apiSecret needs to be set");
@@ -165,8 +165,8 @@ public class TenantResource extends JaxRsResourceBase {
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                      @HeaderParam(HDR_REASON) final String reason,
                                                      @HeaderParam(HDR_COMMENT) final String comment,
-                                                     @javax.ws.rs.core.Context final HttpServletRequest request,
-                                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+                                                     @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                                     @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
         return insertTenantKey(TenantKey.PUSH_NOTIFICATION_CB,  null,  notificationCallback, uriInfo,"getPushNotificationCallbacks", createdBy, reason, comment, request);
     }
 
@@ -176,7 +176,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a push notification", response = TenantKeyValueJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
-    public Response getPushNotificationCallbacks(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+    public Response getPushNotificationCallbacks(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, request);
     }
 
@@ -189,7 +189,7 @@ public class TenantResource extends JaxRsResourceBase {
     public Response deletePushNotificationCallbacks(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
-                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return deleteTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, createdBy, reason, comment, request);
     }
 
@@ -206,8 +206,8 @@ public class TenantResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request,
-                                              @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                              @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
         return insertTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, pluginConfig, uriInfo, "getPluginConfiguration", createdBy, reason, comment, request);
     }
 
@@ -220,7 +220,7 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a per tenant configuration for a plugin", response = TenantKeyValueJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getPluginConfiguration(@PathParam("pluginName") final String pluginName,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                           @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, request);
     }
 
@@ -234,7 +234,7 @@ public class TenantResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return deleteTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, createdBy, reason, comment, request);
     }
 
@@ -246,7 +246,7 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a per tenant key value based on key prefix", response = TenantKeyValueJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getAllPluginConfiguration(@PathParam("keyPrefix") final String keyPrefix,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Map<String, List<String>> apiResult = tenantApi.searchTenantKeyValues(keyPrefix, tenantContext);
@@ -270,8 +270,8 @@ public class TenantResource extends JaxRsResourceBase {
                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                  @HeaderParam(HDR_REASON) final String reason,
                                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                                 @javax.ws.rs.core.Context final HttpServletRequest request,
-                                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+                                                 @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                                 @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
         return insertTenantKey(TenantKey.PER_TENANT_CONFIG, null, perTenantConfig, uriInfo, "getPerTenantConfiguration", createdBy, reason, comment, request);
     }
 
@@ -281,7 +281,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a per tenant configuration (system properties)", response = TenantKeyValueJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
-    public Response getPerTenantConfiguration(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+    public Response getPerTenantConfiguration(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PER_TENANT_CONFIG, null, request);
     }
 
@@ -294,7 +294,7 @@ public class TenantResource extends JaxRsResourceBase {
     public Response deletePerTenantConfiguration(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return deleteTenantKey(TenantKey.PER_TENANT_CONFIG, null, createdBy, reason, comment, request);
     }
 
@@ -311,8 +311,8 @@ public class TenantResource extends JaxRsResourceBase {
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
                                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                                          @javax.ws.rs.core.Context final HttpServletRequest request,
-                                                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+                                                          @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                                          @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
         return insertTenantKey(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, pluginName, paymentStateMachineConfig, uriInfo, "getPluginPaymentStateMachineConfig", createdBy, reason, comment, request);
     }
 
@@ -323,7 +323,7 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a per tenant payment state machine for a plugin", response = TenantKeyValueJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getPluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
-                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                                       @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, pluginName, request);
     }
 
@@ -337,7 +337,7 @@ public class TenantResource extends JaxRsResourceBase {
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
                                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                                          @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return deleteTenantKey(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, pluginName, createdBy, reason, comment, request);
     }
 
@@ -354,8 +354,8 @@ public class TenantResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request,
-                               @javax.ws.rs.core.Context  final UriInfo uriInfo) throws TenantApiException {
+                               @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                               @jakarta.ws.rs.core.Context  final UriInfo uriInfo) throws TenantApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         tenantApi.addTenantKeyValue(key, value, callContext);
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key, request);
@@ -368,7 +368,7 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a per tenant user key/value", response = TenantKeyValueJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getUserKeyValue(@PathParam("keyName") final String key,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                           @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<String> values = tenantApi.getTenantValuesForKey(key, tenantContext);
         final TenantKeyValueJson result = new TenantKeyValueJson(key, values);
@@ -386,7 +386,7 @@ public class TenantResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         tenantApi.deleteTenantKey(key, callContext);
         return Response.status(Status.NO_CONTENT).build();

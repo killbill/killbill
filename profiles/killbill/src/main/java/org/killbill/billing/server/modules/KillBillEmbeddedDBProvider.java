@@ -20,7 +20,7 @@ package org.killbill.billing.server.modules;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.commons.jdbi.guice.DaoConfig;
 

@@ -20,9 +20,9 @@ package org.killbill.billing.jaxrs.util;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletRequest;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.ServletRequest;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.tenant.api.Tenant;

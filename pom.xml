@@ -61,21 +61,45 @@
     <properties>
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
+        <!-- Align with killbill-commons 0.27.0 Jakarta baseline -->
+        <guice.version>7.0.0</guice.version>
+        <hk2.version>3.0.6</hk2.version>
+        <jackson.jakarta.rs.version>${jackson.version}</jackson.jakarta.rs.version>
+        <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
+        <jakarta.servlet-api.version>5.0.0</jakarta.servlet-api.version>
+        <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
+        <jaxb-api.version>4.0.0</jaxb-api.version>
+        <jaxb-runtime.version>4.0.0</jaxb-runtime.version>
+        <jersey.version>3.0.18</jersey.version>
+        <jetty.version>11.0.24</jetty.version>
+        <killbill-commons.version>0.27.0</killbill-commons.version>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
+        <project.build.targetJdk>21</project.build.targetJdk>
         <!-- killbill-oss-parent still brings SpotBugs 4.7.2.1, whose ASM stack cannot parse
              Java 21 class files. Keep this local override until the parent moves to a
              Java-21-capable SpotBugs line. -->
         <spotbugs-maven-plugin.version>4.9.8.3</spotbugs-maven-plugin.version>
+        <surefireArgLine>-Xmx${build.jvmsize} --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</surefireArgLine>
         <!-- Temporary until upgrade to 2.x -->
         <swagger.version>1.6.2</swagger.version>
     </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.fasterxml.jackson.jakarta.rs</groupId>
+                <artifactId>jackson-jakarta-rs-json-provider</artifactId>
+                <version>${jackson.jakarta.rs.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-common</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.inject</groupId>
+                <artifactId>jakarta.inject-api</artifactId>
+                <version>${jakarta.inject-api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

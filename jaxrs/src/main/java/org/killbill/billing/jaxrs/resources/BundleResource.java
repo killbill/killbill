@@ -30,23 +30,23 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
@@ -95,7 +95,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.BUNDLES_PATH)
@@ -133,7 +133,7 @@ public class BundleResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundle(@PathParam("bundleId") final UUID bundleId,
                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
+                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final TenantContext tenantContext = this.context.createTenantContextNoAccountId(request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, tenantContext);
         final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
@@ -150,7 +150,7 @@ public class BundleResource extends JaxRsResourceBase {
     public Response getBundleByKey(@ApiParam(required=true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                    @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
+                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
 
         final TenantContext tenantContext = this.context.createTenantContextNoAccountId(request);
 
@@ -178,7 +178,7 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve bundle audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Subscription bundle not found")})
     public Response getBundleAuditLogsWithHistory(@PathParam("bundleId") final UUID bundleId,
-                                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                                  @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<AuditLogWithHistory> auditLogWithHistory = subscriptionApi.getSubscriptionBundleAuditLogsWithHistoryForId(bundleId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
@@ -193,7 +193,7 @@ public class BundleResource extends JaxRsResourceBase {
     public Response getBundles(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+                               @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundles(offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(BundleResource.class,
@@ -238,7 +238,7 @@ public class BundleResource extends JaxRsResourceBase {
                                   @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                   @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                   @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+                                  @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<SubscriptionBundle> bundles = subscriptionApi.searchSubscriptionBundles(searchKey, offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(BundleResource.class,
@@ -265,7 +265,7 @@ public class BundleResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+                                @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
@@ -288,7 +288,7 @@ public class BundleResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+                                 @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
@@ -311,8 +311,8 @@ public class BundleResource extends JaxRsResourceBase {
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request,
-                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+                                           @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                           @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, tenantContext);
         return addBlockingState(json, bundle.getAccountId(), id, BlockingStateType.SUBSCRIPTION_BUNDLE, requestedDate, pluginPropertiesString, createdBy, reason, comment, request, uriInfo);
@@ -328,7 +328,7 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                    @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         return super.getCustomFields(bundleId, auditMode, context.createTenantContextNoAccountId(request));
     }
 
@@ -345,8 +345,8 @@ public class BundleResource extends JaxRsResourceBase {
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request,
-                                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+                                             @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                             @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(bundleId, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -364,7 +364,7 @@ public class BundleResource extends JaxRsResourceBase {
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+                                             @jakarta.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(bundleId, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -385,7 +385,7 @@ public class BundleResource extends JaxRsResourceBase {
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+                                             @jakarta.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(bundleId, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -400,7 +400,7 @@ public class BundleResource extends JaxRsResourceBase {
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                             @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
+                            @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, tenantContext);
         return super.getTags(bundle.getAccountId(), bundleId, auditMode, includedDeleted, tenantContext);
@@ -424,8 +424,8 @@ public class BundleResource extends JaxRsResourceBase {
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, SubscriptionApiException, AccountApiException {
+                                   @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, SubscriptionApiException, AccountApiException {
         verifyNonNullOrEmpty(json, "BundleJson body should be specified");
         verifyNonNullOrEmpty(json.getAccountId(), "BundleJson accountId needs to be set");
 
@@ -467,8 +467,8 @@ public class BundleResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+                                      @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
 
         verifyNonNullOrEmpty(json, "BundleJson body should be specified");
         verifyNonNullOrEmpty(json.getExternalKey(), "BundleJson externalKey needs to be set");
@@ -493,8 +493,8 @@ public class BundleResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment,
-                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+                                     @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(bundleId, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
@@ -512,7 +512,7 @@ public class BundleResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(bundleId, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }

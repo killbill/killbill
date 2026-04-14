@@ -19,8 +19,8 @@ package org.killbill.billing.util.broadcast.dao;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.util.entity.dao.DBRouter;
 import org.skife.jdbi.v2.Handle;

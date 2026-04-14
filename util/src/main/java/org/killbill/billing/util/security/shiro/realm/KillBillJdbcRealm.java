@@ -17,8 +17,8 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import javax.sql.DataSource;
 
 import org.apache.shiro.realm.jdbc.JdbcRealm;

@@ -17,7 +17,7 @@
 
 package org.killbill.billing.util.broadcast;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.broadcast.BroadcastApi;

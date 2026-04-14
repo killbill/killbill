@@ -35,10 +35,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
 import javax.sql.DataSource;
 
 import org.apache.shiro.web.servlet.ShiroFilter;
@@ -128,7 +128,7 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected
-    @javax.inject.Named(BusModule.EXTERNAL_BUS_NAMED)
+    @jakarta.inject.Named(BusModule.EXTERNAL_BUS_NAMED)
     PersistentBus externalBus;
 
     @Inject

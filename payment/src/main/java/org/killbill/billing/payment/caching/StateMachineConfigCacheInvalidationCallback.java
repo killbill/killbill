@@ -17,7 +17,7 @@
 
 package org.killbill.billing.payment.caching;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;

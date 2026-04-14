@@ -20,7 +20,7 @@ package org.killbill.billing.beatrix.integration.db;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;

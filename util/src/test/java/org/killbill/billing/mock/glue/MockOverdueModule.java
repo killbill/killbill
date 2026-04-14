@@ -18,7 +18,7 @@
 
 package org.killbill.billing.mock.glue;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.glue.OverdueModule;
 import org.killbill.billing.overdue.api.OverdueApi;

@@ -21,7 +21,7 @@ package org.killbill.billing.subscription.api.user;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;

@@ -20,19 +20,19 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.Iterator;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -71,7 +71,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 //
 // Test endpoint that should not be enabled on a production system.
@@ -146,7 +146,7 @@ public class TestResource extends JaxRsResourceBase {
     @ApiOperation(value = "Wait for all available bus events and notifications to be processed")
     @ApiResponses(value = {@ApiResponse(code = 412, message = "Timeout too short")})
     public Response waitForQueuesToComplete(@QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
-                                            @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                            @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final boolean areAllNotificationsProcessed = waitForNotificationToComplete(request, timeoutSec);
         return Response.status(areAllNotificationsProcessed ? Status.OK : Status.PRECONDITION_FAILED).build();
     }
@@ -172,7 +172,7 @@ public class TestResource extends JaxRsResourceBase {
     public Response setTestClockTime(@QueryParam(QUERY_REQUESTED_DT) final String requestedClockDate,
                                      @QueryParam("timeZone") final String timeZoneStr,
                                      @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
         if (requestedClockDate == null) {
@@ -198,7 +198,7 @@ public class TestResource extends JaxRsResourceBase {
                                         @QueryParam("years") final Integer addYears,
                                         @QueryParam("timeZone") final String timeZoneStr,
                                         @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                        @jakarta.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
         if (addDays != null) {

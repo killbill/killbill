@@ -34,7 +34,7 @@ import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
