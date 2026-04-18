@@ -73,7 +73,70 @@
         <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" />
     </Match>
 
+    <!--
+    CT_CONSTRUCTOR_THROW: SpotBugs 4.9+ flags constructors that may throw exceptions, warning about
+    partially initialized objects vulnerable to finalizer attacks. These classes are Guice-managed
+    singletons whose lifecycle is controlled by the DI container — they are not subclassed by
+    untrusted code and do not use finalizers, so the finalizer attack vector does not apply.
+    -->
+    <Match>
+        <Class name="org.killbill.billing.util.entity.dao.EntityDaoBase" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.glue.EhCacheProviderBase" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.glue.EhcacheShiroManagerProvider" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.security.api.DefaultSecurityApi" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.security.shiro.dao.SessionModelDao" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.security.shiro.realm.KillBillAuth0Realm" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.util.tag.DefaultTagDefinition" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+
+    <!-- args is the method parameter (Object[]). The toString() call is intentional for the error message in IllegalStateException. -->
+    <Match>
+        <Class name="org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperInvocationHandler" />
+        <Method name="retrieveTimeZoneAwareEntityFromArguments" />
+        <Bug pattern="DMI_INVOKING_TOSTRING_ON_ARRAY" />
+    </Match>
+
+    <!-- getDefault() intentionally hides SocketFactory.getDefault() to return the SSL-skipping factory. This is by design for test/dev LDAP connections. -->
+    <Match>
+        <Class name="org.killbill.billing.util.security.shiro.realm.SkipSSLCheckSocketFactory" />
+        <Method name="getDefault" />
+        <Bug pattern="HSM_HIDING_METHOD" />
+    </Match>
+
     <!-- MODULE: CATALOG -->
+
+    <!-- Guice-managed class; constructor throws on invalid override input. Not subclassed by untrusted code. -->
+    <Match>
+        <Class name="org.killbill.billing.catalog.DefaultPlan" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
 
     <!--
     Applied to line ~211 and ~245. The warning arise because DefaultCaseChangePlanAlignment and
@@ -89,6 +152,12 @@
 
     <!-- MODULE: Subscription -->
 
+    <!-- Constructor validates and transforms event data, may throw CatalogApiException. Not subclassed by untrusted code. -->
+    <Match>
+        <Class name="org.killbill.billing.subscription.api.timeline.DefaultSubscriptionBaseTimeline" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+
     <!--
     All code base that use this class use "hasNext()" before "next()", and there are null guard all over the place.
     Thus, solution for this class only adding explanation in javadoc.
@@ -97,6 +166,22 @@
         <Class name="org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator" />
         <Method name="next" />
         <Bug pattern="IT_NO_SUCH_ELEMENT" />
+    </Match>
+
+    <!-- MODULE: Junction -->
+
+    <!-- Constructor derives billing fields from subscription events and may throw CatalogApiException. Not subclassed by untrusted code. -->
+    <Match>
+        <Class name="org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+
+    <!-- MODULE: Invoice -->
+
+    <!-- Constructor validates usage configuration and may throw InvoiceApiException. Not subclassed by untrusted code. -->
+    <Match>
+        <Class name="org.killbill.billing.invoice.usage.SubscriptionUsageInArrear" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
     </Match>
 
     <!-- MODULE: Overdue -->
@@ -108,6 +193,18 @@
     </Match>
 
     <!-- MODULE: Payment -->
+
+    <!-- Guice-managed singleton; constructor initializes state machine and may throw MissingEntryException. Not subclassed by untrusted code. -->
+    <Match>
+        <Class name="org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <!-- RETRY_OPERATION_NAME is a final instance field initialized from the state machine config; the value depends on the injected config so making it static is not appropriate. -->
+    <Match>
+        <Class name="org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper" />
+        <Field name="RETRY_OPERATION_NAME" />
+        <Bug pattern="SS_SHOULD_BE_STATIC" />
+    </Match>
 
     <!-- These lines supposed to be workaround for: https://github.com/killbill/killbill/issues/1453. Keep it as is. -->
     <Match>
@@ -149,6 +246,32 @@
     </Match>
 
     <!-- MODULE: JaxRs -->
+
+    <!--
+    CT_CONSTRUCTOR_THROW: These JSON DTO classes convert API objects in their constructors and may throw
+    CatalogApiException or similar. They are instantiated in JAX-RS resource methods, not subclassed by
+    untrusted code, and do not use finalizers.
+    -->
+    <Match>
+        <Class name="org.killbill.billing.jaxrs.json.CatalogJson" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.jaxrs.json.CatalogJson$PhaseJson" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.jaxrs.json.PhasePriceJson" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.jaxrs.json.SessionJson" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="org.killbill.billing.jaxrs.json.SubscriptionJson" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
 
     <!-- See this discussion: https://github.com/killbill/killbill/pull/1858#discussion_r1193803654 -->
     <Match>
