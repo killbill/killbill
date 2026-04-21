@@ -34,8 +34,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.inject.Inject;
-import javax.xml.bind.JAXBException;
+import jakarta.inject.Inject;
+import jakarta.xml.bind.JAXBException;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;

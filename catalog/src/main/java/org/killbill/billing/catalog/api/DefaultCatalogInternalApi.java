@@ -17,7 +17,7 @@
 
 package org.killbill.billing.catalog.api;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.override.PriceOverrideSvc;

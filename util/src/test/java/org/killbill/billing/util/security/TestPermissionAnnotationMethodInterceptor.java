@@ -18,7 +18,7 @@
 
 package org.killbill.billing.util.security;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthenticatedException;

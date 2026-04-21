@@ -18,7 +18,7 @@
 
 package org.killbill.billing.payment.glue;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.killbill.automaton.DefaultStateMachineConfig;
 import org.killbill.automaton.StateMachineConfig;

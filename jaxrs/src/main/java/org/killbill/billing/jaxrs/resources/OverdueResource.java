@@ -21,18 +21,18 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.json.OverdueJson;
@@ -58,8 +58,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.TEXT_XML;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.TEXT_XML;
 
 @Singleton
 @Path(JaxrsResource.OVERDUE_PATH)
@@ -93,7 +93,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Produces(TEXT_XML)
     @ApiOperation(value = "Retrieve the overdue config as XML", response = String.class, hidden=true)
     @ApiResponses(value = {})
-    public Response getOverdueConfigXmlOriginal(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+    public Response getOverdueConfigXmlOriginal(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         return Response.status(Status.OK).entity(XMLWriter.writeXML((DefaultOverdueConfig) overdueApi.getOverdueConfig(tenantContext), DefaultOverdueConfig.class)).build();
     }
@@ -104,7 +104,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Produces(TEXT_XML)
     @ApiOperation(value = "Retrieve the overdue config as XML", response = String.class)
     @ApiResponses(value = {})
-    public Response getOverdueConfigXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+    public Response getOverdueConfigXml(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         return getOverdueConfigXmlOriginal(request);
     }
 
@@ -115,7 +115,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve the overdue config as JSON", response = OverdueJson.class)
     @ApiResponses(value = {})
-    public Response getOverdueConfigJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+    public Response getOverdueConfigJson(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final OverdueConfig overdueConfig = overdueApi.getOverdueConfig(tenantContext);
         final OverdueJson result = new OverdueJson(overdueConfig);
@@ -138,8 +138,8 @@ public class OverdueResource extends JaxRsResourceBase {
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                    @HeaderParam(HDR_REASON) final String reason,
                                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                                   @javax.ws.rs.core.Context final HttpServletRequest request,
-                                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                                   @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         // Validation purpose:  Will throw if bad XML or catalog validation fails
         final InputStream stream = new ByteArrayInputStream(overdueXML.getBytes(StandardCharsets.UTF_8));
         XMLLoader.getObjectFromStream(stream, DefaultOverdueConfig.class);
@@ -160,8 +160,8 @@ public class OverdueResource extends JaxRsResourceBase {
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                    @HeaderParam(HDR_REASON) final String reason,
                                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                                   @javax.ws.rs.core.Context final HttpServletRequest request,
-                                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                                   @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         return uploadOverdueConfigXmlOriginal(overdueXML, createdBy, reason, comment, request, uriInfo);
     }
 
@@ -177,8 +177,8 @@ public class OverdueResource extends JaxRsResourceBase {
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                             @HeaderParam(HDR_REASON) final String reason,
                                             @HeaderParam(HDR_COMMENT) final String comment,
-                                            @javax.ws.rs.core.Context final HttpServletRequest request,
-                                            @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+                                            @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                            @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final OverdueConfig overdueConfig = OverdueJson.toOverdueConfigWithValidation(overdueJson);

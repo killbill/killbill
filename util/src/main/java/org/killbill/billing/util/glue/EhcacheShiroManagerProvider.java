@@ -21,8 +21,8 @@ package org.killbill.billing.util.glue;
 import java.lang.reflect.Field;
 
 import javax.cache.CacheManager;
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;

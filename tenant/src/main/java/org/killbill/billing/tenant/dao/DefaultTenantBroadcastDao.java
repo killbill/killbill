@@ -19,8 +19,8 @@ package org.killbill.billing.tenant.dao;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.tenant.api.TenantApiException;

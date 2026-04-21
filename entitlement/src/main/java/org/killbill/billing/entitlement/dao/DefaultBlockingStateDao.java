@@ -32,7 +32,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;

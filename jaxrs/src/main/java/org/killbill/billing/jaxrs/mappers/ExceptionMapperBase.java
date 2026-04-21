@@ -18,10 +18,10 @@
 
 package org.killbill.billing.jaxrs.mappers;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.account.api.AccountApiException;

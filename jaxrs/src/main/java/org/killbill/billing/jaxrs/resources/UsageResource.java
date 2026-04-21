@@ -22,20 +22,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.AccountApiException;
@@ -72,7 +72,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.USAGES_PATH)
@@ -110,8 +110,8 @@ public class UsageResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
-                                @javax.ws.rs.core.Context final HttpServletRequest request,
-                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException,
+                                @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException,
                                                                                         AccountApiException,
                                                                                         UsageApiException {
         verifyNonNullOrEmpty(json, "SubscriptionUsageRecordJson body should be specified");
@@ -166,7 +166,7 @@ public class UsageResource extends JaxRsResourceBase {
                              @QueryParam(QUERY_START_DATE) final String startDate,
                              @QueryParam(QUERY_END_DATE) final String endDate,
                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                             @javax.ws.rs.core.Context final HttpServletRequest request) {
+                             @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
         }
@@ -191,7 +191,7 @@ public class UsageResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_START_DATE) final String startDate,
                                 @QueryParam(QUERY_END_DATE) final String endDate,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                @jakarta.ws.rs.core.Context final HttpServletRequest request) {
 
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();

@@ -34,34 +34,34 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import javax.servlet.ReadListener;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.WriteListener;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.WriteListener;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
+import jakarta.ws.rs.OPTIONS;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.util.Context;
@@ -105,67 +105,67 @@ public class PluginResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    public Response doDELETE(@javax.ws.rs.core.Context final HttpServletRequest request,
-                             @javax.ws.rs.core.Context final HttpServletResponse response,
-                             @javax.ws.rs.core.Context final ServletContext servletContext,
-                             @javax.ws.rs.core.Context final ServletConfig servletConfig,
-                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
+    public Response doDELETE(@jakarta.ws.rs.core.Context final HttpServletRequest request,
+                             @jakarta.ws.rs.core.Context final HttpServletResponse response,
+                             @jakarta.ws.rs.core.Context final ServletContext servletContext,
+                             @jakarta.ws.rs.core.Context final ServletConfig servletConfig,
+                             @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
     @GET
-    public Response doGET(@javax.ws.rs.core.Context final HttpServletRequest request,
-                          @javax.ws.rs.core.Context final HttpServletResponse response,
-                          @javax.ws.rs.core.Context final ServletContext servletContext,
-                          @javax.ws.rs.core.Context final ServletConfig servletConfig,
-                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
+    public Response doGET(@jakarta.ws.rs.core.Context final HttpServletRequest request,
+                          @jakarta.ws.rs.core.Context final HttpServletResponse response,
+                          @jakarta.ws.rs.core.Context final ServletContext servletContext,
+                          @jakarta.ws.rs.core.Context final ServletConfig servletConfig,
+                          @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
     @OPTIONS
-    public Response doOPTIONS(@javax.ws.rs.core.Context final HttpServletRequest request,
-                              @javax.ws.rs.core.Context final HttpServletResponse response,
-                              @javax.ws.rs.core.Context final ServletContext servletContext,
-                              @javax.ws.rs.core.Context final ServletConfig servletConfig,
-                              @javax.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
+    public Response doOPTIONS(@jakarta.ws.rs.core.Context final HttpServletRequest request,
+                              @jakarta.ws.rs.core.Context final HttpServletResponse response,
+                              @jakarta.ws.rs.core.Context final ServletContext servletContext,
+                              @jakarta.ws.rs.core.Context final ServletConfig servletConfig,
+                              @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
     @POST
     @Consumes("application/x-www-form-urlencoded")
     public Response doFormPOST(final MultivaluedMap<String, String> form,
-                               @javax.ws.rs.core.Context final HttpServletRequest request,
-                               @javax.ws.rs.core.Context final HttpServletResponse response,
-                               @javax.ws.rs.core.Context final ServletContext servletContext,
-                               @javax.ws.rs.core.Context final ServletConfig servletConfig,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
+                               @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                               @jakarta.ws.rs.core.Context final HttpServletResponse response,
+                               @jakarta.ws.rs.core.Context final ServletContext servletContext,
+                               @jakarta.ws.rs.core.Context final ServletConfig servletConfig,
+                               @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
         return serviceViaOSGIPlugin(form, request, response, servletContext, servletConfig, uriInfo);
     }
 
     @POST
-    public Response doPOST(@javax.ws.rs.core.Context final HttpServletRequest request,
-                           @javax.ws.rs.core.Context final HttpServletResponse response,
-                           @javax.ws.rs.core.Context final ServletContext servletContext,
-                           @javax.ws.rs.core.Context final ServletConfig servletConfig,
-                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
+    public Response doPOST(@jakarta.ws.rs.core.Context final HttpServletRequest request,
+                           @jakarta.ws.rs.core.Context final HttpServletResponse response,
+                           @jakarta.ws.rs.core.Context final ServletContext servletContext,
+                           @jakarta.ws.rs.core.Context final ServletConfig servletConfig,
+                           @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
     @PUT
-    public Response doPUT(@javax.ws.rs.core.Context final HttpServletRequest request,
-                          @javax.ws.rs.core.Context final HttpServletResponse response,
-                          @javax.ws.rs.core.Context final ServletContext servletContext,
-                          @javax.ws.rs.core.Context final ServletConfig servletConfig,
-                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
+    public Response doPUT(@jakarta.ws.rs.core.Context final HttpServletRequest request,
+                          @jakarta.ws.rs.core.Context final HttpServletResponse response,
+                          @jakarta.ws.rs.core.Context final ServletContext servletContext,
+                          @jakarta.ws.rs.core.Context final ServletConfig servletConfig,
+                          @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
     @HEAD
-    public Response doHEAD(@javax.ws.rs.core.Context final HttpServletRequest request,
-                           @javax.ws.rs.core.Context final HttpServletResponse response,
-                           @javax.ws.rs.core.Context final ServletContext servletContext,
-                           @javax.ws.rs.core.Context final ServletConfig servletConfig,
-                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
+    public Response doHEAD(@jakarta.ws.rs.core.Context final HttpServletRequest request,
+                           @jakarta.ws.rs.core.Context final HttpServletResponse response,
+                           @jakarta.ws.rs.core.Context final ServletContext servletContext,
+                           @jakarta.ws.rs.core.Context final ServletConfig servletConfig,
+                           @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws ServletException, IOException {
         serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
 
         // Make sure to return 204

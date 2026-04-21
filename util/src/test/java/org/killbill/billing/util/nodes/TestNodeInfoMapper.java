@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.osgi.api.PluginState;
 import org.killbill.billing.util.UtilTestSuiteNoDB;

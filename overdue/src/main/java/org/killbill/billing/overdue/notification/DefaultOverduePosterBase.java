@@ -21,7 +21,7 @@ package org.killbill.billing.overdue.notification;
 import java.util.Iterator;
 import java.util.UUID;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;

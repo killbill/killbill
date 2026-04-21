@@ -26,23 +26,23 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -89,7 +89,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.PAYMENTS_PATH)
@@ -123,7 +123,7 @@ public class PaymentResource extends ComboPaymentResource {
                                @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+                               @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
@@ -142,7 +142,7 @@ public class PaymentResource extends ComboPaymentResource {
                                             @ApiParam(required=true) @QueryParam(QUERY_EXTERNAL_KEY) final String paymentExternalKey,
                                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+                                            @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         verifyNonNullOrEmpty(paymentExternalKey, "Payment externalKey needs to be specified");
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -165,7 +165,7 @@ public class PaymentResource extends ComboPaymentResource {
                                 @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+                                @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
@@ -212,7 +212,7 @@ public class PaymentResource extends ComboPaymentResource {
                                    @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
@@ -267,8 +267,8 @@ public class PaymentResource extends ComboPaymentResource {
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                        @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                        @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         completeTransactionInternalWithoutPayment(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
         return Response.status(Status.NO_CONTENT).build();
     }
@@ -293,8 +293,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                      @HeaderParam(HDR_REASON) final String reason,
                                                      @HeaderParam(HDR_COMMENT) final String comment,
-                                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                                     @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         completeTransactionInternalWithoutPayment(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
         return Response.status(Status.NO_CONTENT).build();
     }
@@ -326,8 +326,8 @@ public class PaymentResource extends ComboPaymentResource {
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
                                          @HeaderParam(HDR_COMMENT) final String comment,
-                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                         @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                         @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return captureAuthorizationInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -349,8 +349,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                       @HeaderParam(HDR_REASON) final String reason,
                                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                                      @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return captureAuthorizationInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -404,8 +404,8 @@ public class PaymentResource extends ComboPaymentResource {
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
-                                  @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                  @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                  @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return refundPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -428,8 +428,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                @HeaderParam(HDR_REASON) final String reason,
                                                @HeaderParam(HDR_COMMENT) final String comment,
-                                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                               @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                               @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return refundPaymentInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
 
     }
@@ -486,8 +486,8 @@ public class PaymentResource extends ComboPaymentResource {
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
-                                @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return voidPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -509,8 +509,8 @@ public class PaymentResource extends ComboPaymentResource {
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
-                                             @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                             @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                             @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return voidPaymentInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -567,8 +567,8 @@ public class PaymentResource extends ComboPaymentResource {
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                      @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return chargebackPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -591,8 +591,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                    @HeaderParam(HDR_REASON) final String reason,
                                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                                   @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return chargebackPaymentInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -646,8 +646,8 @@ public class PaymentResource extends ComboPaymentResource {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                              @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return chargebackReversalPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -670,8 +670,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                            @HeaderParam(HDR_REASON) final String reason,
                                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                                           @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                                           @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         return chargebackReversalPaymentInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
@@ -717,8 +717,8 @@ public class PaymentResource extends ComboPaymentResource {
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                       @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                       @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
         verifyNonNullOrEmpty(json, "ComboPaymentTransactionJson body should be specified");
 
@@ -771,8 +771,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
                                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                                          @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                                          @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         paymentApi.cancelScheduledPaymentTransaction(paymentTransactionId, callContext);
         return Response.status(Status.NO_CONTENT).build();
@@ -790,8 +790,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                                    @HeaderParam(HDR_REASON) final String reason,
                                                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                                                   @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         paymentApi.cancelScheduledPaymentTransaction(paymentTransactionExternalKey, callContext);
         return Response.status(Status.NO_CONTENT).build();
@@ -807,7 +807,7 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                    @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         return super.getCustomFields(id, auditMode, context.createTenantContextNoAccountId(request));
     }
 
@@ -824,8 +824,8 @@ public class PaymentResource extends ComboPaymentResource {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request,
-                                              @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                              @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -843,7 +843,7 @@ public class PaymentResource extends ComboPaymentResource {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -861,7 +861,7 @@ public class PaymentResource extends ComboPaymentResource {
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+                                              @jakarta.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(id, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -876,7 +876,7 @@ public class PaymentResource extends ComboPaymentResource {
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
+                            @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
@@ -895,8 +895,8 @@ public class PaymentResource extends ComboPaymentResource {
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+                                      @jakarta.ws.rs.core.Context final UriInfo uriInfo,
+                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(paymentId, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
@@ -914,7 +914,7 @@ public class PaymentResource extends ComboPaymentResource {
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(paymentId, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -926,7 +926,7 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiOperation(value = "Retrieve payment audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getPaymentAuditLogsWithHistory(@PathParam("paymentId") final UUID paymentId,
-                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAuditLogsWithHistoryForId(paymentId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
@@ -939,7 +939,7 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiOperation(value = "Retrieve payment attempt audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getPaymentAttemptAuditLogsWithHistory(@PathParam("paymentAttemptId") final UUID paymentAttemptId,
-                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAttemptAuditLogsWithHistoryForId(paymentAttemptId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();

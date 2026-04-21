@@ -25,7 +25,7 @@ import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BroadcastInternalEvent;

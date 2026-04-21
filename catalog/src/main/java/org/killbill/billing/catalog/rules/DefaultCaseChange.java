@@ -24,10 +24,10 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.net.URI;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlIDREF;
 
 import org.killbill.billing.catalog.CatalogSafetyInitializer;
 import org.killbill.billing.catalog.DefaultPriceList;

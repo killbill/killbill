@@ -18,8 +18,8 @@
 
 package org.killbill.billing.server;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.platform.api.LifecycleHandlerType;

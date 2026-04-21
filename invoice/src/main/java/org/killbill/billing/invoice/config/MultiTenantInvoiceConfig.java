@@ -19,8 +19,8 @@ package org.killbill.billing.invoice.config;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalTenantContext;

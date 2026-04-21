@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;

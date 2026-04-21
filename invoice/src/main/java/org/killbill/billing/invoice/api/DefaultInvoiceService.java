@@ -18,7 +18,7 @@
 
 package org.killbill.billing.invoice.api;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier;
 import org.killbill.billing.util.optimizer.BusOptimizer;
