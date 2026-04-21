@@ -71,6 +71,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
@@ -83,16 +87,16 @@
             <artifactId>jakarta.xml.bind-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-lang</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>

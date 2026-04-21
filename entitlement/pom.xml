@@ -71,7 +71,15 @@
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-config-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-lang</artifactId>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
