@@ -40,7 +40,6 @@ public class SubscriptionUsageRecordJson {
     private final UUID subscriptionId;
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final List<UnitUsageRecordJson> unitUsageRecords;
-    @Schema()
     private final String trackingId;
 
     @JsonCreator

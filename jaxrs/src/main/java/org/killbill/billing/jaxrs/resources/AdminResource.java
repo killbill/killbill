@@ -156,7 +156,6 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_OCTET_STREAM)
     @Operation(summary = "Get queues entries")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Response.class))),
-                           @ApiResponse(responseCode = "200", description = "Success"),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getQueueEntries(@QueryParam("accountId") final UUID accountId,
