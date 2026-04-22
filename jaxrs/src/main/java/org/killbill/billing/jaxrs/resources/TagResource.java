@@ -60,16 +60,19 @@ import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TAGS_PATH)
-@Api(value = JaxrsResource.TAGS_PATH, description = "Operations on tags", tags="Tag")
+@Tag(name = "Tag", description = "Operations on tags")
 public class TagResource extends JaxRsResourceBase {
 
     @Inject
@@ -89,8 +92,8 @@ public class TagResource extends JaxRsResourceBase {
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List tags", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "List tags")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class))))})
     public Response getTags(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                             @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -110,8 +113,8 @@ public class TagResource extends JaxRsResourceBase {
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Search tags", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Search tags")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class))))})
     public Response searchTags(@PathParam("searchKey") final String searchKey,
                                @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -148,8 +151,9 @@ public class TagResource extends JaxRsResourceBase {
     @GET
     @Path("/{tagId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve tag audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve tag audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getTagAuditLogsWithHistory(@PathParam("tagId") final UUID tagId,
                                                @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);

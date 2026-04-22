@@ -26,9 +26,9 @@ import org.killbill.billing.payment.api.TransactionType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="ComboPaymentTransaction", parent = ComboPaymentJson.class)
+@Schema(name = "ComboPaymentTransaction")
 public class ComboPaymentTransactionJson extends ComboPaymentJson {
 
     private final PaymentTransactionJson transaction;

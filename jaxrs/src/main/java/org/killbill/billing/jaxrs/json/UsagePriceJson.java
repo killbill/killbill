@@ -27,9 +27,9 @@ import org.killbill.billing.catalog.api.UsageType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="UsagePrice")
+@Schema(name = "UsagePrice")
 public class UsagePriceJson {
 
     private final String usageName;

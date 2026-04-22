@@ -89,17 +89,20 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.BUNDLES_PATH)
-@Api(value = JaxrsResource.BUNDLES_PATH, description = "Operations on bundles", tags="Bundle")
+@Tag(name = "Bundle", description = "Operations on bundles")
 public class BundleResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "bundleId";
@@ -128,9 +131,10 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a bundle by id", response = BundleJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
-                           @ApiResponse(code = 404, message = "Bundle not found")})
+    @Operation(summary = "Retrieve a bundle by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BundleJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response getBundle(@PathParam("bundleId") final UUID bundleId,
                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                               @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
@@ -145,9 +149,10 @@ public class BundleResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Bundle not found")})
-    public Response getBundleByKey(@ApiParam(required=true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+    @Operation(summary = "Retrieve a bundle by external key")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BundleJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
+    public Response getBundleByKey(@Parameter(required = true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                    @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
@@ -175,8 +180,9 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve bundle audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Subscription bundle not found")})
+    @Operation(summary = "Retrieve bundle audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Subscription bundle not found")})
     public Response getBundleAuditLogsWithHistory(@PathParam("bundleId") final UUID bundleId,
                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -188,8 +194,8 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List bundles", response = BundleJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "List bundles")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BundleJson.class))))})
     public Response getBundles(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -232,8 +238,8 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Search bundles", response = BundleJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Search bundles")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BundleJson.class))))})
     public Response searchBundles(@PathParam("searchKey") final String searchKey,
                                   @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                   @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -255,10 +261,10 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + PAUSE)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Pause a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
-                           @ApiResponse(code = 404, message = "Bundle not found")})
+    @Operation(summary = "Pause a bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response pauseBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -278,10 +284,10 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + RESUME)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Resume a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
-                           @ApiResponse(code = 404, message = "Bundle not found")})
+    @Operation(summary = "Resume a bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response resumeBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                  @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -300,10 +306,11 @@ public class BundleResource extends JaxRsResourceBase {
     @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
-    @ApiOperation(value = "Block a bundle", response = BlockingStateJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Blocking state created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
-                           @ApiResponse(code = 404, message = "Bundle not found")})
+    @Operation(summary = "Block a bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BlockingStateJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Blocking state created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response addBundleBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
                                            final BlockingStateJson json,
                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -324,8 +331,9 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve bundle custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getBundleCustomFields")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @Operation(summary = "Retrieve bundle custom fields", operationId = "getBundleCustomFields")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) {
@@ -337,9 +345,10 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to bundle", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @Operation(summary = "Add custom fields to bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
+                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response createBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                              final List<CustomFieldJson> customFields,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -356,9 +365,9 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Modify custom fields to bundle")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @Operation(summary = "Modify custom fields to bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response modifyBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                              final List<CustomFieldJson> customFields,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -377,9 +386,9 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove custom fields from bundle")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @Operation(summary = "Remove custom fields from bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response deleteBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                              @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -394,9 +403,10 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve bundle tags", response = TagJson.class, responseContainer = "List", nickname = "getBundleTags")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
-                           @ApiResponse(code = 404, message = "Bundle not found")})
+    @Operation(summary = "Retrieve bundle tags", operationId = "getBundleTags")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                             @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -411,10 +421,11 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Transfer a bundle to another account", response = BundleJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Bundle transferred successfully"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id, requested date or policy supplied"),
-                           @ApiResponse(code = 404, message = "Bundle not found")})
+    @Operation(summary = "Transfer a bundle to another account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BundleJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Bundle transferred successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id, requested date or policy supplied"),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response transferBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                    final BundleJson json,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -457,10 +468,10 @@ public class BundleResource extends JaxRsResourceBase {
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + RENAME_KEY)
     @Consumes(APPLICATION_JSON)
-    @ApiOperation(value = "Update a bundle externalKey")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid argumnent supplied"),
-                           @ApiResponse(code = 404, message = "Bundle not found")})
+    @Operation(summary = "Update a bundle externalKey")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid argumnent supplied"),
+                           @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response renameExternalKey(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                       final BundleJson json,
                                       /* @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString, */
@@ -485,9 +496,10 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to bundle", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @Operation(summary = "Add tags to bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response createBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                      final List<UUID> tagList,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -504,9 +516,9 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove tags from bundle")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @Operation(summary = "Remove tags from bundle")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response deleteBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                      @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,

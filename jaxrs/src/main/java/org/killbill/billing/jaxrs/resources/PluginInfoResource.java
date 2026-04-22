@@ -44,14 +44,17 @@ import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.PLUGINS_INFO_PATH)
-@Api(value = JaxrsResource.PLUGINS_INFO_PATH, description = "Operations on plugins", tags="PluginInfo")
+@Tag(name = "PluginInfo", description = "Operations on plugins")
 public class PluginInfoResource extends JaxRsResourceBase {
 
     private final PluginsInfoApi pluginsInfoApi;
@@ -74,7 +77,8 @@ public class PluginInfoResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve the list of registered plugins", response = PluginInfoJson.class, responseContainer = "List")
+    @Operation(summary = "Retrieve the list of registered plugins")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PluginInfoJson.class))))})
     public Response getPluginsInfo(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final List<PluginInfoJson> result = Iterables.toStream(pluginsInfoApi.getPluginsInfo())
                 .map(PluginInfoJson::new)

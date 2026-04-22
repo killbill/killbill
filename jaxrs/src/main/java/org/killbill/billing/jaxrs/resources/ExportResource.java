@@ -47,16 +47,18 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.EXPORT_PATH)
-@Api(value = JaxrsResource.EXPORT_PATH, description = "Export endpoints", tags="Export")
+@Tag(name = "Export", description = "Export endpoints")
 public class ExportResource extends JaxRsResourceBase {
 
     private final ExportUserApi exportUserApi;
@@ -80,10 +82,11 @@ public class ExportResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_OCTET_STREAM)
-    @ApiOperation(value = "Export account data", response = Response.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Export account data")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Response.class))),
+                           @ApiResponse(responseCode = "200", description = "Success"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public StreamingOutput exportDataForAccount(@PathParam("accountId") final UUID accountId,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                 @HeaderParam(HDR_REASON) final String reason,

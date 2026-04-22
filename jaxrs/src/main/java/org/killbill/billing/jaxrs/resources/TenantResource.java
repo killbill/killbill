@@ -68,17 +68,20 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.TENANTS_PATH)
-@Api(value = JaxrsResource.TENANTS_PATH, description = "Operations on tenants", tags="Tenant")
+@Tag(name = "Tenant", description = "Operations on tenants")
 public class TenantResource extends JaxRsResourceBase {
 
     private final TenantUserApi tenantApi;
@@ -105,9 +108,10 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/{tenantId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a tenant by id", response = TenantJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied"),
-                           @ApiResponse(code = 404, message = "Tenant not found")})
+    @Operation(summary = "Retrieve a tenant by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied"),
+                           @ApiResponse(responseCode = "404", description = "Tenant not found")})
     public Response getTenant(@PathParam("tenantId") final UUID tenantId) throws TenantApiException {
         final Tenant tenant = tenantApi.getTenantById(tenantId);
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
@@ -116,8 +120,9 @@ public class TenantResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a tenant by its API key", response = TenantJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Tenant not found")})
+    @Operation(summary = "Retrieve a tenant by its API key")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantJson.class))),
+                           @ApiResponse(responseCode = "404", description = "Tenant not found")})
     public Response getTenantByApiKey(@QueryParam(QUERY_API_KEY) final String externalKey) throws TenantApiException {
         final Tenant tenant = tenantApi.getTenantByApiKey(externalKey);
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
@@ -127,9 +132,10 @@ public class TenantResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a tenant", response = TenantJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tenant created successfully"),
-                           @ApiResponse(code = 409, message = "Tenant already exists")})
+    @Operation(summary = "Create a tenant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Tenant created successfully"),
+                           @ApiResponse(responseCode = "409", description = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
                                  @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("false") final Boolean useGlobalDefault,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -158,9 +164,10 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a push notification", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Push notification registered successfully"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Create a push notification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Push notification registered successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response registerPushNotificationCallback(@QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                      @HeaderParam(HDR_REASON) final String reason,
@@ -174,8 +181,9 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a push notification", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Retrieve a push notification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response getPushNotificationCallbacks(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, request);
     }
@@ -183,9 +191,9 @@ public class TenantResource extends JaxRsResourceBase {
     @TimedResource
     @DELETE
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
-    @ApiOperation(value = "Delete a push notification")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Delete a push notification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response deletePushNotificationCallbacks(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
@@ -198,9 +206,10 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant configuration for a plugin", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Plugin configuration uploaded successfully"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Add a per tenant configuration for a plugin")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Plugin configuration uploaded successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response uploadPluginConfiguration(@PathParam("pluginName") final String pluginName,
                                               final String pluginConfig,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -217,8 +226,9 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a per tenant configuration for a plugin", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Retrieve a per tenant configuration for a plugin")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response getPluginConfiguration(@PathParam("pluginName") final String pluginName,
                                            @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, request);
@@ -227,9 +237,9 @@ public class TenantResource extends JaxRsResourceBase {
     @TimedResource
     @DELETE
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
-    @ApiOperation(value = "Delete a per tenant configuration for a plugin")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Delete a per tenant configuration for a plugin")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response deletePluginConfiguration(@PathParam("pluginName") final String pluginName,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
@@ -243,8 +253,9 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + UPLOAD_PER_TENANT_CONFIG + "/{keyPrefix:" + ANYTHING_PATTERN + "}" + "/" + SEARCH)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a per tenant key value based on key prefix", response = TenantKeyValueJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Retrieve a per tenant key value based on key prefix")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TenantKeyValueJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response getAllPluginConfiguration(@PathParam("keyPrefix") final String keyPrefix,
                                               @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
@@ -263,9 +274,9 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant configuration (system properties)", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Per tenant configuration uploaded successfully"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation()", response = TenantKeyValueJson.class)
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Per tenant configuration uploaded successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response uploadPerTenantConfiguration(final String perTenantConfig,
                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                  @HeaderParam(HDR_REASON) final String reason,
@@ -279,8 +290,8 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a per tenant configuration (system properties)", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation()", response = TenantKeyValueJson.class)
+    @ApiResponses(value = {@ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response getPerTenantConfiguration(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PER_TENANT_CONFIG, null, request);
     }
@@ -288,9 +299,9 @@ public class TenantResource extends JaxRsResourceBase {
     @TimedResource
     @DELETE
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
-    @ApiOperation(value = "Delete a per tenant configuration (system properties)")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation()")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response deletePerTenantConfiguration(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
@@ -303,9 +314,10 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant payment state machine for a plugin", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Per tenant state machine uploaded successfully"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Add a per tenant payment state machine for a plugin")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Per tenant state machine uploaded successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response uploadPluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
                                                           final String paymentStateMachineConfig,
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -320,8 +332,9 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a per tenant payment state machine for a plugin", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Retrieve a per tenant payment state machine for a plugin")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response getPluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
                                                        @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, pluginName, request);
@@ -330,9 +343,9 @@ public class TenantResource extends JaxRsResourceBase {
     @TimedResource
     @DELETE
     @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
-    @ApiOperation(value = "Delete a per tenant payment state machine for a plugin")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Delete a per tenant payment state machine for a plugin")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response deletePluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
@@ -346,9 +359,10 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant user key/value", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Per tenant config uploaded successfully"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Add a per tenant user key/value")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Per tenant config uploaded successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response insertUserKeyValue(@PathParam("keyName") final String key,
                                final String value,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -365,8 +379,9 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a per tenant user key/value", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Retrieve a per tenant user key/value")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response getUserKeyValue(@PathParam("keyName") final String key,
                                            @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -379,9 +394,9 @@ public class TenantResource extends JaxRsResourceBase {
     @TimedResource
     @DELETE
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
-    @ApiOperation(value = "Delete  a per tenant user key/value")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @Operation(summary = "Delete  a per tenant user key/value")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response deleteUserKeyValue(@PathParam("keyName") final String key,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,

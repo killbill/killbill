@@ -27,9 +27,9 @@ import org.killbill.billing.catalog.api.CatalogValidationError;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value = "CatalogValidation")
+@Schema(name = "CatalogValidation")
 public class CatalogValidationJson {
 
     private final List<CatalogValidationErrorJson> catalogValidationErrors;
@@ -78,7 +78,7 @@ public class CatalogValidationJson {
         return catalogValidationErrors != null ? catalogValidationErrors.hashCode() : 0;
     }
 
-    @ApiModel(value = "CatalogValidationError")
+    @Schema(name = "CatalogValidationError")
     public static class CatalogValidationErrorJson {
 
         private final String errorDescription;

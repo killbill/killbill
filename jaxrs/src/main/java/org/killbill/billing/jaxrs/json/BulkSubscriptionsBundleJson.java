@@ -22,13 +22,12 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="BulkSubscriptionsBundle")
+@Schema(name = "BulkSubscriptionsBundle")
 public class BulkSubscriptionsBundleJson {
 
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final List<SubscriptionJson> baseEntitlementAndAddOns;
 
     @JsonCreator

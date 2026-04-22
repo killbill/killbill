@@ -63,16 +63,19 @@ import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.NODES_INFO_PATH)
-@Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info", tags="NodesInfo")
+@Tag(name = "NodesInfo", description = "Operations to retrieve nodes info")
 public class NodesInfoResource extends JaxRsResourceBase {
 
     private final KillbillNodesApi killbillInfoApi;
@@ -117,7 +120,8 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve all the nodes infos", response = NodeInfoJson.class, responseContainer = "List")
+    @Operation(summary = "Retrieve all the nodes infos")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = NodeInfoJson.class))))})
     public Response getNodesInfo(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
 
         final Iterable<NodeInfo> nodeInfos = killbillInfoApi.getNodesInfo();
@@ -142,9 +146,9 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger a node command")
-    @ApiResponses(value = {@ApiResponse(code = 202, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid node command supplied")})
+    @Operation(summary = "Trigger a node command")
+    @ApiResponses(value = {@ApiResponse(responseCode = "202", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid node command supplied")})
     public Response triggerNodeCommand(final NodeCommandJson json,
                                        @QueryParam(QUERY_LOCAL_NODE_ONLY) @DefaultValue("false") final Boolean localNodeOnly,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,

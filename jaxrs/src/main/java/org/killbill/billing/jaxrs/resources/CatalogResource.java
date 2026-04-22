@@ -99,17 +99,20 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static jakarta.ws.rs.core.MediaType.TEXT_XML;
 
 @Singleton
 @Path(JaxrsResource.CATALOG_PATH)
-@Api(value = JaxrsResource.CATALOG_PATH, description = "Catalog information", tags = "Catalog")
+@Tag(name = "Catalog", description = "Catalog information")
 public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogUserApi catalogUserApi;
@@ -140,8 +143,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(TEXT_XML)
-    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve the full catalog as XML")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
     public Response getCatalogXmlOriginal(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                           @jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -196,8 +199,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @Path("/xml")
     @GET
     @Produces(TEXT_XML)
-    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class)
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve the full catalog as XML")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
     public Response getCatalogXml(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -207,7 +210,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @TimedResource
     @POST
     @Consumes(TEXT_XML)
-    @ApiOperation(value = "Upload the full catalog as XML", hidden = true)
+    @Operation(summary = "Upload the full catalog as XML")
     @ApiResponses(value = {})
     public Response uploadCatalogXmlOriginal(final String catalogXML,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -224,8 +227,9 @@ public class CatalogResource extends JaxRsResourceBase {
     @POST
     @Path("/xml")
     @Consumes(TEXT_XML)
-    @ApiOperation(value = "Upload the full catalog as XML", response = String.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Catalog XML created successfully")})
+    @Operation(summary = "Upload the full catalog as XML")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+                           @ApiResponse(responseCode = "201", description = "Catalog XML created successfully")})
     public Response uploadCatalogXml(final String catalogXML,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
@@ -240,7 +244,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @Path("/xml/validate")
     @Consumes(TEXT_XML)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Validate a XML catalog", response = CatalogValidationJson.class)
+    @Operation(summary = "Validate a XML catalog")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CatalogValidationJson.class)))})
     public Response validateCatalogXml(final String catalogXML,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
@@ -256,8 +261,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve the catalog as JSON", responseContainer = "List", response = CatalogJson.class)
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve the catalog as JSON")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CatalogJson.class))))})
     public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -288,8 +293,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/versions")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a list of catalog versions", response = DateTime.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve a list of catalog versions")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = DateTime.class))))})
     public Response getCatalogVersions(@QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                        @jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = accountId != null ?
@@ -323,8 +328,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/availableAddons")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve available add-ons for a given product", response = PlanDetailJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve available add-ons for a given product")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PlanDetailJson.class))))})
     public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName,
                                        @Nullable @QueryParam("priceListName") final String priceListName,
                                        @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
@@ -347,8 +352,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/availableBasePlans")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve available base plans", response = PlanDetailJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve available base plans")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PlanDetailJson.class))))})
     public Response getAvailableBasePlans(@QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                           @jakarta.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final TenantContext tenantContext = accountId != null ?
@@ -371,8 +376,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/plan")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve plan for a given subscription and date", response = PlanJson.class)
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve plan for a given subscription and date")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PlanJson.class)))})
     public Response getPlanForSubscriptionAndDate(@QueryParam("subscriptionId") final UUID subscriptionId,
                                                   @QueryParam("requestedDate") final String requestedDateString,
                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, CurrencyValueNull {
@@ -397,8 +402,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/phase")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve phase for a given subscription and date", response = PhaseJson.class)
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve phase for a given subscription and date")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PhaseJson.class)))})
     public Response getPhaseForSubscriptionAndDate(@QueryParam("subscriptionId") final UUID subscriptionId,
                                                    @QueryParam("requestedDate") final String requestedDateString,
                                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, CurrencyValueNull {
@@ -423,8 +428,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/product")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve product for a given subscription and date", response = ProductJson.class)
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve product for a given subscription and date")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductJson.class)))})
     public Response getProductForSubscriptionAndDate(@QueryParam("subscriptionId") final UUID subscriptionId,
                                                      @QueryParam("requestedDate") final String requestedDateString,
                                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
@@ -449,8 +454,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/priceList")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve priceList for a given subscription and date", response = PriceListJson.class)
-    @ApiResponses(value = {})
+    @Operation(summary = "Retrieve priceList for a given subscription and date")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PriceListJson.class)))})
     public Response getPriceListForSubscriptionAndDate(@QueryParam("subscriptionId") final UUID subscriptionId,
                                                        @QueryParam("requestedDate") final String requestedDateString,
                                                        @jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
@@ -501,8 +506,9 @@ public class CatalogResource extends JaxRsResourceBase {
     @Path("/simplePlan")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a simple plan entry in the current version of the catalog", response = String.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created new plan successfully")})
+    @Operation(summary = "Add a simple plan entry in the current version of the catalog")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+                           @ApiResponse(responseCode = "201", description = "Created new plan successfully")})
     public Response addSimplePlan(final SimplePlanJson simplePlan,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -568,8 +574,8 @@ public class CatalogResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @ApiOperation(value = "Delete all versions for a per tenant catalog")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+    @Operation(summary = "Delete all versions for a per tenant catalog")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation")})
     public Response deleteCatalog(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,

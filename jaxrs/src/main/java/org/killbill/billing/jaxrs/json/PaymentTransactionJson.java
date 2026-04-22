@@ -30,26 +30,25 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="PaymentTransaction", parent = JsonBase.class)
+@Schema(name = "PaymentTransaction")
 public class PaymentTransactionJson extends JsonBase {
 
     private final UUID transactionId;
     private final String transactionExternalKey;
-    @ApiModelProperty(value = "Associated payment id, required when notifying state transitions")
+    @Schema(description = "Associated payment id, required when notifying state transitions")
     private final UUID paymentId;
     private final String paymentExternalKey;
-    @ApiModelProperty(dataType = "org.killbill.billing.payment.api.TransactionType")
+    @Schema(implementation = TransactionType.class)
     private final TransactionType transactionType;
-    @ApiModelProperty(dataType = "org.joda.time.DateTime")
+    @Schema(implementation = DateTime.class)
     private final DateTime effectiveDate;
-    @ApiModelProperty(value = "Transaction status, required for state change notifications", dataType = "org.killbill.billing.payment.api.TransactionStatus")
+    @Schema(description = "Transaction status, required for state change notifications", implementation = TransactionStatus.class)
     private final String status;
-    @ApiModelProperty(value = "Transaction amount, required except for void operations")
+    @Schema(description = "Transaction amount, required except for void operations")
     private final BigDecimal amount;
-    @ApiModelProperty(value = "Amount currency (account currency unless specified)", dataType = "org.killbill.billing.catalog.api.Currency")
+    @Schema(description = "Amount currency (account currency unless specified)", implementation = Currency.class)
     private final Currency currency;
     private final BigDecimal processedAmount;
     private final Currency processedCurrency;

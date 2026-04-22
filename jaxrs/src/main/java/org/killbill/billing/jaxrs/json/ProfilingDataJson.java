@@ -30,9 +30,9 @@ import org.killbill.commons.profiling.ProfilingData.ProfilingDataItem;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="ProfilingData")
+@Schema(name = "ProfilingData")
 public class ProfilingDataJson {
 
     private final List<ProfilingDataJsonItem> rawData;

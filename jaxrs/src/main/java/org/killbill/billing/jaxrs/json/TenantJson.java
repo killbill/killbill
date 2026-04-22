@@ -23,17 +23,16 @@ import org.killbill.billing.tenant.api.TenantData;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="Tenant", parent = JsonBase.class)
+@Schema(name = "Tenant")
 public class TenantJson extends JsonBase {
 
     private final UUID tenantId;
     private final String externalKey;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String apiKey;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String apiSecret;
 
     @JsonCreator

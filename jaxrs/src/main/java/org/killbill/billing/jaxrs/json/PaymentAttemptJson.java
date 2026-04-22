@@ -31,10 +31,9 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="PaymentAttempt", parent = JsonBase.class)
+@Schema(name = "PaymentAttempt")
 public class PaymentAttemptJson extends JsonBase {
 
     private final UUID accountId;
@@ -43,12 +42,12 @@ public class PaymentAttemptJson extends JsonBase {
     private final UUID transactionId;
     private final String transactionExternalKey;
     private final TransactionType transactionType;
-    @ApiModelProperty(dataType = "org.joda.time.DateTime")
+    @Schema(implementation = DateTime.class)
     private final DateTime effectiveDate;
     private final String stateName;
-    @ApiModelProperty(value = "Transaction amount, required except for void operations")
+    @Schema(description = "Transaction amount, required except for void operations")
     private final BigDecimal amount;
-    @ApiModelProperty(value = "Amount currency (account currency unless specified)", dataType = "org.killbill.billing.catalog.api.Currency")
+    @Schema(description = "Amount currency (account currency unless specified)", implementation = Currency.class)
     private final Currency currency;
     // Plugin specific fields
     private final String pluginName;

@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.147.0-SNAPSHOT</version>
+        <version>0.147.0-e070ccd-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.24.17-SNAPSHOT</version>
@@ -65,11 +65,26 @@
         <killbill-platform.version>0.42.0-SNAPSHOT</killbill-platform.version>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
-        <!-- Temporary until upgrade to 2.x -->
-        <swagger.version>1.6.2</swagger.version>
+        <!-- Swagger 2.2.x (OpenAPI 3) -->
+        <swagger.version>2.2.28</swagger.version>
     </properties>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-jaxrs2-jakarta</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-models-jakarta</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-common</artifactId>

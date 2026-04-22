@@ -27,14 +27,13 @@ import org.killbill.billing.util.entity.Entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="AuditLog")
+@Schema(name = "AuditLog")
 public class AuditLogJson {
 
     private final String changeType;
-    @ApiModelProperty(dataType = "org.joda.time.DateTime")
+    @Schema(implementation = DateTime.class)
     private final DateTime changeDate;
     private final String changedBy;
     private final String reasonCode;

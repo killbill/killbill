@@ -60,16 +60,19 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
-@Api(value = JaxrsResource.CREDITS_PATH, description = "Operations on credits", tags = "Credit")
+@Tag(name = "Credit", description = "Operations on credits")
 public class CreditResource extends JaxRsResourceBase {
 
     private final InvoiceUserApi invoiceUserApi;
@@ -94,9 +97,10 @@ public class CreditResource extends JaxRsResourceBase {
     @GET
     @Path("/{creditId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a credit by id", response = InvoiceItemJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid credit id supplied"),
-                           @ApiResponse(code = 404, message = "Credit not found")})
+    @Operation(summary = "Retrieve a credit by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoiceItemJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid credit id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Credit not found")})
     public Response getCredit(@PathParam("creditId") final UUID creditId,
                               @jakarta.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -108,10 +112,11 @@ public class CreditResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a credit", response = InvoiceItemJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created credit successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Create a credit")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceItemJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Created credit successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response createCredits(final List<InvoiceItemJson> json,
                                  @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
