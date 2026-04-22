@@ -50,7 +50,6 @@ import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
-import io.swagger.v3.jaxrs2.integration.OpenApiServlet;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;

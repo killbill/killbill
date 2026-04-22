@@ -71,6 +71,11 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-common</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations-jakarta</artifactId>
                 <version>${swagger.version}</version>
@@ -84,11 +89,6 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-models-jakarta</artifactId>
                 <version>${swagger.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-common</artifactId>
-                <version>${netty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

@@ -26,6 +26,7 @@ import org.killbill.billing.util.api.AuditLevel;
 
 import io.swagger.v3.jaxrs2.ReaderListener;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.integration.api.OpenApiReader;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -47,7 +48,7 @@ public class KillBillApiDefinition implements ReaderListener {
     public static final String API_SECRET_SCHEME = "Killbill Api Secret";
 
     @Override
-    public void beforeScan(final io.swagger.v3.jaxrs2.Reader reader, final OpenAPI openAPI) {
+    public void beforeScan(final OpenApiReader reader, final OpenAPI openAPI) {
         if (openAPI.getComponents() == null) {
             openAPI.setComponents(new Components());
         }
@@ -71,7 +72,7 @@ public class KillBillApiDefinition implements ReaderListener {
     }
 
     @Override
-    public void afterScan(final io.swagger.v3.jaxrs2.Reader reader, final OpenAPI openAPI) {
+    public void afterScan(final OpenApiReader reader, final OpenAPI openAPI) {
         if (openAPI.getPaths() != null) {
             for (final String pathName : openAPI.getPaths().keySet()) {
                 final PathItem pathItem = openAPI.getPaths().get(pathName);
