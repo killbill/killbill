@@ -109,6 +109,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
@@ -122,10 +126,6 @@
             <artifactId>jakarta.xml.bind-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
@@ -135,7 +135,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
-            <artifactId>shiro-core</artifactId>
+            <artifactId>shiro-cache</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
@@ -143,16 +143,16 @@
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
-            <artifactId>shiro-lang</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.shiro</groupId>
-            <artifactId>shiro-cache</artifactId>
+            <artifactId>shiro-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-guice</artifactId>
             <classifier>jakarta</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-lang</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
