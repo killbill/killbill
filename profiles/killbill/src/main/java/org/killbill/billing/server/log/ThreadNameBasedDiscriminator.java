@@ -85,15 +85,41 @@ public class ThreadNameBasedDiscriminator implements Discriminator<ILoggingEvent
         return null;
     }
 
+    @VisibleForTesting
+    static String buildMarkerName(final String prefix, final char[] classNameChars, final int startPosition) {
+        final StringBuilder markerName = new StringBuilder(prefix);
+        for (int j = startPosition; j < classNameChars.length; j++) {
+            final char kar = classNameChars[j];
+            if (kar == '.') {
+                break;
+            }
+            markerName.append(kar);
+        }
+        return markerName.toString();
+    }
+
+    @VisibleForTesting
+    static String buildPluginMarkerName(final char[] classNameChars, final int startPosition) {
+        final StringBuilder markerName = new StringBuilder();
+        int next = startPosition;
+        String cur;
+        while ((cur = findNextToken(classNameChars, next, '.')) != null) {
+            markerName.setLength(0);
+            markerName.append(classNameChars, next, cur.length() - 1);
+            next += cur.length();
+        }
+        return markerName.isEmpty() ? null : markerName.toString();
+    }
+
     private String getKillbillCaller() {
-        final Class[] stackTrace = killbillSecurityManager.getClassContext();
+        final Class<?>[] stackTrace = killbillSecurityManager.getClassContext();
         if (stackTrace == null || stackTrace.length <= 3) {
             return null;
         }
 
         // Skip first ones (i.e. skip this class)
         for (int i = 4; i < stackTrace.length; i++) {
-            final Class aStackTrace = stackTrace[i];
+            final Class<?> aStackTrace = stackTrace[i];
             final String className = aStackTrace.getName();
             final char[] classNameChars = className.toCharArray();
 
@@ -192,27 +218,14 @@ public class ThreadNameBasedDiscriminator implements Discriminator<ILoggingEvent
                     }
                 }
 
-                for (int j = startPosition; j < classNameChars.length; j++) {
-                    final char kar = classNameChars[j];
-                    if (kar == '.') {
-                        break;
-                    }
-                    markerName += kar;
-                }
-                return markerName;
+                return buildMarkerName(markerName, classNameChars, startPosition);
             } else { /* Support for plugins as well */
                 int next = lookupNextToken(classNameChars, 0, "com.killbill.billing.plugin.");
                 if (next == -1) {
                     next = lookupNextToken(classNameChars, 0, "org.killbill.billing.plugin.");
                 }
                 if (next != -1) {
-                    String markerName = null;
-                    String cur;
-                    while ((cur = findNextToken(classNameChars, next, '.')) != null) {
-                        markerName = cur.substring(0, cur.length() - 1);
-                        next += cur.length();
-                    }
-                    return markerName;
+                    return buildPluginMarkerName(classNameChars, next);
                 }
             }
         }
