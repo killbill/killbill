@@ -119,8 +119,9 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/users")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @Operation()", response = UserRolesJson.class)
-    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "User role created successfully")})
+    @Operation(summary = "Add a new user with roles (to make api requests)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserRolesJson.class))),
+                           @ApiResponse(responseCode = "201", description = "User role created successfully")})
     public Response addUserRoles(final UserRolesJson json,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
@@ -220,8 +221,9 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/roles")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @Operation()", response = RoleDefinitionJson.class)
-    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Role definition created successfully")})
+    @Operation(summary = "Add a new role definition)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDefinitionJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Role definition created successfully")})
     public Response addRoleDefinition(final RoleDefinitionJson json,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
@@ -238,7 +240,7 @@ public class SecurityResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/roles")
-    @Operation()")
+    @Operation(summary = "Update a new role definition)")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation")})
     public Response updateRoleDefinition(final RoleDefinitionJson json,
                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,

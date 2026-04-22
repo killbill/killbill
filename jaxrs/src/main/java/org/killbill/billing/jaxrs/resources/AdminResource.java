@@ -108,7 +108,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.ADMIN_PATH)
-@Tag(name = JaxrsResource.ADMIN_PATH)", tags = "Admin")
+@Tag(name = "Admin", description = "Admin operations (will require special privileges)")
 public class AdminResource extends JaxRsResourceBase {
 
     private static final String OK = "OK";

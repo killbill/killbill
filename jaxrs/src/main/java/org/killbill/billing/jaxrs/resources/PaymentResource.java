@@ -717,8 +717,9 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/" + COMBO)
-    @Operation() account ", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @Operation(summary = "Combo api to create a new payment transaction on a existing (or not) account ")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
                            @ApiResponse(responseCode = "400", description = "Invalid data for Account or PaymentMethod"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
                            @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),

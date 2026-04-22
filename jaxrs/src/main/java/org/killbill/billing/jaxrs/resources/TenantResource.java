@@ -274,8 +274,9 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @Operation()", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Per tenant configuration uploaded successfully"),
+    @Operation(summary = "Add a per tenant configuration (system properties)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Per tenant configuration uploaded successfully"),
                            @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response uploadPerTenantConfiguration(final String perTenantConfig,
                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -290,8 +291,9 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
     @Produces(APPLICATION_JSON)
-    @Operation()", response = TenantKeyValueJson.class)
-    @ApiResponses(value = {@ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
+    @Operation(summary = "Retrieve a per tenant configuration (system properties)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response getPerTenantConfiguration(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return getTenantKey(TenantKey.PER_TENANT_CONFIG, null, request);
     }
@@ -299,7 +301,7 @@ public class TenantResource extends JaxRsResourceBase {
     @TimedResource
     @DELETE
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
-    @Operation()")
+    @Operation(summary = "Delete a per tenant configuration (system properties)")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
                            @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response deletePerTenantConfiguration(@HeaderParam(HDR_CREATED_BY) final String createdBy,

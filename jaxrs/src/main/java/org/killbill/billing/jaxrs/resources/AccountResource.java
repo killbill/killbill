@@ -1072,8 +1072,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @Operation()", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @Operation(summary = "Trigger a payment using the account external key (authorization, purchase or credit)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
                            @ApiResponse(responseCode = "400", description = "Invalid account external key supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
@@ -1102,8 +1103,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @Operation()", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @Operation(summary = "Trigger a payment (authorization, purchase or credit)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
