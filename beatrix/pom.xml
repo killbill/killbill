@@ -106,7 +106,15 @@
         </dependency>
         <dependency>
             <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <!-- Needed to re-declare here. Otherwise, (at least during test), they pick the javax version -->
+            <classifier>jakarta</classifier>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ehcache</groupId>
             <artifactId>ehcache-clustered</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.javassist</groupId>
