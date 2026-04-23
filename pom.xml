@@ -109,9 +109,9 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-            <id>sonatype-snapshots</id>
-            <name>Sonatype Snapshots</name>
-            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+            <id>central-snapshots</id>
+            <name>Central Snapshots</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
         </repository>
     </repositories>
 </project>
