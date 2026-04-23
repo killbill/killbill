@@ -51,7 +51,7 @@ jobs:
             database-password: 'root'
             database-port: '3306'
             database: 'mysql'
-            java-version: '11'
+            java-version: '21'
             java-distribution: 'temurin'
             maven_version: '3.8.4'
     steps:
