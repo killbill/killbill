@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.147.0-e070ccd-SNAPSHOT</version>
+        <version>0.147.0-6e1ad50-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.24.17-SNAPSHOT</version>
@@ -61,12 +61,8 @@
     <properties>
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
-        <killbill-commons.version>0.27.0-SNAPSHOT</killbill-commons.version>
-        <killbill-platform.version>0.42.0-SNAPSHOT</killbill-platform.version>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
-        <!-- Swagger 2.2.x (OpenAPI 3) -->
-        <swagger.version>2.2.28</swagger.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -74,21 +70,6 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-common</artifactId>
                 <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.swagger.core.v3</groupId>
-                <artifactId>swagger-annotations-jakarta</artifactId>
-                <version>${swagger.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.swagger.core.v3</groupId>
-                <artifactId>swagger-jaxrs2-jakarta</artifactId>
-                <version>${swagger.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.swagger.core.v3</groupId>
-                <artifactId>swagger-models-jakarta</artifactId>
-                <version>${swagger.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -120,4 +101,17 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>sonatype-snapshots</id>
+            <name>Sonatype Snapshots</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+        </repository>
+    </repositories>
 </project>
