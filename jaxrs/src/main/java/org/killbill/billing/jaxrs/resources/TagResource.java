@@ -60,7 +60,6 @@ import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -72,7 +71,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TAGS_PATH)
-@Tag(name = "Tag", description = "Operations on tags")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Tag", description = "Operations on tags")
 public class TagResource extends JaxRsResourceBase {
 
     @Inject

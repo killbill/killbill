@@ -111,7 +111,6 @@ import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -126,7 +125,7 @@ import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.b
 
 @Singleton
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
-@Tag(name = "Subscription", description = "Operations on subscriptions")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Subscription", description = "Operations on subscriptions")
 public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);

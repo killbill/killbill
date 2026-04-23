@@ -141,7 +141,6 @@ import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -154,7 +153,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
-@Tag(name = "Account", description = "Operations on accounts")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Account", description = "Operations on accounts")
 public class AccountResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "accountId";

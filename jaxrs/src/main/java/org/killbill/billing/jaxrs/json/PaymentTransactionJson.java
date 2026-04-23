@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentTransaction;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -44,7 +45,8 @@ public class PaymentTransactionJson extends JsonBase {
     private final TransactionType transactionType;
     @Schema(implementation = DateTime.class)
     private final DateTime effectiveDate;
-    @Schema(description = "Transaction status, required for state change notifications", implementation = TransactionStatus.class)
+    @Schema(description = "Transaction status, required for state change notifications",
+            implementation = TransactionStatus.class)
     private final String status;
     @Schema(description = "Transaction amount, required except for void operations")
     private final BigDecimal amount;

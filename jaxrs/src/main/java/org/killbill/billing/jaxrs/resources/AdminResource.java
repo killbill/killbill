@@ -96,7 +96,6 @@ import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -108,7 +107,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.ADMIN_PATH)
-@Tag(name = "Admin", description = "Admin operations (will require special privileges)")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Admin", description = "Admin operations (will require special privileges)")
 public class AdminResource extends JaxRsResourceBase {
 
     private static final String OK = "OK";
