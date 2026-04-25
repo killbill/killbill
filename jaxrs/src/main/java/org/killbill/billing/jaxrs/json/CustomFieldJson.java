@@ -27,18 +27,17 @@ import org.killbill.billing.util.customfield.CustomField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="CustomField", parent = JsonBase.class)
+@Schema(name = "CustomField")
 public class CustomFieldJson extends JsonBase {
 
     private final UUID customFieldId;
     private final UUID objectId;
     private final ObjectType objectType;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String name;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String value;
 
     @JsonCreator

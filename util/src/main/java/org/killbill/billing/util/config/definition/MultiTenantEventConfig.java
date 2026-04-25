@@ -19,8 +19,8 @@ package org.killbill.billing.util.config.definition;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.BusInternalEvent.BusInternalEventType;

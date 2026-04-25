@@ -25,9 +25,9 @@ import org.killbill.billing.osgi.api.PluginInfo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="PluginInfo")
+@Schema(name = "PluginInfo")
 public class PluginInfoJson {
 
     private final String bundleSymbolicName;
@@ -100,7 +100,7 @@ public class PluginInfoJson {
         return services;
     }
 
-    @ApiModel(value="PluginServiceInfo")
+    @Schema(name = "PluginServiceInfo")
     public static class PluginServiceInfoJson {
 
         private final String serviceTypeName;

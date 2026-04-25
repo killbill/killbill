@@ -37,9 +37,9 @@ import org.killbill.billing.util.audit.AuditLog;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="Invoice", parent = JsonBase.class)
+@Schema(name = "Invoice")
 public class InvoiceJson extends JsonBase {
 
     private final BigDecimal amount;

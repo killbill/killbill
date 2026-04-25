@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;

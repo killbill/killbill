@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;

@@ -19,7 +19,7 @@ package org.killbill.billing.util.optimizer;
 
 import java.sql.Connection;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;

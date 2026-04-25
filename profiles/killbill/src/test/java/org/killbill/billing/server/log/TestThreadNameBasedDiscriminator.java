@@ -81,4 +81,36 @@ public class TestThreadNameBasedDiscriminator extends KillbillTestSuite {
         res = ThreadNameBasedDiscriminator.findNextToken(input.toCharArray(), next, '.');
         Assert.assertNull(res);
     }
+
+    @Test(groups = "fast")
+    public void testBuildMarkerName() {
+        final String input = "org.killbill.billing.invoice.generator.DefaultInvoiceGenerator";
+
+        final String res = ThreadNameBasedDiscriminator.buildMarkerName("org.killbill.billing.", input.toCharArray(), 21);
+        Assert.assertEquals(res, "org.killbill.billing.invoice");
+    }
+
+    @Test(groups = "fast")
+    public void testBuildMarkerNameWithoutNextSeparator() {
+        final String input = "org.killbill.commons.metrics";
+
+        final String res = ThreadNameBasedDiscriminator.buildMarkerName("org.killbill.", input.toCharArray(), 13);
+        Assert.assertEquals(res, "org.killbill.commons");
+    }
+
+    @Test(groups = "fast")
+    public void testBuildPluginMarkerName() {
+        final String input = "org.killbill.billing.plugin.analytics.segment.SegmentPluginApi.";
+
+        final String res = ThreadNameBasedDiscriminator.buildPluginMarkerName(input.toCharArray(), 28);
+        Assert.assertEquals(res, "SegmentPluginApi");
+    }
+
+    @Test(groups = "fast")
+    public void testBuildPluginMarkerNameReturnsNullWhenNoTokenTerminatorExists() {
+        final String input = "NoTokenTerminatorApi";
+
+        final String res = ThreadNameBasedDiscriminator.buildPluginMarkerName(input.toCharArray(), 0);
+        Assert.assertNull(res);
+    }
 }

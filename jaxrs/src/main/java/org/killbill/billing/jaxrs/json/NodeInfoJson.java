@@ -23,9 +23,9 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="NodeInfo")
+@Schema(name = "NodeInfo")
 public class NodeInfoJson {
 
     private final String nodeName;

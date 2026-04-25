@@ -20,8 +20,8 @@ package org.killbill.billing.util.cache;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.Cachable.CacheType;

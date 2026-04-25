@@ -29,9 +29,9 @@ import org.killbill.billing.payment.api.TransactionType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="InvoicePaymentTransaction")
+@Schema(name = "InvoicePaymentTransaction")
 public class InvoicePaymentTransactionJson extends PaymentTransactionJson {
 
     private final Boolean isAdjusted;

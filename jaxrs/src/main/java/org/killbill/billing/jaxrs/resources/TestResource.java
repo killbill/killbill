@@ -20,19 +20,19 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.Iterator;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -66,12 +66,15 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 //
 // Test endpoint that should not be enabled on a production system.
@@ -84,7 +87,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 //
 @Singleton
 @Path(JaxrsResource.TEST_PATH)
-@Api(value = JaxrsResource.TEST_PATH, description = "Operations for testing", hidden=true)
+@Hidden
 public class TestResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestResource.class);
@@ -143,10 +146,10 @@ public class TestResource extends JaxRsResourceBase {
 
     @GET
     @Path("/queues")
-    @ApiOperation(value = "Wait for all available bus events and notifications to be processed")
-    @ApiResponses(value = {@ApiResponse(code = 412, message = "Timeout too short")})
+    @Operation(summary = "Wait for all available bus events and notifications to be processed")
+    @ApiResponses(value = {@ApiResponse(responseCode = "412", description = "Timeout too short")})
     public Response waitForQueuesToComplete(@QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
-                                            @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                            @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final boolean areAllNotificationsProcessed = waitForNotificationToComplete(request, timeoutSec);
         return Response.status(areAllNotificationsProcessed ? Status.OK : Status.PRECONDITION_FAILED).build();
     }
@@ -154,8 +157,9 @@ public class TestResource extends JaxRsResourceBase {
     @GET
     @Path("/clock")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Get the current time", response = ClockResource.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid timezone supplied")})
+    @Operation(summary = "Get the current time")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ClockResource.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid timezone supplied")})
     public Response getCurrentTime(@QueryParam("timeZone") final String timeZoneStr) {
         final DateTimeZone timeZone = timeZoneStr != null ? DateTimeZone.forID(timeZoneStr) : DateTimeZone.UTC;
         final DateTime now = clock.getUTCNow();
@@ -166,13 +170,14 @@ public class TestResource extends JaxRsResourceBase {
     @POST
     @Path("/clock")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Set the current time", response = ClockResource.class)
-    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"), */
-                           @ApiResponse(code = 400, message = "Invalid time or timezone supplied")})
+    @Operation(summary = "Set the current time")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ClockResource.class))),
+                           /* @ApiResponse(responseCode = "200", description = "Successful"), */
+                           @ApiResponse(responseCode = "400", description = "Invalid time or timezone supplied")})
     public Response setTestClockTime(@QueryParam(QUERY_REQUESTED_DT) final String requestedClockDate,
                                      @QueryParam("timeZone") final String timeZoneStr,
                                      @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
         if (requestedClockDate == null) {
@@ -190,15 +195,16 @@ public class TestResource extends JaxRsResourceBase {
     @PUT
     @Path("/clock")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Move the current time", response = ClockResource.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid timezone supplied")})
+    @Operation(summary = "Move the current time")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ClockResource.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid timezone supplied")})
     public Response updateTestClockTime(@QueryParam("days") final Integer addDays,
                                         @QueryParam("weeks") final Integer addWeeks,
                                         @QueryParam("months") final Integer addMonths,
                                         @QueryParam("years") final Integer addYears,
                                         @QueryParam("timeZone") final String timeZoneStr,
                                         @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                        @jakarta.ws.rs.core.Context final HttpServletRequest request) {
 
         final ClockMock testClock = getClockMock();
         if (addDays != null) {

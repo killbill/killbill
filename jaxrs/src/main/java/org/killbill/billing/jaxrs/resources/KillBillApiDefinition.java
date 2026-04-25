@@ -24,27 +24,23 @@ import java.util.stream.Collectors;
 
 import org.killbill.billing.util.api.AuditLevel;
 
-import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.jaxrs.config.ReaderListener;
-import io.swagger.models.Model;
-import io.swagger.models.Operation;
-import io.swagger.models.Path;
-import io.swagger.models.Response;
-import io.swagger.models.Swagger;
-import io.swagger.models.auth.ApiKeyAuthDefinition;
-import io.swagger.models.auth.BasicAuthDefinition;
-import io.swagger.models.auth.In;
-import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.HeaderParameter;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.PathParameter;
-import io.swagger.models.parameters.QueryParameter;
-import io.swagger.models.properties.Property;
+import io.swagger.v3.jaxrs2.ReaderListener;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.integration.api.OpenApiReader;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 
 import static org.killbill.billing.jaxrs.resources.JaxrsResource.HDR_CREATED_BY;
 import static org.killbill.billing.jaxrs.resources.JaxrsResource.QUERY_AUDIT;
 
-@SwaggerDefinition
+@OpenAPIDefinition
 public class KillBillApiDefinition implements ReaderListener {
 
     public static final String BASIC_AUTH_SCHEME = "basicAuth";
@@ -52,97 +48,130 @@ public class KillBillApiDefinition implements ReaderListener {
     public static final String API_SECRET_SCHEME = "Killbill Api Secret";
 
     @Override
-    public void beforeScan(final io.swagger.jaxrs.Reader reader, final Swagger swagger) {
-        BasicAuthDefinition basicAuthDefinition = new BasicAuthDefinition();
-        swagger.addSecurityDefinition(BASIC_AUTH_SCHEME, basicAuthDefinition);
+    public void beforeScan(final OpenApiReader reader, final OpenAPI openAPI) {
+        if (openAPI.getComponents() == null) {
+            openAPI.setComponents(new Components());
+        }
 
-        ApiKeyAuthDefinition xKillbillApiKey = new ApiKeyAuthDefinition("X-Killbill-ApiKey", In.HEADER);
-        swagger.addSecurityDefinition(API_KEY_SCHEME, xKillbillApiKey);
+        final SecurityScheme basicAuth = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("basic");
+        openAPI.getComponents().addSecuritySchemes(BASIC_AUTH_SCHEME, basicAuth);
 
-        ApiKeyAuthDefinition xKillbillApiSecret = new ApiKeyAuthDefinition("X-Killbill-ApiSecret", In.HEADER);
-        swagger.addSecurityDefinition(API_SECRET_SCHEME, xKillbillApiSecret);
+        final SecurityScheme apiKey = new SecurityScheme()
+                .type(SecurityScheme.Type.APIKEY)
+                .name("X-Killbill-ApiKey")
+                .in(SecurityScheme.In.HEADER);
+        openAPI.getComponents().addSecuritySchemes(API_KEY_SCHEME, apiKey);
+
+        final SecurityScheme apiSecret = new SecurityScheme()
+                .type(SecurityScheme.Type.APIKEY)
+                .name("X-Killbill-ApiSecret")
+                .in(SecurityScheme.In.HEADER);
+        openAPI.getComponents().addSecuritySchemes(API_SECRET_SCHEME, apiSecret);
     }
 
     @Override
-    public void afterScan(final io.swagger.jaxrs.Reader reader, final Swagger swagger) {
-
-        for (final String pathName : swagger.getPaths().keySet()) {
-            final Path path = swagger.getPaths().get(pathName);
-            decorateOperation(path.getGet(), pathName, "GET");
-            decorateOperation(path.getPost(), pathName, "POST");
-            decorateOperation(path.getPut(), pathName, "PUT");
-            decorateOperation(path.getDelete(), pathName, "DELETE");
-            decorateOperation(path.getOptions(), pathName, "OPTIONS");
-
-        }
-
-        for (final Model m : swagger.getDefinitions().values()) {
-            if (m.getProperties() != null) {
-                for (final Property p : m.getProperties().values()) {
-                    p.setReadOnly(false);
-                }
+    public void afterScan(final OpenApiReader reader, final OpenAPI openAPI) {
+        if (openAPI.getPaths() != null) {
+            for (final String pathName : openAPI.getPaths().keySet()) {
+                final PathItem pathItem = openAPI.getPaths().get(pathName);
+                decorateOperation(pathItem.getGet(), pathName, "GET");
+                decorateOperation(pathItem.getPost(), pathName, "POST");
+                decorateOperation(pathItem.getPut(), pathName, "PUT");
+                decorateOperation(pathItem.getDelete(), pathName, "DELETE");
+                decorateOperation(pathItem.getOptions(), pathName, "OPTIONS");
             }
         }
-    }
 
-    private void decorateOperation(final Operation op, final String pathName, final String httpMethod) {
-        if (op != null) {
-
-            // Bug in swagger ? somehow when we only specify a 201, swagger adds a 200 response with the schema response
-            if (httpMethod.equals("POST")) {
-                if (op.getResponses().containsKey("201") && op.getResponses().containsKey("200")) {
-                    final Response resp200 =op.getResponses().remove("200");
-                    final Response resp201 = op.getResponses().get("201");
-                    if (resp201.getSchema() == null) {
-                        resp201.setSchema(resp200.getSchema());
-                    }
-                }
-            }
-
-            op.addSecurity(BASIC_AUTH_SCHEME, null);
-            if (requiresTenantInformation(pathName, httpMethod)) {
-                op.addSecurity(API_KEY_SCHEME, null);
-                op.addSecurity(API_SECRET_SCHEME, null);
-            }
-
-            for (Parameter p : op.getParameters()) {
-                if (p instanceof BodyParameter) {
-                    p.setRequired(true);
-                } else if (p instanceof PathParameter) {
-                    p.setRequired(true);
-                } else if (p instanceof HeaderParameter) {
-                    if (p.getName().equals(HDR_CREATED_BY)) {
-                        p.setRequired(true);
-                    }
-                } else if (p instanceof QueryParameter) {
-                    QueryParameter qp = (QueryParameter) p;
-                    if (qp.getName().equals(QUERY_AUDIT)) {
-                        qp.setRequired(false);
-                        qp.setType("string");
-                        final List<String> values = Arrays.stream(AuditLevel.values())
-                                .map(Objects::toString)
-                                .collect(Collectors.toUnmodifiableList());
-                        qp.setEnum(values);
-                    } else if (qp.getName().equals(JaxrsResource.QUERY_REQUESTED_DT) ||
-                               qp.getName().equals(JaxrsResource.QUERY_ENTITLEMENT_REQUESTED_DT) ||
-                               qp.getName().equals(JaxrsResource.QUERY_BILLING_REQUESTED_DT) ||
-                               qp.getName().equals(JaxrsResource.QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) ||
-                               qp.getName().equals(JaxrsResource.QUERY_START_DATE) ||
-                               qp.getName().equals(JaxrsResource.QUERY_END_DATE) ||
-                               qp.getName().equals(JaxrsResource.QUERY_TARGET_DATE)) {
-                        qp.setType("string");
-                        // Yack... See #922
-                        if (op.getOperationId().equals("getCatalogJson") ||
-                            op.getOperationId().equals("getCatalogXml") ||
-                            op.getOperationId().equals("setTestClockTime")) {
-                            qp.setFormat("date-time");
-                        } else {
-                            qp.setFormat("date");
+        if (openAPI.getComponents() != null && openAPI.getComponents().getSchemas() != null) {
+            for (final Schema<?> schema : openAPI.getComponents().getSchemas().values()) {
+                if (schema.getProperties() != null) {
+                    for (final Object prop : schema.getProperties().values()) {
+                        if (prop instanceof Schema) {
+                            ((Schema<?>) prop).setReadOnly(null);
                         }
                     }
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void decorateOperation(final Operation op, final String pathName, final String httpMethod) {
+        if (op != null) {
+
+            // Bug in swagger ? somehow when we only specify a 201, swagger adds a 200 response with the schema response
+            if (httpMethod.equals("POST")) {
+                if (op.getResponses() != null &&
+                    op.getResponses().containsKey("201") && op.getResponses().containsKey("200")) {
+                    final ApiResponse resp200 = op.getResponses().remove("200");
+                    final ApiResponse resp201 = op.getResponses().get("201");
+                    if (resp201.getContent() == null && resp200.getContent() != null) {
+                        resp201.setContent(resp200.getContent());
+                    }
+                }
+            }
+
+            op.addSecurityItem(new SecurityRequirement().addList(BASIC_AUTH_SCHEME));
+            if (requiresTenantInformation(pathName, httpMethod)) {
+                op.addSecurityItem(new SecurityRequirement().addList(API_KEY_SCHEME));
+                op.addSecurityItem(new SecurityRequirement().addList(API_SECRET_SCHEME));
+            }
+
+            // In OpenAPI 3, request body is separate from parameters
+            if (op.getRequestBody() != null) {
+                op.getRequestBody().setRequired(true);
+            }
+
+            if (op.getParameters() != null) {
+                for (final Parameter p : op.getParameters()) {
+                    if ("path".equals(p.getIn())) {
+                        p.setRequired(true);
+                    } else if ("header".equals(p.getIn())) {
+                        if (HDR_CREATED_BY.equals(p.getName())) {
+                            p.setRequired(true);
+                        }
+                    } else if ("query".equals(p.getIn())) {
+                        if (QUERY_AUDIT.equals(p.getName())) {
+                            p.setRequired(false);
+                            if (p.getSchema() == null) {
+                                p.setSchema(new Schema<String>());
+                            }
+                            p.getSchema().setType("string");
+                            final List<String> values = Arrays.stream(AuditLevel.values())
+                                    .map(Objects::toString)
+                                    .collect(Collectors.toUnmodifiableList());
+                            p.getSchema().setEnum(values);
+                        } else if (isDateParameter(p.getName())) {
+                            if (p.getSchema() == null) {
+                                p.setSchema(new Schema<String>());
+                            }
+                            p.getSchema().setType("string");
+                            // Yack... See #922
+                            if (op.getOperationId() != null &&
+                                (op.getOperationId().equals("getCatalogJson") ||
+                                 op.getOperationId().equals("getCatalogXml") ||
+                                 op.getOperationId().equals("setTestClockTime"))) {
+                                p.getSchema().setFormat("date-time");
+                            } else {
+                                p.getSchema().setFormat("date");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean isDateParameter(final String name) {
+        return JaxrsResource.QUERY_REQUESTED_DT.equals(name) ||
+               JaxrsResource.QUERY_ENTITLEMENT_REQUESTED_DT.equals(name) ||
+               JaxrsResource.QUERY_BILLING_REQUESTED_DT.equals(name) ||
+               JaxrsResource.QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT.equals(name) ||
+               JaxrsResource.QUERY_START_DATE.equals(name) ||
+               JaxrsResource.QUERY_END_DATE.equals(name) ||
+               JaxrsResource.QUERY_TARGET_DATE.equals(name);
     }
 
     public static boolean requiresTenantInformation(final String path, final String httpMethod) {

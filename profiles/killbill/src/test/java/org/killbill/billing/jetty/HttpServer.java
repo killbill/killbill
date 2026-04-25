@@ -24,7 +24,7 @@ import java.util.EventListener;
 import java.util.Map;
 
 import javax.management.MBeanServer;
-import javax.servlet.DispatcherType;
+import jakarta.servlet.DispatcherType;
 
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.io.ConnectionStatistics;

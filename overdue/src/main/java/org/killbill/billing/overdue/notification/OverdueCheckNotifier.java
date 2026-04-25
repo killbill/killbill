@@ -20,7 +20,7 @@ package org.killbill.billing.overdue.notification;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.overdue.OverdueProperties;
