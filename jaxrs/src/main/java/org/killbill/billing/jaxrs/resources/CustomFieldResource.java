@@ -61,16 +61,19 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CUSTOM_FIELDS_PATH)
-@Api(value = JaxrsResource.CUSTOM_FIELDS_PATH, description = "Operations on custom fields", tags="CustomField")
+@Tag(name = "CustomField", description = "Operations on custom fields")
 public class CustomFieldResource extends JaxRsResourceBase {
 
     @Inject
@@ -90,8 +93,8 @@ public class CustomFieldResource extends JaxRsResourceBase {
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List custom fields", response = CustomFieldJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "List custom fields")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class))))})
     public Response getCustomFields(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                     @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -119,8 +122,8 @@ public class CustomFieldResource extends JaxRsResourceBase {
     @GET
     @Path("/" + SEARCH )
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Search custom fields by type, name and optional value", response = CustomFieldJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Search custom fields by type, name and optional value")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class))))})
     public Response searchCustomFieldsByTypeName(@QueryParam("objectType") final String objectType,
                                                  @QueryParam("fieldName") final String fieldName,
                                                  @Nullable @QueryParam("fieldValue") final String fieldValue,
@@ -161,8 +164,8 @@ public class CustomFieldResource extends JaxRsResourceBase {
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Search custom fields", response = CustomFieldJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Search custom fields")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class))))})
     public Response searchCustomFields(@PathParam("searchKey") final String searchKey,
                                        @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                        @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -191,8 +194,9 @@ public class CustomFieldResource extends JaxRsResourceBase {
     @GET
     @Path("/{customFieldId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve custom field audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve custom field audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getCustomFieldAuditLogsWithHistory(@PathParam("customFieldId") final UUID customFieldId,
                                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);

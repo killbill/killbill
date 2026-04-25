@@ -24,10 +24,9 @@ import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="HostedPaymentPageFormDescriptor", parent = JsonBase.class)
+@Schema(name = "HostedPaymentPageFormDescriptor")
 public class HostedPaymentPageFormDescriptorJson extends JsonBase {
 
     private final UUID kbAccountId;

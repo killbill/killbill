@@ -22,16 +22,15 @@ import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="Session")
+@Schema(name = "Session")
 public class SessionJson {
 
     private final String id;
-    @ApiModelProperty(dataType = "org.joda.time.DateTime")
+    @Schema(implementation = DateTime.class)
     private final DateTime startDate;
-    @ApiModelProperty(dataType = "org.joda.time.DateTime")
+    @Schema(implementation = DateTime.class)
     private final DateTime lastAccessDate;
     private final Long timeout;
     private final String host;

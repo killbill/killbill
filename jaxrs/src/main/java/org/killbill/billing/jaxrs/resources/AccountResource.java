@@ -141,17 +141,19 @@ import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
-@Api(value = JaxrsResource.ACCOUNTS_PATH, description = "Operations on accounts", tags = "Account")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Account", description = "Operations on accounts")
 public class AccountResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "accountId";
@@ -197,9 +199,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve an account by id", response = AccountJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve an account by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAccount(@PathParam("accountId") final UUID accountId,
                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
@@ -216,8 +219,8 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List accounts", response = AccountJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "List accounts")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AccountJson.class))))})
     public Response getAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                 @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                 @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
@@ -247,8 +250,8 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Search accounts", response = AccountJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "Search accounts")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AccountJson.class))))})
     public Response searchAccounts(@PathParam("searchKey") final String searchKey,
                                    @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                    @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -279,9 +282,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve bundles for account", response = BundleJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve bundles for account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BundleJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAccountBundles(@PathParam("accountId") final UUID accountId,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                       @QueryParam(QUERY_BUNDLES_FILTER) final String bundlesFilter,
@@ -312,9 +316,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES + "/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve paginated bundles for account", response = BundleJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve paginated bundles for account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BundleJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAccountBundlesPaginated(@PathParam("accountId") final UUID accountId,
                                                @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -362,9 +367,10 @@ public class AccountResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve an account by external key", response = AccountJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
-    public Response getAccountByKey(@ApiParam(required = true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+    @Operation(summary = "Retrieve an account by external key")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountJson.class))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
+    public Response getAccountByKey(@Parameter(required = true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                     @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
                                     @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -394,9 +400,10 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create account", response = AccountJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Account created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account data supplied")})
+    @Operation(summary = "Create account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Account created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account data supplied")})
     public Response createAccount(final AccountJson json,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -415,9 +422,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}")
-    @ApiOperation(value = "Update account")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account data supplied")})
+    @Operation(summary = "Update account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account data supplied")})
     public Response updateAccount(@PathParam("accountId") final UUID accountId,
                                   final AccountJson json,
                                   @QueryParam(QUERY_ACCOUNT_TREAT_NULL_AS_RESET) @DefaultValue("false") final Boolean treatNullValueAsReset,
@@ -440,9 +447,9 @@ public class AccountResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Close account")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Close account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response closeAccount(@PathParam("accountId") final UUID accountId,
                                  @QueryParam(QUERY_CANCEL_ALL_SUBSCRIPTIONS) @DefaultValue("false") final Boolean cancelAllSubscriptions,
                                  @QueryParam(QUERY_WRITE_OFF_UNPAID_INVOICES) @DefaultValue("false") final Boolean writeOffUnpaidInvoices,
@@ -511,9 +518,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account timeline", response = AccountTimelineJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account timeline")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountTimelineJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAccountTimeline(@PathParam("accountId") final UUID accountId,
                                        @QueryParam(QUERY_PARALLEL) @DefaultValue("false") final Boolean parallel,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -664,9 +672,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CBA_REBALANCING)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Rebalance account CBA")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Rebalance account CBA")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response rebalanceExistingCBAOnAccount(@PathParam("accountId") final UUID accountId,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                   @HeaderParam(HDR_REASON) final String reason,
@@ -686,9 +694,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account invoices")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getInvoicesForAccount(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_START_DATE) final String startDateStr,
                                           @QueryParam(QUERY_END_DATE) final String endDateStr,
@@ -735,9 +744,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES + "/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve paginated invoices for account", response = InvoiceJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve paginated invoices for account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getInvoicesForAccountPaginated(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                           @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -777,9 +787,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account invoice payments", response = InvoicePaymentJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account invoice payments")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoicePaymentJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getInvoicePayments(@PathParam("accountId") final UUID accountId,
                                        @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                        @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
@@ -805,10 +816,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
-    @ApiOperation(value = "Trigger a payment for all unpaid invoices", response = InvoiceJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Successful operation"),
-                           @ApiResponse(code = 204, message = "Nothing to pay"),
-                           @ApiResponse(code = 404, message = "Invalid account id supplied")})
+    @Operation(summary = "Trigger a payment for all unpaid invoices")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Successful operation"),
+                           @ApiResponse(responseCode = "204", description = "Nothing to pay"),
+                           @ApiResponse(responseCode = "404", description = "Invalid account id supplied")})
     public Response payAllInvoices(@PathParam("accountId") final UUID accountId,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
@@ -898,10 +910,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a payment method", response = PaymentMethodJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment method created"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Add a payment method")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentMethodJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Payment method created"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response createPaymentMethod(@PathParam("accountId") final UUID accountId,
                                         final PaymentMethodJson json,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
@@ -942,9 +955,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account payment methods", response = PaymentMethodJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account payment methods")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PaymentMethodJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getPaymentMethodsForAccount(@PathParam("accountId") final UUID accountId,
                                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                                 @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
@@ -968,10 +982,10 @@ public class AccountResource extends JaxRsResourceBase {
     @PUT
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/refresh")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refresh account payment methods")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Refresh account payment methods")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response refreshPaymentMethods(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -998,10 +1012,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/{paymentMethodId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS_DEFAULT_PATH_POSTFIX)
-    @ApiOperation(value = "Set the default payment method")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id or payment method id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Set the default payment method")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id or payment method id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response setDefaultPaymentMethod(@PathParam("accountId") final UUID accountId,
                                             @PathParam("paymentMethodId") final UUID paymentMethodId,
                                             @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
@@ -1032,8 +1046,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account payments", response = PaymentJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Retrieve account payments")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PaymentJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response getPaymentsForAccount(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                           @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
@@ -1056,17 +1071,18 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account external key supplied"),
-                           @ApiResponse(code = 404, message = "Account not found"),
-                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
-                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
-                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
-                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
-                           @ApiResponse(code = 504, message = "Payment operation timeout")})
+    @Operation(summary = "Trigger a payment using the account external key (authorization, purchase or credit)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account external key supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found"),
+                           @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
+                           @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),
+                           @ApiResponse(responseCode = "502", description = "Failed to submit payment transaction"),
+                           @ApiResponse(responseCode = "503", description = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(responseCode = "504", description = "Payment operation timeout")})
     public Response processPaymentByExternalKey(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
-                                                @ApiParam(required = true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+                                                @Parameter(required = true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID paymentMethodId,
                                                 @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -1086,15 +1102,16 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found"),
-                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
-                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
-                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
-                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
-                           @ApiResponse(code = 504, message = "Payment operation timeout")})
+    @Operation(summary = "Trigger a payment (authorization, purchase or credit)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found"),
+                           @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
+                           @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),
+                           @ApiResponse(responseCode = "502", description = "Failed to submit payment transaction"),
+                           @ApiResponse(responseCode = "503", description = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(responseCode = "504", description = "Payment operation timeout")})
     public Response processPayment(@PathParam("accountId") final UUID accountId,
                                    @MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
@@ -1182,9 +1199,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + OVERDUE)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve overdue state for account", response = OverdueStateJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve overdue state for account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OverdueStateJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getOverdueAccount(@PathParam("accountId") final UUID accountId,
                                       @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
@@ -1204,8 +1222,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve blocking states for account", response = BlockingStateJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Retrieve blocking states for account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BlockingStateJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response getBlockingStates(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                       @QueryParam(QUERY_BLOCKING_STATE_TYPES) final List<BlockingStateType> typeFilter,
                                       @QueryParam(QUERY_BLOCKING_STATE_SVCS) final List<String> svcsFilter,
@@ -1227,8 +1246,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/" + BLOCK + "/{blockingId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve blocking state audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Blocking state  not found")})
+    @Operation(summary = "Retrieve blocking state audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Blocking state  not found")})
     public Response getBlockingStateAuditLogsWithHistory(@PathParam("blockingId") final UUID blockingId,
                                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -1241,10 +1261,11 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
-    @ApiOperation(value = "Block an account", response = BlockingStateJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Blocking state created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Block an account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BlockingStateJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Blocking state created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response addAccountBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
                                             final BlockingStateJson json,
                                             @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -1266,8 +1287,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getAccountCustomFields")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Retrieve account custom fields", operationId = "getAccountCustomFields")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) {
@@ -1278,9 +1300,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + ALL_CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account customFields", response = CustomFieldJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account customFields")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAllCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                        @QueryParam(QUERY_OBJECT_TYPE) final ObjectType objectType,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -1297,9 +1320,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to account", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Add custom fields to account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
+                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response createAccountCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                               final List<CustomFieldJson> customFields,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1316,9 +1340,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Modify custom fields to account")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Modify custom fields to account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response modifyAccountCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                               final List<CustomFieldJson> customFields,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1334,9 +1358,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove custom fields from account")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Remove custom fields from account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response deleteAccountCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                               @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1355,9 +1379,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account tags", response = TagJson.class, responseContainer = "List", nickname = "getAccountTags")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account tags", operationId = "getAccountTags")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
                             @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -1369,9 +1394,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + ALL_TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account tags", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account tags")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAllTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                @QueryParam(QUERY_OBJECT_TYPE) final ObjectType objectType,
                                @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
@@ -1389,9 +1415,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to account", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Add tags to account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response createAccountTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                       final List<UUID> tagList,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1408,9 +1435,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove tags from account")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied or account does not have a default payment method (AUTO_PAY_OFF tag only)")})
+    @Operation(summary = "Remove tags from account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied or account does not have a default payment method (AUTO_PAY_OFF tag only)")})
     public Response deleteAccountTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                       @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1446,8 +1473,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve an account emails", response = AccountEmailJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Retrieve an account emails")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AccountEmailJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response getEmails(@PathParam(ID_PARAM_NAME) final UUID accountId,
                               @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createTenantContextWithAccountId(accountId, request));
@@ -1464,10 +1492,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add account email", response = AccountEmailJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Email created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Add account email")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AccountEmailJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Email created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response addEmail(@PathParam(ID_PARAM_NAME) final UUID accountId,
                              final AccountEmailJson json,
                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1498,9 +1527,9 @@ public class AccountResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS + "/{email}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Delete email from account")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    @Operation(summary = "Delete email from account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid account id supplied")})
     public Response removeEmail(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                 @PathParam("email") final String email,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1522,8 +1551,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS + "/{accountEmailId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account email audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account email audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAccountEmailAuditLogsWithHistory(@PathParam("accountId") final UUID accountId,
                                                         @PathParam("accountEmailId") final UUID accountEmailId,
                                                         @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
@@ -1545,9 +1575,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CHILDREN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List children accounts", response = AccountJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid parent account id supplied"),
-                           @ApiResponse(code = 404, message = "Parent Account not found")})
+    @Operation(summary = "List children accounts")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AccountJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid parent account id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Parent Account not found")})
     public Response getChildrenAccounts(@PathParam("accountId") final UUID parentAccountId,
                                         @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
                                         @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
@@ -1570,10 +1601,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{childAccountId:" + UUID_PATTERN + "}/" + TRANSFER_CREDIT)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Move a given child credit to the parent level")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Account does not have credit"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Move a given child credit to the parent level")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Account does not have credit"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response transferChildCreditToParent(@PathParam("childAccountId") final UUID childAccountId,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                 @HeaderParam(HDR_REASON) final String reason,
@@ -1595,8 +1626,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + AUDIT_LOG)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve audit logs by account id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve audit logs by account id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAccountAuditLogs(@PathParam("accountId") final UUID accountId,
                                @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
@@ -1608,8 +1640,9 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account audit logs with history by account id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve account audit logs with history by account id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getAccountAuditLogsWithHistory(@PathParam("accountId") final UUID accountId,
                                         @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);

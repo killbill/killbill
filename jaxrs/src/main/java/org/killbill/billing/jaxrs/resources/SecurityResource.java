@@ -57,16 +57,19 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.SECURITY_PATH)
-@Api(value = JaxrsResource.SECURITY_PATH, description = "Information about RBAC", tags="Security")
+@Tag(name = "Security", description = "Information about RBAC")
 public class SecurityResource extends JaxRsResourceBase {
 
     private final SecurityApi securityApi;
@@ -90,8 +93,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Path("/permissions")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List user permissions", response = String.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "List user permissions")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = String.class))))})
     public Response getCurrentUserPermissions(@jakarta.ws.rs.core.Context final HttpServletRequest request) {
         // The getCurrentUserPermissions takes a TenantContext which is not used because permissions are cross tenants (at this point)
         final TenantContext nullTenantContext = null;
@@ -103,8 +106,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Path("/subject")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Get user information", response = SubjectJson.class)
-    @ApiResponses(value = {})
+    @Operation(summary = "Get user information")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SubjectJson.class)))})
     public Response getCurrentUserSubject(@jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final Subject subject = SecurityUtils.getSubject();
         final SubjectJson subjectJson = new SubjectJson(subject);
@@ -116,8 +119,9 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/users")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a new user with roles (to make api requests)", response = UserRolesJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "User role created successfully")})
+    @Operation(summary = "Add a new user with roles (to make api requests)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserRolesJson.class))),
+                           @ApiResponse(responseCode = "201", description = "User role created successfully")})
     public Response addUserRoles(final UserRolesJson json,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
@@ -133,8 +137,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/password")
-    @ApiOperation(value = "Update a user password")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+    @Operation(summary = "Update a user password")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation")})
     public Response updateUserPassword(@PathParam("username") final String username,
                                        final UserRolesJson json,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -150,8 +154,9 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/roles")
-    @ApiOperation(value = "Get roles associated to a user", response = UserRolesJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "The user does not exist or has been inactivated")})
+    @Operation(summary = "Get roles associated to a user")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserRolesJson.class))),
+                           @ApiResponse(responseCode = "404", description = "The user does not exist or has been inactivated")})
     public Response getUserRoles(@PathParam("username") final String username,
                                  @jakarta.ws.rs.core.Context final HttpServletRequest request,
                                  @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
@@ -165,8 +170,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/roles")
-    @ApiOperation(value = "Update roles associated to a user")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+    @Operation(summary = "Update roles associated to a user")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation")})
      public Response updateUserRoles(@PathParam("username") final String username,
                                     final UserRolesJson json,
                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -183,8 +188,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}")
-    @ApiOperation(value = "Invalidate an existing user")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+    @Operation(summary = "Invalidate an existing user")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation")})
     public Response invalidateUser(@PathParam("username") final String username,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -200,7 +205,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Produces(APPLICATION_JSON)
     @Path("/roles/{role:" + ANYTHING_PATTERN + "}")
-    @ApiOperation(value = "Get role definition", response = RoleDefinitionJson.class)
+    @Operation(summary = "Get role definition")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDefinitionJson.class)))})
     public Response getRoleDefinition(@PathParam("role") final String role,
                                  @jakarta.ws.rs.core.Context final HttpServletRequest request,
                                  @jakarta.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
@@ -215,8 +221,9 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/roles")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a new role definition)", response = RoleDefinitionJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Role definition created successfully")})
+    @Operation(summary = "Add a new role definition)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDefinitionJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Role definition created successfully")})
     public Response addRoleDefinition(final RoleDefinitionJson json,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
@@ -233,8 +240,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/roles")
-    @ApiOperation(value = "Update a new role definition)")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+    @Operation(summary = "Update a new role definition)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation")})
     public Response updateRoleDefinition(final RoleDefinitionJson json,
                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                     @HeaderParam(HDR_REASON) final String reason,

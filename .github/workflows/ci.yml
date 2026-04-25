@@ -51,26 +51,27 @@ jobs:
             database-password: 'root'
             database-port: '3306'
             database: 'mysql'
-            java-version: '11'
+            java-version: '21'
             java-distribution: 'temurin'
             maven_version: '3.8.4'
     steps:
       - name: Checkout killbill
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Set up JDK
-        uses: actions/setup-java@v2.5.0
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.java-version }}
           distribution: ${{ matrix.java-distribution }}
           #cache: 'maven'
       - name: Configure Sonatype mirror
-        uses: s4u/maven-settings-action@v2.4.1
+        uses: s4u/maven-settings-action@v4.0.0
         # Go to Sonatype directly to avoid delay syncs (could get rid of this if actions/setup-java were to support mirrors).
         with:
-          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "central", "url": "https://oss.sonatype.org/content/repositories/releases"}]'
+          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "central", "url": "https://repo.maven.apache.org/maven2"}]'
           sonatypeSnapshots: true
+          githubServer: false
       - name: Set up Maven
         run: mvn --errors --batch-mode --show-version wrapper:wrapper "-Dmaven=${{ matrix.maven_version }}"
       - name: Build Kill Bill
@@ -148,7 +149,7 @@ jobs:
                -d '{"apiKey": "bob", "apiSecret": "lazar"}' \
                "http://127.0.0.1:8080/1.0/kb/tenants"
       - name: Checkout killbill-integration-tests
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
           path: killbill-integration-tests
@@ -186,7 +187,7 @@ jobs:
       #   run: |
       #     bundle exec rake test:plugins TESTOPTS="--stop-on-failure"
       - name: Upload artifact on failure
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: failure-${{ matrix.database }}

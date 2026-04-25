@@ -64,17 +64,20 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.INVOICES_ITEMS_PATH)
-@Api(value = JaxrsResource.INVOICES_ITEMS_PATH, description = "Operations on invoice items", tags="InvoiceItem")
+@Tag(name = "InvoiceItem", description = "Operations on invoice items")
 public class InvoiceItemResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "invoiceItemId";
 
@@ -92,8 +95,9 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve invoice item audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice item not found")})
+    @Operation(summary = "Retrieve invoice item audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Invoice item not found")})
     public Response getInvoiceItemAuditLogsWithHistory(@PathParam("invoiceItemId") final UUID invoiceItemId,
                                                        @jakarta.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -106,8 +110,9 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve invoice item custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getInvoiceItemCustomFields")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    @Operation(summary = "Retrieve invoice item custom fields", operationId = "getInvoiceItemCustomFields")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid invoice item id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) {
@@ -119,9 +124,10 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to invoice item", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    @Operation(summary = "Add custom fields to invoice item")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
+                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid invoice item id supplied")})
     public Response createInvoiceItemCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   final List<CustomFieldJson> customFields,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -139,9 +145,9 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Modify custom fields to invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    @Operation(summary = "Modify custom fields to invoice item")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid invoice item id supplied")})
     public Response modifyInvoiceItemCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   final List<CustomFieldJson> customFields,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -158,9 +164,9 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove custom fields from invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    @Operation(summary = "Remove custom fields from invoice item")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid invoice item id supplied")})
     public Response deleteInvoiceItemCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -175,11 +181,12 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve invoice item tags", response = TagJson.class, responseContainer = "List", nickname = "getInvoiceItemTags")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve invoice item tags", operationId = "getInvoiceItemTags")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid invoice item id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                            @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                            @Parameter(required = true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, AccountApiException {
@@ -194,9 +201,10 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to invoice item", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    @Operation(summary = "Add tags to invoice item")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid invoice item id supplied")})
     public Response createInvoiceItemTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                           final List<UUID> tagList,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -213,9 +221,9 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove tags from invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    @Operation(summary = "Remove tags from invoice item")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid invoice item id supplied")})
     public Response deleteInvoiceItemTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                           @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,

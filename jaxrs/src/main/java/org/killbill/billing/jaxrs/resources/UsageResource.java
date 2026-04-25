@@ -67,16 +67,18 @@ import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.Iterables;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.USAGES_PATH)
-@Api(value = JaxrsResource.USAGES_PATH, description = "Operations on usage", tags="Usage")
+@Tag(name = "Usage", description = "Operations on usage")
 public class UsageResource extends JaxRsResourceBase {
 
     private final UsageUserApi usageUserApi;
@@ -103,9 +105,9 @@ public class UsageResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record usage for a subscription")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully recorded usage data change"),
-                           @ApiResponse(code = 400, message = "Invalid subscription (e.g. inactive)")})
+    @Operation(summary = "Record usage for a subscription")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Successfully recorded usage data change"),
+                           @ApiResponse(responseCode = "400", description = "Invalid subscription (e.g. inactive)")})
     public Response recordUsage(final SubscriptionUsageRecordJson json,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
@@ -159,8 +161,9 @@ public class UsageResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/{unitType}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve usage for a subscription and unit type", response = RolledUpUsageJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Missing start date or end date")})
+    @Operation(summary = "Retrieve usage for a subscription and unit type")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RolledUpUsageJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Missing start date or end date")})
     public Response getUsage(@PathParam("subscriptionId") final UUID subscriptionId,
                              @PathParam("unitType") final String unitType,
                              @QueryParam(QUERY_START_DATE) final String startDate,
@@ -185,8 +188,9 @@ public class UsageResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve usage for a subscription", response = RolledUpUsageJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Missing start date or end date")})
+    @Operation(summary = "Retrieve usage for a subscription")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RolledUpUsageJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Missing start date or end date")})
     public Response getAllUsage(@PathParam("subscriptionId") final UUID subscriptionId,
                                 @QueryParam(QUERY_START_DATE) final String startDate,
                                 @QueryParam(QUERY_END_DATE) final String endDate,

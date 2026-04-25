@@ -22,11 +22,11 @@ jobs:
     steps:
       - name: Checkout code
         if: github.event.inputs.perform_version == ''
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
       - name: Checkout full repository
         # Required when performing an existing release.
         if: github.event.inputs.perform_version != ''
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           fetch-depth: '0'
       - name: Setup git user
@@ -38,9 +38,10 @@ jobs:
           git config --global user.name "Kill Bill core team"
           git config --global url."https://${BUILD_USER}:${BUILD_TOKEN}@github.com/".insteadOf "git@github.com:"
       - name: Configure Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v5
         with:
-          java-version: 11
+          java-version: 21
+          distribution: temurin
       - name: Download Java dependencies
         # We do as much as we can, but it may not be enough (https://issues.apache.org/jira/browse/MDEP-82)
         run: |
@@ -59,9 +60,9 @@ jobs:
           # Will be pushed as part of the release process, only if the release is successful
           git commit -m "pom.xml: update killbill-oss-parent to ${{ github.event.inputs.parent_version }}"
       - name: Configure settings.xml for release
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
-          java-version: 11
+          java-version: 21
           distribution: temurin
           server-id: central
           server-username: MAVEN_USERNAME

@@ -62,16 +62,19 @@ import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TAG_DEFINITIONS_PATH)
-@Api(value = JaxrsResource.TAG_DEFINITIONS_PATH, description = "Operations on tag definitions", tags="TagDefinition")
+@Tag(name = "TagDefinition", description = "Operations on tag definitions")
 public class TagDefinitionResource extends JaxRsResourceBase {
 
     @Inject
@@ -90,8 +93,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List tag definitions", response = TagDefinitionJson.class, responseContainer = "List")
-    @ApiResponses(value = {})
+    @Operation(summary = "List tag definitions")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagDefinitionJson.class))))})
     public Response getTagDefinitions(@jakarta.ws.rs.core.Context final HttpServletRequest request,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -110,8 +113,9 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @GET
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a tag definition", response = TagDefinitionJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
+    @Operation(summary = "Retrieve a tag definition")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TagDefinitionJson.class))),
+                           @ApiResponse(responseCode = "400", description = "Invalid tagDefinitionId supplied")})
     public Response getTagDefinition(@PathParam("tagDefinitionId") final UUID tagDefId,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
@@ -126,9 +130,10 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a tag definition", response = TagDefinitionJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag definition created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid name or description supplied")})
+    @Operation(summary = "Create a tag definition")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TagDefinitionJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Tag definition created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid name or description supplied")})
     public Response createTagDefinition(final TagDefinitionJson json,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -151,9 +156,9 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Delete a tag definition")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
+    @Operation(summary = "Delete a tag definition")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid tagDefinitionId supplied")})
     public Response deleteTagDefinition(@PathParam("tagDefinitionId") final UUID tagDefId,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -167,8 +172,9 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @GET
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve tag definition audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve tag definition audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getTagDefinitionAuditLogsWithHistory(@PathParam("tagDefinitionId") final UUID tagDefinitionId,
                                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);

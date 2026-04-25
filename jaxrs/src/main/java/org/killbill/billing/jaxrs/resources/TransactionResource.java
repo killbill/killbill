@@ -72,17 +72,20 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.PAYMENT_TRANSACTIONS_PATH)
-@Api(value = JaxrsResource.PAYMENT_TRANSACTIONS_PATH, description = "Operations on payment transactions", tags="PaymentTransaction")
+@Tag(name = "PaymentTransaction", description = "Operations on payment transactions")
 public class TransactionResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "transactionId";
@@ -104,8 +107,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @GET
     @Path("/{transactionId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a payment by transaction id", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Payment not found")})
+    @Operation(summary = "Retrieve a payment by transaction id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "404", description = "Payment not found")})
     public Response getPaymentByTransactionId(@PathParam("transactionId") final UUID transactionId,
                                               @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                               @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
@@ -123,9 +127,10 @@ public class TransactionResource extends JaxRsResourceBase {
     @TimedResource(name = "getPaymentByTransactionExternalKey")
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a payment by transaction external key", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Payment not found")})
-    public Response getPaymentByTransactionExternalKey(@ApiParam(required = true) @QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String paymentTransactionExternalKey,
+    @Operation(summary = "Retrieve a payment by transaction external key")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "404", description = "Payment not found")})
+    public Response getPaymentByTransactionExternalKey(@Parameter(required = true) @QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String paymentTransactionExternalKey,
                                                        @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                                        @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                                        @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -144,10 +149,11 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Mark a pending payment transaction as succeeded or failed", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Successfully notifiy state change"),
-                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
-                           @ApiResponse(code = 404, message = "Account or Payment not found")})
+    @Operation(summary = "Mark a pending payment transaction as succeeded or failed")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
+                           @ApiResponse(responseCode = "201", description = "Successfully notifiy state change"),
+                           @ApiResponse(responseCode = "400", description = "Invalid paymentId supplied"),
+                           @ApiResponse(responseCode = "404", description = "Account or Payment not found")})
     public Response notifyStateChanged(@PathParam("transactionId") final UUID transactionId,
                                        final PaymentTransactionJson json,
                                        @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -178,8 +184,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @GET
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment transaction custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getTransactionCustomFields")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @Operation(summary = "Retrieve payment transaction custom fields", operationId = "getTransactionCustomFields")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomFieldJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @jakarta.ws.rs.core.Context final HttpServletRequest request) {
@@ -191,9 +198,10 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to payment transaction", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @Operation(summary = "Add custom fields to payment transaction")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
+                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response createTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   final List<CustomFieldJson> customFields,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -211,9 +219,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Modify custom fields to payment transaction")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @Operation(summary = "Modify custom fields to payment transaction")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response modifyTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   final List<CustomFieldJson> customFields,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -230,9 +238,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove custom fields from payment transaction")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @Operation(summary = "Remove custom fields from payment transaction")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response deleteTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -247,9 +255,10 @@ public class TransactionResource extends JaxRsResourceBase {
     @GET
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment transaction tags", response = TagJson.class, responseContainer = "List", nickname = "getTransactionTags")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied"),
-                           @ApiResponse(code = 404, message = "Invoice not found")})
+    @Operation(summary = "Retrieve payment transaction tags", operationId = "getTransactionTags")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied"),
+                           @ApiResponse(responseCode = "404", description = "Invoice not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID id,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -264,9 +273,10 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to payment transaction", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
-                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @Operation(summary = "Add tags to payment transaction")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
+                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+                           @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response createTransactionTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                           final List<UUID> tagList,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -283,9 +293,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Remove tags from payment transaction")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @Operation(summary = "Remove tags from payment transaction")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response deleteTransactionTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                           @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -300,8 +310,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @GET
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment transaction audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @Operation(summary = "Retrieve payment transaction audit logs with history by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = AuditLogJson.class)))),
+                           @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getTransactionAuditLogsWithHistory(@PathParam("transactionId") final UUID transactionId,
                                                    @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
