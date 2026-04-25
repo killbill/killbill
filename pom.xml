@@ -101,17 +101,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <repositories>
-        <repository>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>central-snapshots</id>
-            <name>Central Snapshots</name>
-            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-        </repository>
-    </repositories>
 </project>
