@@ -1253,6 +1253,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private final InvoiceConfig defaultInvoiceConfig;
         private boolean isInvoicingSystemEnabled;
         private boolean shouldParkAccountsWithUnknownUsage;
+        private boolean isParkAccountsOnAllExceptions;
         private boolean isZeroAmountUsageDisabled;
         private UsageDetailMode detailMode;
         private InArrearMode inArrearMode;
@@ -1457,6 +1458,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
+        public boolean isParkAccountsOnAllExceptions() {
+            return isParkAccountsOnAllExceptions;
+        }
+
+        @Override
+        public boolean isParkAccountsOnAllExceptions(final InternalTenantContext tenantContext) {
+            return isParkAccountsOnAllExceptions();
+        }
+
+        @Override
         public List<TimeSpan> getRescheduleIntervalOnLock() {
             return defaultInvoiceConfig.getRescheduleIntervalOnLock();
         }
@@ -1481,6 +1492,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         public void reset() {
             isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
+            isParkAccountsOnAllExceptions = defaultInvoiceConfig.isParkAccountsOnAllExceptions();
             isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
             detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
             inArrearMode = defaultInvoiceConfig.getInArrearMode();

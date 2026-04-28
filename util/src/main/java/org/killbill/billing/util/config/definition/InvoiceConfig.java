@@ -212,6 +212,16 @@ public interface InvoiceConfig extends LockAwareConfig {
     @Description("Whether to park accounts when usage data is recorded but not defined in the catalog")
     boolean shouldParkAccountsWithUnknownUsage(@Param("dummy") final InternalTenantContext tenantContext);
 
+    @Config("org.killbill.invoice.parkAccountsOnAllExceptions")
+    @Default("true")
+    @Description("Whether to park accounts on all unrecoverable invoice processing failures (lock failure, subscriber exceptions, billing event fetch failures)")
+    boolean isParkAccountsOnAllExceptions();
+
+    @Config("org.killbill.invoice.parkAccountsOnAllExceptions")
+    @Default("true")
+    @Description("Whether to park accounts on all unrecoverable invoice processing failures (lock failure, subscriber exceptions, billing event fetch failures)")
+    boolean isParkAccountsOnAllExceptions(@Param("dummy") final InternalTenantContext tenantContext);
+
     @Config("org.killbill.invoice.maxInvoiceLimit")
     @Default(DEFAULT_NULL_PERIOD)
     @Description("How far back in time should invoice generation look at")

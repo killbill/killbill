@@ -33,6 +33,7 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
+import org.killbill.queue.api.QueueEvent;
 import org.killbill.queue.retry.RetryableHandler;
 import org.killbill.queue.retry.RetryableService;
 import org.slf4j.Logger;
@@ -114,5 +115,13 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
 
     private void processEventForInvoiceNotification(final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         listener.handleEventForInvoiceNotification(eventDateTime, userToken, accountRecordId, tenantRecordId);
+    }
+
+    /**
+     * Delegates retry exhaustion handling to the InvoiceListener.
+     * Note: this method is intended to be called by RetryableService once killbill-commons adds the hook.
+     */
+    public void onRetriesExhausted(final QueueEvent event, final Long searchKey1, final Long searchKey2) {
+        listener.onRetriesExhausted(event, searchKey1, searchKey2);
     }
 }
