@@ -353,9 +353,12 @@ public class InvoiceDispatcher {
         if (periods.size() == 0) {
             return false;
         }
-        // Since we can't keep track of attempts, we only look at the first value
+        // Unlike the QueueRetryException path (Paths B/C), the notification-queue path cannot track
+        // retry counts across reschedules, so exactly one reschedule is issued per failed attempt using
+        // the first period in the schedule. Each rescheduled notification that also fails re-issues a
+        // single reschedule with the same delay.
         final DateTime nextRescheduleDt = clock.getUTCNow().plus(periods.get(0));
-        log.info("Rescheduling invoice call at time {}", nextRescheduleDt);
+        log.info("Failed to acquire lock, rescheduling invoice for accountId='{}' at '{}'", accountId, nextRescheduleDt);
         invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
         return true;
     }
