@@ -356,7 +356,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(searchKey2, searchKey1, "InvoiceRetryExhausted", CallOrigin.INTERNAL, UserType.SYSTEM, null);
             final UUID accountId = accountApi.getByRecordId(searchKey1, context);
-            log.warn("Failed to generate invoice for accountId='{}', all retries exhausted, parking account", accountId);
+            log.warn("Failed to generate invoice for accountId='{}', all retries exhausted", accountId);
             parkedAccountsManager.parkAccount(accountId, context);
         } catch (final Exception e) {
             log.warn("Unable to park account after retries exhausted for accountRecordId='{}'", searchKey1, e);
@@ -371,7 +371,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, eventDescription, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             final UUID accountId = accountApi.getByRecordId(accountRecordId, context);
-            log.warn("Failed to generate invoice for accountId='{}', event='{}', parking account", accountId, eventDescription, e);
+            log.warn("Failed to generate invoice for accountId='{}', event='{}'", accountId, eventDescription, e);
             parkedAccountsManager.parkAccount(accountId, context);
         } catch (final Exception inner) {
             log.warn("Unable to park account after invoice failure for accountRecordId='{}'", accountRecordId, inner);

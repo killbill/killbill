@@ -335,7 +335,7 @@ public class InvoiceDispatcher {
             if (!rescheduleProcessAccount(accountId, context)) {
                 log.warn("Failed to generate invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
                 if (invoiceConfig.isParkAccountsOnAllExceptions(context)) {
-                    parkAccount(accountId, e, context);
+                    parkAccount(accountId, context);
                 }
             }
         } finally {
@@ -465,19 +465,19 @@ public class InvoiceDispatcher {
         } catch (final CatalogApiException e) {
             log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             if (!isDryRun && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
-                parkAccount(accountId, e, context);
+                parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final AccountApiException e) {
             log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             if (!isDryRun && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
-                parkAccount(accountId, e, context);
+                parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             if (!isDryRun && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
-                parkAccount(accountId, e, context);
+                parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final InvoiceApiException e) {
@@ -486,7 +486,7 @@ public class InvoiceDispatcher {
             }
 
             if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode() && !isDryRun) {
-                parkAccount(accountId, e, context);
+                parkAccount(accountId, context);
             }
             throw e;
         } catch (final NoSuchNotificationQueue e) {
@@ -640,11 +640,6 @@ public class InvoiceDispatcher {
         } catch (final TagApiException ignored) {
             log.warn("Unable to park account", ignored);
         }
-    }
-
-    private void parkAccount(final UUID accountId, final Throwable cause, final InternalCallContext context) {
-        log.warn("Failed to generate invoice for accountId='{}', parking account", accountId, cause);
-        parkAccount(accountId, context);
     }
 
     private Iterable<UUID> getFilteredSubscriptionIdsFor_UPCOMING_INVOICE_DryRun(@Nullable final DryRunArguments dryRunArguments, final BillingEventSet billingEvents) {
