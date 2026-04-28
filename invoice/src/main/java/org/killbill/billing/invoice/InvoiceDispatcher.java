@@ -333,8 +333,9 @@ public class InvoiceDispatcher {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
             if (!rescheduleProcessAccount(accountId, context)) {
-                log.warn("Failed to generate invoice for accountId='{}', targetDate='{}', parking account", accountId, targetDate, e);
+                log.warn("Failed to generate invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
                 if (invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                    log.warn("Failed to generate invoice for accountId='{}', targetDate='{}', parking account", accountId, targetDate);
                     parkAccount(accountId, context);
                 }
             }
@@ -463,20 +464,23 @@ public class InvoiceDispatcher {
             printInvoiceTiming(invoiceTimings);
             return result;
         } catch (final CatalogApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             if (!isDryRun && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments);
                 parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final AccountApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             if (!isDryRun && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments);
                 parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             if (!isDryRun && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments);
                 parkAccount(accountId, context);
             }
             return Collections.emptyList();
