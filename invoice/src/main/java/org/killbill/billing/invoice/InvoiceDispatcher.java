@@ -333,7 +333,8 @@ public class InvoiceDispatcher {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
             if (!rescheduleProcessAccount(accountId, context)) {
-                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
+                log.warn("Failed to process invoice for accountId='{}', targetDate='{}', parking account", accountId, targetDate, e);
+                parkAccount(accountId, context);
             }
         } finally {
             if (lock != null) {
@@ -350,9 +351,11 @@ public class InvoiceDispatcher {
         if (periods.size() == 0) {
             return false;
         }
-        // Since we can't keep track of attempts, we only look at the first value
+        // Unlike the QueueRetryException path (Paths B/C), the notification-queue path cannot track
+        // retry counts across reschedules, so exactly one reschedule is issued using the first period
+        // in the schedule. If that retry also fails to acquire the lock it will be rescheduled once more.
         final DateTime nextRescheduleDt = clock.getUTCNow().plus(periods.get(0));
-        log.info("Rescheduling invoice call at time {}", nextRescheduleDt);
+        log.info("Failed to acquire lock, rescheduling invoice for accountId='{}' at '{}'", accountId, nextRescheduleDt);
         invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
         return true;
     }
