@@ -22,11 +22,15 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
+import io.swagger.v3.oas.integration.OpenApiConfigurationException;
+import io.swagger.v3.oas.models.Components;
 import jakarta.servlet.ServletContext;
 
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.filter.EncodingFilter;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
+import org.killbill.billing.jaxrs.resources.KillBillApiScanner;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
@@ -167,18 +171,17 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
                                  .url("http://www.apache.org/licenses/LICENSE-2.0.html"))
                 .version(KillbillVersions.getKillbillVersion());
 
-        final OpenAPI openAPI = new OpenAPI().info(info);
+        final OpenAPI openAPI = new OpenAPI().info(info).components(new Components());
 
         final SwaggerConfiguration swaggerConfig = new SwaggerConfiguration()
                 .openAPI(openAPI)
+                .scannerClass(KillBillApiScanner.class.getName())
                 .resourcePackages(java.util.Set.of("org.killbill.billing.jaxrs.resources"))
                 .prettyPrint(true);
 
         try {
-            new io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder<>()
-                    .openApiConfiguration(swaggerConfig)
-                    .buildContext(true);
-        } catch (final io.swagger.v3.oas.integration.OpenApiConfigurationException e) {
+            new JaxrsOpenApiContextBuilder<>().openApiConfiguration(swaggerConfig).buildContext(true);
+        } catch (final OpenApiConfigurationException e) {
             logger.error("Failed to initialize OpenAPI/Swagger configuration", e);
         }
     }

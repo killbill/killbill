@@ -27,7 +27,6 @@ import org.killbill.billing.util.api.AuditLevel;
 import io.swagger.v3.jaxrs2.ReaderListener;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.integration.api.OpenApiReader;
-import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -44,15 +43,11 @@ import static org.killbill.billing.jaxrs.resources.JaxrsResource.QUERY_AUDIT;
 public class KillBillApiDefinition implements ReaderListener {
 
     public static final String BASIC_AUTH_SCHEME = "basicAuth";
-    public static final String API_KEY_SCHEME = "Killbill Api Key";
-    public static final String API_SECRET_SCHEME = "Killbill Api Secret";
+    public static final String API_KEY_SCHEME = "killbillApiKey";
+    public static final String API_SECRET_SCHEME = "killbillApiSecret";
 
     @Override
     public void beforeScan(final OpenApiReader reader, final OpenAPI openAPI) {
-        if (openAPI.getComponents() == null) {
-            openAPI.setComponents(new Components());
-        }
-
         final SecurityScheme basicAuth = new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("basic");
@@ -113,11 +108,13 @@ public class KillBillApiDefinition implements ReaderListener {
                 }
             }
 
-            op.addSecurityItem(new SecurityRequirement().addList(BASIC_AUTH_SCHEME));
+            final SecurityRequirement securityRequirement = new SecurityRequirement().addList(BASIC_AUTH_SCHEME);
             if (requiresTenantInformation(pathName, httpMethod)) {
-                op.addSecurityItem(new SecurityRequirement().addList(API_KEY_SCHEME));
-                op.addSecurityItem(new SecurityRequirement().addList(API_SECRET_SCHEME));
+                securityRequirement
+                        .addList(API_KEY_SCHEME)
+                        .addList(API_SECRET_SCHEME);
             }
+            op.addSecurityItem(securityRequirement);
 
             // In OpenAPI 3, request body is separate from parameters
             if (op.getRequestBody() != null) {
