@@ -9,30 +9,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  resolve-e2e-ref:
-    runs-on: ubuntu-latest
-    outputs:
-      e2e-ref: ${{ steps.refs.outputs.e2e-ref }}
-    steps:
-      - name: Resolve E2E branch ref
-        id: refs
-        shell: bash
-        run: |
-          branch=master
-          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.base_ref }}" == "java2x" ]]; then
-            branch=java2x
-          elif [[ "${{ github.ref_type }}" == "branch" && "${{ github.ref_name }}" == "java2x" ]]; then
-            branch=java2x
-          fi
-
-          echo "e2e-ref=refs/heads/$branch" >> "$GITHUB_OUTPUT"
-          echo "Using integration test ref refs/heads/$branch"
-
   ci:
     uses: killbill/gh-actions-shared/.github/workflows/ci.yml@java21
   e2e:
-    needs:
-      - resolve-e2e-ref
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -46,6 +25,7 @@ jobs:
       matrix:
         include:
           - ruby-version: '2.7'
+            ref: refs/heads/master
             database-adapter: 'mysql2'
             database-user: 'root'
             database-password: 'root'
@@ -69,7 +49,7 @@ jobs:
         uses: s4u/maven-settings-action@v4.0.0
         # Go to Sonatype directly to avoid delay syncs (could get rid of this if actions/setup-java were to support mirrors).
         with:
-          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "central", "url": "https://repo.maven.apache.org/maven2"}]'
+          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "central", "url": "https://oss.sonatype.org/content/repositories/releases"}]'
           sonatypeSnapshots: true
           githubServer: false
       - name: Set up Maven
@@ -154,7 +134,7 @@ jobs:
           persist-credentials: false
           path: killbill-integration-tests
           repository: killbill/killbill-integration-tests
-          ref: ${{ needs.resolve-e2e-ref.outputs.e2e-ref }}
+          ref: ${{ matrix.ref }}
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
