@@ -41,9 +41,10 @@ public class TestInvoiceNotificationQListener extends InvoiceListener {
                                             final InternalCallContextFactory internalCallContextFactory,
                                             final InvoiceDispatcher dispatcher,
                                             final InvoiceInternalApi invoiceApi,
+                                            final ParkedAccountsManager parkedAccountsManager,
                                             final BusDispatcherOptimizer busOptimizer,
                                             final NotificationQueueService notificationQueueService) {
-        super(accountApi, internalCallContextFactory, dispatcher, invoiceApi, notificationQueueService, busOptimizer, clock);
+        super(accountApi, internalCallContextFactory, dispatcher, invoiceApi, parkedAccountsManager, notificationQueueService, busOptimizer, clock);
     }
 
     @Override

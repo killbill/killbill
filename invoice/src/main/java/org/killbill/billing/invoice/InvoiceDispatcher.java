@@ -44,7 +44,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -194,7 +193,7 @@ public class InvoiceDispatcher {
         try {
             processAccount(false, accountId, null, null, false, true, Collections.emptyList(), internalCallContext);
         } catch (final InvoiceApiException e) {
-            log.warn("Failed to process BCD change for accountId='{}'", accountId, e);
+            log.warn("Failed to generate invoice for accountId='{}', BCD change processing failed", accountId, e);
         }
     }
 
@@ -220,7 +219,7 @@ public class InvoiceDispatcher {
 
             processSubscriptionStartRequestedDateWithLock(accountId, transition, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId, e);
+            log.warn("Failed to generate invoice for accountId='{}', could not acquire lock", accountId, e);
             throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
@@ -332,29 +331,13 @@ public class InvoiceDispatcher {
             if (isApiCall) {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
-            if (!rescheduleProcessAccount(accountId, context)) {
-                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
-            }
+            log.warn("Failed to generate invoice for accountId='{}', targetDate='{}', could not acquire lock", accountId, targetDate, e);
+            throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
                 lock.release();
             }
         }
-        return Collections.emptyList();
-    }
-
-
-    private boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
-
-        final List<Period> periods = TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context));
-        if (periods.size() == 0) {
-            return false;
-        }
-        // Since we can't keep track of attempts, we only look at the first value
-        final DateTime nextRescheduleDt = clock.getUTCNow().plus(periods.get(0));
-        log.info("Rescheduling invoice call at time {}", nextRescheduleDt);
-        invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
-        return true;
     }
 
 
@@ -460,25 +443,48 @@ public class InvoiceDispatcher {
             printInvoiceTiming(invoiceTimings);
             return result;
         } catch (final CatalogApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                parkAccount(accountId, context);
+            }
             return Collections.emptyList();
         } catch (final AccountApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                parkAccount(accountId, context);
+            }
             return Collections.emptyList();
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                parkAccount(accountId, context);
+            }
             return Collections.emptyList();
         } catch (final InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_PLUGIN_API_ABORTED.getCode()) {
+                log.info("Invoice generation aborted by plugin for accountId='{}', targetDate='{}'", accountId, inputTargetDate);
                 return Collections.emptyList();
             }
-
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            // Only case where we park even if this is from an API call and isParkAccountsOnAllExceptions is not explicitly set.
             if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode() && !isDryRun) {
-                log.warn("Illegal invoicing state detected for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+                parkAccount(accountId, context);
+            } else if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                parkAccount(accountId, context);
+            }
+            // For non-API, non-dry-run paths the exception has been fully handled above (logged and parked if applicable).
+            // Rethrowing would only cause duplicate logging in the async callers that catch and swallow it anyway.
+            if (!isApiCall && !isDryRun) {
+                return Collections.emptyList();
+            }
+            throw e;
+        } catch (RuntimeException e) { // The case of LockFailedException was handled prior we enter this method.
+            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
             throw e;
-        } catch (final NoSuchNotificationQueue e) {
+        } catch (final NoSuchNotificationQueue e) { /* Dry run use cases */
             throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, "Failed to retrieve future notifications from notificationQ");
         }
     }
@@ -677,7 +683,7 @@ public class InvoiceDispatcher {
         try {
             account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final AccountApiException e) {
-            log.error("Unable to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
+            log.warn("Failed to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
             long startNano = System.nanoTime();
             invoicePluginDispatcher.onFailureCall(originalTargetDate, null, accountInvoices.getInvoices(), false, isRescheduled, callContext, inputProperties, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
@@ -694,6 +700,7 @@ public class InvoiceDispatcher {
         invoiceTimings.put(InvoiceTiming.PLUGINS_PRIOR_CALL, System.nanoTime() - startNano);
 
         if (priorCallResult.getRescheduleDate() != null) {
+            log.info("Invoice generation rescheduled by plugin for accountId='{}', targetDate='{}', rescheduled to '{}'", accountId, originalTargetDate, priorCallResult.getRescheduleDate());
             final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(priorCallResult.getRescheduleDate(), billingEvents, internalCallContext);
             setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             return null;
@@ -865,7 +872,7 @@ public class InvoiceDispatcher {
         try {
             account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final AccountApiException e) {
-            log.error("Unable to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
+            log.warn("Failed to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
             long startNano = System.nanoTime();
             invoicePluginDispatcher.onFailureCall(originalTargetDate, null, accountInvoices.getInvoices(), true, isRescheduled, callContext, inputProperties, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
@@ -1339,7 +1346,7 @@ public class InvoiceDispatcher {
 
             processParentInvoiceForInvoiceGenerationWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
+            log.warn("Failed to generate invoice for parentAccountId='{}', could not acquire lock", childAccount.getParentAccountId().toString(), e);
             throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
@@ -1426,7 +1433,7 @@ public class InvoiceDispatcher {
 
             processParentInvoiceForAdjustmentsWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
+            log.warn("Failed to generate invoice for parentAccountId='{}', could not acquire lock", childAccount.getParentAccountId().toString(), e);
             throw new QueueRetryException(e, TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context)));
         } finally {
             if (lock != null) {
