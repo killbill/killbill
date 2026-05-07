@@ -17,6 +17,8 @@
 
 package org.killbill.billing.server.log;
 
+import java.util.Objects;
+
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -29,7 +31,22 @@ public class ThreadNameBasedDiscriminator implements Discriminator<ILoggingEvent
     private static final String BILLING_DOT = "billing.";
     private static final String COMMONS_DOT = "commons.";
 
-    private final KillbillSecurityManager killbillSecurityManager = new KillbillSecurityManager();
+    private static final String ORG_KILLBILL_BILLING_DOT = ORG_KILLBILL_DOT + BILLING_DOT;
+    private static final String ORG_KILLBILL_COMMONS_DOT = ORG_KILLBILL_DOT + COMMONS_DOT;
+    private static final String COM_KILLBILL_BILLING_PLUGIN_DOT = "com.killbill.billing.plugin.";
+
+    // Skip JDBI wrappers, profiling utilities, etc.
+    private static final String[] SKIP_PREFIXES = {
+            "org.killbill.billing.util.entity.",
+            "org.killbill.billing.util.dao.",
+            "org.killbill.commons.profiling.",
+            "org.killbill.commons.jdbi."
+    };
+
+    // RETAIN_CLASS_REFERENCE is required to call getDeclaringClass() on stack frames.
+    // The walker is stateless and safe to share across threads.
+    private static final StackWalker STACK_WALKER =
+            StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
 
     private boolean started;
 
@@ -112,132 +129,65 @@ public class ThreadNameBasedDiscriminator implements Discriminator<ILoggingEvent
     }
 
     private String getKillbillCaller() {
-        final Class<?>[] stackTrace = killbillSecurityManager.getClassContext();
-        if (stackTrace == null || stackTrace.length <= 3) {
+        // Walk the call stack and return the first frame whose declaring class
+        // produces a non-null marker. We skip our own frames so the discriminator
+        // implementation itself never matches the org.killbill.billing.* rule.
+        return STACK_WALKER.walk(frames -> frames
+                .filter(frame -> frame.getDeclaringClass() != ThreadNameBasedDiscriminator.class)
+                .map(frame -> extractMarker(frame.getDeclaringClass().getName()))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null));
+    }
+
+    /**
+     * Compute the marker name for a given fully-qualified class name, or
+     * {@code null} when the caller should be skipped (JDBI/entity/dao/profiling
+     * wrappers) or does not belong to a Kill Bill / plugin package.
+     *
+     * <p>Isolated from the stack walking logic so that the parsing rules can be
+     * unit-tested without spinning up a real call stack.</p>
+     */
+    @VisibleForTesting
+    static String extractMarker(final String className) {
+        if (className == null) {
             return null;
         }
 
-        // Skip first ones (i.e. skip this class)
-        for (int i = 4; i < stackTrace.length; i++) {
-            final Class<?> aStackTrace = stackTrace[i];
-            final String className = aStackTrace.getName();
-            final char[] classNameChars = className.toCharArray();
-
-            // Try to be faster than using patterns or String methods
-            if (classNameChars.length > 13 &&
-                classNameChars[0] == 'o' &&
-                classNameChars[1] == 'r' &&
-                classNameChars[2] == 'g' &&
-                classNameChars[3] == '.' &&
-                classNameChars[4] == 'k' &&
-                classNameChars[5] == 'i' &&
-                classNameChars[6] == 'l' &&
-                classNameChars[7] == 'l' &&
-                classNameChars[8] == 'b' &&
-                classNameChars[9] == 'i' &&
-                classNameChars[10] == 'l' &&
-                classNameChars[11] == 'l' &&
-                classNameChars[12] == '.') {
-                String markerName = ORG_KILLBILL_DOT;
-
-                // Extract the killbill module for Kill Bill proper calls, otherwise get the top-level package
-                int startPosition = 13;
-                if (classNameChars.length > 21 &&
-                    classNameChars[13] == 'b' &&
-                    classNameChars[14] == 'i' &&
-                    classNameChars[15] == 'l' &&
-                    classNameChars[16] == 'l' &&
-                    classNameChars[17] == 'i' &&
-                    classNameChars[18] == 'n' &&
-                    classNameChars[19] == 'g' &&
-                    classNameChars[20] == '.') {
-                    startPosition = 21;
-                    markerName += BILLING_DOT;
-
-                    // Extract the submodule in util
-                    if (classNameChars.length > 26 &&
-                        classNameChars[21] == 'u' &&
-                        classNameChars[22] == 't' &&
-                        classNameChars[23] == 'i' &&
-                        classNameChars[24] == 'l' &&
-                        classNameChars[25] == '.') {
-                        startPosition = 26;
-
-                        // Skip JDBI wrappers
-                        if (classNameChars.length > 33 &&
-                            classNameChars[26] == 'e' &&
-                            classNameChars[27] == 'n' &&
-                            classNameChars[28] == 't' &&
-                            classNameChars[29] == 'i' &&
-                            classNameChars[30] == 't' &&
-                            classNameChars[31] == 'y' &&
-                            classNameChars[32] == '.') {
-                            continue;
-                        } else if (classNameChars.length > 30 &&
-                                   classNameChars[26] == 'd' &&
-                                   classNameChars[27] == 'a' &&
-                                   classNameChars[28] == 'o' &&
-                                   classNameChars[29] == '.') {
-                            continue;
-                        }
-                    }
-                    // Extract the submodule in commons
-                } else if (classNameChars.length > 21 &&
-                           classNameChars[13] == 'c' &&
-                           classNameChars[14] == 'o' &&
-                           classNameChars[15] == 'm' &&
-                           classNameChars[16] == 'm' &&
-                           classNameChars[17] == 'o' &&
-                           classNameChars[18] == 'n' &&
-                           classNameChars[19] == 's' &&
-                           classNameChars[20] == '.') {
-                    startPosition = 21;
-                    markerName += COMMONS_DOT;
-
-                    // Skip profiling
-                    if (classNameChars.length > 31 &&
-                        classNameChars[21] == 'p' &&
-                        classNameChars[22] == 'r' &&
-                        classNameChars[23] == 'o' &&
-                        classNameChars[24] == 'f' &&
-                        classNameChars[25] == 'i' &&
-                        classNameChars[26] == 'l' &&
-                        classNameChars[27] == 'i' &&
-                        classNameChars[28] == 'n' &&
-                        classNameChars[29] == 'g' &&
-                        classNameChars[30] == '.') {
-                        continue;
-                        // Skip JDBI utilities
-                    } else if (classNameChars.length > 26 &&
-                               classNameChars[21] == 'j' &&
-                               classNameChars[22] == 'd' &&
-                               classNameChars[23] == 'b' &&
-                               classNameChars[24] == 'i' &&
-                               classNameChars[25] == '.') {
-                        continue;
-                    }
-                }
-
-                return buildMarkerName(markerName, classNameChars, startPosition);
-            } else { /* Support for plugins as well */
-                int next = lookupNextToken(classNameChars, 0, "com.killbill.billing.plugin.");
-                if (next == -1) {
-                    next = lookupNextToken(classNameChars, 0, "org.killbill.billing.plugin.");
-                }
-                if (next != -1) {
-                    return buildPluginMarkerName(classNameChars, next);
+        if (className.startsWith(ORG_KILLBILL_DOT)) {
+            // Skip well-known infrastructure / wrapper packages
+            for (final String skip : SKIP_PREFIXES) {
+                if (className.startsWith(skip)) {
+                    return null;
                 }
             }
+
+            final char[] classNameChars = className.toCharArray();
+
+            // Extract the killbill module for Kill Bill proper calls...
+            if (className.startsWith(ORG_KILLBILL_BILLING_DOT) &&
+                classNameChars.length > ORG_KILLBILL_BILLING_DOT.length()) {
+                return buildMarkerName(ORG_KILLBILL_BILLING_DOT, classNameChars, ORG_KILLBILL_BILLING_DOT.length());
+            }
+
+            // ...or for Kill Bill commons calls...
+            if (className.startsWith(ORG_KILLBILL_COMMONS_DOT) &&
+                classNameChars.length > ORG_KILLBILL_COMMONS_DOT.length()) {
+                return buildMarkerName(ORG_KILLBILL_COMMONS_DOT, classNameChars, ORG_KILLBILL_COMMONS_DOT.length());
+            }
+
+            // ...otherwise fall back to the top-level package under org.killbill.
+            if (classNameChars.length > ORG_KILLBILL_DOT.length()) {
+                return buildMarkerName(ORG_KILLBILL_DOT, classNameChars, ORG_KILLBILL_DOT.length());
+            }
+            return null;
         }
+
+        // Support for plugins published under com.killbill.billing.plugin.*
+        if (className.startsWith(COM_KILLBILL_BILLING_PLUGIN_DOT)) {
+            return buildPluginMarkerName(className.toCharArray(), COM_KILLBILL_BILLING_PLUGIN_DOT.length());
+        }
+
         return null;
-    }
-
-    // Simple utility class used to provide public access to the protected getClassContext() method of SecurityManager.
-    // Faster than new Throwable().getStackTrace() and Thread.currentThread().getStackTrace()
-    private static final class KillbillSecurityManager extends SecurityManager {
-
-        public Class[] getClassContext() {
-            return super.getClassContext();
-        }
     }
 }
