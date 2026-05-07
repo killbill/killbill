@@ -255,7 +255,7 @@ public class PluginResource extends JaxRsResourceBase {
                 out.write("&".getBytes(UTF_8));
             }
 
-            out.write((entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)).getBytes(UTF_8));
+            out.write((entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), UTF_8)).getBytes(UTF_8));
             idx++;
         }
     }
@@ -426,6 +426,8 @@ public class PluginResource extends JaxRsResourceBase {
             }
             if (printWriter == null) {
                 final String encoding = getCharacterEncoding();
+                // Servlet specs default response charset.
+                // https://jakarta.ee/specifications/servlet/6.0/jakarta-servlet-spec-6.0.pdf~55
                 Charset charset = StandardCharsets.ISO_8859_1;
                 if (encoding != null) {
                     try {
@@ -449,10 +451,19 @@ public class PluginResource extends JaxRsResourceBase {
         public void sendError(final int sc, final String msg) throws IOException {
             setStatus(sc);
             if (msg != null) {
-                buffer.write(msg.getBytes(StandardCharsets.UTF_8));
+                buffer.write(msg.getBytes(UTF_8));
             }
         }
 
+        // We deliberately do not delegate to super.sendRedirect(...): the default HttpServletResponseWrapper
+        // implementation forwards to the underlying HttpServletResponse, which commits and closes the response,
+        // and exactly the root cause of https://github.com/killbill/killbill/issues/2205. Instead, we stage the 302
+        // status and the Location header on the wrapped response so PluginResource can hand a well-formed JAX-RS
+        // Response back to Jersey.
+        //
+        // The plugin-supplied target is preserved verbatim. It MAY be normalized to an absolute URL
+        // ("scheme://host[:port]<path>") by Jersey or the host servlet container before it reaches the wire. Either
+        // form is legal per RFC 7231 and accepted by modern HTTP clients.
         @Override
         public void sendRedirect(final String location) throws IOException {
             setStatus(HttpServletResponse.SC_FOUND);
