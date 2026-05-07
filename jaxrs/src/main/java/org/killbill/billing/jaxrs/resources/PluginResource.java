@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -198,24 +200,11 @@ public class PluginResource extends JaxRsResourceBase {
         // The real ServletOutputStream is a HttpOutput, which we don't want to give to plugins.
         // Jooby for instance would commit the underlying HTTP channel (via ServletServletResponse#send),
         // meaning that any further headers (e.g. Profiling) that we would add would not be returned.
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        final OSGIServletResponseWrapper res = new OSGIServletResponseWrapper(response,
-                                                                              new ServletOutputStream() {
-                                                                                  @Override
-                                                                                  public boolean isReady() {
-                                                                                      return true;
-                                                                                  }
-
-                                                                                  @Override
-                                                                                  public void setWriteListener(final WriteListener writeListener) {
-                                                                                      throw new UnsupportedOperationException();
-                                                                                  }
-
-                                                                                  @Override
-                                                                                  public void write(final int b) throws IOException {
-                                                                                      byteArrayOutputStream.write(b);
-                                                                                  }
-                                                                              });
+        // The wrapper fully buffers the response (output stream, writer, sendError, sendRedirect,
+        // flushBuffer, reset, ...) so no servlet API call by a plugin can commit / close the
+        // underlying Jetty response before PluginResource hands the result back to Jersey.
+        // See https://github.com/killbill/killbill/issues/2205
+        final OSGIServletResponseWrapper res = new OSGIServletResponseWrapper(response);
 
         osgiServlet.service(req, res);
 
@@ -224,7 +213,7 @@ public class PluginResource extends JaxRsResourceBase {
         }
 
         final Response.ResponseBuilder builder  = Response.status(response.getStatus())
-                .entity(byteArrayOutputStream.toByteArray());
+                .entity(res.getCapturedBytes());
         for (final String name : response.getHeaderNames()) {
             for (final String value : response.getHeaders(name)) {
                 builder.header(name, value);
@@ -266,7 +255,7 @@ public class PluginResource extends JaxRsResourceBase {
                 out.write("&".getBytes(UTF_8));
             }
 
-            out.write((entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)).getBytes(UTF_8));
+            out.write((entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), UTF_8)).getBytes(UTF_8));
             idx++;
         }
     }
@@ -384,16 +373,159 @@ public class PluginResource extends JaxRsResourceBase {
 
     private static final class OSGIServletResponseWrapper extends HttpServletResponseWrapper {
 
-        private final ServletOutputStream servletOutputStream;
+        // Fully buffer the response. None of the servlet APIs below ever touch the underlying
+        // Jetty response body / commit state; only headers and status are propagated via the
+        // HttpServletResponseWrapper super-calls (which do not commit). PluginResource reads the
+        // captured bytes after the OSGI servlet returns and hands them to Jersey.
+        // See https://github.com/killbill/killbill/issues/2205
+        private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        private final ServletOutputStream servletOutputStream = new ServletOutputStream() {
+            @Override
+            public boolean isReady() {
+                return true;
+            }
 
-        public OSGIServletResponseWrapper(final HttpServletResponse response, final ServletOutputStream servletOutputStream) {
+            @Override
+            public void setWriteListener(final WriteListener writeListener) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void write(final int b) {
+                buffer.write(b);
+            }
+
+            @Override
+            public void write(final byte[] b, final int off, final int len) {
+                buffer.write(b, off, len);
+            }
+        };
+
+        // Lazily created on getWriter(); mutually exclusive with direct getOutputStream() use,
+        // per the Servlet spec.
+        private PrintWriter printWriter;
+        private boolean outputStreamRequested;
+
+        public OSGIServletResponseWrapper(final HttpServletResponse response) {
             super(response);
-            this.servletOutputStream = servletOutputStream;
         }
 
         @Override
         public ServletOutputStream getOutputStream() throws IOException {
+            if (printWriter != null) {
+                throw new IllegalStateException("getWriter() has already been called on this response");
+            }
+            outputStreamRequested = true;
             return servletOutputStream;
+        }
+
+        @Override
+        public PrintWriter getWriter() throws IOException {
+            if (outputStreamRequested) {
+                throw new IllegalStateException("getOutputStream() has already been called on this response");
+            }
+            if (printWriter == null) {
+                final String encoding = getCharacterEncoding();
+                // Servlet specs default response charset.
+                // https://jakarta.ee/specifications/servlet/6.0/jakarta-servlet-spec-6.0.pdf~55
+                Charset charset = StandardCharsets.ISO_8859_1;
+                if (encoding != null) {
+                    try {
+                        charset = Charset.forName(encoding);
+                    } catch (final IllegalArgumentException e) {
+                        // IllegalCharsetNameException / UnsupportedCharsetException — fall back to
+                        // the servlet default rather than failing the plugin call.
+                    }
+                }
+                printWriter = new PrintWriter(new OutputStreamWriter(buffer, charset), false);
+            }
+            return printWriter;
+        }
+
+        @Override
+        public void sendError(final int sc) throws IOException {
+            setStatus(sc);
+        }
+
+        @Override
+        public void sendError(final int sc, final String msg) throws IOException {
+            setStatus(sc);
+            if (msg != null) {
+                buffer.write(msg.getBytes(UTF_8));
+            }
+        }
+
+        // We deliberately do not delegate to super.sendRedirect(...): the default HttpServletResponseWrapper
+        // implementation forwards to the underlying HttpServletResponse, which commits and closes the response,
+        // and exactly the root cause of https://github.com/killbill/killbill/issues/2205. Instead, we stage the 302
+        // status and the Location header on the wrapped response so PluginResource can hand a well-formed JAX-RS
+        // Response back to Jersey.
+        //
+        // The plugin-supplied target is preserved verbatim. It MAY be normalized to an absolute URL
+        // ("scheme://host[:port]<path>") by Jersey or the host servlet container before it reaches the wire. Either
+        // form is legal per RFC 7231 and accepted by modern HTTP clients.
+        @Override
+        public void sendRedirect(final String location) throws IOException {
+            setStatus(HttpServletResponse.SC_FOUND);
+            setHeader("Location", location);
+        }
+
+        @Override
+        public void flushBuffer() throws IOException {
+            // Flush our captured writer (if any) into the byte buffer, but never touch the
+            // underlying Jetty response — that is what would commit / close the channel.
+            if (printWriter != null) {
+                printWriter.flush();
+            }
+        }
+
+        @Override
+        public void resetBuffer() {
+            if (printWriter != null) {
+                // Discard any buffered chars in the PrintWriter.
+                printWriter.flush();
+            }
+            buffer.reset();
+        }
+
+        @Override
+        public void reset() {
+            // Reset status and headers on the wrapped response (it is never committed by us, so
+            // this is safe and does not throw IllegalStateException), then clear our buffer.
+            super.reset();
+            resetBuffer();
+        }
+
+        @Override
+        public boolean isCommitted() {
+            // We buffer everything; the response is never committed from the plugin's point of view.
+            return false;
+        }
+
+        @Override
+        public int getBufferSize() {
+            // Our backing ByteArrayOutputStream grows as needed and is never auto-flushed to the
+            // underlying response, so report an effectively-unbounded buffer. This signals to
+            // plugins that they do not need to call flushBuffer() to avoid hitting a limit.
+            return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public void setBufferSize(final int size) {
+            // No-op: our buffer grows as needed and is never auto-flushed to the underlying
+            // response.
+        }
+
+        /**
+         * @return the bytes captured during the OSGI servlet invocation; flushes the lazily
+         *         created PrintWriter (if any) so that any chars written via {@link #getWriter()}
+         *         are included.
+         */
+        byte[] getCapturedBytes() {
+            if (printWriter != null) {
+                printWriter.flush();
+            }
+            return buffer.toByteArray();
         }
     }
 }
