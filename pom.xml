@@ -76,7 +76,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
-                <version>1.21</version>
+                <version>1.26.0</version>
             </dependency>
             <dependency>
                 <!-- log4jdbc-log4j2-jdbc4 still pulls 2.0-beta8 -->
