@@ -88,7 +88,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
         final InvoiceItems credits = new InvoiceItems();
         credits.add(credit);
-        creditApi.createCredits(credits, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        creditApi.createCredits(credits, toJavaLocalDate(clock.getUTCToday()), true, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Add refund
         final Payment postedPayment = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0);

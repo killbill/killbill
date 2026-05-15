@@ -705,7 +705,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         InvoiceItems credits = new InvoiceItems();
         credits.add(credit);
-        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, clock.getUTCToday(), false, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, toJavaLocalDate(clock.getUTCToday()), false, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(creditJsons.size(), 1);
 
         Invoice invoice = invoiceApi.getInvoice(creditJsons.get(0).getInvoiceId(), requestOptions);
@@ -767,7 +767,7 @@ public class TestInvoice extends TestJaxrsBase {
         // insert credit to child account
         InvoiceItems credits = new InvoiceItems();
         credits.add(credit);
-        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, toJavaLocalDate(clock.getUTCToday()), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(creditJsons.size(), 1);
 
         Invoices childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
@@ -972,7 +972,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         InvoiceItems credits = new InvoiceItems();
         credits.add(credit);
-        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, clock.getUTCToday(), false, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, toJavaLocalDate(clock.getUTCToday()), false, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(creditJsons.size(), 1);
         final UUID invoiceId = creditJsons.get(0).getInvoiceId();
 
