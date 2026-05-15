@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entity.EntityPersistenceException;
@@ -243,9 +244,15 @@ public class CBADao {
     private InvoiceItemModelDao buildCBAItem(final InvoiceModelDao invoice,
                                              final BigDecimal amount,
                                              final InternalCallContext context) {
+        // Use the invoice's target date (effective date) so that the CBA_ADJ item date is consistent
+        // with the corresponding CREDIT_ADJ or other invoice items. Fall back to invoiceDate for
+        // parent invoices where targetDate is null, and finally to context createdDate as last resort.
+        final LocalDate cbaDate = invoice.getTargetDate() != null ? invoice.getTargetDate() :
+                                  (invoice.getInvoiceDate() != null ? invoice.getInvoiceDate() :
+                                   context.getCreatedDate().toLocalDate());
         return new InvoiceItemModelDao(new CreditBalanceAdjInvoiceItem(invoice.getId(),
                                                                        invoice.getAccountId(),
-                                                                       context.getCreatedDate().toLocalDate(),
+                                                                       cbaDate,
                                                                        amount.negate(),
                                                                        invoice.getCurrency()));
     }

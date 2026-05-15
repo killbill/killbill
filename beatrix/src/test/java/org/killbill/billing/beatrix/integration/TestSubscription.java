@@ -99,7 +99,7 @@ public class TestSubscription extends TestIntegrationBase {
         toBeChecked = List.of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("169.32")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2334.20")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("2164.88"), false /* Issue with test where created date for context is wrong*/));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 11), new LocalDate(2012, 5, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("2164.88")));
 
         final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, productName, ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                                    SubscriptionEventType.CHANGE, bpEntitlement.getId(), bpEntitlement.getBundleId(), null, BillingActionPolicy.IMMEDIATE);
