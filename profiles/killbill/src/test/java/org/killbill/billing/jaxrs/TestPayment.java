@@ -31,7 +31,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
@@ -124,13 +125,13 @@ public class TestPayment extends TestJaxrsBase {
         authTransaction.setAmount(BigDecimal.ONE);
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setTransactionType(TransactionType.AUTHORIZE);
-        final DateTime effectiveDate = new DateTime(2018, 9, 4, 3, 5, 35);
+        final ZonedDateTime effectiveDate = ZonedDateTime.of(2018, 9, 4, 3, 5, 35, 0, ZoneId.systemDefault());
         authTransaction.setEffectiveDate(effectiveDate);
 
         final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                                           NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
-        assertEquals(paymentTransaction.getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(paymentTransaction.getEffectiveDate().toInstant(), effectiveDate.toInstant());
     }
 
     @Test(groups = "slow")
