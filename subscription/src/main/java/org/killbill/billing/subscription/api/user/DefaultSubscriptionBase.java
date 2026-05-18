@@ -252,6 +252,29 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
+    public Plan getFuturePlanAt(DateTime at) {
+        if (!at.isAfter(clock.getUTCNow()) || transitions == null) {
+            return getCurrentPlan();
+        }
+
+        final List<SubscriptionBaseTransition> previousChanges = transitions.stream()
+                .filter(t -> !t.getEffectiveTransitionTime().isAfter(at))
+                .filter(t -> t.getTransitionType().equals(SubscriptionBaseTransitionType.CHANGE)
+                        || t.getTransitionType().equals(SubscriptionBaseTransitionType.UNDO_CHANGE))
+                .collect(Collectors.toList());
+        final SubscriptionBaseTransition lastChange = !previousChanges.isEmpty()
+                ? previousChanges.get(previousChanges.size() - 1)
+                : null;
+
+        if (lastChange != null) {
+            return lastChange.getNextPlan();
+
+        } else {
+            return getCurrentOrPendingPlan();
+        }
+    }
+
+    @Override
     public PriceList getCurrentPriceList() {
         return (getPreviousTransition() == null) ? null :
                getPreviousTransition().getNextPriceList();
