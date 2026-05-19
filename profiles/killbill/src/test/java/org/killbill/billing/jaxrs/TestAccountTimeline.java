@@ -19,13 +19,14 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.gen.Account;
@@ -52,7 +53,8 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can retrieve the timeline without audits")
     public void testAccountTimeline() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault()));
+        final ZonedDateTime newTime = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setTime(toJodaDateTime(newTime));
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -65,19 +67,21 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertNotNull(timeline.getInvoices().get(0).getBundleKeys());
 
         final List<EventSubscription> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
-        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(events.get(0).getEffectiveDate())), new org.joda.time.LocalDate(2012, 4, 25));
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(events.get(0).getEffectiveDate())), toJodaLocalDate(LocalDate.of(2012, 4, 25)));
         Assert.assertEquals(events.get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
-        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(events.get(1).getEffectiveDate())), new org.joda.time.LocalDate(2012, 4, 25));
+
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(events.get(1).getEffectiveDate())), toJodaLocalDate(LocalDate.of(2012, 4, 25)));
         Assert.assertEquals(events.get(1).getEventType(), SubscriptionEventType.START_BILLING);
-        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(events.get(2).getEffectiveDate())), new org.joda.time.LocalDate(2012, 5, 25));
+
+        Assert.assertEquals(internalCallContext.toLocalDate(toJodaDateTime(events.get(2).getEffectiveDate())), toJodaLocalDate(LocalDate.of(2012, 5, 25)));
         Assert.assertEquals(events.get(2).getEventType(), SubscriptionEventType.PHASE);
     }
 
     @Test(groups = "slow", description = "Can retrieve the timeline with audits")
     public void testAccountTimelineWithAudits() throws Exception {
-        final DateTime startTime = clock.getUTCNow();
+        final ZonedDateTime startTime = toJavaZonedDateTime(clock.getUTCNow());
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final DateTime endTime = clock.getUTCNow();
+        final ZonedDateTime endTime = toJavaZonedDateTime(clock.getUTCNow());
 
         // Add credit
         final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).get(1);
@@ -118,7 +122,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         verifyBundles(accountJson.getAccountId(), startTime, endTime);
     }
 
-    private void verifyPayments(final UUID accountId, final DateTime startTime, final DateTime endTime,
+    private void verifyPayments(final UUID accountId, final ZonedDateTime startTime, final ZonedDateTime endTime,
                                 final BigDecimal refundAmount, final BigDecimal chargebackAmount) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
             final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
@@ -189,7 +193,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         }
     }
 
-    private void verifyInvoices(final UUID accountId, final DateTime startTime, final DateTime endTime) throws Exception {
+    private void verifyInvoices(final UUID accountId, final ZonedDateTime startTime, final ZonedDateTime endTime) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
             final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
@@ -215,7 +219,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         }
     }
 
-    private void verifyCredits(final UUID accountId, final DateTime startTime, final DateTime endTime, final BigDecimal creditAmount) throws Exception {
+    private void verifyCredits(final UUID accountId, final ZonedDateTime startTime, final ZonedDateTime endTime, final BigDecimal creditAmount) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
             final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
@@ -235,7 +239,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         }
     }
 
-    private void verifyBundles(final UUID accountId, final DateTime startTime, final DateTime endTime) throws Exception {
+    private void verifyBundles(final UUID accountId, final ZonedDateTime startTime, final ZonedDateTime endTime) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
             final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
@@ -295,9 +299,10 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
     private void verifyAuditLog(final AuditLog auditLogJson, final ChangeType changeType, @Nullable final String reasonCode,
                                 @Nullable final String comments, @Nullable final String changedBy,
-                                final DateTime startTime, final DateTime endTime) {
+                                final ZonedDateTime startTime, final ZonedDateTime endTime) {
         Assert.assertEquals(auditLogJson.getChangeType(), changeType.toString());
-        Assert.assertFalse(toJodaDateTime(auditLogJson.getChangeDate()).isBefore(startTime));
+        // Preserve Joda behavior that, according to copilot, their isBefore() using millis, while JDK may use nanos.
+        Assert.assertFalse(auditLogJson.getChangeDate().toInstant().toEpochMilli() < startTime.toInstant().toEpochMilli());
         // Flaky
         //Assert.assertFalse(toJodaDateTime(auditLogJson.getChangeDate()).isAfter(endTime));
         Assert.assertEquals(auditLogJson.getReasonCode(), reasonCode);
