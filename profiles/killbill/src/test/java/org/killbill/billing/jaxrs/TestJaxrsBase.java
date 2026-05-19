@@ -27,6 +27,9 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.EventListener;
 import java.util.Iterator;
@@ -43,7 +46,6 @@ import javax.sql.DataSource;
 
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.eclipse.jetty.servlet.FilterHolder;
-import java.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
@@ -467,25 +469,43 @@ public class TestJaxrsBase extends KillbillClient {
     /**
      * Helper method to convert Java Time ZonedDateTime to Joda Time DateTime for use with InternalCallContext.toLocalDate()
      */
-    protected org.joda.time.DateTime toJodaDateTime(final java.time.ZonedDateTime zonedDateTime) {
+    protected org.joda.time.DateTime toJodaDateTime(final ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             return null;
         }
         return new org.joda.time.DateTime(zonedDateTime.toInstant().toEpochMilli());
     }
 
-    protected java.time.ZonedDateTime toJavaZonedDateTime(final org.joda.time.DateTime jodaDateTime) {
+    protected org.joda.time.LocalDate toJodaLocalDate(final LocalDate localDate) {
+        if (localDate == null) {
+            return null;
+        }
+        return new org.joda.time.LocalDate(localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth());
+    }
+
+    protected ZonedDateTime toJavaZonedDateTime(final org.joda.time.DateTime jodaDateTime) {
         if (jodaDateTime == null) {
             return null;
         }
         final int offsetSeconds = jodaDateTime.getZone().getOffset(jodaDateTime.getMillis()) / 1000;
-        return java.time.Instant.ofEpochMilli(jodaDateTime.getMillis()).atZone(java.time.ZoneOffset.ofTotalSeconds(offsetSeconds));
+        return Instant.ofEpochMilli(jodaDateTime.getMillis()).atZone(java.time.ZoneOffset.ofTotalSeconds(offsetSeconds));
     }
 
-    protected java.time.LocalDate toJavaLocalDate(final org.joda.time.LocalDate jodaDate) {
+    protected LocalDate toJavaLocalDate(final org.joda.time.LocalDate jodaDate) {
         if (jodaDate == null) {
             return null;
         }
-        return java.time.LocalDate.of(jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth());
+        return LocalDate.of(jodaDate.getYear(), jodaDate.getMonthOfYear(), jodaDate.getDayOfMonth());
+    }
+
+    protected java.time.LocalDate toJavaLocalDate(final org.joda.time.DateTime jodaDateTime) {
+        if (jodaDateTime == null) {
+            return null;
+        }
+        return LocalDate.of(jodaDateTime.getYear(), jodaDateTime.getMonthOfYear(), jodaDateTime.getDayOfMonth());
+    }
+
+    protected org.joda.time.LocalDate clockGetToday(final String timezone) {
+        return clock.getToday(org.joda.time.DateTimeZone.forID(timezone));
     }
 }
