@@ -20,14 +20,14 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -76,9 +76,12 @@ public class TestInvoicePayment extends TestJaxrsBase {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
+
     @Test(groups = "slow", description = "Trigger payments for account with no unpaid invoices")
     public void testPayZeroInvoice() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault()));
+        final ZonedDateTime newTime = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setTime(toJodaDateTime(newTime));
+
         // No payment method
         final Account accountJson = createAccountWithExternalPaymentMethod();
         // Pay all invoices - nothing to pay
@@ -88,7 +91,8 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can pay invoices")
     public void testPayAllInvoices() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault()));
+        final ZonedDateTime newTime = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setTime(toJodaDateTime(newTime));
 
         // No payment method
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -318,9 +322,8 @@ public class TestInvoicePayment extends TestJaxrsBase {
     public void testWithFailedInvoicePayment() throws Exception {
 
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
-
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, DateTimeZone.getDefault());
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
