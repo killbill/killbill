@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.gen.Account;
@@ -51,7 +50,7 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can add a credit to an existing invoice")
     public void testAddCreditToInvoice() throws Exception {
-        final DateTime effectiveDate = clock.getUTCNow();
+        final LocalDate effectiveDate = toJavaLocalDate(clock.getUTCNow());
         final BigDecimal creditAmount = BigDecimal.ONE;
         final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(accountJson.getAccountId());
@@ -73,7 +72,7 @@ public class TestCredit extends TestJaxrsBase {
         assertEquals(createdCredits.get(0).getAccountId(), accountJson.getAccountId());
         assertEquals(createdCredits.get(0).getInvoiceId(), invoiceId);
         assertEquals(createdCredits.get(0).getAmount().compareTo(creditAmount), 0);
-        assertEquals(createdCredits.get(0).getStartDate().compareTo(toJavaLocalDate(effectiveDate.toLocalDate())), 0);
+        assertEquals(createdCredits.get(0).getStartDate().compareTo(effectiveDate), 0);
         assertEquals(createdCredits.get(0).getDescription().compareTo("description"), 0);
         assertEquals(createdCredits.get(0).getQuantity().compareTo(new BigDecimal("5")), 0);
         assertEquals(createdCredits.get(0).getRate().compareTo(BigDecimal.TEN), 0);
@@ -82,7 +81,6 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can add a credit with a different date to an existing invoice")
     public void testAddCreditWithDifferentDateToInvoice() throws Exception {
-        final DateTime effectiveDate = clock.getUTCNow();
         final BigDecimal creditAmount = BigDecimal.ONE;
         final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(accountJson.getAccountId());
