@@ -304,7 +304,7 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can retrieve invoice payments")
     public void testInvoicePayments() throws Exception {
-        clock.setTime(new org.joda.time.DateTime(2012, 4, 25, 0, 3, 42, org.joda.time.DateTimeZone.getDefault()));
+        clock.setTime(toJodaDateTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault())));
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -324,7 +324,7 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create an insta-payment")
     public void testInvoiceCreatePayment() throws Exception {
-        clock.setTime(new org.joda.time.DateTime(2012, 4, 25, 0, 3, 42, org.joda.time.DateTimeZone.getDefault()));
+        clock.setTime(toJodaDateTime(ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault())));
 
         // STEPH MISSING SET ACCOUNT AUTO_PAY_OFF
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -812,8 +812,8 @@ public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve parent and children invoices with and without children items")
     public void testParentInvoiceWithChildItems() throws Exception {
-        final org.joda.time.DateTime initialDate = new org.joda.time.DateTime(2012, 4, 25, 0, 3, 42, org.joda.time.DateTimeZone.getDefault());
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account parentAccount = createAccount();
         final Account childAccount1 = createAccount(parentAccount.getAccountId());
@@ -1196,7 +1196,7 @@ public class TestInvoice extends TestJaxrsBase {
     public void testInvoiceDryRunStopBilling() throws Exception {
 
         final LocalDate initialDate = LocalDate.of(2012, 4, 25);
-        clock.setDay(new org.joda.time.LocalDate(initialDate.getYear(), initialDate.getMonthValue(), initialDate.getDayOfMonth()));
+        clock.setDay(toJodaLocalDate(initialDate));
 
         final Account account = createAccountNoPMBundleAndSubscription(); // create account with subscription to shotgun-monthly plan
         final Subscription subscription = accountApi.getAccountBundles(account.getAccountId(), null, null, requestOptions).get(0).getSubscriptions().get(0);
