@@ -18,6 +18,7 @@
 
 package org.killbill.billing.server.dao;
 
+import java.io.InputStream;
 import java.util.Properties;
 
 import org.killbill.billing.KillbillTestSuite;
@@ -47,6 +48,26 @@ public class TestEmbeddedDBFactory extends KillbillTestSuite {
         final EmbeddedDB genericEmbeddedDb = EmbeddedDBFactory.get(createDaoConfig("jdbc:derby://localhost:1527/killbill;collation=TERRITORY_BASED:PRIMARY", "root", "root"));
         Assert.assertEquals(genericEmbeddedDb.getDBEngine(), DBEngine.GENERIC);
         checkEmbeddedDb(genericEmbeddedDb);
+    }
+
+    // Regression test for issue #2157: the bundled killbill-server.properties reference
+    // implementation must default to PostgreSQL for both the main DAO and the OSGI DAO.
+    @Test(groups = "fast")
+    public void testDefaultReferenceImplementationIsPostgres() throws Exception {
+        final Properties properties = new Properties();
+        try (final InputStream in = getClass().getResourceAsStream("/killbill-server.properties")) {
+            Assert.assertNotNull(in, "killbill-server.properties resource not found on the classpath");
+            properties.load(in);
+        }
+
+        Assert.assertEquals(properties.getProperty("org.killbill.dao.url"),
+                            "jdbc:postgresql://127.0.0.1:5432/killbill");
+        Assert.assertEquals(properties.getProperty("org.killbill.billing.osgi.dao.url"),
+                            "jdbc:postgresql://127.0.0.1:5432/killbill");
+
+        final DaoConfig daoConfig = new AugmentedConfigurationObjectFactory(properties).build(DaoConfig.class);
+        final EmbeddedDB embeddedDb = EmbeddedDBFactory.get(daoConfig);
+        Assert.assertEquals(embeddedDb.getDBEngine(), DBEngine.POSTGRESQL);
     }
 
     private void checkEmbeddedDb(final EmbeddedDB embeddedDb) {
