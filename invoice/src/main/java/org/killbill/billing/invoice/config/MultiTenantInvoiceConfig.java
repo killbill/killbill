@@ -223,6 +223,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantLockAwareConfigBase imp
     }
 
     @Override
+    public boolean isParkAccountsOnAllExceptions() {
+        return staticConfig.isParkAccountsOnAllExceptions();
+    }
+
+    @Override
+    public boolean isParkAccountsOnAllExceptions(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("isParkAccountsOnAllExceptions", tenantContext);
+        if (result != null) {
+            return Boolean.parseBoolean(result);
+        }
+        return isParkAccountsOnAllExceptions();
+    }
+
+    @Override
     public UsageDetailMode getItemResultBehaviorMode() {
         final UsageDetailMode mode = staticConfig.getItemResultBehaviorMode();
         if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {

@@ -333,7 +333,11 @@ public class InvoiceDispatcher {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
             if (!rescheduleProcessAccount(accountId, context)) {
-                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
+                // Issue #2208: with no reschedule periods configured, the account would otherwise be silently abandoned.
+                log.warn("Failed to generate invoice for accountId='{}', targetDate='{}', parking account", accountId, targetDate, e);
+                if (invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                    parkAccount(accountId, context);
+                }
             }
         } finally {
             if (lock != null) {
@@ -460,13 +464,16 @@ public class InvoiceDispatcher {
             printInvoiceTiming(invoiceTimings);
             return result;
         } catch (final CatalogApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+            parkAccountOnRecoverableError(isDryRun, accountId, context);
             return Collections.emptyList();
         } catch (final AccountApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+            parkAccountOnRecoverableError(isDryRun, accountId, context);
             return Collections.emptyList();
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+            parkAccountOnRecoverableError(isDryRun, accountId, context);
             return Collections.emptyList();
         } catch (final InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_PLUGIN_API_ABORTED.getCode()) {
@@ -629,6 +636,19 @@ public class InvoiceDispatcher {
         } catch (final TagApiException ignored) {
             log.warn("Unable to park account", ignored);
         }
+    }
+
+    // Issue #2208: park when a recoverable-looking API exception (Catalog/Account/SubscriptionBase) has just
+    // caused us to silently drop invoice generation. Skipped in dryRun (to avoid mutating state) and when
+    // the operator has opted out via org.killbill.invoice.parkAccountsOnAllExceptions=false.
+    private void parkAccountOnRecoverableError(final boolean isDryRun, final UUID accountId, final InternalCallContext context) {
+        if (isDryRun) {
+            return;
+        }
+        if (!invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+            return;
+        }
+        parkAccount(accountId, context);
     }
 
     private Iterable<UUID> getFilteredSubscriptionIdsFor_UPCOMING_INVOICE_DryRun(@Nullable final DryRunArguments dryRunArguments, final BillingEventSet billingEvents) {

@@ -44,15 +44,18 @@ import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.commons.eventbus.AllowConcurrentEvents;
 import org.killbill.commons.eventbus.Subscribe;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.queue.api.QueueEvent;
 import org.killbill.queue.retry.RetryableService;
 import org.killbill.queue.retry.RetryableSubscriber;
 import org.killbill.queue.retry.RetryableSubscriber.SubscriberAction;
@@ -67,12 +70,15 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceListener.class);
 
+    private final AccountInternalApi accountApi;
     private final InvoiceDispatcher dispatcher;
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceInternalApi invoiceApi;
     private final RetryableSubscriber retryableSubscriber;
     private final BusDispatcherOptimizer busDispatcherOptimizer;
     private final SubscriberQueueHandler subscriberQueueHandler;
+    private final ParkedAccountsManager parkedAccountsManager;
+    private final InvoiceConfig invoiceConfig;
 
     @Inject
     public InvoiceListener(final AccountInternalApi accountApi,
@@ -81,12 +87,17 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                            final InvoiceInternalApi invoiceApi,
                            final NotificationQueueService notificationQueueService,
                            final BusDispatcherOptimizer busDispatcherOptimizer,
+                           final ParkedAccountsManager parkedAccountsManager,
+                           final InvoiceConfig invoiceConfig,
                            final Clock clock) {
         super(notificationQueueService);
+        this.accountApi = accountApi;
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceApi = invoiceApi;
         this.busDispatcherOptimizer = busDispatcherOptimizer;
+        this.parkedAccountsManager = parkedAccountsManager;
+        this.invoiceConfig = invoiceConfig;
         this.subscriberQueueHandler = new SubscriberQueueHandler();
 
         subscriberQueueHandler.subscribe(EffectiveSubscriptionInternalEvent.class,
@@ -103,7 +114,9 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                      final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
                                                      dispatcher.processSubscriptionForInvoiceGeneration(event, context);
                                                  } catch (final InvoiceApiException e) {
-                                                     log.warn("Unable to process event {}", event, e);
+                                                     handleFailedInvoiceDispatch("SubscriptionBaseTransition", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
+                                                 } catch (final RuntimeException e) {
+                                                     handleFailedInvoiceDispatch("SubscriptionBaseTransition", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  }
                                              }
                                          });
@@ -121,9 +134,11 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                      final UUID accountId = accountApi.getByRecordId(event.getSearchKey1(), context);
                                                      dispatcher.processAccountFromNotificationOrBusEvent(accountId, null, null, false, context);
                                                  } catch (final InvoiceApiException e) {
-                                                     log.warn("Unable to process event {}", event, e);
+                                                     handleFailedInvoiceDispatch("SubscriptionBaseTransition", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  } catch (final AccountApiException e) {
-                                                     log.warn("Unable to process event {}", event, e);
+                                                     handleFailedInvoiceDispatch("SubscriptionBaseTransition", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
+                                                 } catch (final RuntimeException e) {
+                                                     handleFailedInvoiceDispatch("SubscriptionBaseTransition", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  }
                                              }
                                          });
@@ -141,9 +156,11 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                      }
 
                                                  } catch (final InvoiceApiException e) {
-                                                     log.warn("Unable to process event {}", event, e);
+                                                     handleFailedInvoiceDispatch("CreateParentInvoice", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  } catch (final AccountApiException e) {
-                                                     log.warn("Unable to process event {}", event, e);
+                                                     handleFailedInvoiceDispatch("CreateParentInvoice", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
+                                                 } catch (final RuntimeException e) {
+                                                     handleFailedInvoiceDispatch("CreateParentInvoice", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  }
                                              }
                                          });
@@ -160,9 +177,11 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                          dispatcher.processParentInvoiceForAdjustments(account, event.getInvoiceId(), context);
                                                      }
                                                  } catch (final InvoiceApiException e) {
-                                                     log.warn("Unable to process event {}", event, e);
+                                                     handleFailedInvoiceDispatch("AdjustParentInvoice", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  } catch (final AccountApiException e) {
-                                                     log.warn("Unable to process event {}", event, e);
+                                                     handleFailedInvoiceDispatch("AdjustParentInvoice", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
+                                                 } catch (final RuntimeException e) {
+                                                     handleFailedInvoiceDispatch("AdjustParentInvoice", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  }
                                              }
                                          });
@@ -175,23 +194,30 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                      return;
                                                  }
 
-
-                                                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-                                                 dispatcher.processSubscriptionStartRequestedDate(event, context);
+                                                 try {
+                                                     final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+                                                     dispatcher.processSubscriptionStartRequestedDate(event, context);
+                                                 } catch (final RuntimeException e) {
+                                                     handleFailedInvoiceDispatch("SubscriptionBaseTransition", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
+                                                 }
                                              }
                                          });
         subscriberQueueHandler.subscribe(AccountChangeInternalEvent.class,
                                          new SubscriberAction<AccountChangeInternalEvent>() {
                                              @Override
                                              public void run(final AccountChangeInternalEvent event) {
-                                                 for (final ChangedField changedField : event.getChangedFields()) {
-                                                     if ("billCycleDayLocal".equals(changedField.getFieldName()) &&
-                                                         !Objects.equals(changedField.getOldValue(), changedField.getNewValue()) &&
-                                                         !"0".equals(changedField.getOldValue())) {
-                                                         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "AccountBCDChange", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-                                                         dispatcher.processAccountBCDChange(event.getAccountId(), context);
-                                                         return;
+                                                 try {
+                                                     for (final ChangedField changedField : event.getChangedFields()) {
+                                                         if ("billCycleDayLocal".equals(changedField.getFieldName()) &&
+                                                             !Objects.equals(changedField.getOldValue(), changedField.getNewValue()) &&
+                                                             !"0".equals(changedField.getOldValue())) {
+                                                             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "AccountBCDChange", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+                                                             dispatcher.processAccountBCDChange(event.getAccountId(), context);
+                                                             return;
+                                                         }
                                                      }
+                                                 } catch (final RuntimeException e) {
+                                                     handleFailedInvoiceDispatch("AccountBCDChange", event.getSearchKey1(), event.getSearchKey2(), event.getUserToken(), event, e);
                                                  }
                                              }
                                          });
@@ -282,6 +308,52 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
 
     private boolean isChildrenAccountAndPaymentDelegated(final Account account) {
         return account.getParentAccountId() != null && account.isPaymentDelegatedToParent();
+    }
+
+    // Issue #2208: shared park helper for subscriber action failures. We log at WARN with the
+    // shared "parking account" marker so operators can alert on it, then attempt the park-tag write.
+    private void handleFailedInvoiceDispatch(final String eventDescription,
+                                             final Long accountRecordId,
+                                             final Long tenantRecordId,
+                                             final UUID userToken,
+                                             final BusInternalEvent event,
+                                             final Exception e) {
+        try {
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(
+                    tenantRecordId, accountRecordId, eventDescription, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+            final UUID accountId = accountApi.getByRecordId(accountRecordId, context);
+            log.warn("Failed to generate invoice for accountId='{}', event='{}', parking account", accountId, event, e);
+            if (invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                try {
+                    parkedAccountsManager.parkAccount(accountId, context);
+                } catch (final TagApiException tagApiException) {
+                    log.warn("Unable to park account after invoice failure for accountId='{}'", accountId, tagApiException);
+                }
+            }
+        } catch (final Exception inner) {
+            log.warn("Unable to park account after invoice failure for accountRecordId='{}', event='{}'", accountRecordId, event, inner);
+        }
+    }
+
+    // Issue #2208: invoked from RetryableService.scheduleRetry() once the killbill-commons hook is
+    // released. Kept public + non-@Override so it compiles before the parent change lands; subclasses
+    // (DefaultNextBillingDateNotifier) can delegate here.
+    public void onRetriesExhaustedForInvoice(final QueueEvent event, final Long accountRecordId, final Long tenantRecordId) {
+        try {
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(
+                    tenantRecordId, accountRecordId, "InvoiceRetryExhausted", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+            final UUID accountId = accountApi.getByRecordId(accountRecordId, context);
+            log.warn("Failed to generate invoice for accountId='{}', all retries exhausted, parking account", accountId);
+            if (invoiceConfig.isParkAccountsOnAllExceptions(context)) {
+                try {
+                    parkedAccountsManager.parkAccount(accountId, context);
+                } catch (final TagApiException tagApiException) {
+                    log.warn("Unable to park account after retries exhausted for accountId='{}'", accountId, tagApiException);
+                }
+            }
+        } catch (final Exception inner) {
+            log.warn("Unable to park account after retries exhausted for accountRecordId='{}'", accountRecordId, inner);
+        }
     }
 
     public void handleParentInvoiceCommitmentEvent(final UUID invoiceId, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {

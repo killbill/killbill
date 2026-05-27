@@ -171,6 +171,16 @@ public interface InvoiceConfig extends LockAwareConfig {
     @Description("Whether the invoicing system is enabled")
     boolean isInvoicingSystemEnabled(@Param("dummy") final InternalTenantContext tenantContext);
 
+    @Config("org.killbill.invoice.parkAccountsOnAllExceptions")
+    @Default("true")
+    @Description("Park accounts on any unrecoverable invoice processing failure (lock retry exhausted, retries exhausted, non-UNEXPECTED_ERROR exceptions, runtime exceptions in subscribers)")
+    boolean isParkAccountsOnAllExceptions();
+
+    @Config("org.killbill.invoice.parkAccountsOnAllExceptions")
+    @Default("true")
+    @Description("Park accounts on any unrecoverable invoice processing failure (lock retry exhausted, retries exhausted, non-UNEXPECTED_ERROR exceptions, runtime exceptions in subscribers)")
+    boolean isParkAccountsOnAllExceptions(@Param("dummy") final InternalTenantContext tenantContext);
+
     @Config("org.killbill.invoice.item.result.behavior.mode")
     @Default("AGGREGATE")
     @Description("How the result for an item will be reported (aggregate mode or detail mode). ")
