@@ -40,6 +40,7 @@ import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.server.providers.KillbillExceptionListener;
 import org.killbill.billing.server.security.TenantFilter;
+import org.killbill.billing.util.jvm.JvmEnvironmentInfo;
 import org.killbill.billing.util.nodes.KillbillVersions;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
@@ -153,6 +154,9 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
     @Override
     protected void startLifecycleStage3() {
         super.startLifecycleStage3();
+
+        // Surface JVM ergonomics relevant to Java 17+ container deployments (see issue #2176).
+        JvmEnvironmentInfo.capture().logTo(logger);
 
         final BeanConfig beanConfig = new BeanConfig();
         beanConfig.setResourcePackage("org.killbill.billing.jaxrs.resources");
