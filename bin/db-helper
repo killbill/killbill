@@ -29,12 +29,13 @@ POM="$TOP/pom.xml"
 ACTION=
 HOST="localhost"
 DATABASE="killbill"
-USER="root"
-PWD="root"
+USER="postgres"
+PWD="postgres"
 PORT=
 PORT_MYSQL=3306
 PORT_POSTGRES=5432
-DRIVER="mysql"
+# PostgreSQL is the default database engine for Kill Bill (issue #2157).
+DRIVER="postgres"
 TEST_ALSO=
 OUTPUT_FILE=
 DDL_FILE=
@@ -61,12 +62,12 @@ eval set -- "${ARGS}"
 function usage() {
     echo -n "./db_helper"
     echo -n " -a|--action <create|clean|dump|migrate|dryRunMigrate|repair|info>"
-    echo -n " --driver <mysql|postgres> (default = mysql)"
+    echo -n " --driver <mysql|postgres> (default = postgres)"
     echo -n " -h|--host host (default = localhost)"
     echo -n " --port port"
     echo -n " -d|--database database_name (default = killbill)"
-    echo -n " -u|--user user_name (default = root)"
-    echo -n " -p|--password password (default = root)"
+    echo -n " -u|--user user_name (default = postgres)"
+    echo -n " -p|--password password (default = postgres)"
     echo -n " -t|--test (also include test ddl)"
     echo -n " -f|--file file (output file, for dump only)"
     echo -n " --help this message"
