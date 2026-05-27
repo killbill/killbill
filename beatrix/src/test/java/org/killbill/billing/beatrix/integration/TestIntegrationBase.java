@@ -1457,6 +1457,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
+        public boolean isParkAccountsOnAllExceptions() {
+            return defaultInvoiceConfig.isParkAccountsOnAllExceptions();
+        }
+
+        @Override
+        public boolean isParkAccountsOnAllExceptions(final InternalTenantContext tenantContext) {
+            return isParkAccountsOnAllExceptions();
+        }
+
+        @Override
         public List<TimeSpan> getRescheduleIntervalOnLock() {
             return defaultInvoiceConfig.getRescheduleIntervalOnLock();
         }
