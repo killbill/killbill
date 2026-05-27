@@ -692,6 +692,36 @@ public class TestInvoice extends TestJaxrsBase {
         Assert.assertNull(page);
     }
 
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2127")
+    public void testInvoiceSearchByDate() throws Exception {
+        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountNoPMBundleAndSubscription();
+        Assert.assertNotNull(account);
+
+        Invoices invoices = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        Assert.assertNotNull(invoices);
+        Assert.assertEquals(invoices.size(), 1);
+
+        // Non-date search clauses should keep working
+        invoices = invoiceApi.searchInvoices("_q=1&status=COMMITTED", requestOptions);
+        Assert.assertNotNull(invoices);
+        Assert.assertEquals(invoices.size(), 1);
+
+        // Equality match on a date column. Previously broken on PostgreSQL
+        // ("operator does not exist: date = character varying").
+        invoices = invoiceApi.searchInvoices("_q=1&target_date=2012-04-25", requestOptions);
+        Assert.assertNotNull(invoices);
+        Assert.assertEquals(invoices.size(), 1);
+
+        // Range match on a date column. Previously broken on PostgreSQL
+        // ("operator does not exist: date <= character varying").
+        invoices = invoiceApi.searchInvoices("_q=1&target_date%5Blte%5D=2012-04-25", requestOptions);
+        Assert.assertNotNull(invoices);
+        Assert.assertEquals(invoices.size(), 1);
+    }
+
     @Test(groups = "slow", description = "Can add a credit to a new invoice")
     public void testCreateCreditInvoiceAndMoveStatus() throws Exception {
 
