@@ -43,6 +43,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
@@ -158,6 +159,11 @@ public class SubscriptionJson extends JsonBase {
         private static List<AuditLog> getAuditLogsForSubscriptionEvent(final SubscriptionEvent subscriptionEvent, @Nullable final AccountAuditLogs accountAuditLogs) {
             if (accountAuditLogs == null) {
                 return null;
+            }
+            // BCD updates are surfaced as SERVICE_STATE_CHANGE for API compatibility, but the
+            // underlying record lives in subscription_events, so route the audit-log lookup there.
+            if (SubscriptionBaseTransitionType.BCD_CHANGE.toString().equals(subscriptionEvent.getServiceStateName())) {
+                return accountAuditLogs.getAuditLogsForSubscriptionEvent(subscriptionEvent.getId());
             }
             final ObjectType subscriptionEventObjectType = subscriptionEvent.getSubscriptionEventType().getObjectType();
             if (subscriptionEventObjectType == ObjectType.SUBSCRIPTION_EVENT) {

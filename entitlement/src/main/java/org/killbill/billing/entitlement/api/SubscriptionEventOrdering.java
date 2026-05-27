@@ -95,6 +95,11 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
                 return List.of(SubscriptionEventType.STOP_BILLING);
             case PHASE:
                 return List.of(SubscriptionEventType.PHASE);
+            // BCD updates are stored as subscription events but no dedicated SubscriptionEventType
+            // exists in the public API enum; surface them as SERVICE_STATE_CHANGE so they appear in
+            // the timeline. They can be distinguished by their serviceStateName ("BCD_CHANGE").
+            case BCD_CHANGE:
+                return List.of(SubscriptionEventType.SERVICE_STATE_CHANGE);
             /*
              * Those can be ignored:
              */
@@ -143,14 +148,19 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
 
     @VisibleForTesting
     static SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final InternalTenantContext internalTenantContext) {
+        final boolean isBcdChange = in.getTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE;
+        // For BCD updates we want consumers to see this is a billing-side change tagged "BCD_CHANGE",
+        // rather than the generic SERVICE_STATE_CHANGE that the public enum forces us to use.
+        final String serviceName = isBcdChange ? BILLING_SERVICE_NAME : getServiceName(eventType);
+        final String serviceStateName = isBcdChange ? SubscriptionBaseTransitionType.BCD_CHANGE.toString() : eventType.toString();
         return new DefaultSubscriptionEvent(in.getId(),
                                             in.getSubscriptionId(),
                                             in.getEffectiveTransitionTime(),
                                             eventType,
                                             false,
                                             false,
-                                            getServiceName(eventType),
-                                            eventType.toString(),
+                                            serviceName,
+                                            serviceStateName,
                                             (in.getPreviousPlan() != null ? in.getPreviousPlan().getProduct() : null),
                                             in.getPreviousPlan(),
                                             in.getPreviousPhase(),
