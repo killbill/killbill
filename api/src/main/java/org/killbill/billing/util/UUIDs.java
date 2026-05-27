@@ -25,11 +25,32 @@ import java.util.UUID;
 /**
  * UUIDs helper.
  *
+ * Identifier generation defaults to UUIDv7 (RFC 9562): a 48-bit Unix
+ * millisecond timestamp followed by version/variant tag bits and random
+ * payload. Within a JVM, identifiers minted by {@link #randomUUID()} are
+ * strictly monotonically increasing — including across calls that fall in
+ * the same millisecond — which makes them friendly to B-tree primary keys
+ * in databases that recognise UUIDv7 (PostgreSQL 18+, etc.).
+ *
+ * The legacy UUIDv4 generator is retained as {@link #randomUUIDv4()} for
+ * callers that need a fully random identifier with no temporal correlation.
+ *
  * @author kares
  */
 public abstract class UUIDs {
 
-    public static UUID randomUUID() { return rndUUIDv4(); }
+    public static UUID randomUUID() { return rndUUIDv7(); }
+
+    /**
+     * @return a freshly generated UUIDv4 (fully random, no temporal ordering).
+     */
+    public static UUID randomUUIDv4() { return rndUUIDv4(); }
+
+    /**
+     * @return a freshly generated UUIDv7 (time-ordered, RFC 9562). Equivalent
+     *         to {@link #randomUUID()} but explicit about the version.
+     */
+    public static UUID randomUUIDv7() { return rndUUIDv7(); }
 
     public static void setRandom(final Random random) {
         threadRandom.set(random);
@@ -37,6 +58,58 @@ public abstract class UUIDs {
 
     public static Random getRandom() {
         return threadRandom.get();
+    }
+
+    // Guards the (lastMillis, sequence) pair used to keep UUIDv7 outputs
+    // monotonic when many identifiers are requested within the same ms.
+    private static final Object v7Lock = new Object();
+    private static long v7LastMillis = -1L;
+    private static int v7Sequence = 0;
+    // rand_a is 12 bits in the UUIDv7 layout; the counter occupies the same
+    // field, so it must never exceed 0xFFF.
+    private static final int V7_SEQUENCE_MAX = 0x0FFF;
+
+    private static UUID rndUUIDv7() {
+        final long timestamp;
+        final int sequence;
+        synchronized (v7Lock) {
+            long now = System.currentTimeMillis();
+            if (now > v7LastMillis) {
+                v7LastMillis = now;
+                v7Sequence = 0;
+            } else {
+                // Same millisecond (or, very rarely, a backwards clock step).
+                // Bump the sequence; if it overflows the 12-bit field, borrow
+                // a millisecond from the future so we never break ordering.
+                if (v7Sequence >= V7_SEQUENCE_MAX) {
+                    v7LastMillis += 1L;
+                    v7Sequence = 0;
+                } else {
+                    v7Sequence++;
+                }
+            }
+            timestamp = v7LastMillis;
+            sequence = v7Sequence;
+        }
+
+        final Random random = threadRandom.get();
+        final byte[] randB = new byte[8];
+        random.nextBytes(randB);
+
+        // High 64 bits: 48-bit ms timestamp | 4-bit version (0x7) | 12-bit sequence
+        long msb = (timestamp & 0x0000FFFFFFFFFFFFL) << 16;
+        msb |= 0x7000L;                       // version 7
+        msb |= (sequence & 0x0FFFL);          // rand_a (sub-ms counter)
+
+        // Low 64 bits: 2-bit variant (0b10) | 62 bits of randomness
+        long lsb = 0L;
+        for (int i = 0; i < 8; i++) {
+            lsb = (lsb << 8) | (randB[i] & 0xffL);
+        }
+        lsb &= 0x3FFFFFFFFFFFFFFFL;           // clear top two bits
+        lsb |= 0x8000000000000000L;           // set IETF variant (0b10xx...)
+
+        return new UUID(msb, lsb);
     }
 
     private static UUID rndUUIDv4() {
