@@ -68,6 +68,7 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
 
     @SqlQuery
     InvoiceModelDao getParentDraftInvoice(@Bind("accountId") final String parentAccountId,
+                                          @Bind("invoiceDate") final LocalDate invoiceDate,
                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery

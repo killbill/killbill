@@ -1357,7 +1357,11 @@ public class InvoiceDispatcher {
         final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
 
         final BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
-        InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(childAccount.getParentAccountId(), parentContext);
+        // Look up the parent DRAFT invoice keyed by parent account *and* invoice date.
+        // This prevents items from a new billing cycle from being aggregated onto a stale
+        // DRAFT invoice left over from a previous cycle (see #1922).
+        final LocalDate parentInvoiceDate = childInvoice.getInvoiceDate();
+        InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(childAccount.getParentAccountId(), parentInvoiceDate, parentContext);
 
         final String description = childAccount.getExternalKey().concat(" summary");
         if (draftParentInvoice != null) {
@@ -1385,8 +1389,7 @@ public class InvoiceDispatcher {
                 return;
             }
 
-            final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
-            draftParentInvoice = new InvoiceModelDao(childAccount.getParentAccountId(), invoiceDate, childAccount.getCurrency(), InvoiceStatus.DRAFT, true);
+            draftParentInvoice = new InvoiceModelDao(childAccount.getParentAccountId(), parentInvoiceDate, childAccount.getCurrency(), InvoiceStatus.DRAFT, true);
             final InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), childAccount.getParentAccountId(), childAccount.getId(), childInvoiceAmount, childAccount.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 

@@ -2053,12 +2053,45 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceDao.createInvoices(List.of(parentInvoice), null, Collections.emptySet(), null, null, true, context);
 
-        final InvoiceModelDao parentDraftInvoice = invoiceDao.getParentDraftInvoice(parentAccountId, context);
+        final InvoiceModelDao parentDraftInvoice = invoiceDao.getParentDraftInvoice(parentAccountId, today.toLocalDate(), context);
 
         assertNotNull(parentDraftInvoice);
         assertEquals(parentDraftInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertEquals(parentDraftInvoice.getInvoiceItems().size(), 1);
 
+    }
+
+    /**
+     * Regression test for #1922: a DRAFT parent invoice from a previous billing cycle
+     * must not be returned when looking up the DRAFT for a new cycle's invoice date.
+     * Before the fix, {@code getParentDraftInvoice} ignored the invoice date and the
+     * dispatcher merged second-cycle child amounts onto the stale first-cycle DRAFT.
+     */
+    @Test(groups = "slow")
+    public void testGetParentDraftInvoiceIsScopedByInvoiceDate() throws InvoiceApiException {
+
+        final UUID parentAccountId = UUID.randomUUID();
+        final UUID childAccountId = UUID.randomUUID();
+        final DateTime today = clock.getNow(account.getTimeZone());
+        final LocalDate cycle1Date = today.toLocalDate();
+        final LocalDate cycle2Date = cycle1Date.plusMonths(1);
+
+        // Cycle 1: create a parent DRAFT invoice dated cycle1Date with one child line item.
+        final InvoiceModelDao parentInvoiceCycle1 = new InvoiceModelDao(parentAccountId, cycle1Date, account.getCurrency(), InvoiceStatus.DRAFT, true);
+        final InvoiceItem cycle1Item = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoiceCycle1.getId(), parentAccountId, childAccountId, BigDecimal.TEN, account.getCurrency(), "");
+        parentInvoiceCycle1.addInvoiceItem(new InvoiceItemModelDao(cycle1Item));
+        invoiceDao.createInvoices(List.of(parentInvoiceCycle1), null, Collections.emptySet(), null, null, true, context);
+
+        // Looking up the DRAFT for cycle 1's invoice date must return that DRAFT.
+        final InvoiceModelDao foundCycle1 = invoiceDao.getParentDraftInvoice(parentAccountId, cycle1Date, context);
+        assertNotNull(foundCycle1);
+        assertEquals(foundCycle1.getInvoiceDate(), cycle1Date);
+
+        // Looking up the DRAFT for cycle 2's invoice date must NOT return the stale cycle-1 DRAFT.
+        // Before the fix this would (incorrectly) return the cycle 1 DRAFT and the dispatcher
+        // would aggregate the new cycle's children onto it.
+        final InvoiceModelDao foundCycle2 = invoiceDao.getParentDraftInvoice(parentAccountId, cycle2Date, context);
+        assertNull(foundCycle2);
     }
 
     @Test(groups = "slow")

@@ -199,14 +199,21 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     List<InvoiceParentChildModelDao> getChildInvoicesByParentInvoiceId(UUID parentInvoiceId, final InternalCallContext context) throws InvoiceApiException;
 
     /**
-     * Retrieve parent invoice by the parent account id
+     * Retrieve the parent DRAFT invoice for the given parent account and invoice date.
+     * <p>
+     * The {@code invoiceDate} is the discriminator between billing cycles: a DRAFT
+     * parent invoice from a previous cycle (different {@code invoice_date}) must not
+     * be returned, otherwise items for a new cycle would be aggregated onto a stale
+     * DRAFT (see #1922).
      *
      * @param parentAccountId the parent account id
+     * @param invoiceDate the invoice date of the parent DRAFT to look up (i.e. the
+     *                    invoice date of the child invoice currently being aggregated)
      * @param context the tenant context
-     * @return a parent invoice in DRAFT status
+     * @return a parent invoice in DRAFT status for that exact invoice date, or {@code null}
      * @throws InvoiceApiException if any unexpected error occurs
      */
-    InvoiceModelDao getParentDraftInvoice(UUID parentAccountId, InternalCallContext context) throws InvoiceApiException;
+    InvoiceModelDao getParentDraftInvoice(UUID parentAccountId, LocalDate invoiceDate, InternalCallContext context) throws InvoiceApiException;
 
     /**
      * Update invoice item amount
