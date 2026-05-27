@@ -333,7 +333,12 @@ public class InvoiceDispatcher {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
             if (!rescheduleProcessAccount(accountId, context)) {
-                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
+                // No rescheduleIntervalOnLock is configured, so we cannot put a follow-up
+                // notification on the bus. The next billing-date notification for this account
+                // would otherwise never be issued, silently abandoning the account. Park it
+                // instead so the failure surfaces and an operator can recover invoicing.
+                log.warn("Failed to process invoice for accountId='{}', targetDate='{}', parking account (no rescheduleIntervalOnLock configured)", accountId, targetDate, e);
+                parkAccount(accountId, context);
             }
         } finally {
             if (lock != null) {
@@ -350,9 +355,14 @@ public class InvoiceDispatcher {
         if (periods.size() == 0) {
             return false;
         }
-        // Since we can't keep track of attempts, we only look at the first value
+        // Unlike the QueueRetryException path used by the bus-event handlers (which is driven
+        // by RetryableService and tracks attempt counts), the billing-date notification queue
+        // path used here cannot track retries across reschedules: the rescheduled notification
+        // is indistinguishable from a fresh one. We therefore always issue exactly one reschedule
+        // using the first configured period; subsequent lock failures will be reschedule-once as
+        // well. If even that single retry fails repeatedly, no further retries are attempted.
         final DateTime nextRescheduleDt = clock.getUTCNow().plus(periods.get(0));
-        log.info("Rescheduling invoice call at time {}", nextRescheduleDt);
+        log.info("Failed to acquire lock, rescheduling invoice for accountId='{}' at '{}'", accountId, nextRescheduleDt);
         invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
         return true;
     }
