@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * UUIDs helper.
@@ -29,7 +30,55 @@ import java.util.UUID;
  */
 public abstract class UUIDs {
 
-    public static UUID randomUUID() { return rndUUIDv4(); }
+    /**
+     * When this system property is set to {@code true} at JVM startup,
+     * {@link #randomUUID()} returns time-ordered UUIDv7 identifiers (see
+     * <a href="https://www.rfc-editor.org/rfc/rfc9562#name-uuid-version-7">RFC 9562</a>)
+     * instead of the historical UUIDv4. UUIDv7 ids carry a 48-bit Unix
+     * millisecond prefix that keeps inserts roughly monotonic for B-tree
+     * primary keys (issue #2156).
+     */
+    public static final String UUID_V7_PROPERTY = "org.killbill.uuid.v7.enabled";
+
+    private static final boolean USE_UUID_V7 = Boolean.getBoolean(UUID_V7_PROPERTY);
+
+    private static final long V7_MILLIS_MASK = 0xFFFFFFFFFFFFL;
+    private static final long V7_VERSION_BITS = 0x7000L;
+    private static final long V7_LSB_VARIANT_CLEAR_MASK = 0x3FFFFFFFFFFFFFFFL;
+    private static final long V7_LSB_VARIANT_SET_MASK = 0x8000000000000000L;
+
+    private static final AtomicLong lastV7Millis = new AtomicLong(0L);
+
+    public static UUID randomUUID() {
+        return USE_UUID_V7 ? randomUUIDv7() : randomUUIDv4();
+    }
+
+    /** Returns {@code true} when {@link #randomUUID()} dispatches to UUIDv7. */
+    public static boolean isUUIDv7Enabled() {
+        return USE_UUID_V7;
+    }
+
+    /** Always generates a UUIDv4 (purely random), regardless of {@link #UUID_V7_PROPERTY}. */
+    public static UUID randomUUIDv4() {
+        return rndUUIDv4();
+    }
+
+    /** Always generates a UUIDv7 (time-ordered), regardless of {@link #UUID_V7_PROPERTY}. */
+    public static UUID randomUUIDv7() {
+        return rndUUIDv7(nextMonotonicMillis());
+    }
+
+    /**
+     * Extracts the 48-bit Unix millisecond timestamp embedded in a UUIDv7.
+     *
+     * @throws IllegalArgumentException if {@code uuid} is not version 7
+     */
+    public static long timestampMillisFromV7(final UUID uuid) {
+        if (uuid.version() != 7) {
+            throw new IllegalArgumentException("Not a UUIDv7: " + uuid);
+        }
+        return uuid.getMostSignificantBits() >>> 16;
+    }
 
     public static void setRandom(final Random random) {
         threadRandom.set(random);
@@ -37,6 +86,42 @@ public abstract class UUIDs {
 
     public static Random getRandom() {
         return threadRandom.get();
+    }
+
+    // Ensures the millisecond counter handed to UUIDv7 is strictly monotonic
+    // within this JVM, so concurrent generations within the same wall-clock
+    // millisecond (and small backwards clock jumps) still yield sortable ids.
+    private static long nextMonotonicMillis() {
+        final long now = System.currentTimeMillis();
+        while (true) {
+            final long last = lastV7Millis.get();
+            final long next = (now > last) ? now : last + 1L;
+            if (lastV7Millis.compareAndSet(last, next)) {
+                return next;
+            }
+        }
+    }
+
+    // Visible for tests.
+    static UUID rndUUIDv7(final long unixMillis) {
+        final Random random = threadRandom.get();
+        final byte[] bytes = new byte[10];
+        random.nextBytes(bytes);
+
+        // msb: [48 bits unix_ts_ms][4 bits version=0x7][12 bits rand_a]
+        long msb = (unixMillis & V7_MILLIS_MASK) << 16;
+        msb |= V7_VERSION_BITS;
+        msb |= ((bytes[0] & 0x0fL) << 8) | (bytes[1] & 0xffL);
+
+        // lsb: [2 bits variant=10][62 bits rand_b]
+        long lsb = 0L;
+        for (int i = 2; i < 10; i++) {
+            lsb = (lsb << 8) | (bytes[i] & 0xffL);
+        }
+        lsb &= V7_LSB_VARIANT_CLEAR_MASK;
+        lsb |= V7_LSB_VARIANT_SET_MASK;
+
+        return new UUID(msb, lsb);
     }
 
     private static UUID rndUUIDv4() {
