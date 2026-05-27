@@ -29,7 +29,49 @@ import java.util.UUID;
  */
 public abstract class UUIDs {
 
-    public static UUID randomUUID() { return rndUUIDv4(); }
+    /**
+     * Generate a random Kill Bill identifier.
+     *
+     * <p>Since issue #2156 this returns an RFC 9562 (formerly draft-ietf-uuidrev-rfc4122bis)
+     * <strong>version 7</strong> UUID — a 128-bit value whose top 48 bits encode the
+     * Unix epoch in milliseconds, followed by a 4-bit version field, 74 bits of
+     * randomness, and a 2-bit variant field. The result is still a {@link UUID}
+     * and is wire-/storage-compatible with the previously generated v4 values, but
+     * is time-ordered, which yields significantly better B-tree locality when used
+     * as a database key (see https://www.rfc-editor.org/rfc/rfc9562 §5.7).</p>
+     *
+     * <p>Within a single thread, two successive calls are guaranteed to produce
+     * lexicographically increasing UUIDs (when compared as unsigned 128-bit byte
+     * strings), even if invoked within the same millisecond.</p>
+     */
+    public static UUID randomUUID() { return rndUUIDv7(); }
+
+    /**
+     * Generate a legacy RFC 4122 version 4 (purely random) UUID. Retained for
+     * call sites that explicitly require a non-time-ordered identifier, e.g.
+     * security tokens or test fixtures whose ordering must not leak the wall
+     * clock. New code should prefer {@link #randomUUID()}.
+     */
+    public static UUID randomUUIDv4() { return rndUUIDv4(); }
+
+    /**
+     * Explicit accessor for the new RFC 9562 version 7 generator. Equivalent
+     * to {@link #randomUUID()} but self-documenting at the call site.
+     */
+    public static UUID randomUUIDv7() { return rndUUIDv7(); }
+
+    /**
+     * Extract the embedded Unix timestamp (in milliseconds since the epoch) from
+     * a v7 UUID. Throws {@link IllegalArgumentException} if the supplied UUID is
+     * not version 7.
+     */
+    public static long unixTimestampMillis(final UUID uuid) {
+        if (uuid.version() != 7) {
+            throw new IllegalArgumentException("Not a UUIDv7: " + uuid);
+        }
+        // Top 48 bits of the most-significant long.
+        return uuid.getMostSignificantBits() >>> 16;
+    }
 
     public static void setRandom(final Random random) {
         threadRandom.set(random);
@@ -38,6 +80,77 @@ public abstract class UUIDs {
     public static Random getRandom() {
         return threadRandom.get();
     }
+
+    // RFC 9562 UUIDv7 layout (bit indexes within the 128-bit value, MSB first):
+    //   [ 0..47]  unix_ts_ms  (48 bits)
+    //   [48..51]  version     (4 bits) = 0b0111
+    //   [52..63]  rand_a      (12 bits)
+    //   [64..65]  variant     (2 bits) = 0b10
+    //   [66..127] rand_b      (62 bits)
+    //
+    // Monotonicity within a single thread is preserved using the "monotonic
+    // random" method (RFC 9562 §6.2 method 1): on a same-ms call we increment
+    // the previously-emitted random payload by one, carrying through rand_a
+    // and finally bumping the timestamp if the entire 74-bit random space
+    // wraps (in practice unreachable).
+    private static UUID rndUUIDv7() {
+        final long now = System.currentTimeMillis();
+        final long[] state = threadV7State.get();
+
+        long ts;
+        long msb;
+        long lsb;
+
+        if (now > state[0]) {
+            ts = now;
+            final Random random = threadRandom.get();
+            final byte[] bytes = new byte[10]; // 80 random bits, we keep 74
+            random.nextBytes(bytes);
+            final long randA = (((bytes[0] & 0xffL) << 8) | (bytes[1] & 0xffL)) & 0x0FFFL;
+            long randB = 0L;
+            for (int i = 2; i < 10; i++) {
+                randB = (randB << 8) | (bytes[i] & 0xffL);
+            }
+            randB &= 0x3FFFFFFFFFFFFFFFL;
+            msb = (ts << 16) | (0x7L << 12) | randA;
+            lsb = (0x2L << 62) | randB;
+        } else {
+            // Clock did not advance (same ms, or it ran backwards). Reuse the
+            // last timestamp and increment the 74-bit random payload so the
+            // emitted UUID remains strictly greater than the previous one.
+            ts = state[0];
+            msb = state[1];
+            lsb = state[2];
+
+            long randB = (lsb & 0x3FFFFFFFFFFFFFFFL) + 1L;
+            if ((randB & ~0x3FFFFFFFFFFFFFFFL) != 0L) {
+                randB = 0L;
+                long randA = (msb & 0x0FFFL) + 1L;
+                if ((randA & ~0x0FFFL) != 0L) {
+                    // Entire 74-bit random space exhausted within one ms. Roll
+                    // the timestamp forward; with current clocks this is unreachable.
+                    randA = 0L;
+                    ts++;
+                }
+                msb = (ts << 16) | (0x7L << 12) | randA;
+            }
+            lsb = (0x2L << 62) | randB;
+        }
+
+        state[0] = ts;
+        state[1] = msb;
+        state[2] = lsb;
+
+        return new UUID(msb, lsb);
+    }
+
+    private static final ThreadLocal<long[]> threadV7State =
+        new ThreadLocal<long[]>() {
+            @Override
+            protected long[] initialValue() {
+                return new long[]{ -1L, 0L, 0L };
+            }
+    };
 
     private static UUID rndUUIDv4() {
         // ~ return UUID.randomUUID() :
