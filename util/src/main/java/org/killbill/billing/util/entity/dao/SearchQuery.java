@@ -28,6 +28,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+
 public class SearchQuery {
 
     public static final String SEARCH_QUERY_MARKER = "_q=1&";
@@ -71,6 +74,10 @@ public class SearchQuery {
                 valueTyped = Boolean.valueOf(value);
             } else if (valueType == Integer.class || valueType == Long.class || valueType == Double.class) {
                 valueTyped = Objects.requireNonNullElse(convertToNumber(value), value);
+            } else if (valueType == LocalDate.class) {
+                valueTyped = Objects.requireNonNullElse(convertToLocalDate(value), value);
+            } else if (valueType == DateTime.class) {
+                valueTyped = Objects.requireNonNullElse(convertToDateTime(value), value);
             } else {
                 valueTyped = value;
             }
@@ -92,6 +99,33 @@ public class SearchQuery {
                 return Double.parseDouble(str);
             } catch (final NumberFormatException e2) {
                 // String cannot be parsed as a number
+                return null;
+            }
+        }
+    }
+
+    private static LocalDate convertToLocalDate(@Nullable final String str) {
+        if (str == null) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(str);
+        } catch (final IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static DateTime convertToDateTime(@Nullable final String str) {
+        if (str == null) {
+            return null;
+        }
+        try {
+            return DateTime.parse(str);
+        } catch (final IllegalArgumentException e1) {
+            // Accept date-only strings (e.g. "2025-08-28") for datetime columns
+            try {
+                return LocalDate.parse(str).toDateTimeAtStartOfDay();
+            } catch (final IllegalArgumentException e2) {
                 return null;
             }
         }
