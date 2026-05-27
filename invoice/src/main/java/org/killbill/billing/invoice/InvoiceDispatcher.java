@@ -333,7 +333,10 @@ public class InvoiceDispatcher {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
             if (!rescheduleProcessAccount(accountId, context)) {
-                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId, targetDate, e);
+                // No reschedule interval is configured: the notification path cannot retry, so park
+                // the account to surface the lock-acquisition failure rather than silently abandoning it.
+                log.warn("Failed to process invoice for accountId='{}', targetDate='{}', no reschedule interval configured, parking account", accountId, targetDate, e);
+                parkAccount(accountId, context);
             }
         } finally {
             if (lock != null) {
@@ -346,13 +349,21 @@ public class InvoiceDispatcher {
 
     private boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
 
+        // Unlike the QueueRetryException paths (processSubscriptionStartRequestedDate,
+        // processParentInvoiceForInvoiceGeneration, processParentInvoiceForAdjustments) which can iterate
+        // through the full rescheduleIntervalOnLock schedule via the retry notification queue, this path
+        // originates from the billing-date notification queue and reschedules a brand new notification.
+        // We have no place to persist an attempt counter across that new notification, so only a single
+        // reschedule is issued here, using the first period in the configured schedule. If the rescheduled
+        // attempt also fails, the same code runs again and reschedules once more; subsequent entries in the
+        // schedule are intentionally not honored on this path.
         final List<Period> periods = TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context));
         if (periods.size() == 0) {
             return false;
         }
         // Since we can't keep track of attempts, we only look at the first value
         final DateTime nextRescheduleDt = clock.getUTCNow().plus(periods.get(0));
-        log.info("Rescheduling invoice call at time {}", nextRescheduleDt);
+        log.info("Failed to acquire lock, rescheduling invoice for accountId='{}' at '{}'", accountId, nextRescheduleDt);
         invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
         return true;
     }
