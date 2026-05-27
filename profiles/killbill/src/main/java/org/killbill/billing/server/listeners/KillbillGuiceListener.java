@@ -35,6 +35,7 @@ import org.killbill.billing.server.filters.Jersey1BackwardCompatibleFilter;
 import org.killbill.billing.server.filters.KillbillMDCInsertingServletFilter;
 import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.server.filters.RequestDataFilter;
+import org.killbill.billing.server.diagnostics.JvmRuntimeDiagnostics;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.notifications.PushNotificationListener;
@@ -128,6 +129,9 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
     @Override
     protected void startLifecycleStage2() {
+        // Log JVM + container-awareness state once at boot (see issue #2176).
+        JvmRuntimeDiagnostics.log();
+
         killbilleventHandler = injector.getInstance(KillbillEventHandler.class);
 
         // Perform Bus registration
