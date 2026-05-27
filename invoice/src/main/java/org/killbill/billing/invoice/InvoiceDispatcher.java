@@ -1357,7 +1357,18 @@ public class InvoiceDispatcher {
         final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
 
         final BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
+        final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
         InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(childAccount.getParentAccountId(), parentContext);
+
+        // If the existing parent DRAFT belongs to a prior billing cycle (different invoice date), do not merge new
+        // child amounts into it — that silently combines amounts from different periods on the same PARENT_SUMMARY
+        // item, and prevents a new parent DRAFT from being created for the current cycle (see #1922). This happens
+        // when the parent DRAFT auto-commit was delayed or disabled before the next cycle's child invoices arrived.
+        if (draftParentInvoice != null && !invoiceDate.equals(draftParentInvoice.getInvoiceDate())) {
+            log.info("Existing parent DRAFT invoiceId='{}' has invoiceDate='{}' which differs from current invoiceDate='{}'; a new parent DRAFT will be created for the current cycle",
+                     draftParentInvoice.getId(), draftParentInvoice.getInvoiceDate(), invoiceDate);
+            draftParentInvoice = null;
+        }
 
         final String description = childAccount.getExternalKey().concat(" summary");
         if (draftParentInvoice != null) {
@@ -1385,7 +1396,6 @@ public class InvoiceDispatcher {
                 return;
             }
 
-            final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
             draftParentInvoice = new InvoiceModelDao(childAccount.getParentAccountId(), invoiceDate, childAccount.getCurrency(), InvoiceStatus.DRAFT, true);
             final InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), childAccount.getParentAccountId(), childAccount.getId(), childInvoiceAmount, childAccount.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));

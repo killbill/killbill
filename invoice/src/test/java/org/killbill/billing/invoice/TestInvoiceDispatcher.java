@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -47,9 +48,13 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -349,5 +354,125 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoices.size(), 1);
         return invoices.get(0);
     }
-    
+
+    // Regression test for https://github.com/killbill/killbill/issues/1922
+    //
+    // When the parent DRAFT invoice generated for a prior billing cycle has not yet been committed (e.g. the
+    // auto-commit notification was delayed or disabled) and a new cycle's child invoices arrive, the previous
+    // behaviour blindly merged the new amounts into the prior cycle's PARENT_SUMMARY items. The result was that
+    // no parent invoice was generated for the new cycle and amounts from different periods collapsed onto the
+    // same items. After the fix, a stale parent DRAFT is left alone and a new parent DRAFT is created for the
+    // current cycle.
+    @Test(groups = "slow")
+    public void testParentInvoiceNotMergedAcrossBillingCycles() throws Exception {
+        final DateTime cycle1Clock = new DateTime(2025, 8, 1, 10, 0, 0, 0, DateTimeZone.UTC);
+        clock.setTime(cycle1Clock);
+
+        final Account parentAccount = createParentOrChildAccount(null, false);
+        final Account child1 = createParentOrChildAccount(parentAccount.getId(), true);
+        final Account child2 = createParentOrChildAccount(parentAccount.getId(), true);
+        final Account child3 = createParentOrChildAccount(parentAccount.getId(), true);
+
+        // Cycle 1 (August): each child commits an invoice and we run the parent-summary dispatch on it.
+        final UUID child1Inv1 = persistCommittedChildInvoice(child1, new BigDecimal("10.00"), new LocalDate(2025, 8, 1));
+        final UUID child2Inv1 = persistCommittedChildInvoice(child2, new BigDecimal("20.00"), new LocalDate(2025, 8, 1));
+        final UUID child3Inv1 = persistCommittedChildInvoice(child3, new BigDecimal("30.00"), new LocalDate(2025, 8, 1));
+
+        dispatcher.processParentInvoiceForInvoiceGeneration(child1, child1Inv1, contextFor(child1));
+        dispatcher.processParentInvoiceForInvoiceGeneration(child2, child2Inv1, contextFor(child2));
+        dispatcher.processParentInvoiceForInvoiceGeneration(child3, child3Inv1, contextFor(child3));
+
+        final InternalCallContext parentContext = contextFor(parentAccount);
+        List<InvoiceModelDao> parentInvoices = invoiceDao.getInvoicesByAccount(false, true, parentContext);
+        Assert.assertEquals(parentInvoices.size(), 1, "Cycle 1 should produce exactly one parent DRAFT invoice");
+        Assert.assertEquals(parentInvoices.get(0).getStatus(), InvoiceStatus.DRAFT);
+        Assert.assertEquals(parentInvoices.get(0).getInvoiceItems().size(), 3, "Cycle 1 parent DRAFT should hold one PARENT_SUMMARY per child");
+        Assert.assertEquals(totalAmount(parentInvoices.get(0)).compareTo(new BigDecimal("60.00")), 0);
+
+        // Simulate the August parent DRAFT auto-commit being delayed/disabled (no commit happens) before September.
+        final DateTime cycle2Clock = new DateTime(2025, 9, 1, 10, 0, 0, 0, DateTimeZone.UTC);
+        clock.setTime(cycle2Clock);
+
+        // Cycle 2 (September): same children commit a new invoice each.
+        final UUID child1Inv2 = persistCommittedChildInvoice(child1, new BigDecimal("11.00"), new LocalDate(2025, 9, 1));
+        final UUID child2Inv2 = persistCommittedChildInvoice(child2, new BigDecimal("22.00"), new LocalDate(2025, 9, 1));
+        final UUID child3Inv2 = persistCommittedChildInvoice(child3, new BigDecimal("33.00"), new LocalDate(2025, 9, 1));
+
+        dispatcher.processParentInvoiceForInvoiceGeneration(child1, child1Inv2, contextFor(child1));
+        dispatcher.processParentInvoiceForInvoiceGeneration(child2, child2Inv2, contextFor(child2));
+        dispatcher.processParentInvoiceForInvoiceGeneration(child3, child3Inv2, contextFor(child3));
+
+        parentInvoices = invoiceDao.getInvoicesByAccount(false, true, contextFor(parentAccount));
+        Assert.assertEquals(parentInvoices.size(), 2,
+                            "Cycle 2 must produce a separate parent DRAFT for the new billing period (not merge into the prior cycle's DRAFT)");
+
+        final InvoiceModelDao augustParent = parentInvoices.stream()
+                                                           .filter(i -> new LocalDate(2025, 8, 1).equals(i.getInvoiceDate()))
+                                                           .findFirst()
+                                                           .orElseThrow(() -> new AssertionError("Cycle 1 parent DRAFT missing"));
+        Assert.assertEquals(augustParent.getInvoiceItems().size(), 3, "Cycle 1 parent items must not have been removed or duplicated");
+        Assert.assertEquals(totalAmount(augustParent).compareTo(new BigDecimal("60.00")), 0,
+                            "Cycle 1 amounts must not be polluted by Cycle 2");
+
+        final InvoiceModelDao septemberParent = parentInvoices.stream()
+                                                              .filter(i -> new LocalDate(2025, 9, 1).equals(i.getInvoiceDate()))
+                                                              .findFirst()
+                                                              .orElseThrow(() -> new AssertionError("Cycle 2 parent DRAFT was not generated"));
+        Assert.assertEquals(septemberParent.getStatus(), InvoiceStatus.DRAFT);
+        Assert.assertEquals(septemberParent.getInvoiceItems().size(), 3,
+                            "Cycle 2 parent DRAFT must contain one PARENT_SUMMARY per child");
+        Assert.assertEquals(totalAmount(septemberParent).compareTo(new BigDecimal("66.00")), 0);
+
+        for (final InvoiceItemModelDao item : septemberParent.getInvoiceItems()) {
+            Assert.assertEquals(item.getType(), InvoiceItemType.PARENT_SUMMARY);
+            Assert.assertNotNull(item.getChildAccountId());
+        }
+    }
+
+    private Account createParentOrChildAccount(@Nullable final UUID parentAccountId, final boolean isPaymentDelegatedToParent) throws AccountApiException {
+        final MockAccountBuilder builder = new MockAccountBuilder()
+                .name(UUID.randomUUID().toString().substring(0, 8))
+                .firstNameLength(6)
+                .email(UUID.randomUUID().toString().substring(0, 8))
+                .phone(UUID.randomUUID().toString().substring(0, 8))
+                .migrated(false)
+                .externalKey(UUID.randomUUID().toString().substring(0, 8))
+                .billingCycleDayLocal(1)
+                .currency(Currency.USD)
+                .paymentMethodId(UUID.randomUUID())
+                .timeZone(DateTimeZone.UTC)
+                .createdDate(clock.getUTCNow());
+        if (parentAccountId != null) {
+            builder.parentAccountId(parentAccountId);
+            builder.isPaymentDelegatedToParent(isPaymentDelegatedToParent);
+        }
+        return accountUserApi.createAccount(builder.build(), callContext);
+    }
+
+    private InternalCallContext contextFor(final Account account) {
+        return internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+    }
+
+    private UUID persistCommittedChildInvoice(final Account childAccount, final BigDecimal amount, final LocalDate targetDate) throws Exception {
+        final InternalCallContext childContext = contextFor(childAccount);
+        final DefaultInvoice childInvoice = new DefaultInvoice(UUID.randomUUID(), childAccount.getId(), null,
+                                                               targetDate, targetDate, Currency.USD, false, InvoiceStatus.COMMITTED);
+        final RecurringInvoiceItem item = new RecurringInvoiceItem(childInvoice.getId(), childAccount.getId(),
+                                                                   UUID.randomUUID(), UUID.randomUUID(),
+                                                                   "test product", "test plan", "test phase", null,
+                                                                   targetDate, targetDate.plusMonths(1),
+                                                                   amount, amount, Currency.USD);
+        childInvoice.addInvoiceItem(item);
+        invoiceUtil.createInvoice(childInvoice, childContext);
+        return childInvoice.getId();
+    }
+
+    private static BigDecimal totalAmount(final InvoiceModelDao invoice) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (final InvoiceItemModelDao item : invoice.getInvoiceItems()) {
+            total = total.add(item.getAmount());
+        }
+        return total;
+    }
+
 }

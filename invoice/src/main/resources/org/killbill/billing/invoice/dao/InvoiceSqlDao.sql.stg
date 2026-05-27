@@ -76,7 +76,7 @@ getParentDraftInvoice() ::= <<
    WHERE account_id = :accountId
      AND status = 'DRAFT'
    <AND_CHECK_TENANT("")>
-   <defaultOrderBy("")>
+   order by invoice_date desc, <recordIdField("")> desc
 >>
 
 getInvoiceByAccountRecordIdAfter() ::= <<
