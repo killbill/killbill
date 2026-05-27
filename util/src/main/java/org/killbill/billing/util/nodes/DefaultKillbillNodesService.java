@@ -81,6 +81,8 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
 
     @LifecycleHandlerType(LifecycleLevel.BOOT)
     public void init() {
+        // Surface JVM/container tuning info at boot so operators can validate JDK 17+ deployments (issue #2176).
+        JvmInfo.captureAndLog(logger);
         try {
             final Optional<NodeInfoModelDao> nodeWithSameName =
                     nodeInfoDao.getAll()
