@@ -89,6 +89,12 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
             case TRANSFER:
                 return List.of(SubscriptionEventType.START_BILLING);
             case CHANGE:
+            // BCD_CHANGE events represent an update of the billCycleDay on the subscription. The
+            // public SubscriptionEventType enum (in killbill-api) does not expose a dedicated
+            // value for BCD updates, so we surface them as CHANGE events here. Without this
+            // mapping the BCD_CHANGE transition is silently dropped and never appears in the
+            // events list returned by the subscription API (see issue #2224).
+            case BCD_CHANGE:
                 return List.of(SubscriptionEventType.CHANGE);
             case CANCEL:
             case EXPIRED:

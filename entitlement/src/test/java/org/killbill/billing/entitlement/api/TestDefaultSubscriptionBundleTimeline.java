@@ -146,6 +146,65 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertNull(events.get(3).getNextPhase());
     }
 
+    // Regression test for https://github.com/killbill/killbill/issues/2224 - BCD_UPDATE events
+    // were silently dropped by SubscriptionEventOrdering and never appeared in the events list
+    // returned from the subscription API. They must now surface as CHANGE events.
+    @Test(groups = "fast")
+    public void testBCDUpdateEventIsIncludedInTimeline() throws CatalogApiException {
+        clock.setDay(new LocalDate(2013, 1, 1));
+
+        final DateTimeZone accountTimeZone = DateTimeZone.UTC;
+        final UUID accountId = UUID.randomUUID();
+        final String externalKey = "foo";
+
+        final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
+
+        final UUID entitlementId = UUID.randomUUID();
+
+        final List<SubscriptionBaseTransition> allTransitions = new ArrayList<SubscriptionBaseTransition>();
+
+        DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
+        final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, effectiveDate, clock.getUTCNow(), null, "trial");
+        allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+        blockingStates.add(bsCreate);
+
+        // PHASE transition
+        effectiveDate = effectiveDate.plusDays(30);
+        clock.addDays(30);
+        final SubscriptionBaseTransition tr2 = createTransition(entitlementId, EventType.PHASE, null, effectiveDate, clock.getUTCNow(), "trial", "phase");
+        allTransitions.add(tr2);
+
+        // BCD_UPDATE transition - no plan/phase change, just a BCD update
+        effectiveDate = effectiveDate.plusDays(10);
+        clock.addDays(10);
+        final SubscriptionBaseTransition tr3 = createTransition(entitlementId, EventType.BCD_UPDATE, null, effectiveDate, clock.getUTCNow(), "phase", "phase");
+        allTransitions.add(tr3);
+
+        final List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
+        entitlements.add(entitlement);
+
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
+
+        final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
+        // Expect: START_ENTITLEMENT, START_BILLING, PHASE, CHANGE (the BCD update)
+        assertEquals(events.size(), 4);
+
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
+        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.CHANGE);
+
+        // The BCD_UPDATE event should carry the id of the BCD transition
+        assertEquals(events.get(3).getId(), tr3.getId());
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate())
+                                        .compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+    }
+
     @Test(groups="fast")
     public void testOneSimpleEntitlementCancelImmediately() throws CatalogApiException {
         testOneSimpleEntitlementCancelImmediatelyImpl(false);
