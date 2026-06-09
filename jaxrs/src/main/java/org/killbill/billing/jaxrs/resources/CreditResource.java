@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -118,6 +119,7 @@ public class CreditResource extends JaxRsResourceBase {
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response createCredits(final List<InvoiceItemJson> json,
+                                  @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                  @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -133,11 +135,11 @@ public class CreditResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextWithAccountId(json.get(0).getAccountId(), createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(json.get(0).getAccountId(), callContext);
-        final LocalDate effectiveDate = new LocalDate(callContext.getCreatedDate(), account.getTimeZone());
+        final LocalDate requestedDate = Objects.requireNonNullElse(toLocalDate(requestedDateTimeString), new LocalDate(callContext.getCreatedDate(), account.getTimeZone()));
 
         final Iterable<InvoiceItem> inputItems = validateSanitizeAndTranformInputItems(account.getCurrency(), json);
 
-        final List<InvoiceItem> createdCredits = invoiceUserApi.insertCredits(account.getId(), effectiveDate, inputItems, autoCommit, pluginProperties, callContext);
+        final List<InvoiceItem> createdCredits = invoiceUserApi.insertCredits(account.getId(), requestedDate, inputItems, autoCommit, pluginProperties, callContext);
         final List<InvoiceItemJson> createdCreditsJson = createdCredits.stream()
                 .map(InvoiceItemJson::new)
                 .collect(Collectors.toUnmodifiableList());

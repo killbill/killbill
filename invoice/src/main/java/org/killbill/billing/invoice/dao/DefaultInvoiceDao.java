@@ -436,14 +436,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-    @Override
-    public void rescheduleInvoiceNotification(final UUID accountId, final DateTime nextRescheduleDt, final InternalCallContext context) {
-        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
-            nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, Collections.emptySet(), nextRescheduleDt, true, context);
-            return null;
-        });
-    }
-
     public List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> inputInvoices,
                                                     @Nullable final BillingEventSet billingEvents,
                                                     final Set<InvoiceTrackingModelDao> trackingIds,

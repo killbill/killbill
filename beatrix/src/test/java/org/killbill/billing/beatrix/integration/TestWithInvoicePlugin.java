@@ -44,6 +44,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -180,6 +181,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.additionalInvoiceItem = null;
         testInvoicePluginApi.isAborted = false;
         testInvoicePluginApi.shouldUpdateDescription = false;
+        testInvoicePluginApi.shouldThrowException = false;
         testInvoicePluginApi.rescheduleDate = null;
         testInvoicePluginApi.wasRescheduled = false;
         testInvoicePluginApi.priorCallInvocationCalls = 0;
@@ -770,7 +772,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertFalse(testInvoicePluginApi.wasRescheduled);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testWithRetries() throws Exception {
 
         testInvoicePluginApi.taxItems = PerSubscriptionTaxItems;

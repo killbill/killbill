@@ -26,7 +26,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -58,8 +57,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
                                                       final InternalCallContext context);
 
     InvoiceStatus getInvoiceStatus(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException;
-
-    void rescheduleInvoiceNotification(final UUID accountId, final DateTime nextRescheduleDt, final InternalCallContext context);
 
     InvoiceModelDao getByNumber(Integer number, Boolean includeInvoiceComponents, InternalTenantContext context) throws InvoiceApiException;
 
