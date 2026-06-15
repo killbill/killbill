@@ -45,6 +45,8 @@ public abstract class EntitlementOrderingBase {
 
             case PHASE:
             case CHANGE:
+            case BCD_UPDATE:
+            case QUANTITY_UPDATE:
                 return ENT_BILLING_SERVICE_NAME;
 
             default:
