@@ -110,14 +110,15 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    public PriorCallResult priorCall(final LocalDate targetDate,
+    public PriorCallResult priorCall(final UUID accountId,
+                              final LocalDate targetDate,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
                               final Iterable<PluginProperty> pluginProperties,
                               final InternalTenantContext internalTenantContext) throws InvoiceApiException {
-        log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
+        log.debug("Invoking invoice plugins priorCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}'", accountId, targetDate, isDryRun, isRescheduled);
 
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
@@ -139,11 +140,11 @@ public class InvoicePluginDispatcher {
             if (priorInvoiceResult.getRescheduleDate() != null &&
                 (earliestRescheduleDate == null || earliestRescheduleDate.compareTo(priorInvoiceResult.getRescheduleDate()) > 0)) {
                 earliestRescheduleDate = priorInvoiceResult.getRescheduleDate();
-                log.info("Invoice plugin {} rescheduled invoice generation to {} for targetDate {}", invoicePluginName, earliestRescheduleDate, targetDate);
+                log.info("Invoice plugin {} rescheduled invoice generation for accountId='{}', targetDate='{}', rescheduled to '{}'", invoicePluginName, accountId, targetDate, earliestRescheduleDate);
             }
 
             if (priorInvoiceResult.isAborted()) {
-                log.info("Invoice plugin {} aborted invoice generation for targetDate {}", invoicePluginName, targetDate);
+                log.info("Invoice plugin {} aborted invoice generation for accountId='{}', targetDate='{}'", invoicePluginName, accountId, targetDate);
                 throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, invoicePluginName);
             }
 
@@ -155,7 +156,8 @@ public class InvoicePluginDispatcher {
         return new PriorCallResult(earliestRescheduleDate, inputPluginProperties);
     }
 
-    public void onSuccessCall(final LocalDate targetDate,
+    public void onSuccessCall(final UUID accountId,
+                              final LocalDate targetDate,
                               @Nullable final DefaultInvoice invoice,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
@@ -163,11 +165,12 @@ public class InvoicePluginDispatcher {
                               final CallContext callContext,
                               final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
-        log.debug("Invoking invoice plugins onSuccessCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
-        onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
+        log.debug("Invoking invoice plugins onSuccessCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", accountId, targetDate, isDryRun, isRescheduled, invoice);
+        onCompletionCall(true, accountId, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
-    public void onFailureCall(final LocalDate targetDate,
+    public void onFailureCall(final UUID accountId,
+                              final LocalDate targetDate,
                               @Nullable final DefaultInvoice invoice,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
@@ -175,11 +178,12 @@ public class InvoicePluginDispatcher {
                               final CallContext callContext,
                               final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
-        log.debug("Invoking invoice plugins onFailureCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
-        onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
+        log.debug("Invoking invoice plugins onFailureCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", accountId, targetDate, isDryRun, isRescheduled, invoice);
+        onCompletionCall(false, accountId, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
     private void onCompletionCall(final boolean isSuccess,
+                                  final UUID accountId,
                                   final LocalDate targetDate,
                                   @Nullable final DefaultInvoice originalInvoice,
                                   final List<Invoice> existingInvoices,
@@ -214,8 +218,8 @@ public class InvoicePluginDispatcher {
                     }
                 }
             } catch (final RuntimeException e) {
-                log.warn("Invoice plugin {} threw an exception during {} call for targetDate='{}'",
-                         invoicePluginName, isSuccess ? "onSuccessCall" : "onFailureCall", targetDate, e);
+                log.warn("Invoice plugin {} threw an exception during {} call for accountId='{}', targetDate='{}'",
+                         invoicePluginName, isSuccess ? "onSuccessCall" : "onFailureCall", accountId, targetDate, e);
             }
         }
     }

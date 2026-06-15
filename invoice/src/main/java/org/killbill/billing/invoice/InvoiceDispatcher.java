@@ -208,8 +208,7 @@ public class InvoiceDispatcher {
         try {
             accountId = subscriptionApi.getAccountIdFromSubscriptionId(transition.getSubscriptionId(), context);
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed handling SubscriptionBase change.",
-                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));
+            log.warn("Failed to generate invoice, could not resolve accountId for subscriptionId='{}'", transition.getSubscriptionId(), e);
             return;
         }
 
@@ -244,8 +243,7 @@ public class InvoiceDispatcher {
 
             setFutureNotifications(account, notificationsBuilder.build(), context);
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed handling SubscriptionBase change.",
-                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));
+            log.warn("Failed to generate invoice, could not resolve accountId for subscriptionId='{}'", transition.getSubscriptionId(), e);
         } catch (final AccountApiException e) {
             log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
         } catch (final CatalogApiException e) {
@@ -443,19 +441,19 @@ public class InvoiceDispatcher {
             printInvoiceTiming(invoiceTimings);
             return result;
         } catch (final CatalogApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final AccountApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
@@ -465,7 +463,7 @@ public class InvoiceDispatcher {
                 log.info("Invoice generation aborted by plugin for accountId='{}', targetDate='{}'", accountId, inputTargetDate);
                 return Collections.emptyList();
             }
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             // Only case where we park even if this is from an API call and isParkAccountsOnAllExceptions is not explicitly set.
             if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode() && !isDryRun) {
                 parkAccount(accountId, context);
@@ -479,7 +477,7 @@ public class InvoiceDispatcher {
             }
             throw e;
         } catch (RuntimeException e) { // The case of LockFailedException was handled prior we enter this method.
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
@@ -685,7 +683,7 @@ public class InvoiceDispatcher {
         } catch (final AccountApiException e) {
             log.warn("Failed to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
             long startNano = System.nanoTime();
-            invoicePluginDispatcher.onFailureCall(originalTargetDate, null, accountInvoices.getInvoices(), false, isRescheduled, callContext, inputProperties, internalCallContext);
+            invoicePluginDispatcher.onFailureCall(accountId, originalTargetDate, null, accountInvoices.getInvoices(), false, isRescheduled, callContext, inputProperties, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
             return null;
         }
@@ -694,7 +692,7 @@ public class InvoiceDispatcher {
         Iterable<PluginProperty> pluginProperties = inputProperties;
 
         long startNano = System.nanoTime();
-        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(originalTargetDate, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(accountId, originalTargetDate, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
         pluginProperties = priorCallResult.getPluginProperties();
 
         invoiceTimings.put(InvoiceTiming.PLUGINS_PRIOR_CALL, System.nanoTime() - startNano);
@@ -718,7 +716,7 @@ public class InvoiceDispatcher {
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
             startNano = System.nanoTime();
-            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(accountId, originalTargetDate, null, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
 
             log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, originalTargetDate);
@@ -835,7 +833,7 @@ public class InvoiceDispatcher {
                                      final InvoiceModelDao refreshedInv = invoiceDao.getById(i.getId(), internalCallContext);
                                      final DefaultInvoice refreshedInvoice = new DefaultInvoice(refreshedInv);
                                      long startNano1 = System.nanoTime();
-                                     invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, completionProperties, internalCallContext);
+                                     invoicePluginDispatcher.onSuccessCall(accountId, actualTargetDate, refreshedInvoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, completionProperties, internalCallContext);
                                      invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano1);
                                      resultingInvoices.add(refreshedInvoice);
                                  } catch (final InvoiceApiException e) {
@@ -848,7 +846,7 @@ public class InvoiceDispatcher {
                 splitInvoices.stream()
                              .forEach(i -> {
                                  long startNano2 = System.nanoTime();
-                                 invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, completionProperties, internalCallContext);
+                                 invoicePluginDispatcher.onFailureCall(accountId, actualTargetDate, invoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, completionProperties, internalCallContext);
                                  invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano2);
                              });
 
@@ -874,7 +872,7 @@ public class InvoiceDispatcher {
         } catch (final AccountApiException e) {
             log.warn("Failed to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
             long startNano = System.nanoTime();
-            invoicePluginDispatcher.onFailureCall(originalTargetDate, null, accountInvoices.getInvoices(), true, isRescheduled, callContext, inputProperties, internalCallContext);
+            invoicePluginDispatcher.onFailureCall(accountId, originalTargetDate, null, accountInvoices.getInvoices(), true, isRescheduled, callContext, inputProperties, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
             return null;
         }
@@ -883,7 +881,7 @@ public class InvoiceDispatcher {
         Iterable<PluginProperty> pluginProperties = inputProperties;
 
         long startNano = System.nanoTime();
-        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(originalTargetDate, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
+        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(accountId, originalTargetDate, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
         invoiceTimings.put(InvoiceTiming.PLUGINS_PRIOR_CALL, System.nanoTime() - startNano);
         pluginProperties = priorCallResult.getPluginProperties();
 
@@ -905,7 +903,7 @@ public class InvoiceDispatcher {
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
             startNano = System.nanoTime();
-            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(accountId, originalTargetDate, null, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
 
             log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, originalTargetDate);
@@ -943,7 +941,7 @@ public class InvoiceDispatcher {
 
         } finally {
             startNano = System.nanoTime();
-            invoicePluginDispatcher.onSuccessCall(actualTargetDate, invoice, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(accountId, actualTargetDate, invoice, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
         }
 
