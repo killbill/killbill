@@ -167,7 +167,44 @@ public class TenantResource extends JaxRsResourceBase {
                                                      @HeaderParam(HDR_COMMENT) final String comment,
                                                      @javax.ws.rs.core.Context final HttpServletRequest request,
                                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        validateCallbackUrl(notificationCallback);
         return insertTenantKey(TenantKey.PUSH_NOTIFICATION_CB,  null,  notificationCallback, uriInfo,"getPushNotificationCallbacks", createdBy, reason, comment, request);
+    }
+
+    private void validateCallbackUrl(final String url) {
+        if (url == null || url.isEmpty()) {
+            throw new IllegalArgumentException("Callback URL must not be empty");
+        }
+
+        final java.net.URI uri;
+        try {
+            uri = java.net.URI.create(url);
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid callback URL: " + url);
+        }
+
+        final String scheme = uri.getScheme();
+        if (scheme == null || (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme))) {
+            throw new IllegalArgumentException("Callback URL must use HTTP or HTTPS scheme");
+        }
+
+        final String host = uri.getHost();
+        if (host == null || host.isEmpty()) {
+            throw new IllegalArgumentException("Callback URL must include a host");
+        }
+
+        // Block requests to private/internal networks
+        final java.net.InetAddress addr;
+        try {
+            addr = java.net.InetAddress.getByName(host);
+        } catch (final java.net.UnknownHostException e) {
+            throw new IllegalArgumentException("Cannot resolve callback host: " + host);
+        }
+
+        if (addr.isLoopbackAddress() || addr.isLinkLocalAddress() ||
+            addr.isSiteLocalAddress() || addr.isAnyLocalAddress()) {
+            throw new IllegalArgumentException("Callback URL must not target internal addresses");
+        }
     }
 
     @TimedResource
