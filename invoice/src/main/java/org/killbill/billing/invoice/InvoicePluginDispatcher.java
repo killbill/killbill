@@ -110,14 +110,14 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    public PriorCallResult priorCall(final UUID accountId,
-                              final LocalDate targetDate,
+    public PriorCallResult priorCall(final LocalDate targetDate,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
                               final Iterable<PluginProperty> pluginProperties,
                               final InternalTenantContext internalTenantContext) throws InvoiceApiException {
+        final UUID accountId = callContext.getAccountId();
         log.debug("Invoking invoice plugins priorCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}'", accountId, targetDate, isDryRun, isRescheduled);
 
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
@@ -156,8 +156,7 @@ public class InvoicePluginDispatcher {
         return new PriorCallResult(earliestRescheduleDate, inputPluginProperties);
     }
 
-    public void onSuccessCall(final UUID accountId,
-                              final LocalDate targetDate,
+    public void onSuccessCall(final LocalDate targetDate,
                               @Nullable final DefaultInvoice invoice,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
@@ -165,12 +164,11 @@ public class InvoicePluginDispatcher {
                               final CallContext callContext,
                               final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
-        log.debug("Invoking invoice plugins onSuccessCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", accountId, targetDate, isDryRun, isRescheduled, invoice);
-        onCompletionCall(true, accountId, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
+        log.debug("Invoking invoice plugins onSuccessCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", callContext.getAccountId(), targetDate, isDryRun, isRescheduled, invoice);
+        onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
-    public void onFailureCall(final UUID accountId,
-                              final LocalDate targetDate,
+    public void onFailureCall(final LocalDate targetDate,
                               @Nullable final DefaultInvoice invoice,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
@@ -178,12 +176,11 @@ public class InvoicePluginDispatcher {
                               final CallContext callContext,
                               final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
-        log.debug("Invoking invoice plugins onFailureCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", accountId, targetDate, isDryRun, isRescheduled, invoice);
-        onCompletionCall(false, accountId, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
+        log.debug("Invoking invoice plugins onFailureCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", callContext.getAccountId(), targetDate, isDryRun, isRescheduled, invoice);
+        onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
     private void onCompletionCall(final boolean isSuccess,
-                                  final UUID accountId,
                                   final LocalDate targetDate,
                                   @Nullable final DefaultInvoice originalInvoice,
                                   final List<Invoice> existingInvoices,
@@ -219,7 +216,7 @@ public class InvoicePluginDispatcher {
                 }
             } catch (final RuntimeException e) {
                 log.warn("Invoice plugin {} threw an exception during {} call for accountId='{}', targetDate='{}'",
-                         invoicePluginName, isSuccess ? "onSuccessCall" : "onFailureCall", accountId, targetDate, e);
+                         invoicePluginName, isSuccess ? "onSuccessCall" : "onFailureCall", callContext.getAccountId(), targetDate, e);
             }
         }
     }
