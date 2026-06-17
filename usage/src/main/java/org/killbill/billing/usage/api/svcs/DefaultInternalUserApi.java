@@ -19,7 +19,11 @@ package org.killbill.billing.usage.api.svcs;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -70,7 +74,14 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
         final DryRunType dryRunType = dryRunInfo != null ? dryRunInfo.getDryRunType() : null;
         final LocalDate inputTargetDate = dryRunInfo != null ? dryRunInfo.getInputTargetDate() : null;
 
-        final UsageContext usageContext = new DefaultUsageContext(dryRunType, inputTargetDate, tenantContext);
+        @SuppressWarnings("unchecked")
+        final Map<Map.Entry<UUID, String>, Set<DateTime>> usageTransitions = StreamSupport.stream(pluginProperties.spliterator(), false)
+                .filter(pp -> "USAGE_TRANSITIONS".equals(pp.getKey()) && pp.getValue() instanceof Map)
+                .findFirst()
+                .map(pp -> (Map<Map.Entry<UUID, String>, Set<DateTime>>) pp.getValue())
+                .orElse(null);
+
+        final UsageContext usageContext = new DefaultUsageContext(dryRunType, inputTargetDate, tenantContext, usageTransitions);
 
         final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, pluginProperties, usageContext);
         if (resultFromPlugin != null) {

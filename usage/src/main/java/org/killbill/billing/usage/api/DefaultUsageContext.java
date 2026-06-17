@@ -17,9 +17,14 @@
 
 package org.killbill.billing.usage.api;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.usage.plugin.api.UsageContext;
@@ -30,11 +35,18 @@ public class DefaultUsageContext implements UsageContext {
     private final DryRunType dryRunType;
     private final LocalDate targetDate;
     private final TenantContext context;
+    private final Map<Map.Entry<UUID, String>, Set<DateTime>> usageTransitions;
 
     public DefaultUsageContext(final DryRunType dryRunType, final LocalDate targetDate, final TenantContext context) {
+        this(dryRunType, targetDate, context, null);
+    }
+
+    public DefaultUsageContext(final DryRunType dryRunType, final LocalDate targetDate, final TenantContext context,
+                               @Nullable final Map<Map.Entry<UUID, String>, Set<DateTime>> usageTransitions) {
         this.dryRunType = dryRunType;
         this.targetDate = targetDate;
         this.context = context;
+        this.usageTransitions = usageTransitions;
     }
 
     @Override
@@ -45,6 +57,11 @@ public class DefaultUsageContext implements UsageContext {
     @Override
     public LocalDate getInputTargetDate() {
         return targetDate;
+    }
+
+    @Override
+    public Map<Map.Entry<UUID, String>, Set<DateTime>> getUsageTransitions() {
+        return usageTransitions;
     }
 
     @Override
