@@ -20,6 +20,7 @@ package org.killbill.billing.catalog.caching;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -142,7 +143,27 @@ public class DefaultCatalogCache implements CatalogCache {
         }
     }
 
+    @Override
+    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog,
+                                       final boolean internalUse, final Set<String> planNames,
+                                       final InternalTenantContext tenantContext) throws CatalogApiException {
+        if (internalUse) {
+            Preconditions.checkState(tenantContext.getAccountRecordId() != null, "Unexpected null accountRecordId in context issued from internal Kill Bill service");
+        }
+
+        final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext, planNames);
+        if (pluginVersionedCatalog != null) {
+            return pluginVersionedCatalog;
+        }
+
+        return getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, tenantContext);
+    }
+
     private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
+        return getCatalogFromPlugins(internalTenantContext, Collections.emptySet());
+    }
+
+    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext, final Set<String> planNames) throws CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
         final Set<String> allServices = pluginRegistry.getAllServices();
         for (final String service : allServices) {
@@ -168,7 +189,7 @@ public class DefaultCatalogCache implements CatalogCache {
                 }
             }
 
-            final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(Collections.emptyList(), tenantContext);
+            final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(planNames, Collections.emptyList(), tenantContext);
             // First plugin that gets something (for that tenant) returns it
             if (pluginCatalog != null) {
                 // The log entry is only interesting if there are multiple plugins
