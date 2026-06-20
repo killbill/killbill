@@ -143,8 +143,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(TEXT_XML)
-    @Operation(summary = "Retrieve the full catalog as XML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
+    @Operation(summary = "Retrieve the full catalog as XML", hidden = true)
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_XML, schema = @Schema(implementation = String.class)))})
     public Response getCatalogXmlOriginal(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                           @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                           @jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -200,7 +200,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Produces(TEXT_XML)
     @Operation(summary = "Retrieve the full catalog as XML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_XML, schema = @Schema(implementation = String.class)))})
     public Response getCatalogXml(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                   @jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -210,7 +210,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @TimedResource
     @POST
     @Consumes(TEXT_XML)
-    @Operation(summary = "Upload the full catalog as XML")
+    @Operation(summary = "Upload the full catalog as XML", hidden = true)
     @ApiResponses(value = {})
     public Response uploadCatalogXmlOriginal(final String catalogXML,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -228,8 +228,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @Path("/xml")
     @Consumes(TEXT_XML)
     @Operation(summary = "Upload the full catalog as XML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-                           @ApiResponse(responseCode = "201", description = "Catalog XML created successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Catalog XML created successfully")})
     public Response uploadCatalogXml(final String catalogXML,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,

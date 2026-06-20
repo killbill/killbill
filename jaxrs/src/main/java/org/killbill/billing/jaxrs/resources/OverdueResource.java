@@ -93,8 +93,8 @@ public class OverdueResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(TEXT_XML)
-    @Operation(summary = "Retrieve the overdue config as XML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
+    @Operation(summary = "Retrieve the overdue config as XML", hidden = true)
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_XML, schema = @Schema(implementation = String.class)))})
     public Response getOverdueConfigXmlOriginal(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         return Response.status(Status.OK).entity(XMLWriter.writeXML((DefaultOverdueConfig) overdueApi.getOverdueConfig(tenantContext), DefaultOverdueConfig.class)).build();
@@ -105,7 +105,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Path("/xml")
     @Produces(TEXT_XML)
     @Operation(summary = "Retrieve the overdue config as XML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_XML, schema = @Schema(implementation = String.class)))})
     public Response getOverdueConfigXml(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         return getOverdueConfigXmlOriginal(request);
     }
@@ -134,7 +134,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @TimedResource
     @POST
     @Consumes(TEXT_XML)
-    @Operation(summary = "Upload the full overdue config as XML")
+    @Operation(summary = "Upload the full overdue config as XML", hidden = true)
     @ApiResponses(value = {})
     public Response uploadOverdueConfigXmlOriginal(final String overdueXML,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -156,8 +156,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Path("/xml")
     @Consumes(TEXT_XML)
     @Operation(summary = "Upload the full overdue config as XML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-                           @ApiResponse(responseCode = "201", description = "Successfully uploaded overdue config"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Successfully uploaded overdue config"),
                            @ApiResponse(responseCode = "400", description = "Invalid node command supplied")})
     public Response uploadOverdueConfigXml(final String overdueXML,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
