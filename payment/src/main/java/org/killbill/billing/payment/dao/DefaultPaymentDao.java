@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -303,17 +302,13 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     }
 
     private List<String> expandSearchFilterToStateNames(final String searchKey) {
-        final Pattern pattern = Pattern.compile(".*" + searchKey + ".*");
-
         // Note that technically, we should look at all of the available state names in the database instead since the state machine is configurable. The common use-case
         // is to override transitions though, not to introduce new states, and since some of it is already hardcoded in PaymentStateMachineHelper anyways, it's probably good enough for now.
-        final List<String> stateNames = new ArrayList<String>();
-        for (final String stateName : PaymentStateMachineHelper.STATE_NAMES) {
-            if (pattern.matcher(stateName).matches()) {
-                stateNames.add(stateName);
-            }
-        }
-        return stateNames;
+        return PaymentStateMachineHelper.STATE_NAMES
+                .stream()
+                .filter(stateName -> stateName.contains(searchKey))
+                .toList();
+
     }
 
     @Override
