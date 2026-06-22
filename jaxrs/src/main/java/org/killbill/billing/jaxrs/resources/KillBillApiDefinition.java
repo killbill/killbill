@@ -132,10 +132,22 @@ public class KillBillApiDefinition implements ReaderListener {
                     } else if ("query".equals(p.getIn())) {
                         if (QUERY_AUDIT.equals(p.getName())) {
                             p.setRequired(false);
-                            if (p.getSchema() == null) {
-                                p.setSchema(new Schema<String>());
-                            }
+                            // Swagger Core 2.x (OpenAPI 3) introspects AuditMode as a POJO because it has
+                            // a getLevel() getter, producing a $ref to an object schema in components/schemas.
+                            // In Swagger Core 1.x (Swagger 2.0, master/0.24.x), query parameter types with a
+                            // single-String constructor were treated as opaque scalars, so no $ref was emitted.
+                            // We must unconditionally replace the schema to clear any $ref the scanner set;
+                            // otherwise the $ref takes precedence per OAS 3.0 and the type/enum siblings are
+                            // ignored, causing code generators to produce object-shaped requests instead of
+                            // the flat ?audit=NONE string the server actually expects (via JAX-RS
+                            // single-String-constructor convention on AuditMode).
+                            //
+                            // Furthermore, this ensures backward compatibility with the 0.24.x swagger spec
+                            // which declared audit as a plain string enum — existing generated clients and
+                            // integrations rely on sending ?audit=NONE as a flat query string value.
+                            p.setSchema(new Schema<String>());
                             p.getSchema().setType("string");
+                            p.getSchema().setDefault("NONE");
                             final List<String> values = Arrays.stream(AuditLevel.values())
                                     .map(Objects::toString)
                                     .collect(Collectors.toUnmodifiableList());
