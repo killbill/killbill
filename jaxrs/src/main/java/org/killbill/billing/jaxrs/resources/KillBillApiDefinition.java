@@ -82,6 +82,25 @@ public class KillBillApiDefinition implements ReaderListener {
         if (openAPI.getComponents() != null && openAPI.getComponents().getSchemas() != null) {
             for (final Schema<?> schema : openAPI.getComponents().getSchemas().values()) {
                 if (schema.getProperties() != null) {
+                    // Swagger Core 2.x (OpenAPI 3) introspects @JsonCreator constructor parameters and
+                    // discovers @JsonProperty values that differ from getter-derived names
+                    // (See for example: src/main/java/org/killbill/billing/jaxrs/json/PlanDetailJson.java)
+                    // It surfaces these as writeOnly properties (ex: "final_phase_billing_period" alongside
+                    // "finalPhaseBillingPeriod", or "tiers" alongside "blocks"). These are internal
+                    // deserialization aliases for backward compatibility. The server accepts legacy
+                    // snake_case or renamed input fields so older clients don't break, but only ever
+                    // serializes (outputs) the camelCase getter-derived names. Swagger Core 1.x (0.24.x)
+                    // never discovered constructor parameters, so these aliases were invisible in the
+                    // swagger spec. Removing them here ensures the generated OpenAPI spec remains
+                    // backward compatible with 0.24.x: generated clients see only the canonical
+                    // property names and won't be confused by write-only duplicates.
+                    schema.getProperties().entrySet().removeIf(entry -> {
+                        if (entry.getValue() instanceof Schema) {
+                            return Boolean.TRUE.equals(((Schema<?>) entry.getValue()).getWriteOnly());
+                        }
+                        return false;
+                    });
+
                     for (final Object prop : schema.getProperties().values()) {
                         if (prop instanceof Schema) {
                             ((Schema<?>) prop).setReadOnly(null);
