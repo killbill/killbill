@@ -226,8 +226,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Create a subscription")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SubscriptionJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Subscription created successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Subscription created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SubscriptionJson.class)))})
     public Response createSubscription(final SubscriptionJson subscription,
                                        @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
                                        @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
@@ -252,8 +251,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Create an entitlement with addOn products")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BundleJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Subscriptions created successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Subscriptions created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BundleJson.class)))})
     public Response createSubscriptionWithAddOns(final List<SubscriptionJson> entitlements,
                                                  @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
                                                  @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
@@ -278,8 +276,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Create multiple entitlements with addOn products")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BundleJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Subscriptions created successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Subscriptions created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BundleJson.class))))})
     public Response createSubscriptionsWithAddOns(final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns,
                                                   @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
                                                   @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
@@ -575,8 +572,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
     @Operation(summary = "Block a subscription")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BlockingStateJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Blocking state created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Blocking state created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BlockingStateJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid subscription id supplied"),
                            @ApiResponse(responseCode = "404", description = "Subscription not found")})
     public Response addSubscriptionBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,

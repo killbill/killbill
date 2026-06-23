@@ -178,8 +178,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Upload the full overdue config as JSON")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OverdueJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Successfully uploaded overdue config"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Successfully uploaded overdue config", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OverdueJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid node command supplied")})
     public Response uploadOverdueConfigJson(final OverdueJson overdueJson,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,

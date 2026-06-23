@@ -511,8 +511,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add a simple plan entry in the current version of the catalog")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-                           @ApiResponse(responseCode = "201", description = "Created new plan successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created new plan successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
     public Response addSimplePlan(final SimplePlanJson simplePlan,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,

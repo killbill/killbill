@@ -114,8 +114,7 @@ public class CreditResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Create a credit")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceItemJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Created credit successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created credit successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceItemJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response createCredits(final List<InvoiceItemJson> json,

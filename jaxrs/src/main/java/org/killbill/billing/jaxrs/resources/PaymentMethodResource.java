@@ -309,8 +309,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add custom fields to payment method")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
-                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Custom field created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment method id supplied")})
     public Response createPaymentMethodCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
                                                     final List<CustomFieldJson> customFields,

@@ -173,8 +173,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Refund a payment, and adjust the invoice if needed")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Created refund successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created refund successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found")})
     public Response createRefundWithAdjustments(@PathParam("paymentId") final UUID paymentId,
@@ -256,8 +255,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Record a chargeback")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Created chargeback successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created chargeback successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found")})
     public Response createChargeback(@PathParam("paymentId") final UUID paymentId,
@@ -295,8 +293,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Record a chargebackReversal")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Created chargeback reversal successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created chargeback reversal successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found")})
     public Response createChargebackReversal(@PathParam("paymentId") final UUID paymentId,
@@ -405,8 +402,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
-                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Custom field created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment id supplied")})
     public Response createInvoicePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                      final List<CustomFieldJson> customFields,
@@ -480,8 +476,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add tags to payment")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Tag created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment id supplied")})
     public Response createInvoicePaymentTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                              final List<UUID> tagList,

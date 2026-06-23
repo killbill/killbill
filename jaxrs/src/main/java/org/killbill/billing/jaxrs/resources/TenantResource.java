@@ -133,8 +133,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Create a tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Tenant created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Tenant created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantJson.class))),
                            @ApiResponse(responseCode = "409", description = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
                                  @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("false") final Boolean useGlobalDefault,
@@ -165,8 +164,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Create a push notification")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Push notification registered successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Push notification registered successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response registerPushNotificationCallback(@QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -207,8 +205,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add a per tenant configuration for a plugin")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Plugin configuration uploaded successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Plugin configuration uploaded successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response uploadPluginConfiguration(@PathParam("pluginName") final String pluginName,
                                               final String pluginConfig,
@@ -275,8 +272,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add a per tenant configuration (system properties)")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Per tenant configuration uploaded successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Per tenant configuration uploaded successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response uploadPerTenantConfiguration(final String perTenantConfig,
                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -317,8 +313,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add a per tenant payment state machine for a plugin")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Per tenant state machine uploaded successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Per tenant state machine uploaded successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response uploadPluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
                                                           final String paymentStateMachineConfig,
@@ -362,8 +357,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add a per tenant user key/value")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Per tenant config uploaded successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Per tenant config uploaded successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TenantKeyValueJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid tenantId supplied")})
     public Response insertUserKeyValue(@PathParam("keyName") final String key,
                                final String value,

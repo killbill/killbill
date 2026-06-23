@@ -150,8 +150,7 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Mark a pending payment transaction as succeeded or failed")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Successfully notifiy state change"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Successfully notifiy state change", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid paymentId supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or Payment not found")})
     public Response notifyStateChanged(@PathParam("transactionId") final UUID transactionId,
@@ -199,8 +198,7 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add custom fields to payment transaction")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
-                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Custom field created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response createTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   final List<CustomFieldJson> customFields,
@@ -274,8 +272,7 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add tags to payment transaction")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Tag created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid transaction id supplied")})
     public Response createTransactionTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                           final List<UUID> tagList,

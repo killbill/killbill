@@ -354,8 +354,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Trigger an invoice generation")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoiceJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Created invoice successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created invoice successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoiceJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoice(@Parameter(required = true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                         @QueryParam(QUERY_TARGET_DATE) final String targetDate,
@@ -387,8 +386,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Trigger an invoice generation")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Created invoice successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created invoice successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoiceGroup(@Parameter(required = true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                              @QueryParam(QUERY_TARGET_DATE) final String targetDate,
@@ -422,8 +420,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Create a migration invoice")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoiceJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Created migration invoice successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created migration invoice successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoiceJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id or target datetime supplied")})
     public Response createMigrationInvoice(@PathParam("accountId") final UUID accountId,
                                            final List<InvoiceItemJson> items,
@@ -535,8 +532,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Adjust an invoice item")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoiceJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Created adjustment Successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created adjustment Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoiceJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id, invoice id or invoice item id supplied"),
                            @ApiResponse(responseCode = "404", description = "Invoice not found")})
     public Response adjustInvoiceItem(@PathParam("invoiceId") final UUID invoiceId,
@@ -593,8 +589,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/" + CHARGES + "/{accountId:" + UUID_PATTERN + "}")
     @Operation(summary = "Create external charge(s)")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceItemJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Created external charge Successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created external charge Successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceItemJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response createExternalCharges(@PathParam("accountId") final UUID accountId,
@@ -629,8 +624,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/" + TAXES + "/{accountId:" + UUID_PATTERN + "}")
     @Operation(summary = "Create tax items")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceItemJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Create tax items successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Create tax items successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InvoiceItemJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response createTaxItems(@PathParam("accountId") final UUID accountId,
@@ -715,8 +709,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Operation(summary = "Trigger a payment for invoice")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Created payment Successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Created payment Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InvoicePaymentJson.class))),
                            @ApiResponse(responseCode = "204", description = "Nothing to pay for"),
                            @ApiResponse(responseCode = "400", description = "Invalid account id or invoice id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
@@ -768,8 +761,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Operation(summary = "Upload the invoice translation for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class))),
-                           @ApiResponse(responseCode = "201", description = "Uploaded invoice translation Successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Uploaded invoice translation Successfully", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class)))})
     public Response uploadInvoiceTranslation(@PathParam("locale") final String localeStr,
                                              final String invoiceTranslation,
                                              @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
@@ -809,8 +801,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Operation(summary = "Upload the catalog translation for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class))),
-                           @ApiResponse(responseCode = "201", description = "Uploaded catalog translation Successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Uploaded catalog translation Successfully", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class)))})
     public Response uploadCatalogTranslation(@PathParam("locale") final String localeStr,
                                              final String catalogTranslation,
                                              @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
@@ -849,8 +840,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(TEXT_HTML)
     @Path("/" + INVOICE_TEMPLATE)
     @Operation(summary = "Upload the invoice template for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class))),
-                           @ApiResponse(responseCode = "201", description = "Uploaded invoice template Successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Uploaded invoice template Successfully", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class)))})
     public Response uploadInvoiceTemplate(final String catalogTranslation,
                                           @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -973,8 +963,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add custom fields to invoice")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
-                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Custom field created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid invoice id supplied")})
     public Response createInvoiceCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                               final List<CustomFieldJson> customFields,
@@ -1048,8 +1037,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add tags to invoice")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Tag created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid invoice id supplied")})
     public Response createInvoiceTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                       final List<UUID> tagList,

@@ -316,8 +316,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Capture an existing authorization")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid paymentId supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
@@ -342,8 +341,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Capture an existing authorization")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
                            @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),
@@ -396,8 +394,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Refund an existing payment")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid paymentId supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
@@ -423,8 +420,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Refund an existing payment")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
                            @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),
@@ -561,8 +557,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Record a chargeback")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid paymentId supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
@@ -588,8 +583,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Record a chargeback")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
                            @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),
@@ -642,8 +636,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Record a chargeback reversal")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid paymentId supplied"),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
@@ -669,8 +662,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Record a chargeback reversal")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "404", description = "Account or payment not found"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
                            @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),
@@ -718,8 +710,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Produces(APPLICATION_JSON)
     @Path("/" + COMBO)
     @Operation(summary = "Combo api to create a new payment transaction on a existing (or not) account ")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Payment transaction created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid data for Account or PaymentMethod"),
                            @ApiResponse(responseCode = "402", description = "Transaction declined by gateway"),
                            @ApiResponse(responseCode = "422", description = "Payment is aborted by a control plugin"),
@@ -832,8 +823,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
-                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Custom field created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment id supplied")})
     public Response createPaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                               final List<CustomFieldJson> customFields,
@@ -905,8 +895,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add tags to payment payment")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Tag created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid payment id supplied")})
     public Response createPaymentTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
                                       final List<UUID> tagList,

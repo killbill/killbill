@@ -120,8 +120,7 @@ public class SecurityResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add a new user with roles (to make api requests)")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserRolesJson.class))),
-                           @ApiResponse(responseCode = "201", description = "User role created successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "User role created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserRolesJson.class)))})
     public Response addUserRoles(final UserRolesJson json,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
@@ -222,8 +221,7 @@ public class SecurityResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add a new role definition)")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDefinitionJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Role definition created successfully")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Role definition created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDefinitionJson.class)))})
     public Response addRoleDefinition(final RoleDefinitionJson json,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,

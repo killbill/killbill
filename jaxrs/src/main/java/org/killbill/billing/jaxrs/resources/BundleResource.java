@@ -307,8 +307,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
     @Operation(summary = "Block a bundle")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BlockingStateJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Blocking state created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Blocking state created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BlockingStateJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied"),
                            @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response addBundleBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
@@ -346,8 +345,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add custom fields to bundle")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
-                           @ApiResponse(responseCode = "201", description = "Custom field created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Custom field created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CustomField.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response createBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                              final List<CustomFieldJson> customFields,
@@ -422,8 +420,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Transfer a bundle to another account")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BundleJson.class))),
-                           @ApiResponse(responseCode = "201", description = "Bundle transferred successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Bundle transferred successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BundleJson.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid bundle id, requested date or policy supplied"),
                            @ApiResponse(responseCode = "404", description = "Bundle not found")})
     public Response transferBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
@@ -497,8 +494,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Operation(summary = "Add tags to bundle")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
-                           @ApiResponse(responseCode = "201", description = "Tag created successfully"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Tag created successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TagJson.class)))),
                            @ApiResponse(responseCode = "400", description = "Invalid bundle id supplied")})
     public Response createBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                      final List<UUID> tagList,
