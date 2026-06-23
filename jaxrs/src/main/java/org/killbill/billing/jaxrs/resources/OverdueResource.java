@@ -156,7 +156,12 @@ public class OverdueResource extends JaxRsResourceBase {
     @Path("/xml")
     @Consumes(TEXT_XML)
     @Operation(summary = "Upload the full overdue config as XML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Successfully uploaded overdue config"),
+    // Server returns 201 with no body (only a Location header), but the 0.24.x swagger spec
+    // declared the response as {type: "string"}. Generated clients from that spec return a String,
+    // and existing user code may call .isEmpty() on it. Dropping the schema would change the
+    // generated return type to void/null, breaking backward compatibility with a NPE.
+    // We keep the string schema to preserve the generated client contract.
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Successfully uploaded overdue config", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(type = "string"))),
                            @ApiResponse(responseCode = "400", description = "Invalid node command supplied")})
     public Response uploadOverdueConfigXml(final String overdueXML,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
