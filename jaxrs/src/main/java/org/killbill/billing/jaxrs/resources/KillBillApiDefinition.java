@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.resources;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.killbill.billing.util.api.AuditLevel;
@@ -108,6 +109,27 @@ public class KillBillApiDefinition implements ReaderListener {
                     }
                 }
             }
+
+            // Swagger Core 2.x registers component schemas for every non-primitive type it encounters
+            // during scanning, even when those types are only used as method parameter types (not as
+            // response/request body models). In Swagger Core 1.x (0.24.x), these types were never
+            // registered because the scanner only introspected response models and explicit @ApiModel
+            // classes. The schemas below are scanner artifacts that no operation, parameter, or other
+            // schema references — they generate unused model classes in client SDKs:
+            //
+            // - AuditMode: query parameter wrapper type (server parses via single-String constructor,
+            //   the inline schema is set explicitly in decorateOperation above)
+            // - MultivaluedMapStringString: JAX-RS form body type from PluginResource.doFormPOST
+            // - MultivaluedMapStringObject: resolved from MultivaluedMap interface hierarchy
+            //
+            // Removing them maintains backward compatibility with the 0.24.x swagger spec which never
+            // exposed these internal types to generated clients.
+            final Set<String> orphanedSchemas = Set.of(
+                    "AuditMode",
+                    "MultivaluedMapStringString",
+                    "MultivaluedMapStringObject"
+            );
+            openAPI.getComponents().getSchemas().keySet().removeAll(orphanedSchemas);
         }
     }
 
