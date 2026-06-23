@@ -285,7 +285,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/{invoiceId:" + UUID_PATTERN + "}/html")
     @Produces(TEXT_HTML)
     @Operation(summary = "Render an invoice as HTML")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "404", description = "Invoice not found")})
     public Response getInvoiceAsHTML(@PathParam("invoiceId") final UUID invoiceId,
                                      @jakarta.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, IOException, AccountApiException {
@@ -754,7 +754,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Produces(TEXT_PLAIN)
     @Operation(summary = "Retrieves the invoice translation for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid locale supplied"),
                            @ApiResponse(responseCode = "404", description = "Translation not found")})
     public Response getInvoiceTranslation(@PathParam("locale") final String localeStr,
@@ -768,7 +768,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Operation(summary = "Upload the invoice translation for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "201", description = "Uploaded invoice translation Successfully")})
     public Response uploadInvoiceTranslation(@PathParam("locale") final String localeStr,
                                              final String invoiceTranslation,
@@ -795,7 +795,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Produces(TEXT_PLAIN)
     @Operation(summary = "Retrieves the catalog translation for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "400", description = "Invalid locale supplied"),
                            @ApiResponse(responseCode = "404", description = "Template not found")})
     public Response getCatalogTranslation(@PathParam("locale") final String localeStr,
@@ -809,7 +809,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(TEXT_PLAIN)
     @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Operation(summary = "Upload the catalog translation for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_PLAIN, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "201", description = "Uploaded catalog translation Successfully")})
     public Response uploadCatalogTranslation(@PathParam("locale") final String localeStr,
                                              final String catalogTranslation,
@@ -837,7 +837,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + INVOICE_TEMPLATE)
     @Produces(TEXT_HTML)
     @Operation(summary = "Retrieves the invoice template for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "404", description = "Template not found")})
     public Response getInvoiceTemplate(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
         return getTemplateResource(null, TenantKey.INVOICE_TEMPLATE, request);
@@ -849,7 +849,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(TEXT_HTML)
     @Path("/" + INVOICE_TEMPLATE)
     @Operation(summary = "Upload the invoice template for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "201", description = "Uploaded invoice template Successfully")})
     public Response uploadInvoiceTemplate(final String catalogTranslation,
                                           @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
@@ -876,7 +876,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + INVOICE_MP_TEMPLATE + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Produces(TEXT_HTML)
     @Operation(summary = "Retrieves the manualPay invoice template for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "404", description = "Template not found")})
     public Response getInvoiceMPTemplate(@PathParam("locale") final String localeStr,
                                          @jakarta.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
@@ -889,7 +889,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(TEXT_HTML)
     @Path("/" + INVOICE_MP_TEMPLATE)
     @Operation(summary = "Upload the manualPay invoice template for the tenant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class)))})
     public Response uploadInvoiceMPTemplate(final String catalogTranslation,
                                             @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
