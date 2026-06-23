@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;

@@ -25,8 +25,8 @@ import java.util.Set;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.cache.Cachable.CacheType;

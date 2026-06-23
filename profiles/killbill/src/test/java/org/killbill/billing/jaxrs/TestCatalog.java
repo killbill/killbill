@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
 import java.time.ZonedDateTime;

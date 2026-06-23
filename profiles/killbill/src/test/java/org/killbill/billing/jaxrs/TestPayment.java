@@ -29,7 +29,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import java.time.ZonedDateTime;
 import java.time.ZoneId;

@@ -22,11 +22,15 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
+import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
+import io.swagger.v3.oas.integration.OpenApiConfigurationException;
+import io.swagger.v3.oas.models.Components;
+import jakarta.servlet.ServletContext;
 
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.filter.EncodingFilter;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
+import org.killbill.billing.jaxrs.resources.KillBillApiScanner;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
@@ -47,17 +51,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
-import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 
 public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
-    // See io.swagger.jaxrs.listing.ApiListingResource
-    private static final String SWAGGER_PATH = "swagger.*";
+    // See io.swagger.v3.jaxrs2.integration.resources.OpenApiResource
+    private static final String SWAGGER_PATH = "openapi.*";
 
     private KillbillEventHandler killbilleventHandler;
 
@@ -68,8 +76,8 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("/" + SWAGGER_PATH + "|((/" + SWAGGER_PATH + "|" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*)")
                                                                              .addJerseyResourcePackage("org.killbill.billing.jaxrs.mappers")
                                                                              .addJerseyResourcePackage("org.killbill.billing.jaxrs.resources")
-                                                                             // Swagger integration
-                                                                             .addJerseyResourcePackage("io.swagger.jaxrs.listing");
+                                                                             // Swagger 2 (OpenAPI 3) integration
+                                                                             .addJerseyResourcePackage("io.swagger.v3.jaxrs2.integration.resources");
 
         // Jackson integration
         builder.addJerseyResourceClass(JacksonJsonProvider.class.getName());
@@ -154,15 +162,28 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
     protected void startLifecycleStage3() {
         super.startLifecycleStage3();
 
-        final BeanConfig beanConfig = new BeanConfig();
-        beanConfig.setResourcePackage("org.killbill.billing.jaxrs.resources");
-        beanConfig.setTitle("Kill Bill");
-        beanConfig.setDescription("Kill Bill is an open-source billing and payments platform");
-        beanConfig.setContact("killbilling-users@googlegroups.com");
-        beanConfig.setLicense("Apache License, Version 2.0");
-        beanConfig.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
-        beanConfig.setVersion(KillbillVersions.getKillbillVersion());
-        beanConfig.setScan(true);
+        final Info info = new Info()
+                .title("Kill Bill")
+                .description("Kill Bill is an open-source billing and payments platform")
+                .contact(new Contact().email("killbilling-users@googlegroups.com"))
+                .license(new License()
+                                 .name("Apache License, Version 2.0")
+                                 .url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+                .version(KillbillVersions.getKillbillVersion());
+
+        final OpenAPI openAPI = new OpenAPI().info(info).components(new Components());
+
+        final SwaggerConfiguration swaggerConfig = new SwaggerConfiguration()
+                .openAPI(openAPI)
+                .scannerClass(KillBillApiScanner.class.getName())
+                .resourcePackages(java.util.Set.of("org.killbill.billing.jaxrs.resources"))
+                .prettyPrint(true);
+
+        try {
+            new JaxrsOpenApiContextBuilder<>().openApiConfiguration(swaggerConfig).buildContext(true);
+        } catch (final OpenApiConfigurationException e) {
+            logger.error("Failed to initialize OpenAPI/Swagger configuration", e);
+        }
     }
 
     @Override

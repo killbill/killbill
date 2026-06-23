@@ -28,10 +28,10 @@ import org.killbill.billing.BillingExceptionBase;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 // Doesn't extend JsonBase (no audit logs)
-@ApiModel(value="BillingException")
+@Schema(name = "BillingException")
 public class BillingExceptionJson {
 
     private final String className;

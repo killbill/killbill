@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;

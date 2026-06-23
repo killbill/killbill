@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;

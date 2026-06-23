@@ -18,7 +18,7 @@
 
 package org.killbill.billing.jaxrs;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.jaxrs.glue.TestJaxrsModuleNoDB;

@@ -16,8 +16,8 @@
 
 package org.killbill.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlIDREF;
 
 import org.killbill.billing.catalog.api.Product;
 import org.testng.Assert;

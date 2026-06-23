@@ -35,8 +35,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.cache.CacheManager;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import javax.sql.DataSource;
 
 import org.killbill.billing.util.cache.CacheControllerDispatcher;

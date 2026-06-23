@@ -19,7 +19,7 @@ package org.killbill.billing.beatrix.integration.db;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.KillbillApi;
 import org.killbill.billing.util.callcontext.CallContext;

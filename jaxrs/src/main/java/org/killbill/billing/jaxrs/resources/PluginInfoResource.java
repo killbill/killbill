@@ -20,14 +20,16 @@ package org.killbill.billing.jaxrs.resources;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -44,14 +46,17 @@ import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.PLUGINS_INFO_PATH)
-@Api(value = JaxrsResource.PLUGINS_INFO_PATH, description = "Operations on plugins", tags="PluginInfo")
+@Tag(name = "PluginInfo", description = "Operations on plugins")
 public class PluginInfoResource extends JaxRsResourceBase {
 
     private final PluginsInfoApi pluginsInfoApi;
@@ -74,8 +79,9 @@ public class PluginInfoResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve the list of registered plugins", response = PluginInfoJson.class, responseContainer = "List")
-    public Response getPluginsInfo(@javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+    @Operation(summary = "Retrieve the list of registered plugins")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PluginInfoJson.class))))})
+    public Response getPluginsInfo(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final List<PluginInfoJson> result = Iterables.toStream(pluginsInfoApi.getPluginsInfo())
                 .map(PluginInfoJson::new)
                 .collect(Collectors.toUnmodifiableList());

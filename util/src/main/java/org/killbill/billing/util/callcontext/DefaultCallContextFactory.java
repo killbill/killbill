@@ -19,7 +19,7 @@ package org.killbill.billing.util.callcontext;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.DefaultTenantContext;

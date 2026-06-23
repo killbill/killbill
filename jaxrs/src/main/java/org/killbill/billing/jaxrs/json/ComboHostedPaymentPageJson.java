@@ -23,14 +23,12 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="ComboHostedPaymentPage")
+@Schema(name = "ComboHostedPaymentPage")
 public class ComboHostedPaymentPageJson extends ComboPaymentJson {
 
-    //@ApiModelProperty(name = required = true)
+    //@Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final HostedPaymentPageFieldsJson hostedPaymentPageFields;
 
     @JsonCreator

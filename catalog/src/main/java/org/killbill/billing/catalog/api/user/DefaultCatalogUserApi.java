@@ -29,8 +29,8 @@ import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.xml.bind.JAXBException;
+import jakarta.inject.Inject;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
 import org.joda.time.DateTime;

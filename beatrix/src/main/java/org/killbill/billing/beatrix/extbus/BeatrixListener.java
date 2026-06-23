@@ -21,8 +21,8 @@ package org.killbill.billing.beatrix.extbus;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;

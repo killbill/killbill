@@ -29,9 +29,9 @@ import org.killbill.billing.util.tag.ControlTagType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="OverdueCondition")
+@Schema(name = "OverdueCondition")
 public class OverdueConditionJson {
 
     private final DurationJson timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;

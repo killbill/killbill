@@ -23,20 +23,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -63,16 +63,19 @@ import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.NODES_INFO_PATH)
-@Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info", tags="NodesInfo")
+@Tag(name = "NodesInfo", description = "Operations to retrieve nodes info")
 public class NodesInfoResource extends JaxRsResourceBase {
 
     private final KillbillNodesApi killbillInfoApi;
@@ -117,8 +120,9 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve all the nodes infos", response = NodeInfoJson.class, responseContainer = "List")
-    public Response getNodesInfo(@javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+    @Operation(summary = "Retrieve all the nodes infos")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = NodeInfoJson.class))))})
+    public Response getNodesInfo(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
 
         final Iterable<NodeInfo> nodeInfos = killbillInfoApi.getNodesInfo();
 
@@ -142,16 +146,16 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger a node command")
-    @ApiResponses(value = {@ApiResponse(code = 202, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid node command supplied")})
+    @Operation(summary = "Trigger a node command")
+    @ApiResponses(value = {@ApiResponse(responseCode = "202", description = "Successful operation"),
+                           @ApiResponse(responseCode = "400", description = "Invalid node command supplied")})
     public Response triggerNodeCommand(final NodeCommandJson json,
                                        @QueryParam(QUERY_LOCAL_NODE_ONLY) @DefaultValue("false") final Boolean localNodeOnly,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                                       @jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                       @jakarta.ws.rs.core.Context final UriInfo uriInfo) {
         // Add in the broadcast message the Kill Bill version -- this is needed by the KPM plugin for instance
         final NodeInfo currentNodeInfo = killbillInfoApi.getCurrentNodeInfo();
         if (currentNodeInfo != null) {
