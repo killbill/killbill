@@ -121,13 +121,26 @@ public class KillBillApiDefinition implements ReaderListener {
             //   the inline schema is set explicitly in decorateOperation above)
             // - MultivaluedMapStringString: JAX-RS form body type from PluginResource.doFormPOST
             // - MultivaluedMapStringObject: resolved from MultivaluedMap interface hierarchy
+            // - Response, EntityTag, Link, MediaType, NewCookie, StatusType, UriBuilder: JAX-RS
+            //   framework types. Swagger Core 1.x had built-in filtering for javax.ws.rs.core.Response
+            //   and never introspected it; Swagger Core 2.x does not filter and follows the entire
+            //   class hierarchy if Response is explicitly referenced via @Schema(implementation=...).
+            //   The source annotations on AdminResource and ExportResource have been fixed, but this
+            //   list acts as a safety net in case similar references are added in the future.
             //
             // Removing them maintains backward compatibility with the 0.24.x swagger spec which never
             // exposed these internal types to generated clients.
             final Set<String> orphanedSchemas = Set.of(
                     "AuditMode",
                     "MultivaluedMapStringString",
-                    "MultivaluedMapStringObject"
+                    "MultivaluedMapStringObject",
+                    "Response",
+                    "EntityTag",
+                    "Link",
+                    "MediaType",
+                    "NewCookie",
+                    "StatusType",
+                    "UriBuilder"
             );
             openAPI.getComponents().getSchemas().keySet().removeAll(orphanedSchemas);
         }

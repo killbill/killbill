@@ -154,7 +154,14 @@ public class AdminResource extends JaxRsResourceBase {
     @Path("/queues")
     @Produces(APPLICATION_OCTET_STREAM)
     @Operation(summary = "Get queues entries")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Response.class))),
+    // Swagger Core 1.x (0.24.x) had built-in filtering for javax.ws.rs.core.Response and never
+    // introspected it into a schema. Swagger Core 2.x does not have this filtering — an explicit
+    // @Schema(implementation = Response.class) causes the scanner to recursively introspect the
+    // entire JAX-RS Response class hierarchy (EntityTag, Link, MediaType, NewCookie, StatusType,
+    // UriBuilder), polluting the spec with framework internals. Since this endpoint produces
+    // APPLICATION_OCTET_STREAM (raw streaming data), the correct schema is binary.
+    // This also maintains backward compatibility with 0.24.x which never exposed JAX-RS types.
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = APPLICATION_OCTET_STREAM, schema = @Schema(type = "string", format = "binary"))),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public Response getQueueEntries(@QueryParam("accountId") final UUID accountId,
