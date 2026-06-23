@@ -51,8 +51,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
@@ -87,10 +85,10 @@ public class ExportResource extends JaxRsResourceBase {
     // introspected it into a schema. Swagger Core 2.x does not have this filtering — an explicit
     // @Schema(implementation = Response.class) causes the scanner to recursively introspect the
     // entire JAX-RS Response class hierarchy (EntityTag, Link, MediaType, NewCookie, StatusType,
-    // UriBuilder), polluting the spec with framework internals. Since this endpoint produces
-    // APPLICATION_OCTET_STREAM (raw streaming data), the correct schema is binary.
-    // This also maintains backward compatibility with 0.24.x which never exposed JAX-RS types.
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = APPLICATION_OCTET_STREAM, schema = @Schema(type = "string", format = "binary"))),
+    // UriBuilder), polluting the spec with framework internals. The 0.24.x spec declared no
+    // response schema for this endpoint, so we keep it schema-less for backward compatibility —
+    // generated clients returned void/raw-response and existing code relies on that contract.
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation"),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public StreamingOutput exportDataForAccount(@PathParam("accountId") final UUID accountId,
