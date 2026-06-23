@@ -149,19 +149,6 @@ public class KillBillApiDefinition implements ReaderListener {
     @SuppressWarnings("unchecked")
     private void decorateOperation(final Operation op, final String pathName, final String httpMethod) {
         if (op != null) {
-
-            // Bug in swagger ? somehow when we only specify a 201, swagger adds a 200 response with the schema response
-            if (httpMethod.equals("POST")) {
-                if (op.getResponses() != null &&
-                    op.getResponses().containsKey("201") && op.getResponses().containsKey("200")) {
-                    final ApiResponse resp200 = op.getResponses().remove("200");
-                    final ApiResponse resp201 = op.getResponses().get("201");
-                    if (resp201.getContent() == null && resp200.getContent() != null) {
-                        resp201.setContent(resp200.getContent());
-                    }
-                }
-            }
-
             final SecurityRequirement securityRequirement = new SecurityRequirement().addList(BASIC_AUTH_SCHEME);
             if (requiresTenantInformation(pathName, httpMethod)) {
                 securityRequirement
