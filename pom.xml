@@ -62,7 +62,7 @@
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
         <killbill.version>${project.version}</killbill.version>
-        <killbill-api.version>0.54.1-SNAPSHOT</killbill-api.version>
+        <killbill-api.version>0.55.1-76b0c1b-SNAPSHOT</killbill-api.version>
         <main.basedir>${project.basedir}</main.basedir>
         <!-- Temporary until upgrade to 2.x -->
         <swagger.version>1.6.2</swagger.version>
