@@ -42,6 +42,9 @@ public interface RolesPermissionsSqlDao extends Transactional<RolesPermissionsSq
     @SqlQuery
     public Set<String> getAllPermissions();
 
+    @SqlQuery
+    public List<RolesPermissionsModelDao> getAll();
+
     @SqlUpdate
     public void create(@SmartBindBean final RolesPermissionsModelDao rolesPermissions);
 

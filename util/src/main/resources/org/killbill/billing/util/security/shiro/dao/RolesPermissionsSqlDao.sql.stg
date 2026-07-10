@@ -65,6 +65,13 @@ where is_active = TRUE
 ;
 >>
 
+getAll() ::= <<
+select <allTableFields("")>
+from <tableName()>
+where is_active = TRUE
+;
+>>
+
 unactiveEvent() ::= <<
 update <tableName()>
 set

@@ -52,6 +52,7 @@ import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.security.shiro.dao.RolesPermissionsModelDao;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.slf4j.Logger;
@@ -249,6 +250,16 @@ public class DefaultSecurityApi implements SecurityApi {
         return userDao.getRoleDefinition(role).stream()
                 .map(input -> input == null ? null : input.getPermission())
                 .collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
+    public Map<String, List<String>> getAvailableRoles(final TenantContext tenantContext) {
+        final Map<String, List<String>> rolesToPermissions = new HashMap<>();
+        for (final RolesPermissionsModelDao rolePermission : userDao.getAllRoleDefinitions()) {
+            rolesToPermissions.computeIfAbsent(rolePermission.getRoleName(), ignored -> new ArrayList<>())
+                               .add(rolePermission.getPermission());
+        }
+        return rolesToPermissions;
     }
 
     private List<String> sanitizePermissions(final List<String> permissionsRaw) throws SecurityApiException {

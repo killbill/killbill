@@ -18,7 +18,9 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.inject.Inject;
@@ -199,6 +201,22 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.NO_CONTENT).build();
     }
 
+
+    @TimedResource
+    @GET
+    @Produces(APPLICATION_JSON)
+    @Path("/roles")
+    @Operation(summary = "List all available role definitions")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RoleDefinitionJson.class))))})
+    public Response getAvailableRoles(@jakarta.ws.rs.core.Context final HttpServletRequest request,
+                                      @jakarta.ws.rs.core.Context final UriInfo uriInfo) {
+        final Map<String, List<String>> availableRoles = securityApi.getAvailableRoles(context.createTenantContextNoAccountId(request));
+        final List<RoleDefinitionJson> result = new ArrayList<>(availableRoles.size());
+        for (final Map.Entry<String, List<String>> entry : availableRoles.entrySet()) {
+            result.add(new RoleDefinitionJson(entry.getKey(), entry.getValue()));
+        }
+        return Response.status(Status.OK).entity(result).build();
+    }
 
     @TimedResource
     @GET

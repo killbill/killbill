@@ -20,6 +20,7 @@ package org.killbill.billing.util.security.shiro.realm;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.shiro.SecurityUtils;
@@ -340,6 +341,20 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
         securityApi.updateRoleDefinition("original", List.of(), callContext);
         Assert.assertEquals(securityApi.getRoleDefinition("original", callContext).size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testGetAvailableRoles() throws SecurityApiException {
+        securityApi.addRoleDefinition("librarian", List.of("book:read", "book:lend"), callContext);
+        securityApi.addRoleDefinition("archivist", List.of("book:read"), callContext);
+
+        final Map<String, List<String>> availableRoles = securityApi.getAvailableRoles(callContext);
+
+        Assert.assertTrue(availableRoles.containsKey("librarian"));
+        Assert.assertEqualsNoOrder(availableRoles.get("librarian").toArray(), List.of("book:read", "book:lend").toArray());
+
+        Assert.assertTrue(availableRoles.containsKey("archivist"));
+        Assert.assertEqualsNoOrder(availableRoles.get("archivist").toArray(), List.of("book:read").toArray());
     }
 
     private void testInvalidPermissionScenario(final List<String> permissions) {

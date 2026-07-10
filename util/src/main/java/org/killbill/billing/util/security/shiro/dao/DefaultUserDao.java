@@ -154,6 +154,14 @@ public class DefaultUserDao implements UserDao {
     }
 
     @Override
+    public List<RolesPermissionsModelDao> getAllRoleDefinitions() {
+        return dbi.inTransaction((handle, status) -> {
+            final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
+            return rolesPermissionsSqlDao.getAll();
+        });
+    }
+
+    @Override
     public Set<String> getAllPermissions() {
         return dbi.inTransaction((handle, status) -> {
             final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
