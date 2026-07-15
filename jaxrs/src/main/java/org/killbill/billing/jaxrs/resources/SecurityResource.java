@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.inject.Inject;
@@ -47,7 +48,6 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.SecurityApiException;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -250,4 +250,19 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.NO_CONTENT).build();
     }
 
+    @TimedResource
+    @GET
+    @Produces(APPLICATION_JSON)
+    @Path("/roles")
+    @Operation(summary = "List all active role definitions")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RoleDefinitionJson.class))))})
+    public Response getAvailableRoles(@jakarta.ws.rs.core.Context final HttpServletRequest request) {
+        final Map<String, List<String>> roles = securityApi.getAvailableRoles(context.createTenantContextNoAccountId(request));
+        final List<RoleDefinitionJson> json = roles
+                .entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new RoleDefinitionJson(e.getKey(), e.getValue()))
+                .toList();
+        return Response.status(Status.OK).entity(json).build();
+    }
 }

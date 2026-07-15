@@ -20,6 +20,7 @@ package org.killbill.billing.util.security.shiro.realm;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.shiro.SecurityUtils;
@@ -340,6 +341,25 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
         securityApi.updateRoleDefinition("original", List.of(), callContext);
         Assert.assertEquals(securityApi.getRoleDefinition("original", callContext).size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testGetAvailableRoles() throws SecurityApiException {
+        securityApi.addRoleDefinition("admin", List.of("tenant:add", "tenant:update"), callContext);
+        securityApi.addRoleDefinition("finance", List.of("invoice:credit"), callContext);
+
+        Map<String, List<String>> result = securityApi.getAvailableRoles(callContext);
+        Assert.assertTrue(result.keySet().containsAll(List.of("admin", "finance")));
+        Assert.assertTrue(result.values().stream()
+                                .flatMap(List::stream)
+                                .toList().containsAll(List.of("tenant:add", "tenant:update", "invoice:credit")));
+
+        securityApi.updateRoleDefinition("admin", List.of("tenant:add", "tenant:update", "tenant:delete"), callContext);
+        result = securityApi.getAvailableRoles(callContext);
+        Assert.assertTrue(result.values().stream()
+                                .flatMap(List::stream)
+                                .toList().containsAll(List.of("tenant:add", "tenant:update", "tenant:delete", "invoice:credit")));
+
     }
 
     private void testInvalidPermissionScenario(final List<String> permissions) {
