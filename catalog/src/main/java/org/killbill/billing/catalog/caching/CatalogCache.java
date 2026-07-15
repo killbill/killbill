@@ -17,6 +17,9 @@
 
 package org.killbill.billing.catalog.caching;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.VersionedCatalog;
@@ -26,6 +29,15 @@ public interface CatalogCache {
     public void loadDefaultCatalog(final String url) throws CatalogApiException;
 
     public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, InternalTenantContext tenantContext) throws CatalogApiException;
+
+    /**
+     * Returns a catalog scoped to the requested plan names. Implementations backed by a catalog plugin
+     * will forward {@code planNames} to the plugin so it can return a minimal catalog. When no plugin
+     * is registered, or when {@code planNames} is empty, this falls back to {@link #getCatalog}.
+     */
+    default VersionedCatalog getCatalogForPlans(final Set<String> planNames, final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext tenantContext) throws CatalogApiException {
+        return getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, tenantContext);
+    }
 
     public void clearCatalog(InternalTenantContext tenantContext);
 }

@@ -17,6 +17,8 @@
 
 package org.killbill.billing.subscription.catalog;
 
+import java.util.Set;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
@@ -54,6 +56,12 @@ public class DefaultSubscriptionCatalogApi implements SubscriptionCatalogApi {
     @Override
     public SubscriptionCatalog getFullCatalog(final InternalTenantContext context) throws CatalogApiException {
         final VersionedCatalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
+        return wrapCatalog(catalog, clock);
+    }
+
+    @Override
+    public SubscriptionCatalog getCatalogForPlans(final Set<String> planNames, final InternalTenantContext context) throws CatalogApiException {
+        final VersionedCatalog catalog = catalogInternalApi.getCatalogForPlans(planNames, true, true, context);
         return wrapCatalog(catalog, clock);
     }
 }

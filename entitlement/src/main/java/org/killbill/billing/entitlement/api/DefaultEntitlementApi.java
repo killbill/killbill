@@ -21,11 +21,13 @@ package org.killbill.billing.entitlement.api;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +46,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.AccountEventsStreams;
@@ -386,7 +389,8 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                 final VersionedCatalog catalog;
                 try {
-                    catalog = catalogInternalApi.getFullCatalog(true, true, contextWithValidAccountRecordId);
+                    final Set<String> planNames = collectPlanNamesFromSpecifiers(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
+                    catalog = catalogInternalApi.getCatalogForPlans(planNames, true, true, contextWithValidAccountRecordId);
                 } catch (final CatalogApiException e) {
                     throw new EntitlementApiException(e);
                 }
@@ -448,6 +452,25 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             }
         };
         return pluginExecution.executeWithPlugin(createBaseEntitlementsWithAddOns, pluginContext);
+    }
+
+    /**
+     * Collects all plan names from the specifiers for the purpose of requesting a plan-scoped catalog.
+     * Returns an empty set if any specifier uses a product+period based spec (plan name not yet known).
+     */
+    private Set<String> collectPlanNamesFromSpecifiers(final Iterable<BaseEntitlementWithAddOnsSpecifier> specifiers) {
+        final Set<String> planNames = new HashSet<>();
+        for (final BaseEntitlementWithAddOnsSpecifier spec : specifiers) {
+            for (final EntitlementSpecifier entSpec : spec.getEntitlementSpecifier()) {
+                final PlanPhaseSpecifier planPhaseSpec = entSpec.getPlanPhaseSpecifier();
+                if (planPhaseSpec == null || planPhaseSpec.getPlanName() == null) {
+                    // Cannot determine plan name from specifier — fall back to full catalog
+                    return java.util.Collections.emptySet();
+                }
+                planNames.add(planPhaseSpec.getPlanName());
+            }
+        }
+        return planNames;
     }
 
     private DefaultBaseEntitlementWithAddOnsSpecifier getFirstBaseEntitlementWithAddOnsSpecifier(final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers) throws SubscriptionBaseApiException {

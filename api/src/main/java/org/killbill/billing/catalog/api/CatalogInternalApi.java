@@ -17,11 +17,23 @@
 
 package org.killbill.billing.catalog.api;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 
 public interface CatalogInternalApi {
 
     public VersionedCatalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+
+    /**
+     * Like {@link #getFullCatalog} but forwards {@code planNames} to the catalog plugin so it can
+     * return a minimal catalog scoped to those plans. Falls back to the full catalog when
+     * {@code planNames} is empty or no plugin is registered.
+     */
+    default VersionedCatalog getCatalogForPlans(Set<String> planNames, boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException {
+        return getFullCatalog(useDefaultCatalog, filterTemplateCatalog, context);
+    }
 
     public PriceOverrideSvcStatus getPriceOverrideSvcStatus();
 }

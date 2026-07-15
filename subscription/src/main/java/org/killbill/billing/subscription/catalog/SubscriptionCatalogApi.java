@@ -17,6 +17,9 @@
 
 package org.killbill.billing.subscription.catalog;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PriceOverrideSvcStatus;
@@ -24,6 +27,15 @@ import org.killbill.billing.catalog.api.PriceOverrideSvcStatus;
 public interface SubscriptionCatalogApi {
 
     public SubscriptionCatalog getFullCatalog(InternalTenantContext context) throws CatalogApiException;
+
+    /**
+     * Like {@link #getFullCatalog} but forwards {@code planNames} as a hint to the catalog plugin
+     * so it can return a minimal catalog. Falls back to {@link #getFullCatalog} when
+     * {@code planNames} is empty.
+     */
+    default SubscriptionCatalog getCatalogForPlans(Set<String> planNames, InternalTenantContext context) throws CatalogApiException {
+        return getFullCatalog(context);
+    }
 
     public PriceOverrideSvcStatus getPriceOverrideSvcStatus();
 

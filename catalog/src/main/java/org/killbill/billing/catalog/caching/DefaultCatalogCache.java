@@ -136,10 +136,51 @@ public class DefaultCatalogCache implements CatalogCache {
     }
 
     @Override
+    public VersionedCatalog getCatalogForPlans(final Set<String> planNames, final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext tenantContext) throws CatalogApiException {
+        if (internalUse) {
+            Preconditions.checkState(tenantContext.getAccountRecordId() != null, "Unexpected null accountRecordId in context issued from internal Kill Bill service");
+        }
+
+        // Empty planNames means caller does not know the plan names (read path): fall back to full catalog
+        if (planNames == null || planNames.isEmpty()) {
+            return getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, tenantContext);
+        }
+
+        // Try plan-scoped fetch from plugin (result is NOT cached — plugin is expected to return
+        // null from getLatestCatalogVersion() for per-account optimized calls)
+        final VersionedCatalog pluginVersionedCatalog = getCatalogForPlansFromPlugins(planNames, tenantContext);
+        if (pluginVersionedCatalog != null) {
+            return pluginVersionedCatalog;
+        }
+
+        // No plugin registered: fall back to full XML-based catalog
+        return getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, tenantContext);
+    }
+
+    @Override
     public void clearCatalog(final InternalTenantContext tenantContext) {
         if (!InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId())) {
             cacheController.remove(tenantContext.getTenantRecordId());
         }
+    }
+
+    private VersionedCatalog getCatalogForPlansFromPlugins(final Set<String> planNames, final InternalTenantContext internalTenantContext) throws CatalogApiException {
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
+        final Set<String> allServices = pluginRegistry.getAllServices();
+        for (final String service : allServices) {
+            final CatalogPluginApi plugin = pluginRegistry.getServiceForName(service);
+
+            // Call the plan-scoped overload; the plugin's default implementation falls back to the
+            // full-catalog overload, so existing plugins are unaffected.
+            final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(planNames, Collections.emptyList(), tenantContext);
+            if (pluginCatalog != null) {
+                if (allServices.size() > 1) {
+                    logger.info("Returning catalog for plans {} from plugin {} on tenant {}", planNames, service, internalTenantContext.getTenantRecordId());
+                }
+                return versionedCatalogMapper.toVersionedCatalog(pluginCatalog);
+            }
+        }
+        return null;
     }
 
     private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {

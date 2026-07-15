@@ -28,4 +28,13 @@ public interface CatalogService extends KillbillService {
     public VersionedCatalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
     public VersionedCatalog getFullCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+
+    /**
+     * Like {@link #getFullCatalogForInternalUse} but forwards {@code planNames} to the catalog plugin
+     * so it can return a minimal catalog scoped to those plans. Falls back to the full catalog when
+     * {@code planNames} is empty or no plugin is registered.
+     */
+    default VersionedCatalog getCatalogForPlansForInternalUse(java.util.Set<String> planNames, boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException {
+        return getFullCatalogForInternalUse(useDefaultCatalog, filterTemplateCatalog, context);
+    }
 }

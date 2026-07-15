@@ -109,6 +109,11 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
         return getCatalog(useDefaultCatalog, filterTemplateCatalog, true, context);
     }
 
+    @Override
+    public VersionedCatalog getCatalogForPlansForInternalUse(final java.util.Set<String> planNames, final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+        return catalogCache.getCatalogForPlans(planNames, useDefaultCatalog, filterTemplateCatalog, true, context);
+    }
+
     private VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext context) throws CatalogApiException {
         return catalogCache.getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, context);
     }

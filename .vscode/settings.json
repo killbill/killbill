@@ -5,7 +5,7 @@
             "name": "TestNG",
             "workingDirectory": "${workspaceFolder}",
             "args": [],
-            "vmArgs": ["-ea"],
+            "vmArgs": ["-ea", "-Dorg.killbill.billing.dbi.test.useLocalDb=true"],
             "env": {},
             "sourcePaths": ["src/test/java"],
             "testKind": "testng"

@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -197,7 +198,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         try {
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
+            final SubscriptionCatalog catalog = subscriptionCatalogApi.getCatalogForPlans(Set.of(currentPlan.getName()), internalCallContext);
             final BillingActionPolicy policy = catalog.planCancelPolicy(planPhase, clock.getUTCNow(), subscription.getStartDate());
 
             Preconditions.checkState(policy != BillingActionPolicy.START_OF_TERM, "A default START_OF_TERM policy is not availaible");
@@ -218,7 +219,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         try {
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
+            final Plan currentPlan = subscription.getCurrentOrPendingPlan();
+            final SubscriptionCatalog catalog = subscriptionCatalogApi.getCatalogForPlans(Set.of(currentPlan.getName()), internalCallContext);
             final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : context.getCreatedDate();
 
             return doCancelPlan(Map.of(subscription, effectiveDate), catalog, internalCallContext);
@@ -235,7 +237,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         try {
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
+            final Plan currentPlan = subscription.getCurrentOrPendingPlan();
+            final SubscriptionCatalog catalog = subscriptionCatalogApi.getCatalogForPlans(Set.of(currentPlan.getName()), internalCallContext);
             return cancelWithPolicyNoValidationAndCatalog(List.of(subscription), policy, catalog, internalCallContext);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
@@ -323,7 +326,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         try {
 
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
+            final Plan currentPlan = subscription.getCurrentOrPendingPlan();
+            final SubscriptionCatalog catalog = subscriptionCatalogApi.getCatalogForPlans(Set.of(currentPlan.getName()), internalCallContext);
             final SubscriptionBaseEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
                                                                                      .setSubscriptionId(subscription.getId())
                                                                                      .setEffectiveDate(context.getCreatedDate())
@@ -448,7 +452,11 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                             subscription.getCurrentOrPendingPhase().getPhaseType());
 
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
+            // Include target plan name in the hint when available (PlanSpecifier may use product+period instead)
+            final Set<String> planNames = toPlanPhase.getPlanName() != null
+                    ? Set.of(currentPlan.getName(), toPlanPhase.getPlanName())
+                    : Set.of(currentPlan.getName());
+            final SubscriptionCatalog catalog = subscriptionCatalogApi.getCatalogForPlans(planNames, internalCallContext);
             planChangeResult = catalog.getPlanChangeResult(fromPlanPhase, toPlanPhase, effectiveDate);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
@@ -465,8 +473,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(spec.getOverrides(), context);
 
-        final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
         final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanPhaseSpecifier();
+        final String currentPlanName = subscription.getCurrentOrPendingPlan().getName();
+        final Set<String> planNames = planPhaseSpecifier.getPlanName() != null
+                ? Set.of(currentPlanName, planPhaseSpecifier.getPlanName())
+                : Set.of(currentPlanName);
+        final SubscriptionCatalog catalog = subscriptionCatalogApi.getCatalogForPlans(planNames, internalCallContext);
         final StaticCatalog versionCatalog = catalog.versionForDate(effectiveDate);
         final Plan newPlan = versionCatalog.createOrFindPlan(planPhaseSpecifier, overridesWithContext);
 
