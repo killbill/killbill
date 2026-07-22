@@ -64,8 +64,10 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
-    // See io.swagger.v3.jaxrs2.integration.resources.OpenApiResource
-    private static final String SWAGGER_PATH = "openapi.*";
+    // Matches both /swagger.json|yaml (backward-compatible Swagger 2.0 spec served by
+    // SwaggerResource) and /openapi.json|yaml (native OAS3 spec served by swagger-core's
+    // OpenApiResource). Both must be routed through Jersey.
+    private static final String SWAGGER_PATH = "(openapi|swagger).*";
 
     private KillbillEventHandler killbilleventHandler;
 
