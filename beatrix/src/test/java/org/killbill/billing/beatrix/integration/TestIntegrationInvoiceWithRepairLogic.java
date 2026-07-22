@@ -1488,4 +1488,117 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         checkNoMoreInvoiceToGenerate(account.getId());
     }
+    
+    @Test(groups = "slow", description = "Replication of the bash script's triple overlap bug via manual item injection")
+    public void testTripleOverlapDoubleBillingCrash() throws Exception {
+
+        clock.setDay(new LocalDate(2025, 7, 2));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, "DEFAULT", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(
+                account.getId(),
+                new DefaultEntitlementSpecifier(spec),
+                "externalKey",
+                clock.getUTCToday(), clock.getUTCToday(), false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.setDay(new LocalDate(2025, 8, 1));
+        assertListenerStatus();
+
+        // Apply blocking states
+        clock.setDay(new LocalDate(2025, 8, 15));
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCToday(), Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        clock.setDay(new LocalDate(2025, 9, 27));
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCToday(), Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        clock.setDay(new LocalDate(2026, 2, 15));
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCToday(), Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        clock.setDay(new LocalDate(2026, 2, 24));
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCToday(), Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //
+        // ALL items on ONE invoice — eliminates cross-invoice adjustment events.
+        // The tree only cares about item dates/subscriptionId, not invoice boundaries.
+        //
+        final InvoiceModelDao badInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null,
+                clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.COMMITTED, false);
+
+        // Recurring 1: full annual 08-01 → 08-01
+        final InvoiceItemModelDao recurring1 = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.RECURRING,
+                badInvoice.getId(), account.getId(),
+                bpEntitlement.getBundleId(), entitlementId, "", "Shotgun", "shotgun-annual", "shotgun-annual-evergreen", null,
+                null, new LocalDate(2025, 8, 1), new LocalDate(2026, 8, 1),
+                new BigDecimal("2399.95"), new BigDecimal("2399.95"), account.getCurrency(), null);
+
+        // Repair 1: pause at 08-15 → cancels to 08-01
+        final InvoiceItemModelDao repair1 = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.REPAIR_ADJ,
+                badInvoice.getId(), account.getId(),
+                bpEntitlement.getBundleId(), entitlementId, null, null, null, null, null,
+                null, new LocalDate(2025, 8, 15), new LocalDate(2026, 8, 1),
+                new BigDecimal("-2307.89"), new BigDecimal("2399.95"), account.getCurrency(), recurring1.getId());
+
+        // Recurring 2: resume at 09-27 → new annual ends at 09-01 (BCD-aligned, NOT 08-01!)
+        final InvoiceItemModelDao recurring2 = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.RECURRING,
+                badInvoice.getId(), account.getId(),
+                bpEntitlement.getBundleId(), entitlementId, "", "Shotgun", "shotgun-annual", "shotgun-annual-evergreen", null,
+                null, new LocalDate(2025, 9, 27), new LocalDate(2026, 9, 1),
+                new BigDecimal("2229.00"), new BigDecimal("2399.95"), account.getCurrency(), null);
+
+        // Repair 2: pause at 02-15 → cancels to 09-01
+        final InvoiceItemModelDao repair2 = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.REPAIR_ADJ,
+                badInvoice.getId(), account.getId(),
+                bpEntitlement.getBundleId(), entitlementId, null, null, null, null, null,
+                null, new LocalDate(2026, 2, 15), new LocalDate(2026, 9, 1),
+                new BigDecimal("-1301.89"), new BigDecimal("2399.95"), account.getCurrency(), recurring2.getId());
+
+        // Recurring 3: resume at 02-24 → new annual ends at 02-01
+        final InvoiceItemModelDao recurring3 = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.RECURRING,
+                badInvoice.getId(), account.getId(),
+                bpEntitlement.getBundleId(), entitlementId, "", "Shotgun", "shotgun-annual", "shotgun-annual-evergreen", null,
+                null, new LocalDate(2026, 2, 24), new LocalDate(2027, 2, 1),
+                new BigDecimal("2248.88"), new BigDecimal("2399.95"), account.getCurrency(), null);
+
+        badInvoice.addInvoiceItem(recurring1);
+        badInvoice.addInvoiceItem(repair1);
+        badInvoice.addInvoiceItem(recurring2);
+        badInvoice.addInvoiceItem(repair2);
+        badInvoice.addInvoiceItem(recurring3);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        insertInvoiceItems(badInvoice);
+        assertListenerStatus();
+
+        // DETONATION
+        clock.setDay(new LocalDate(2026, 3, 1));
+        
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
+            fail("Engine failed to crash. Expected ILLEGAL_INVOICING_STATE due to double billing overlap.");
+        } catch (final InvoiceApiException e) {
+            assertNotNull(e.getCause(), "Expected an underlying cause for the InvoiceApiException");
+            assertTrue(e.getCause() instanceof IllegalStateException,
+                    "Expected cause to be IllegalStateException but got: " + e.getCause().getClass().getName());
+            assertTrue(e.getCause().getMessage().contains("Double billing detected"),
+                    "Expected message to contain 'Double billing detected'");
+        }
+        assertListenerStatus();        
+    }   
 }
