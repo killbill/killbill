@@ -74,6 +74,8 @@ public class SubscriptionJson extends JsonBase {
     private final EntitlementSourceType sourceType;
     private final DateTime cancelledDate;
     private final LocalDate chargedThroughDate;
+    @Schema(description = "Effective start of billing for this subscription, populated by the server. To request a specific billing start date " +
+                          "when creating a subscription, use the 'billingDate' query parameter instead of setting this field in the request body.")
     private final DateTime billingStartDate;
     private final DateTime billingEndDate;
     private final Integer billCycleDayLocal;
