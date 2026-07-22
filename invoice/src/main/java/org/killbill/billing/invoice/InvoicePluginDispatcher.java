@@ -117,7 +117,8 @@ public class InvoicePluginDispatcher {
                               final CallContext callContext,
                               final Iterable<PluginProperty> pluginProperties,
                               final InternalTenantContext internalTenantContext) throws InvoiceApiException {
-        log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
+        final UUID accountId = callContext.getAccountId();
+        log.debug("Invoking invoice plugins priorCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}'", accountId, targetDate, isDryRun, isRescheduled);
 
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
@@ -139,11 +140,11 @@ public class InvoicePluginDispatcher {
             if (priorInvoiceResult.getRescheduleDate() != null &&
                 (earliestRescheduleDate == null || earliestRescheduleDate.compareTo(priorInvoiceResult.getRescheduleDate()) > 0)) {
                 earliestRescheduleDate = priorInvoiceResult.getRescheduleDate();
-                log.info("Invoice plugin {} rescheduled invoice generation to {} for targetDate {}", invoicePluginName, earliestRescheduleDate, targetDate);
+                log.info("Invoice plugin {} rescheduled invoice generation for accountId='{}', targetDate='{}', rescheduled to '{}'", invoicePluginName, accountId, targetDate, earliestRescheduleDate);
             }
 
             if (priorInvoiceResult.isAborted()) {
-                log.info("Invoice plugin {} aborted invoice generation for targetDate {}", invoicePluginName, targetDate);
+                log.info("Invoice plugin {} aborted invoice generation for accountId='{}', targetDate='{}'", invoicePluginName, accountId, targetDate);
                 throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, invoicePluginName);
             }
 
@@ -163,7 +164,7 @@ public class InvoicePluginDispatcher {
                               final CallContext callContext,
                               final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
-        log.debug("Invoking invoice plugins onSuccessCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
+        log.debug("Invoking invoice plugins onSuccessCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", callContext.getAccountId(), targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
@@ -175,7 +176,7 @@ public class InvoicePluginDispatcher {
                               final CallContext callContext,
                               final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
-        log.debug("Invoking invoice plugins onFailureCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
+        log.debug("Invoking invoice plugins onFailureCall: accountId='{}', targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", callContext.getAccountId(), targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
@@ -214,8 +215,8 @@ public class InvoicePluginDispatcher {
                     }
                 }
             } catch (final RuntimeException e) {
-                log.warn("Invoice plugin {} threw an exception during {} call for targetDate='{}'",
-                         invoicePluginName, isSuccess ? "onSuccessCall" : "onFailureCall", targetDate, e);
+                log.warn("Invoice plugin {} threw an exception during {} call for accountId='{}', targetDate='{}'",
+                         invoicePluginName, isSuccess ? "onSuccessCall" : "onFailureCall", callContext.getAccountId(), targetDate, e);
             }
         }
     }
