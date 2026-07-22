@@ -18,8 +18,11 @@
 package org.killbill.billing.server.filters;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.inject.Singleton;
 import jakarta.servlet.Filter;
@@ -38,9 +41,20 @@ import org.killbill.commons.utils.net.HttpHeaders;
 @Singleton
 public class ResponseCorsFilter implements Filter {
 
+    private final Set<String> allowedOrigins;
     private final String allowedHeaders;
+    private final String exposedHeaders;
 
     public ResponseCorsFilter() {
+        final String originsProperty = System.getProperty("org.killbill.server.cors.allowed.origins", "");
+        if (originsProperty.isEmpty()) {
+            allowedOrigins = Collections.emptySet();
+        } else {
+            allowedOrigins = Stream.of(originsProperty.split(","))
+                                   .map(String::trim)
+                                   .collect(Collectors.toUnmodifiableSet());
+        }
+
         allowedHeaders = Joiner.on(",")
                                .join(List.of(HttpHeaders.AUTHORIZATION,
                                              HttpHeaders.CONTENT_TYPE,
@@ -56,6 +70,17 @@ public class ResponseCorsFilter implements Filter {
                                              JaxrsResource.HDR_PAGINATION_TOTAL_NB_RECORDS,
                                              JaxrsResource.HDR_REASON)
                                     );
+
+        // Expose pagination and location headers, but not auth credentials
+        exposedHeaders = Joiner.on(",")
+                               .join(List.of(HttpHeaders.CONTENT_TYPE,
+                                             HttpHeaders.LOCATION,
+                                             JaxrsResource.HDR_PAGINATION_CURRENT_OFFSET,
+                                             JaxrsResource.HDR_PAGINATION_MAX_NB_RECORDS,
+                                             JaxrsResource.HDR_PAGINATION_NEXT_OFFSET,
+                                             JaxrsResource.HDR_PAGINATION_NEXT_PAGE_URI,
+                                             JaxrsResource.HDR_PAGINATION_TOTAL_NB_RECORDS)
+                                    );
     }
 
     @Override
@@ -67,12 +92,21 @@ public class ResponseCorsFilter implements Filter {
         final HttpServletResponse res = (HttpServletResponse) response;
         final HttpServletRequest req = (HttpServletRequest) request;
 
-        final String origin = Objects.requireNonNullElse(req.getHeader(HttpHeaders.ORIGIN), "*");
-        res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+        final String origin = req.getHeader(HttpHeaders.ORIGIN);
+
+        if (origin != null && allowedOrigins.contains(origin)) {
+            // Origin is explicitly allowed — reflect it with credentials
+            res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+        } else if (allowedOrigins.isEmpty()) {
+            // No allowlist configured — allow all origins WITHOUT credentials (safe default)
+            res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        }
+        // If origin is present but not in allowlist, no CORS headers are added
+
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, DELETE, PUT, OPTIONS");
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, allowedHeaders);
-        res.addHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, allowedHeaders);
-        res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+        res.addHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, exposedHeaders);
         chain.doFilter(request, response);
     }
 
