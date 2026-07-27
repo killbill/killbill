@@ -100,6 +100,17 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // Disable WADL
         builder.addJerseyParam("jersey.config.server.wadl.disableWadl", "true");
 
+        // See https://github.com/killbill/killbill/issues/2284
+        // Align the Swagger Core context ID used at HTTP request time with the one pre-built during
+        // startLifecycleStage3. Without this, OpenApiResource derives the context ID from the servlet name
+        // ("openapi.context.id.servlet.<name>"), which does not match the default ID ("openapi.context.id.default")
+        // used by the startup JaxrsOpenApiContextBuilder call that has no ServletConfig. The mismatch causes a cache
+        // miss on every first request after a server restart, triggering a full JAX-RS classpath scan that can
+        // take 30-60s on a constrained instance (e.g. t2.medium with exhausted CPU credits), long enough for the
+        // client to close the connection and produce a Broken pipe error.
+        // "openapi.context.id" is a "swagger-core only" parameter, so no side effect would be happened.
+        builder.addJerseyParam("openapi.context.id", "openapi.context.id.default");
+
         if (config.isConfiguredToReturnGZIPResponses()) {
             logger.info("Enable http gzip responses");
             builder.addJerseyResourceClass(EncodingFilter.class.getName());
