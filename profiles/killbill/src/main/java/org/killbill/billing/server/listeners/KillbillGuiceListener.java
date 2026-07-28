@@ -24,6 +24,7 @@ import java.util.Map;
 
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
+import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.Components;
 import jakarta.servlet.ServletContext;
 
@@ -99,6 +100,17 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
         // Disable WADL
         builder.addJerseyParam("jersey.config.server.wadl.disableWadl", "true");
+
+        // See https://github.com/killbill/killbill/issues/2284
+        // Align the Swagger Core context ID used at HTTP request time with the one pre-built during
+        // startLifecycleStage3. Without this, OpenApiResource derives the context ID from the servlet name
+        // ("openapi.context.id.servlet.<name>"), which does not match the default ID ("openapi.context.id.default")
+        // used by the startup JaxrsOpenApiContextBuilder call that has no ServletConfig. The mismatch causes a cache
+        // miss on every first request after a server restart, triggering a full JAX-RS classpath scan that can
+        // take 30-60s on a constrained instance (e.g. t2.medium with exhausted CPU credits), long enough for the
+        // client to close the connection and produce a Broken pipe error.
+        // "openapi.context.id" is a "swagger-core only" parameter, so no side effect would be happened.
+        builder.addJerseyParam("openapi.context.id", "openapi.context.id.default");
 
         if (config.isConfiguredToReturnGZIPResponses()) {
             logger.info("Enable http gzip responses");
@@ -177,10 +189,15 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
                 .openAPI(openAPI)
                 .scannerClass(KillBillApiScanner.class.getName())
                 .resourcePackages(java.util.Set.of("org.killbill.billing.jaxrs.resources"))
-                .prettyPrint(true);
+                .prettyPrint(true)
+                // https://github.com/killbill/killbill/issues/2284#issuecomment-5098287101
+                .cacheTTL(Long.MAX_VALUE);
 
         try {
-            new JaxrsOpenApiContextBuilder<>().openApiConfiguration(swaggerConfig).buildContext(true);
+            final OpenApiContext ctx = new JaxrsOpenApiContextBuilder<>().openApiConfiguration(swaggerConfig).buildContext(true);
+            // Pre-warm: run the scan now so the first HTTP request to /openapi.json returns immediately
+            // Read more: https://github.com/killbill/killbill/issues/2284
+            ctx.read();
         } catch (final OpenApiConfigurationException e) {
             logger.error("Failed to initialize OpenAPI/Swagger configuration", e);
         }
