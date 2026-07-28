@@ -196,6 +196,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <!-- https://github.com/eclipse/jetty.project/issues/5943 -->
@@ -207,6 +208,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-io</artifactId>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <!-- https://github.com/eclipse/jetty.project/issues/5943 -->
@@ -230,6 +232,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <!-- https://github.com/eclipse/jetty.project/issues/5943 -->
@@ -246,6 +249,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <!-- https://github.com/eclipse/jetty.project/issues/5943 -->
