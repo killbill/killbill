@@ -24,6 +24,7 @@ import java.util.Map;
 
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
+import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.Components;
 import jakarta.servlet.ServletContext;
 
@@ -188,10 +189,15 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
                 .openAPI(openAPI)
                 .scannerClass(KillBillApiScanner.class.getName())
                 .resourcePackages(java.util.Set.of("org.killbill.billing.jaxrs.resources"))
-                .prettyPrint(true);
+                .prettyPrint(true)
+                // https://github.com/killbill/killbill/issues/2284#issuecomment-5098287101
+                .cacheTTL(Long.MAX_VALUE);
 
         try {
-            new JaxrsOpenApiContextBuilder<>().openApiConfiguration(swaggerConfig).buildContext(true);
+            final OpenApiContext ctx = new JaxrsOpenApiContextBuilder<>().openApiConfiguration(swaggerConfig).buildContext(true);
+            // Pre-warm: run the scan now so the first HTTP request to /openapi.json returns immediately
+            // Read more: https://github.com/killbill/killbill/issues/2284
+            ctx.read();
         } catch (final OpenApiConfigurationException e) {
             logger.error("Failed to initialize OpenAPI/Swagger configuration", e);
         }
