@@ -48,7 +48,6 @@ import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
-import com.google.inject.util.Providers;
 
 public class CacheModule extends KillBillModule {
 
