@@ -54,7 +54,7 @@ import org.killbill.commons.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.annotation.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Format invoice fields
