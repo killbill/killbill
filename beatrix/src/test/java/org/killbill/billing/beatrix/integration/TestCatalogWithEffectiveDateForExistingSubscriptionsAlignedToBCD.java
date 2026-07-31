@@ -18,18 +18,23 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
@@ -55,8 +60,20 @@ import static org.testng.Assert.assertNotNull;
  *   v1  2026-07-01  electricity-monthly  100  (no effectiveDateForExistingSubscriptions)
  *   v2  2026-07-15  electricity-monthly   50  effectiveDateForExistingSubscriptions 2026-07-15
  *   v3  2026-07-18  electricity-monthly  150  effectiveDateForExistingSubscriptions 2026-07-18
+ *
+ * Each test collects every billing period it checks and logs a summary table before asserting, so
+ * a failing run shows at a glance which periods were mispriced and which catalog version they were
+ * stuck on.
  */
 public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD extends TestIntegrationBase {
+
+    private static final String COLLISION_EXPLANATION =
+            "Both catalog v2 (2026-07-15, price 50) and v3 (2026-07-18, price 150) fall inside the subscription's "
+            + "billing cycle 2026-07-01 -> 2026-08-01, so both are aligned onto 2026-08-01. The two resulting CHANGE "
+            + "billing events are then indistinguishable - same subscription, same effective date, and the same "
+            + "totalOrdering inherited from the CREATE transition - so DefaultBillingEvent.compareTo returns 0 and "
+            + "DefaultBillingEventSet (a TreeSet) silently drops the second add(). Insertion order is catalog "
+            + "effective date ascending, so the survivor is v2 (50) and the more recent v3 (150) is lost.";
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -74,8 +91,6 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
      *   2026-07-15  catalog v2 makes the price 50,  effectiveDateForExistingSubscriptions 2026-07-15
      *   2026-07-18  catalog v3 makes the price 150, effectiveDateForExistingSubscriptions 2026-07-18
      *
-     * Both changes fall inside the 2026-07-01 -> 2026-08-01 cycle, so both align onto 2026-08-01.
-     *
      * EXPECTED : 2026-08-01 -> 2026-09-01 bills 150, from catalog v3 (the most recent change wins).
      * CURRENTLY: it bills 50, from catalog v2, and keeps billing 50 on every later period.
      */
@@ -85,7 +100,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
         clock.setDay(new LocalDate(2026, 7, 1));
 
         final VersionedCatalog catalog = catalogUserApi.getCatalog("ElectricUtility", callContext);
-        Assert.assertEquals(catalog.getVersions().size(), 3, "Expected the 3 catalog versions v1/v2/v3 to be loaded");
+        Assert.assertEquals(catalog.getVersions().size(), 3, "Expected catalog versions v1/v2/v3 to be loaded");
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
@@ -95,48 +110,29 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
                                                            NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         assertNotNull(bpEntitlement);
 
+        final List<PeriodResult> results = new ArrayList<PeriodResult>();
+
         // 2026-07-01 -> 2026-08-01 at 100, from catalog v1. The in-flight period is never disturbed,
         // which is the point of the alignment, so this is correct today and must stay correct.
-        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2026, 7, 1), new LocalDate(2026, 8, 1),
-                                                                                      InvoiceItemType.RECURRING, new BigDecimal("100.00")));
-        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0,
-                            "First period should be priced from catalog v1 (2026-07-01)");
+        results.add(recordRecurring(account, 1, new LocalDate(2026, 7, 1), new LocalDate(2026, 8, 1),
+                                    new BigDecimal("100.00"), catalog, 0));
 
         // 2026-08-01 -> 2026-09-01 must pick up the LAST change made during the cycle, i.e. v3 at 150.
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); // 2026-08-01
         assertListenerStatus();
-
-        try {
-            curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                                     new ExpectedInvoiceItemCheck(new LocalDate(2026, 8, 1), new LocalDate(2026, 9, 1),
-                                                                                  InvoiceItemType.RECURRING, new BigDecimal("150.00")));
-        } catch (final AssertionError e) {
-            throw new AssertionError("Catalog change to 150 (v3, effectiveDateForExistingSubscriptions 2026-07-18) was NOT applied.\n"
-                                     + "Both v2 (2026-07-15, price 50) and v3 (2026-07-18, price 150) fall inside the subscription's\n"
-                                     + "first billing cycle 2026-07-01 -> 2026-08-01, so both are aligned onto 2026-08-01. The two\n"
-                                     + "resulting CHANGE billing events are then indistinguishable - same subscription, same effective\n"
-                                     + "date, and the same totalOrdering inherited from the CREATE transition - so\n"
-                                     + "DefaultBillingEvent.compareTo returns 0 and DefaultBillingEventSet (a TreeSet) silently drops\n"
-                                     + "the second add(). Insertion order is catalog effective date ascending, so the survivor is v2\n"
-                                     + "and the subscription bills 50 instead of 150.\n"
-                                     + "Original failure follows:\n" + e.getMessage(), e);
-        }
-        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(2).getEffectiveDate()), 0,
-                            "Period 2026-08-01 -> 2026-09-01 should be priced from catalog v3 (2026-07-18), the most recent change in the cycle");
+        results.add(recordRecurring(account, 2, new LocalDate(2026, 8, 1), new LocalDate(2026, 9, 1),
+                                    new BigDecimal("150.00"), catalog, 2));
 
         // The candidate list is rebuilt identically on every invoice run, so the loss is permanent
         // rather than limited to the first boundary after the changes.
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); // 2026-09-01
         assertListenerStatus();
+        results.add(recordRecurring(account, 3, new LocalDate(2026, 9, 1), new LocalDate(2026, 10, 1),
+                                    new BigDecimal("150.00"), catalog, 2));
 
-        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2026, 9, 1), new LocalDate(2026, 10, 1),
-                                                                              InvoiceItemType.RECURRING, new BigDecimal("150.00")));
-        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(2).getEffectiveDate()), 0,
-                            "Later periods should also be priced from catalog v3 (2026-07-18)");
+        reportAndAssert("Two catalog changes within the same billing cycle", results, catalog);
     }
 
     /**
@@ -163,22 +159,144 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
                                                            NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         assertNotNull(bpEntitlement);
 
+        final List<PeriodResult> results = new ArrayList<PeriodResult>();
+
         // Created on catalog v2, so the first period is priced at 50
-        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2026, 7, 16), new LocalDate(2026, 8, 16),
-                                                                                      InvoiceItemType.RECURRING, new BigDecimal("50.00")));
-        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0,
-                            "First period should be priced from catalog v2 (2026-07-15)");
+        results.add(recordRecurring(account, 1, new LocalDate(2026, 7, 16), new LocalDate(2026, 8, 16),
+                                    new BigDecimal("50.00"), catalog, 1));
 
         // Only v3 is pending for this subscription, so nothing collides and 150 applies normally
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); // 2026-08-16
         assertListenerStatus();
+        results.add(recordRecurring(account, 2, new LocalDate(2026, 8, 16), new LocalDate(2026, 9, 16),
+                                    new BigDecimal("150.00"), catalog, 2));
 
-        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2026, 8, 16), new LocalDate(2026, 9, 16),
-                                                                              InvoiceItemType.RECURRING, new BigDecimal("150.00")));
-        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(2).getEffectiveDate()), 0,
-                            "A single pending catalog change must apply at the next boundary, priced from catalog v3");
+        reportAndAssert("Single catalog change within the billing cycle (control)", results, catalog);
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------------------------------
+
+    /**
+     * Looks up the RECURRING item covering the given period and records what was billed against what
+     * was expected. Nothing is asserted here so that every period is collected before the summary
+     * table is logged.
+     */
+    private PeriodResult recordRecurring(final Account account,
+                                         final int invoiceNb,
+                                         final LocalDate startDate,
+                                         final LocalDate endDate,
+                                         final BigDecimal expectedAmount,
+                                         final VersionedCatalog catalog,
+                                         final int expectedCatalogVersionIdx) throws Exception {
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
+        Assert.assertTrue(invoices.size() >= invoiceNb,
+                          String.format("Expected at least %d invoices for the account but found %d", invoiceNb, invoices.size()));
+        final Invoice invoice = invoices.get(invoiceNb - 1);
+
+        InvoiceItem recurring = null;
+        for (final InvoiceItem item : invoice.getInvoiceItems()) {
+            if (item.getInvoiceItemType() == InvoiceItemType.RECURRING &&
+                item.getStartDate().compareTo(startDate) == 0 &&
+                item.getEndDate().compareTo(endDate) == 0) {
+                recurring = item;
+                break;
+            }
+        }
+
+        final Date expectedVersion = catalog.getVersions().get(expectedCatalogVersionIdx).getEffectiveDate();
+        if (recurring == null) {
+            return new PeriodResult(invoiceNb, startDate, endDate, expectedAmount, null, expectedVersion, null);
+        }
+        return new PeriodResult(invoiceNb, startDate, endDate, expectedAmount, recurring.getAmount(),
+                                expectedVersion, recurring.getCatalogEffectiveDate() == null ? null : recurring.getCatalogEffectiveDate().toDate());
+    }
+
+    /**
+     * Logs a table of every period checked, then fails if any of them is wrong.
+     */
+    private void reportAndAssert(final String title, final List<PeriodResult> results, final VersionedCatalog catalog) {
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append('\n').append(title).append('\n');
+        sb.append("+---------+---------------------------+----------+----------+--------+----------------------+----------------------+\n");
+        sb.append("| Invoice | Period                    | Expected |   Actual | Result | Catalog used         | Catalog expected     |\n");
+        sb.append("+---------+---------------------------+----------+----------+--------+----------------------+----------------------+\n");
+
+        int failures = 0;
+        for (final PeriodResult r : results) {
+            if (!r.passed()) {
+                failures++;
+            }
+            sb.append(String.format("| %7d | %s -> %s | %8s | %8s | %-6s | %-20s | %-20s |%n",
+                                    r.invoiceNb,
+                                    r.startDate,
+                                    r.endDate,
+                                    r.expectedAmount.toPlainString(),
+                                    r.actualAmount == null ? "MISSING" : r.actualAmount.toPlainString(),
+                                    r.passed() ? "PASS" : "FAIL",
+                                    versionLabel(catalog, r.actualCatalogVersion),
+                                    versionLabel(catalog, r.expectedCatalogVersion)));
+        }
+        sb.append("+---------+---------------------------+----------+----------+--------+----------------------+----------------------+\n");
+
+        final String table = sb.toString();
+        log.info(table);
+
+        if (failures > 0) {
+            // The table goes into the assertion message itself so that it shows up in the surefire
+            // failure report, rather than being buried in the test log.
+            Assert.fail(String.format("%d of %d billing periods were mispriced or priced from the wrong catalog version.%n%s%n%s",
+                                      failures, results.size(), table, COLLISION_EXPLANATION));
+        }
+    }
+
+    private String versionLabel(final VersionedCatalog catalog, final Date date) {
+        if (date == null) {
+            return "n/a";
+        }
+        for (int i = 0; i < catalog.getVersions().size(); i++) {
+            if (catalog.getVersions().get(i).getEffectiveDate().compareTo(date) == 0) {
+                return String.format("%s (v%d)", new DateTime(date, DateTimeZone.UTC).toLocalDate(), i + 1);
+            }
+        }
+        return new DateTime(date, DateTimeZone.UTC).toLocalDate().toString();
+    }
+
+    private static final class PeriodResult {
+
+        private final int invoiceNb;
+        private final LocalDate startDate;
+        private final LocalDate endDate;
+        private final BigDecimal expectedAmount;
+        private final BigDecimal actualAmount;
+        private final Date expectedCatalogVersion;
+        private final Date actualCatalogVersion;
+
+        private PeriodResult(final int invoiceNb,
+                             final LocalDate startDate,
+                             final LocalDate endDate,
+                             final BigDecimal expectedAmount,
+                             final BigDecimal actualAmount,
+                             final Date expectedCatalogVersion,
+                             final Date actualCatalogVersion) {
+            this.invoiceNb = invoiceNb;
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.expectedAmount = expectedAmount;
+            this.actualAmount = actualAmount;
+            this.expectedCatalogVersion = expectedCatalogVersion;
+            this.actualCatalogVersion = actualCatalogVersion;
+        }
+
+        private boolean passed() {
+            return actualAmount != null &&
+                   actualAmount.compareTo(expectedAmount) == 0 &&
+                   actualCatalogVersion != null &&
+                   actualCatalogVersion.compareTo(expectedCatalogVersion) == 0;
+        }
     }
 }
