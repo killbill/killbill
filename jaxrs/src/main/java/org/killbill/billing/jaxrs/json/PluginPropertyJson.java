@@ -21,9 +21,9 @@ import org.killbill.billing.payment.api.PluginProperty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="PluginProperty")
+@Schema(name = "PluginProperty")
 public class PluginPropertyJson {
 
     private final String key;

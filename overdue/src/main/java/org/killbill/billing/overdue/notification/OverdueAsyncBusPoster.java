@@ -18,8 +18,8 @@
 
 package org.killbill.billing.overdue.notification;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;

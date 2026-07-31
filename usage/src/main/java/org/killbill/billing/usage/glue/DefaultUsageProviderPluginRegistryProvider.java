@@ -17,7 +17,7 @@
 
 package org.killbill.billing.usage.glue;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;

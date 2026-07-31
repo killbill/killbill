@@ -34,7 +34,7 @@ public interface UserDao {
 
     public List<RolesPermissionsModelDao> getRoleDefinition(String role);
 
-    public Set<String> getAllPermissions();
+    public List<RolesPermissionsModelDao> getAllPermissions();
 
     public void updateUserPassword(String username, String password, String createdBy) throws SecurityApiException;
 

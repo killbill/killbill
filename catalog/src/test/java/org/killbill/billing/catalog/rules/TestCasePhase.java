@@ -16,7 +16,7 @@
 
 package org.killbill.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;

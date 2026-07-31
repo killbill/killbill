@@ -17,8 +17,8 @@
 
 package org.killbill.billing.util.cache;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.overdue.api.OverdueApiException;

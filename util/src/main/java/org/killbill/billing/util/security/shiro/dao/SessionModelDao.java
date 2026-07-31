@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.shiro.io.DefaultSerializer;
-import org.apache.shiro.io.Serializer;
+import org.apache.shiro.lang.io.DefaultSerializer;
+import org.apache.shiro.lang.io.Serializer;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.SimpleSession;
 import org.joda.time.DateTime;

@@ -19,14 +19,12 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestSuite;
 import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
 import org.killbill.billing.callcontext.MutableCallContext;
@@ -40,17 +38,17 @@ public class TestDBRouterResource implements JaxrsResource {
 
     private final MutableInternalCallContext internalCallContext = new MutableInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID,
                                                                                                   1687L,
-                                                                                                  DateTimeZone.UTC,
-                                                                                                  DateTimeZone.UTC,
-                                                                                                  new DateTime(DateTimeZone.UTC),
+                                                                                                  org.joda.time.DateTimeZone.UTC,
+                                                                                                  org.joda.time.DateTimeZone.UTC,
+                                                                                                  new org.joda.time.DateTime(org.joda.time.DateTimeZone.UTC),
                                                                                                   UUID.randomUUID(),
                                                                                                   UUID.randomUUID().toString(),
                                                                                                   CallOrigin.TEST,
                                                                                                   UserType.TEST,
                                                                                                   "Testing",
                                                                                                   "This is a test",
-                                                                                                  new DateTime(DateTimeZone.UTC),
-                                                                                                  new DateTime(DateTimeZone.UTC));
+                                                                                                  new org.joda.time.DateTime(org.joda.time.DateTimeZone.UTC),
+                                                                                                  new org.joda.time.DateTime(org.joda.time.DateTimeZone.UTC));
 
     private final MutableCallContext callContext = new MutableCallContext(internalCallContext);
 

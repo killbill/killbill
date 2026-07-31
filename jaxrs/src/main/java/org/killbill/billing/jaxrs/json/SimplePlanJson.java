@@ -27,9 +27,9 @@ import org.killbill.billing.catalog.api.TimeUnit;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="SimplePlan")
+@Schema(name = "SimplePlan")
 public class SimplePlanJson {
 
     private final String planId;

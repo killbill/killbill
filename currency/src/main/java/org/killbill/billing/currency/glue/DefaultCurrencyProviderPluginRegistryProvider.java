@@ -16,8 +16,8 @@
 
 package org.killbill.billing.currency.glue;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.killbill.billing.currency.DefaultCurrencyProviderPluginRegistry;
 import org.killbill.billing.currency.plugin.api.CurrencyPluginApi;

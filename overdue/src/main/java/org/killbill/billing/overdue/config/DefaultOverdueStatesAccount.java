@@ -24,7 +24,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Arrays;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.joda.time.Period;
 import org.killbill.billing.catalog.api.TimeUnit;

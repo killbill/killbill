@@ -19,7 +19,7 @@ package org.killbill.billing.util.export.api;
 import java.io.OutputStream;
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.util.api.DatabaseExportOutputStream;
 import org.killbill.billing.util.api.ExportUserApi;

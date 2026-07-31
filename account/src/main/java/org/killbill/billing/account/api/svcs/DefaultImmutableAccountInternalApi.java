@@ -19,8 +19,8 @@ package org.killbill.billing.account.api.svcs;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;

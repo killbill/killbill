@@ -18,8 +18,8 @@
 
 package org.killbill.billing.tenant;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.tenant.api.TenantUserApi;

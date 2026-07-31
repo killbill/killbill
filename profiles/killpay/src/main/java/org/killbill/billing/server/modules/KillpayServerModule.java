@@ -17,7 +17,7 @@
 
 package org.killbill.billing.server.modules;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.beatrix.glue.BeatrixModule;

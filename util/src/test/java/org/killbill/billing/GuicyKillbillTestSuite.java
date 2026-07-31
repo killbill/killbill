@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.api.AbortAfterFirstFailureListener;
@@ -85,7 +85,10 @@ public class GuicyKillbillTestSuite implements IHookable {
     protected KillbillConfigSource configSource;
     protected ConfigSource skifeConfigSource;
 
-    private RedissonClient redissonClient;
+    // Have no option to change from correctly typed (RedissonClient) to Object to avoid class-loading error
+    // when Redis not present. Pretty OK because the reason why this existed is just to call shutdown() on
+    // globalAfterSuite()
+    private Object redissonClient;
 
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
@@ -230,7 +233,7 @@ public class GuicyKillbillTestSuite implements IHookable {
             redissonClient = new RedissonCacheClientProvider("redis://127.0.0.1:56379", 1, null).get();
 
             theRealClock = new DistributedClockMock();
-            ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
+            ((DistributedClockMock) theRealClock).setRedissonClient((RedissonClient) redissonClient);
 
             extraPropertiesForTestSuite.put("org.killbill.cache.config.redis", "true");
             extraPropertiesForTestSuite.put("org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379");
@@ -283,7 +286,7 @@ public class GuicyKillbillTestSuite implements IHookable {
     @AfterSuite(alwaysRun = true)
     public void globalAfterSuite() {
         if (redissonClient != null) {
-            redissonClient.shutdown();
+            ((RedissonClient) redissonClient).shutdown();
         }
         if (redisServer != null) {
             redisServer.stop();

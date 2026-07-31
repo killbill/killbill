@@ -20,6 +20,7 @@ package org.killbill.billing.util.security.shiro.realm;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.shiro.SecurityUtils;
@@ -44,6 +45,9 @@ import org.testng.annotations.Test;
 public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
     private SecurityManager securityManager;
+    // Needed to avoid NPE because of https://github.com/apache/shiro/issues/2804
+    // Also, related PR and discussion : https://github.com/apache/shiro/pull/2807#issuecomment-4779317586
+    private Subject emptySubject;
 
     @Override
     @BeforeMethod(groups = "slow")
@@ -56,6 +60,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
         securityManager = new DefaultSecurityManager(realms);
         SecurityUtils.setSecurityManager(securityManager);
+        emptySubject = new DelegatingSubject(securityManager);
     }
 
     @AfterMethod(groups = "slow")
@@ -162,7 +167,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         securityApi.addUserRoles(username, password, List.of(role), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
-        final Subject subject = securityManager.login(null, goodToken);
+        final Subject subject = securityManager.login(emptySubject, goodToken);
         try {
             ThreadContext.bind(subject);
 
@@ -199,7 +204,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         securityApi.addUserRoles(username, password, List.of("restricted"), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
-        final Subject subject = securityManager.login(null, goodToken);
+        final Subject subject = securityManager.login(emptySubject, goodToken);
 
         subject.checkPermission(Permission.ACCOUNT_CAN_CHARGE.toString());
         subject.checkPermission(Permission.INVOICE_CAN_CREDIT.toString());
@@ -215,7 +220,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         securityApi.addRoleDefinition("newRestricted", List.of("account:*", "invoice", "tag:delete_tag_definition"), callContext);
         securityApi.updateUserRoles(username, List.of("newRestricted"), callContext);
 
-        final Subject newSubject = securityManager.login(null, goodToken);
+        final Subject newSubject = securityManager.login(emptySubject, goodToken);
         newSubject.checkPermission(Permission.ACCOUNT_CAN_CHARGE.toString());
         newSubject.checkPermission(Permission.INVOICE_CAN_CREDIT.toString());
         newSubject.checkPermission(Permission.TAG_CAN_DELETE_TAG_DEFINITION.toString());
@@ -239,7 +244,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         securityApi.addUserRoles(username, password, List.of(role), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
-        final Subject subject = securityManager.login(null, goodToken);
+        final Subject subject = securityManager.login(emptySubject, goodToken);
         try {
             ThreadContext.bind(subject);
             subject.checkPermission(Permission.ACCOUNT_CAN_CHARGE.toString());
@@ -281,7 +286,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         securityApi.addUserRoles(username, password, List.of(role), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
-        final Subject subject = securityManager.login(null, goodToken);
+        final Subject subject = securityManager.login(emptySubject, goodToken);
         try {
             ThreadContext.bind(subject);
 
@@ -340,6 +345,25 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
         securityApi.updateRoleDefinition("original", List.of(), callContext);
         Assert.assertEquals(securityApi.getRoleDefinition("original", callContext).size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testGetAvailableRoles() throws SecurityApiException {
+        securityApi.addRoleDefinition("admin", List.of("tenant:add", "tenant:update"), callContext);
+        securityApi.addRoleDefinition("finance", List.of("invoice:credit"), callContext);
+
+        Map<String, List<String>> result = securityApi.getAvailableRoles(callContext);
+        Assert.assertTrue(result.keySet().containsAll(List.of("admin", "finance")));
+        Assert.assertTrue(result.values().stream()
+                                .flatMap(List::stream)
+                                .toList().containsAll(List.of("tenant:add", "tenant:update", "invoice:credit")));
+
+        securityApi.updateRoleDefinition("admin", List.of("tenant:add", "tenant:update", "tenant:delete"), callContext);
+        result = securityApi.getAvailableRoles(callContext);
+        Assert.assertTrue(result.values().stream()
+                                .flatMap(List::stream)
+                                .toList().containsAll(List.of("tenant:add", "tenant:update", "tenant:delete", "invoice:credit")));
+
     }
 
     private void testInvalidPermissionScenario(final List<String> permissions) {

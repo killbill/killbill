@@ -24,11 +24,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.awaitility.Awaitility;
-import org.joda.time.DateTime;
 import org.killbill.CreatorName;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
-import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.notifications.PushNotificationKey;
 import org.killbill.notificationq.NotificationQueueDispatcher;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -73,7 +71,7 @@ public class TestPushNotification extends TestJaxrsBase {
                                                                                                      "testVerify726Backport",
                                                                                                      new NotificationQueueHandler() {
                                                                                                          @Override
-                                                                                                         public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                                         public void handleReadyNotification(final NotificationEvent notificationKey, final org.joda.time.DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                                                                                                              if (!(notificationKey instanceof PushNotificationKey)) {
                                                                                                                  Assert.fail();
                                                                                                                  return;

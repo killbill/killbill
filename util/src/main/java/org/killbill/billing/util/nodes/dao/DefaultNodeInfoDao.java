@@ -20,8 +20,8 @@ package org.killbill.billing.util.nodes.dao;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.util.entity.dao.DBRouter;

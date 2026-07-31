@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;

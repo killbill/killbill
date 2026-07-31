@@ -31,9 +31,9 @@ import org.killbill.billing.catalog.api.Usage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value = "PhasePrice")
+@Schema(name = "PhasePrice")
 public class PhasePriceJson {
 
     private final String planName;

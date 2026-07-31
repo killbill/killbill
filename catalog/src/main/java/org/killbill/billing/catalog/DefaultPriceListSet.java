@@ -27,9 +27,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;

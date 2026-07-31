@@ -19,7 +19,7 @@
 
 package org.killbill.billing.account;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.Account;

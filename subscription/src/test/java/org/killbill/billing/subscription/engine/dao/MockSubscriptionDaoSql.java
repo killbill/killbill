@@ -18,8 +18,8 @@
 
 package org.killbill.billing.subscription.engine.dao;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.util.audit.dao.AuditDao;

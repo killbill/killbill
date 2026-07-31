@@ -21,17 +21,16 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="UserRoles")
+@Schema(name = "UserRoles")
 public class UserRolesJson {
 
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String username;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String password;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final List<String> roles;
 
     @JsonCreator

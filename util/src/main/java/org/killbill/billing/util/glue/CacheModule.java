@@ -48,7 +48,6 @@ import org.skife.config.AugmentedConfigurationObjectFactory;
 
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
-import com.google.inject.util.Providers;
 
 public class CacheModule extends KillBillModule {
 
@@ -73,7 +72,6 @@ public class CacheModule extends KillBillModule {
             bind(RedissonClient.class).annotatedWith(Names.named(REDIS_CACHE_CLIENT)).toProvider(RedissonCacheClientProvider.class).asEagerSingleton();
             bind(CacheManager.class).toProvider(Redis107CacheManagerProvider.class).asEagerSingleton();
         } else {
-            bind(RedissonClient.class).annotatedWith(Names.named(REDIS_CACHE_CLIENT)).toProvider(Providers.<RedissonClient>of(null));
             bind(CacheManager.class).toProvider(Eh107CacheManagerProvider.class).asEagerSingleton();
         }
 

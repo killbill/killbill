@@ -19,7 +19,7 @@
 
 package org.killbill.billing.server.security;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.gen.Account;

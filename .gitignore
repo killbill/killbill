@@ -228,3 +228,5 @@ tmtags
 logs/
 .logs
 util/sql
+/.codex
+/.idea/copilot.data.migration.ask2agent.xml

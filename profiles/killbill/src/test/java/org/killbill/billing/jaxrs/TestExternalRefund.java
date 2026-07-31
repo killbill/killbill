@@ -18,11 +18,12 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
@@ -48,8 +49,8 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 0 - Can refund an automatic payment. This is a test to validate the correct behaviour.")
     public void testAutomaticPaymentAndRefund() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
         final Payments paymentsForAccount = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -72,8 +73,8 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 0 - Can refund an automatic payment over item adjustments. This is a test to validate the correct behaviour.")
     public void testAutomaticPaymentAndRefundWithAdjustments() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
         final Payments paymentsForAccount = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -100,8 +101,8 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 1 - Can refund a manual payment though an external refund")
     public void testManualPaymentAndExternalRefund() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithExternalPMBundleAndSubscriptionAndManualPayTagAndWaitForFirstInvoice();
 
@@ -134,8 +135,8 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 1 - Can refund a manual payment though an external refund over item adjustments")
     public void testManualPaymentAndExternalRefundWithAdjustments() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithExternalPMBundleAndSubscriptionAndManualPayTagAndWaitForFirstInvoice();
 
@@ -170,8 +171,8 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 2a - Can refund an automatic payment though an external refund")
     public void testAutomaticPaymentAndExternalRefund() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
         // delete PM
@@ -195,8 +196,8 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 2a - Can refund an automatic payment though an external refund over item adjustments")
     public void testAutomaticPaymentAndExternalRefundWithAdjustments() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
         // delete PM
@@ -226,8 +227,8 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 2b - Can refund an automatic payment though another existing payment method")
     public void testAutomaticPaymentAndExternalRefundWithDifferentPM() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 

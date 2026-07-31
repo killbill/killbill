@@ -53,9 +53,9 @@ import org.killbill.billing.catalog.api.Usage;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="Catalog")
+@Schema(name = "Catalog")
 public class CatalogJson {
 
     private final String name;
@@ -226,7 +226,7 @@ public class CatalogJson {
         return result;
     }
 
-    @ApiModel(value="Unit")
+    @Schema(name = "Unit")
     public static class UnitJson {
 
         private final String name;
@@ -276,7 +276,7 @@ public class CatalogJson {
 
     }
 
-    @ApiModel(value="Product")
+    @Schema(name = "Product")
     public static class ProductJson {
 
         private final String type;
@@ -392,7 +392,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="Plan")
+    @Schema(name = "Plan")
     public static class PlanJson {
 
         private final String name;
@@ -496,7 +496,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="TieredBlock")
+    @Schema(name = "TieredBlock")
     public static class TieredBlockJson {
         private final String unit;
         private final String size;
@@ -575,7 +575,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="Limit")
+    @Schema(name = "Limit")
     public static class LimitJson {
         private final String unit;
         private final String max;
@@ -643,7 +643,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="Tier")
+    @Schema(name = "Tier")
     public static class TierJson {
         private final List<TieredBlockJson> blocks;
         private final List<LimitJson> limits;
@@ -722,7 +722,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="Usage")
+    @Schema(name = "Usage")
     public static class UsageJson {
         private final String billingPeriod;
         private final List<TierJson> tiers;
@@ -779,7 +779,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="Phase")
+    @Schema(name = "Phase")
     public static class PhaseJson {
 
         private final String type;
@@ -945,7 +945,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="Price")
+    @Schema(name = "Price")
     public static class PriceJson {
 
         private final Currency currency;
@@ -1008,7 +1008,7 @@ public class CatalogJson {
         }
     }
 
-    @ApiModel(value="PriceList")
+    @Schema(name = "PriceList")
     public static class PriceListJson {
 
         private String name;
@@ -1074,7 +1074,7 @@ public class CatalogJson {
 
     }
 
-    @ApiModel(value="Duration")
+    @Schema(name = "Duration")
     public static class DurationJson {
 
         private final TimeUnit unit;

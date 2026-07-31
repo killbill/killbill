@@ -23,13 +23,13 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.servlet.ServletRequest;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletRequest;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;

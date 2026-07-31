@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;

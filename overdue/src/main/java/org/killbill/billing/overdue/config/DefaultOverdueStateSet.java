@@ -18,8 +18,8 @@
 
 package org.killbill.billing.overdue.config;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;

@@ -19,7 +19,7 @@ package org.killbill.billing.util.cache;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;

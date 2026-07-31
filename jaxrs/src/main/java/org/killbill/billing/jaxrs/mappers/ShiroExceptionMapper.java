@@ -16,14 +16,14 @@
 
 package org.killbill.billing.jaxrs.mappers;
 
-import javax.inject.Singleton;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
-import org.apache.shiro.ShiroException;
+import org.apache.shiro.lang.ShiroException;
 
 @Singleton
 @Provider

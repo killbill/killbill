@@ -22,7 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.platform.api.LifecycleHandlerType;

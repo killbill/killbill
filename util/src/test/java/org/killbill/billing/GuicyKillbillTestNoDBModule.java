@@ -18,8 +18,8 @@
 
 package org.killbill.billing;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleNoDB;

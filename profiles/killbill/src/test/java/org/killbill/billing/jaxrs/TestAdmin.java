@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.JaxrsResource;
@@ -86,8 +87,8 @@ public class TestAdmin extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAdminInvoiceEndpoint() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
         final List<UUID> accounts = new LinkedList<UUID>();
         for (int i = 0; i < 5; i++) {

@@ -17,7 +17,7 @@
 
 package org.killbill.billing.util.optimizer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;

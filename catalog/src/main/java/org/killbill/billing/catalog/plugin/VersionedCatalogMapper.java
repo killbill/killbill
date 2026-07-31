@@ -17,7 +17,7 @@
 
 package org.killbill.billing.catalog.plugin;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;

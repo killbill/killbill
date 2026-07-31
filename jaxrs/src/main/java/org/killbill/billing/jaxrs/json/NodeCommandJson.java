@@ -21,9 +21,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="NodeCommand")
+@Schema(name = "NodeCommand")
 public class NodeCommandJson {
 
     private final boolean isSystemCommandType;

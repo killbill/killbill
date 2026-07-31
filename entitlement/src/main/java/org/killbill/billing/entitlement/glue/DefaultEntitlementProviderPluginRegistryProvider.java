@@ -17,7 +17,7 @@
 
 package org.killbill.billing.entitlement.glue;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.entitlement.plugin.api.EntitlementPluginApi;
 import org.killbill.billing.entitlement.provider.DefaultEntitlementProviderPluginRegistry;

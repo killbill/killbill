@@ -29,10 +29,10 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
-import org.apache.shiro.codec.Base64;
-import org.apache.shiro.codec.Hex;
+import org.apache.shiro.lang.codec.Base64;
+import org.apache.shiro.lang.codec.Hex;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
-import org.apache.shiro.util.ByteSource;
+import org.apache.shiro.lang.util.ByteSource;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 

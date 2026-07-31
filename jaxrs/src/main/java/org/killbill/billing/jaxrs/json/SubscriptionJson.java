@@ -49,10 +49,9 @@ import org.killbill.billing.util.catalog.CatalogDateHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="Subscription", parent = JsonBase.class)
+@Schema(name = "Subscription")
 public class SubscriptionJson extends JsonBase {
 
     private final UUID accountId;
@@ -61,15 +60,15 @@ public class SubscriptionJson extends JsonBase {
     private final String externalKey;
     private final String bundleExternalKey;
     private final DateTime startDate;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String productName;
     private final ProductCategory productCategory;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final BillingPeriod billingPeriod;
     private final PhaseType phaseType;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String priceList;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final String planName;
     private final EntitlementState state;
     private final EntitlementSourceType sourceType;
@@ -83,7 +82,7 @@ public class SubscriptionJson extends JsonBase {
     private final List<PhasePriceJson> prices;
     private final List<PhasePriceJson> priceOverrides;
 
-    @ApiModel(value="EventSubscription", parent = JsonBase.class)
+    @Schema(name = "EventSubscription")
     public static class EventSubscriptionJson extends JsonBase {
 
         private final UUID eventId;

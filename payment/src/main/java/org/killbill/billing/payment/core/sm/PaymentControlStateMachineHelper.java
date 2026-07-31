@@ -17,8 +17,8 @@
 
 package org.killbill.billing.payment.core.sm;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.Operation;

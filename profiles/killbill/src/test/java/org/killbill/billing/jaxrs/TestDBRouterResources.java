@@ -17,7 +17,7 @@
 
 package org.killbill.billing.jaxrs;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
 import org.killbill.billing.jaxrs.resources.TestDBRouterResource;

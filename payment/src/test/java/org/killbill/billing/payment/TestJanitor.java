@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.awaitility.Awaitility;
 import org.joda.time.LocalDate;

@@ -21,8 +21,8 @@ package org.killbill.billing.util.glue;
 import java.lang.reflect.Field;
 
 import javax.cache.CacheManager;
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
@@ -30,13 +30,12 @@ import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.mgt.SubjectDAO;
 import org.ehcache.integrations.shiro.EhcacheShiro;
-import org.ehcache.integrations.shiro.EhcacheShiroManager;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.killbill.commons.metrics.api.MetricRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements Provider<EhcacheShiroManager> {
+public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements Provider<org.apache.shiro.cache.CacheManager> {
 
     private final SecurityManager securityManager;
     private final SubjectDAO subjectDAO;
@@ -57,10 +56,8 @@ public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements 
     }
 
     @Override
-    public EhcacheShiroManager get() {
-        final EhcacheShiroManager shiroEhCacheManager = new EhcacheShiroManagerWrapper(this);
-        // Same EhCache manager instance as the rest of the system
-        shiroEhCacheManager.setCacheManager(ehcacheCacheManager);
+    public org.apache.shiro.cache.CacheManager get() {
+        final EhcacheShiroManagerWrapper shiroEhCacheManager = new EhcacheShiroManagerWrapper(this, ehcacheCacheManager);
 
         if (securityManager instanceof DefaultSecurityManager) {
             // For RBAC only (see also KillbillJdbcTenantRealmProvider)
@@ -87,7 +84,10 @@ public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements 
     }
 
     // Custom createCache implementation going through JCache layer to enable stats, etc.
-    private final class EhcacheShiroManagerWrapper extends EhcacheShiroManager {
+    // Uses composition instead of inheritance since shiro-ehcache3:1.0.0 is compiled against
+    // Shiro 1.x interfaces (org.apache.shiro.util.Initializable/Destroyable) which moved
+    // to org.apache.shiro.lang.util in Shiro 2.0.
+    private final class EhcacheShiroManagerWrapper implements org.apache.shiro.cache.CacheManager {
 
         private final Logger log = LoggerFactory.getLogger(EhcacheShiroManagerWrapper.class);
 
@@ -95,23 +95,26 @@ public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements 
         private final Object shiroCacheLock = new Object();
 
         private final EhcacheShiroManagerProvider ehcacheShiroManagerProvider;
+        private final org.ehcache.CacheManager cacheManager;
 
-        EhcacheShiroManagerWrapper(final EhcacheShiroManagerProvider ehcacheShiroManagerProvider) {
+        EhcacheShiroManagerWrapper(final EhcacheShiroManagerProvider ehcacheShiroManagerProvider,
+                                   final org.ehcache.CacheManager cacheManager) {
             this.ehcacheShiroManagerProvider = ehcacheShiroManagerProvider;
+            this.cacheManager = cacheManager;
         }
 
         public <K, V> Cache<K, V> getCache(final String name) throws CacheException {
             log.trace("Acquiring EhcacheShiro instance named [{}]", name);
 
-            org.ehcache.Cache<Object, Object> cache = getCacheManager().getCache(name, Object.class, Object.class);
+            org.ehcache.Cache<Object, Object> cache = cacheManager.getCache(name, Object.class, Object.class);
 
             if (cache == null) {
                 synchronized (shiroCacheLock) {
-                    cache = getCacheManager().getCache(name, Object.class, Object.class);
+                    cache = cacheManager.getCache(name, Object.class, Object.class);
                     if (cache == null) {
                         log.info("Cache with name {} does not yet exist.  Creating now.", name);
                         ehcacheShiroManagerProvider.createCache(eh107CacheManager, name, Object.class, Object.class);
-                        cache = getCacheManager().getCache(name, Object.class, Object.class);
+                        cache = cacheManager.getCache(name, Object.class, Object.class);
                         log.info("Added EhcacheShiro named [{}]", name);
                     } else {
                         log.info("Using existing EhcacheShiro named [{}]", name);

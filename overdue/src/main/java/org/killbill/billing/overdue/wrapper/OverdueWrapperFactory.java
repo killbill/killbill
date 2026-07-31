@@ -20,7 +20,7 @@ package org.killbill.billing.overdue.wrapper;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.Period;
 import org.killbill.billing.account.api.Account;

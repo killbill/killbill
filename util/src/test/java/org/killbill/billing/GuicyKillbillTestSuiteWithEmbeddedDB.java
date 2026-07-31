@@ -35,13 +35,12 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.cache.CacheManager;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import javax.sql.DataSource;
 
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
-import org.redisson.api.RedissonClient;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +49,6 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite {
@@ -76,11 +74,6 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Nullable
     @Inject
     protected CacheManager cacheManager;
-
-    @Nullable
-    @Inject
-    @Named(REDIS_CACHE_CLIENT)
-    protected RedissonClient redissonCachingClient;
 
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
@@ -136,10 +129,6 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
         if (cacheManager != null) {
             cacheManager.close();
-        }
-
-        if (redissonCachingClient != null) {
-            redissonCachingClient.shutdown();
         }
 
         try {

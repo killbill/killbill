@@ -21,8 +21,8 @@ package org.killbill.billing.overdue.listener;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;

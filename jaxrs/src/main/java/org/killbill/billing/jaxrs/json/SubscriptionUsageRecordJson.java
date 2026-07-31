@@ -31,17 +31,15 @@ import org.killbill.billing.usage.api.UsageRecord;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="SubscriptionUsageRecord")
+@Schema(name = "SubscriptionUsageRecord")
 public class SubscriptionUsageRecordJson {
 
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final UUID subscriptionId;
-    @ApiModelProperty(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private final List<UnitUsageRecordJson> unitUsageRecords;
-    @ApiModelProperty(required = false)
     private final String trackingId;
 
     @JsonCreator
@@ -65,7 +63,7 @@ public class SubscriptionUsageRecordJson {
         return trackingId;
     }
 
-    @ApiModel(value="UnitUsageRecord")
+    @Schema(name = "UnitUsageRecord")
     public static class UnitUsageRecordJson {
 
         private final String unitType;
@@ -94,7 +92,7 @@ public class SubscriptionUsageRecordJson {
         }
     }
 
-    @ApiModel(value="UsageRecord")
+    @Schema(name = "UsageRecord")
     public static class UsageRecordJson {
 
         private final DateTime recordDate;

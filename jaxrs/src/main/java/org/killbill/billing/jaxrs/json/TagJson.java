@@ -28,14 +28,13 @@ import org.killbill.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="Tag", parent = JsonBase.class)
+@Schema(name = "Tag")
 public class TagJson extends JsonBase {
 
     private final UUID tagId;
-    @ApiModelProperty(dataType = "org.killbill.billing.ObjectType")
+    @Schema(implementation = ObjectType.class)
     private final ObjectType objectType;
     private final UUID objectId;
     private final UUID tagDefinitionId;

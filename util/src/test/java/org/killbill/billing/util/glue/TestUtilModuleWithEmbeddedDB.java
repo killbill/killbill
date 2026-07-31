@@ -21,7 +21,7 @@ package org.killbill.billing.util.glue;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.realm.Realm;

@@ -19,9 +19,9 @@ package org.killbill.billing.jaxrs;
 import java.net.URI;
 import java.util.UUID;
 
-import javax.servlet.ServletRequest;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import jakarta.servlet.ServletRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -29,7 +29,7 @@ import org.killbill.billing.server.log.ServerTestSuiteNoDB;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.testng.annotations.Test;
 
-import static javax.ws.rs.core.Response.Status.CREATED;
+import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;

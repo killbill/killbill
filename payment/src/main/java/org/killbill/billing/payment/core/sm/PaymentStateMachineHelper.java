@@ -19,7 +19,7 @@ package org.killbill.billing.payment.core.sm;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.Operation;

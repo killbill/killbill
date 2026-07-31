@@ -211,13 +211,9 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, context).size(), 1);
         Assert.assertTrue(tagUserApi.getTagsForAccount(accountId, true, callContext).isEmpty());
 
-        try {
-            dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
-            Assert.fail();
-        } catch (final InvoiceApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
-            Assert.assertTrue(e.getCause().getMessage().startsWith("Double billing detected"));
-        }
+        // Non-dry-run, isApiCall=false: exception is swallowed, empty list returned, account parked
+        final List<Invoice> emptyInvoicesForParking = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
+        Assert.assertTrue(emptyInvoicesForParking.isEmpty());
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, true, context).size(), 1);
         // No dry-run: account is parked
         final List<Tag> tags = tagUserApi.getTagsForAccount(accountId, false, callContext);

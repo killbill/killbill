@@ -17,8 +17,8 @@
 
 package org.killbill.billing.invoice.glue;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.provider.DefaultInvoiceFormatterFactoryProviderPluginRegistry;

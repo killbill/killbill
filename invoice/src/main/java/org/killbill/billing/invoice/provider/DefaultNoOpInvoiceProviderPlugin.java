@@ -20,7 +20,7 @@ package org.killbill.billing.invoice.provider;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;

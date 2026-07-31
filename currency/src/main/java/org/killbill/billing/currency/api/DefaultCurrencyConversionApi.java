@@ -18,7 +18,7 @@ package org.killbill.billing.currency.api;
 
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.DateTime;
 

@@ -20,7 +20,7 @@ package org.killbill.billing.util.nodes;
 import java.io.IOException;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 

@@ -457,8 +457,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                    <fixed type=\"ONE_TIME\">\n" +
                                    "                        <fixedPrice>\n" +
                                    "                            <price>\n" +
-                                   "<currency>USD</currency>\n" +
-                                   "<value>0</value>\n" +
+                                   "                                <currency>USD</currency>\n" +
+                                   "                                <value>0</value>\n" +
                                    "                            </price>\n" +
                                    "                        </fixedPrice>\n" +
                                    "                    </fixed>\n" +
@@ -608,7 +608,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "</catalog>\n";
 
         assertEquals(catalogUpdater.getCatalogXML(internalCallContext), expectedXML);
-        System.err.println(catalogUpdater.getCatalogXML(internalCallContext));
+        // System.err.println(catalogUpdater.getCatalogXML(internalCallContext));
     }
 
     private StandaloneCatalog enhanceOriginalCatalogForInvalidTestCases(final String catalogName) throws Exception {

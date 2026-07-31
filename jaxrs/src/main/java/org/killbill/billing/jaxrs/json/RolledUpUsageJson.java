@@ -27,9 +27,9 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value = "RolledUpUsage")
+@Schema(name = "RolledUpUsage")
 public class RolledUpUsageJson {
 
     private final UUID subscriptionId;
@@ -68,7 +68,7 @@ public class RolledUpUsageJson {
         return rolledUpUnits;
     }
 
-    @ApiModel(value = "RolledUpUnit")
+    @Schema(name = "RolledUpUnit")
     public static class RolledUpUnitJson {
 
         private final String unitType;

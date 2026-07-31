@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - master
+      - java2x
   pull_request:
   workflow_dispatch:
 
 jobs:
   analyze:
-    uses: killbill/gh-actions-shared/.github/workflows/codeql-analysis.yml@main
+    uses: killbill/gh-actions-shared/.github/workflows/codeql-analysis.yml@java21

@@ -59,7 +59,7 @@ and is_active = TRUE
 >>
 
 getAllPermissions() ::= <<
-select distinct permission
+select <allTableFields("")>
 from <tableName()>
 where is_active = TRUE
 ;

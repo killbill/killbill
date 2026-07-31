@@ -17,8 +17,8 @@
 
 package org.killbill.billing.catalog.glue;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.catalog.provider.DefaultCatalogProviderPluginRegistry;

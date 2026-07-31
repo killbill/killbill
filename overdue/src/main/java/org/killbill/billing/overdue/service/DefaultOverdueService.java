@@ -18,8 +18,8 @@
 
 package org.killbill.billing.overdue.service;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.lifecycle.api.BusService;

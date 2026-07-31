@@ -20,7 +20,7 @@ package org.killbill.billing.invoice.optimizer;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;

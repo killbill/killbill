@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalCallContext;

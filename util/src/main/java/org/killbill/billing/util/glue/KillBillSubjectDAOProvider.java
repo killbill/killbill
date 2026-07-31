@@ -17,7 +17,7 @@
 
 package org.killbill.billing.util.glue;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.apache.shiro.mgt.SessionStorageEvaluator;
 import org.apache.shiro.mgt.SubjectDAO;

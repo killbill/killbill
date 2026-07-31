@@ -27,7 +27,7 @@ import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;

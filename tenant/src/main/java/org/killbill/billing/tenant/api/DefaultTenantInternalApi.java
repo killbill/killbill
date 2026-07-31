@@ -20,8 +20,8 @@ package org.killbill.billing.tenant.api;
 import java.util.List;
 import java.util.Locale;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;

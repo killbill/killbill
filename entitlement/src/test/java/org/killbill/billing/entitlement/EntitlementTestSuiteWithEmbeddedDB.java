@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.Ini;
-import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.ini.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.util.Factory;
+import org.apache.shiro.lang.util.Factory;
 import org.apache.shiro.util.ThreadContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

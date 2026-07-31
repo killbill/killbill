@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;

@@ -31,9 +31,9 @@ import org.killbill.billing.jaxrs.json.CatalogJson.PriceJson;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(value="PlanDetail")
+@Schema(name = "PlanDetail")
 public class PlanDetailJson {
 
     final String product;

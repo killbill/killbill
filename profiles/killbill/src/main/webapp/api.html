@@ -38,7 +38,7 @@
     <script src="./lib/swagger-ui-standalone-preset.js"> </script>
     <script>
     window.onload = function() {
-      var url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname.replace(/(.*)(\/[^\/]*?)$/, '$1/swagger.json')
+      var url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname.replace(/(.*)(\/[^\/]*?)$/, '$1/openapi.json')
 
       // Build a system
       const ui = SwaggerUIBundle({

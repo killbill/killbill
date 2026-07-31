@@ -17,7 +17,7 @@
 
 package org.killbill.billing.catalog;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.caching.PriceOverridePattern;
