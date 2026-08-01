@@ -783,7 +783,20 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
         final LocalDate resultingLocalDate = BillCycleDayCalculator.alignToNextBillCycleDate(prevTransitionDate, curTransitionDate, bcd, billingPeriod, context);
         final DateTime candidateResult = context.toUTCDateTime(resultingLocalDate);
-        return candidateResult;
+        if (candidateResult.isAfter(prevTransitionDate)) {
+            return candidateResult;
+        }
+        //
+        // The alignment resolved to a date at or before the transition we are aligning from - this happens
+        // when the change lands on a day whose day-of-month is the BCD (the subscription's own start day
+        // being the common case), because the aligned LocalDate is then resolved at the account's reference
+        // time of day. Such a candidate would be rejected by the caller and never regenerated, silently
+        // losing the catalog change. Align to the following billing date instead, which is what the caller
+        // asked for in the first place. Re-using the same function keeps the arithmetic correct for both
+        // month based and non month based billing periods.
+        //
+        final LocalDate nextLocalDate = BillCycleDayCalculator.alignToNextBillCycleDate(prevTransitionDate, candidateResult.plusDays(1), bcd, billingPeriod, context);
+        return context.toUTCDateTime(nextLocalDate);
     }
 
     public SubscriptionBaseTransitionData getLastTransitionForCurrentPlan() {
