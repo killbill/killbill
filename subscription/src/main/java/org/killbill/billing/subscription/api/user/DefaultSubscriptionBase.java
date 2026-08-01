@@ -663,12 +663,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
 
                     // Look for any catalog change transition whose date is less the cur event
-                    SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-                    while (prevCandidateForCatalogChangeEvents != null &&
-                           prevCandidateForCatalogChangeEvents.getEffectiveDate().compareTo(cur.getEffectiveTransitionTime()) < 0) {
-                        result.add(prevCandidateForCatalogChangeEvents);
-                        prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-                    }
+                    final SubscriptionBillingEvent prevCandidateForCatalogChangeEvents =
+                            drainCatalogChangeCandidates(candidatesCatalogChangeEvents, result, cur.getEffectiveTransitionTime());
 
                     if (isChangeEvent || isCancelEvent || isPhaseEvent || isExpiredEvent) {
                         candidatesCatalogChangeEvents.clear();
@@ -725,16 +721,40 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
                 }
             }
-            SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-            while (prevCandidateForCatalogChangeEvents != null) {
-                result.add(prevCandidateForCatalogChangeEvents);
-                prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-            }
+            drainCatalogChangeCandidates(candidatesCatalogChangeEvents, result, null);
 
             return result;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+    }
+    
+    
+    // Drains the catalog change candidates into the result list, collapsing candidates that resolve
+    // to the same effective date. Several catalog versions can align onto the same instant (all
+    // changes within one billing cycle do), and such events are indistinguishable downstream - same
+    // subscription, same effective date, same totalOrdering - so only one of them would survive
+    // insertion into the (sorted, de-duplicating) billing event set. We keep the one from the most
+    // recent catalog version: the queue orders equal-date candidates by catalog effective date
+    // ascending, so that is the last one of each run.
+    //
+    private SubscriptionBillingEvent drainCatalogChangeCandidates(final PriorityQueue<SubscriptionBillingEvent> candidates,
+                                                                  final List<SubscriptionBillingEvent> result,
+                                                                  @Nullable final DateTime upTo) {
+        SubscriptionBillingEvent pending = null;
+        SubscriptionBillingEvent candidate = candidates.poll();
+        while (candidate != null &&
+               (upTo == null || candidate.getEffectiveDate().compareTo(upTo) < 0)) {
+            if (pending != null && pending.getEffectiveDate().compareTo(candidate.getEffectiveDate()) != 0) {
+                result.add(pending);
+            }
+            pending = candidate;
+            candidate = candidates.poll();
+        }
+        if (pending != null) {
+            result.add(pending);
+        }
+        return candidate;
     }
 
     // Align to next BCD based on recurring section for the phase
