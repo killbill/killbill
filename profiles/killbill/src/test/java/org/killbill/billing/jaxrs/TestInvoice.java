@@ -21,6 +21,9 @@ package org.killbill.billing.jaxrs;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,10 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.JaxrsResource;
@@ -55,6 +54,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
+import org.killbill.billing.tenant.api.InvoiceBrandingTenantKey;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
@@ -1232,6 +1232,46 @@ public class TestInvoice extends TestJaxrsBase {
         Assert.assertNotNull(invoice);
         assertEquals(invoice.getItems().size(), 2);
         final InvoiceItem item = invoice.getItems().get(0);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2283")
+    public void testHTMLInvoiceGenerationLegacyTemplate() throws Exception {
+        final ZonedDateTime initialDate = ZonedDateTime.of(2026, 7, 1, 0, 0, 0, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        final String template = getResourceBodyString("org/killbill/billing/server/templates/HtmlInvoiceTemplate-default.mustache");
+        invoiceApi.uploadInvoiceTemplate(template, requestOptions);
+        //There is an error with the following due to the issue reported in https://github.com/killbill/killbill/issues/1581
+        //        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        //        final String translations = getResourceBodyString("org/killbill/billing/server/templates/InvoiceTranslations_fr_FR.properties");
+        //        invoiceApi.uploadInvoiceTranslation("fr_FR", translations, requestOptions);
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        final Invoice invoiceJson = invoices.get(0);
+        final String htmlInvoice = invoiceApi.getInvoiceAsHTML(invoiceJson.getInvoiceId(), requestOptions);
+        Assert.assertTrue(htmlInvoice.contains("logo.png"));
+        System.out.println(htmlInvoice);
+
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2283")
+    public void testHTMLInvoiceGenerationNewTemplate() throws Exception {
+        final ZonedDateTime initialDate = ZonedDateTime.of(2026, 7, 1, 0, 0, 0, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE, ExtBusEventType.TENANT_CONFIG_CHANGE);
+        tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.INVOICE_TEMPLATE_WITH_BRANDING.name(), getResourceBodyString("org/killbill/billing/server/templates/HtmlInvoiceTemplate-brandInfo-with-logo-and-style.mustache"), requestOptions); //TODO_2283 - use the invoiceApi.uploadInvoiceTemplate with the templateWithBrandInfo parameter after client is regenerated
+        tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.COMPANY_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/companyInfo.json"), requestOptions);
+        tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.INVOICE_TEMPLATE_BRAND_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/invoiceTemplateBrandInfo.json"), requestOptions);
+        tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.LOGO_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/logoInfo.json"), requestOptions);
+        callbackServlet.assertListenerStatus();
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        final Invoice invoiceJson = invoices.get(0);
+        final String htmlInvoice = invoiceApi.getInvoiceAsHTML(invoiceJson.getInvoiceId(), requestOptions);
+        Assert.assertFalse(htmlInvoice.contains("logo.png"));
+        Assert.assertTrue(htmlInvoice.contains("CloudSprout"));
     }
     
 }
