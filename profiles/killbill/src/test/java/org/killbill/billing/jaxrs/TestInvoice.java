@@ -1251,8 +1251,6 @@ public class TestInvoice extends TestJaxrsBase {
         final Invoice invoiceJson = invoices.get(0);
         final String htmlInvoice = invoiceApi.getInvoiceAsHTML(invoiceJson.getInvoiceId(), requestOptions);
         Assert.assertTrue(htmlInvoice.contains("logo.png"));
-        System.out.println(htmlInvoice);
-
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2283")

@@ -949,7 +949,12 @@ public class InvoiceResource extends JaxRsResourceBase {
             }
         }
         tenantApi.addTenantKeyValue(tenantKey, templateResource, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, Objects.requireNonNullElse(localeStr, defaultLocale.toString()), request);
+        final Map<String, String> locationParams = InvoiceBrandingTenantKey.INVOICE_TEMPLATE_WITH_BRANDING.name().equals(tenantKey) ?
+                                                   Map.of(QUERY_INVOICE_TEMPLATE_WITH_BRAND_INFO, "true") :
+                                                   null;
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr,
+                                        Objects.requireNonNullElse(localeStr, defaultLocale.toString()),
+                                        locationParams, request);
     }
 
     private Response getTemplateResource(@Nullable final String localeStr,
