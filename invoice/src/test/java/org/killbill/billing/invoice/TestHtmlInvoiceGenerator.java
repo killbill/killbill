@@ -63,7 +63,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGenerateInvoice() throws Exception {
-        final HtmlInvoice output = g.generateInvoice(createAccount(), createInvoice(), false, internalCallContext);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), createInvoice(), false, internalCallContext, null);
         Assert.assertNotNull(output);
         Assert.assertNotNull(output.getBody());
         Assert.assertTrue(output.getBody().contains("<!-- Test customKey value -->"));
@@ -73,13 +73,13 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testGenerateEmptyInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
-        final HtmlInvoice output = g.generateInvoice(createAccount(), invoice, false, internalCallContext);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), invoice, false, internalCallContext, null);
         Assert.assertNull(output);
     }
 
     @Test(groups = "fast")
     public void testGenerateNullInvoice() throws Exception {
-        final HtmlInvoice output = g.generateInvoice(createAccount(), null, false, internalCallContext);
+        final HtmlInvoice output = g.generateInvoice(createAccount(), null, false, internalCallContext, null);
         Assert.assertNull(output);
     }
 

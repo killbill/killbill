@@ -23,14 +23,16 @@ import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 
 public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
 
     public DefaultInvoiceFormatterFactory() {
     }
 
-    public InvoiceFormatter createInvoiceFormatter(final String defaultLocale, final String catalogBundlePath, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi, final ResourceBundle bundle, final ResourceBundle defaultBundle) {
-        return new DefaultInvoiceFormatter(defaultLocale, catalogBundlePath, invoice, locale, currencyConversionApi, bundle, defaultBundle);
+    @Override
+    public InvoiceFormatter createInvoiceFormatter(final String defaultLocale, final String catalogBundlePath, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi, final ResourceBundle bundle, final ResourceBundle defaultBundle, final TenantContext tenantContext) {
+        return new DefaultInvoiceFormatter(defaultLocale, catalogBundlePath, invoice, locale, currencyConversionApi, bundle, defaultBundle, tenantContext);
     }
 
 }
