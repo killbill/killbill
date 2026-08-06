@@ -119,6 +119,11 @@ public class HtmlInvoiceGenerator {
         final InvoiceFormatter formattedInvoice = invoiceFormatterFactory.createInvoiceFormatter(config.getDefaultLocale(), config.getCatalogBundlePath(), invoice, locale, currencyConversionApi, bundle, defaultBundle);
         data.put("invoice", formattedInvoice);
 
+        //get company data
+        data.put("company", tenantApi.getInvoiceTemplateCompanyInfo(context));
+        data.put("logo", tenantApi.getInvoiceTemplateLogo(context));
+        data.put("brand", tenantApi.getInvoiceTemplateBrandInfo(context));
+
         invoiceData.setSubject(invoiceTranslator.getInvoiceEmailSubject());
         final String templateText = getTemplateText(locale, manualPay, context);
         invoiceData.setBody(templateEngine.executeTemplateText(templateText, data));

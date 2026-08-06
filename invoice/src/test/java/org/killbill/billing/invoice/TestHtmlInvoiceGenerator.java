@@ -34,6 +34,7 @@ import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
+import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
@@ -58,7 +59,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final TranslatorConfig config = new AugmentedConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
         final InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();
-        g = new HtmlInvoiceGenerator(factory, invoiceFormatterFactoryPluginRegistry, templateEngine, config, null, resourceBundleFactory, null);
+        g = new HtmlInvoiceGenerator(factory, invoiceFormatterFactoryPluginRegistry, templateEngine, config, null, resourceBundleFactory, Mockito.mock(TenantInternalApi.class));
     }
 
     @Test(groups = "fast")

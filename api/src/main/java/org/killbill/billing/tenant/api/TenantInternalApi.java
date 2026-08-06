@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Locale;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.invoice.api.BrandInfo;
+import org.killbill.billing.invoice.api.CompanyInfo;
+import org.killbill.billing.invoice.api.LogoInfo;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 
 public interface TenantInternalApi {
@@ -58,4 +61,11 @@ public interface TenantInternalApi {
     public List<String> getTenantValuesForKey(final String key, final InternalTenantContext tenantContext);
 
     public Tenant getTenantByApiKey(final String key) throws TenantApiException;
+
+    CompanyInfo getInvoiceTemplateCompanyInfo(InternalTenantContext tenantContext);
+
+    LogoInfo getInvoiceTemplateLogo(InternalTenantContext tenantContext);
+
+    BrandInfo getInvoiceTemplateBrandInfo(InternalTenantContext tenantContext);
+
 }

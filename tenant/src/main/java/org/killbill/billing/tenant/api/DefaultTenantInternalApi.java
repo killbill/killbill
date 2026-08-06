@@ -25,6 +25,9 @@ import javax.inject.Named;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.invoice.api.BrandInfo;
+import org.killbill.billing.invoice.api.CompanyInfo;
+import org.killbill.billing.invoice.api.LogoInfo;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantModelDao;
@@ -47,12 +50,14 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
 
     private final TenantDao tenantDao;
     private final TenantCacheInvalidation tenantCacheInvalidation;
+    private final InvoiceBrandingLoader invoiceBrandingLoader;
 
     @Inject
     public DefaultTenantInternalApi(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
                                     final TenantCacheInvalidation tenantCacheInvalidation) {
         this.tenantDao = tenantDao;
         this.tenantCacheInvalidation = tenantCacheInvalidation;
+        this.invoiceBrandingLoader = new InvoiceBrandingLoader(tenantDao);
     }
 
     @Override
@@ -79,8 +84,13 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
 
     @Override
     public String getInvoiceTemplate(final Locale locale, final InternalTenantContext tenantContext) {
-        final List<String> values = tenantDao.getTenantValueForKey(TenantKey.INVOICE_TEMPLATE.toString(), tenantContext);
-        return getUniqueValue(values, "invoice template", tenantContext);
+        List<String> values = tenantDao.getTenantValueForKey(InvoiceBrandingTenantKey.INVOICE_TEMPLATE_WITH_BRANDING.toString(), tenantContext);
+        String value = getUniqueValue(values, "invoice template with branding", tenantContext);
+        if (value == null) {
+            values = tenantDao.getTenantValueForKey(TenantKey.INVOICE_TEMPLATE.toString(), tenantContext);
+            value = getUniqueValue(values, "invoice template", tenantContext);
+        }
+        return value;
     }
 
     @Override
@@ -127,6 +137,22 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_API_KEY, key);
         }
         return new DefaultTenant(tenant);
+    }
+
+    @Override
+    public CompanyInfo getInvoiceTemplateCompanyInfo(final InternalTenantContext tenantContext) {
+        return invoiceBrandingLoader.getInvoiceTemplateCompanyInfo(tenantContext);
+    }
+
+    @Override
+    public LogoInfo getInvoiceTemplateLogo(final InternalTenantContext tenantContext) {
+        return invoiceBrandingLoader.getInvoiceTemplateLogoInfo(tenantContext);
+    }
+
+    @Override
+    public BrandInfo getInvoiceTemplateBrandInfo(final InternalTenantContext tenantContext) {
+
+        return invoiceBrandingLoader.getInvoiceTemplateBrandInfo(tenantContext);
     }
 
     private String getUniqueValue(final List<String> values, final String msg, final InternalTenantContext tenantContext) {

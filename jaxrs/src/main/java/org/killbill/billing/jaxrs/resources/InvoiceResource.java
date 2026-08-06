@@ -97,7 +97,6 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.LocaleUtils;
-import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -113,8 +112,10 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
+import org.killbill.commons.utils.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.killbill.billing.tenant.api.InvoiceBrandingTenantKey;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -816,8 +817,13 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(TEXT_HTML)
     @ApiOperation(value = "Retrieves the invoice template for the tenant", response = String.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Template not found")})
-    public Response getInvoiceTemplate(@javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
-        return getTemplateResource(null, TenantKey.INVOICE_TEMPLATE, request);
+    public Response getInvoiceTemplate(@QueryParam(QUERY_INVOICE_TEMPLATE_WITH_BRAND_INFO) @DefaultValue("false") final boolean templateWithBrandInfo,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+        if (templateWithBrandInfo) {
+            return getTemplateResource(null, InvoiceBrandingTenantKey.INVOICE_TEMPLATE_WITH_BRANDING.name(), request);
+        } else {
+            return getTemplateResource(null, TenantKey.INVOICE_TEMPLATE, request);
+        }
     }
 
     @TimedResource
@@ -827,23 +833,38 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + INVOICE_TEMPLATE)
     @ApiOperation(value = "Upload the invoice template for the tenant", response = String.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Uploaded invoice template Successfully")})
-    public Response uploadInvoiceTemplate(final String catalogTranslation,
+    public Response uploadInvoiceTemplate(final String invoiceTemplate,
                                           @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
+                                          @QueryParam(QUERY_INVOICE_TEMPLATE_WITH_BRAND_INFO) @DefaultValue("false") final boolean templateWithBrandInfo,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
-        return uploadTemplateResource(catalogTranslation,
-                                      null,
-                                      deleteIfExists,
-                                      TenantKey.INVOICE_TEMPLATE,
-                                      "getInvoiceTemplate",
-                                      createdBy,
-                                      reason,
-                                      comment,
-                                      request,
-                                      uriInfo);
+
+        if (templateWithBrandInfo) {
+            return uploadTemplateResource(invoiceTemplate,
+                                          null,
+                                          deleteIfExists,
+                                          InvoiceBrandingTenantKey.INVOICE_TEMPLATE_WITH_BRANDING.name(),
+                                          "getInvoiceTemplate",
+                                          createdBy,
+                                          reason,
+                                          comment,
+                                          request,
+                                          uriInfo);
+        } else {
+            return uploadTemplateResource(invoiceTemplate,
+                                          null,
+                                          deleteIfExists,
+                                          TenantKey.INVOICE_TEMPLATE,
+                                          "getInvoiceTemplate",
+                                          createdBy,
+                                          reason,
+                                          comment,
+                                          request,
+                                          uriInfo);
+        }
     }
 
 
@@ -904,27 +925,52 @@ public class InvoiceResource extends JaxRsResourceBase {
             tenantKeyStr = tenantKey.toString();
         }
 
+        return uploadTemplateResource(templateResource, localeStr, deleteIfExists, tenantKeyStr, getMethodStr, createdBy, reason, comment, request, uriInfo);
+
+    }
+
+    private Response uploadTemplateResource(final String templateResource,
+                                            @Nullable final String localeStr,
+                                            final boolean deleteIfExists,
+                                            final String tenantKey,
+                                            final String getMethodStr,
+                                            final String createdBy,
+                                            final String reason,
+                                            final String comment,
+                                            final HttpServletRequest request,
+                                            final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        if (!tenantApi.getTenantValuesForKey(tenantKeyStr, callContext).isEmpty()) {
+        if (!tenantApi.getTenantValuesForKey(tenantKey, callContext).isEmpty()) {
             if (deleteIfExists) {
-                tenantApi.deleteTenantKey(tenantKeyStr, callContext);
+                tenantApi.deleteTenantKey(tenantKey, callContext);
             } else {
                 return Response.status(Status.BAD_REQUEST).build();
             }
         }
-        tenantApi.addTenantKeyValue(tenantKeyStr, templateResource, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, Objects.requireNonNullElse(localeStr, defaultLocale.toString()), request);
+        tenantApi.addTenantKeyValue(tenantKey, templateResource, callContext);
+        final Map<String, String> locationParams = InvoiceBrandingTenantKey.INVOICE_TEMPLATE_WITH_BRANDING.name().equals(tenantKey) ?
+                                                   Map.of(QUERY_INVOICE_TEMPLATE_WITH_BRAND_INFO, "true") :
+                                                   null;
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr,
+                                        Objects.requireNonNullElse(localeStr, defaultLocale.toString()),
+                                        locationParams, request);
     }
 
     private Response getTemplateResource(@Nullable final String localeStr,
                                          final TenantKey tenantKey,
                                          final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
-        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final String tenantKeyStr = localeStr != null ?
                                     LocaleUtils.localeString(LocaleUtils.toLocale(localeStr), tenantKey.toString()) :
                                     tenantKey.toString();
-        final List<String> result = tenantApi.getTenantValuesForKey(tenantKeyStr, tenantContext);
+        return getTemplateResource(localeStr, tenantKeyStr, request);
+    }
+
+    private Response getTemplateResource(@Nullable final String localeStr,
+                                         final String tenantKey,
+                                         final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<String> result = tenantApi.getTenantValuesForKey(tenantKey, tenantContext);
         return result.isEmpty() ? Response.status(Status.NOT_FOUND).build() : Response.status(Status.OK).entity(result.get(0)).build();
     }
 

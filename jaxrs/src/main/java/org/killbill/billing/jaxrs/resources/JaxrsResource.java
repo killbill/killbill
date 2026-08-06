@@ -193,6 +193,8 @@ public interface JaxrsResource {
 
     String QUERY_INVOICES_FILTER = "invoicesFilter";
 
+    String QUERY_INVOICE_TEMPLATE_WITH_BRAND_INFO = "templateWithBrandInfo";
+
     String CHARGES = "charges";
     String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 
