@@ -469,7 +469,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         if (dryRunSubscriptionSpec != null && dryRunSubscriptionSpec.getDryRunAction() != null) {
             if (SubscriptionEventType.START_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction()) || SubscriptionEventType.CHANGE.equals(dryRunSubscriptionSpec.getDryRunAction())) {
                 if (dryRunSubscriptionSpec.getPlanName() == null) {
-                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified when no planName is specified");
+                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product name should be specified when no planName is specified");
                     verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified when no planName is specified");
                     verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductCategory(), "DryRun subscription product category should be specified when no planName is specified");
                     if (dryRunSubscriptionSpec.getProductCategory().equals(ProductCategory.ADD_ON)) {
@@ -863,13 +863,12 @@ public class InvoiceResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
-    @Path("/" + INVOICE_MP_TEMPLATE + "/{locale:" + ANYTHING_PATTERN + "}/")
+    @Path("/" + INVOICE_MP_TEMPLATE)
     @Produces(TEXT_HTML)
     @Operation(summary = "Retrieves the manualPay invoice template for the tenant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = TEXT_HTML, schema = @Schema(implementation = String.class))),
                            @ApiResponse(responseCode = "404", description = "Template not found")})
-    public Response getInvoiceMPTemplate(@PathParam("locale") final String localeStr,
-                                         @jakarta.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
+    public Response getInvoiceMPTemplate(@jakarta.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, TenantApiException {
         return getTemplateResource(null, TenantKey.INVOICE_MP_TEMPLATE, request);
     }
 
