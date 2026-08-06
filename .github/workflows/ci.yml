@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - maint-for-0-24-x
   pull_request:
   workflow_dispatch:
 
