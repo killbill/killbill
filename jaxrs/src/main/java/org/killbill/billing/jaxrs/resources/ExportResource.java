@@ -49,6 +49,7 @@ import org.killbill.commons.metrics.api.annotation.TimedResource;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
@@ -81,14 +82,24 @@ public class ExportResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_OCTET_STREAM)
     @Operation(summary = "Export account data")
-    // Swagger Core 1.x (0.24.x) had built-in filtering for javax.ws.rs.core.Response and never
-    // introspected it into a schema. Swagger Core 2.x does not have this filtering — an explicit
-    // @Schema(implementation = Response.class) causes the scanner to recursively introspect the
-    // entire JAX-RS Response class hierarchy (EntityTag, Link, MediaType, NewCookie, StatusType,
-    // UriBuilder), polluting the spec with framework internals. The 0.24.x spec declared no
-    // response schema for this endpoint, so we keep it schema-less for backward compatibility —
-    // generated clients returned void/raw-response and existing code relies on that contract.
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation"),
+    //
+    // Why schema-less @ApiResponse?
+    //   Swagger Core 1.x had built-in filtering for javax.ws.rs.core.Response — it never
+    //   introspected it. Swagger Core 2.x does NOT filter: an explicit
+    //   @Schema(implementation = Response.class) recursively introspects the entire JAX-RS
+    //   Response hierarchy (EntityTag, Link, MediaType, NewCookie, StatusType, UriBuilder),
+    //   polluting the spec with framework internals. The 0.24.x spec had no response schema
+    //   here, so we keep it schema-less to preserve generated-client backward compatibility.
+    //
+    // Why explicit @Content(mediaType)?
+    //   Swagger Core 2.x only records media types inside OAS3 "content" maps, which require
+    //   @Content. Without it, @Produces(APPLICATION_OCTET_STREAM) is invisible to the scanner
+    //   and the Swagger 2.0 converter defaults to produces:["application/json"] — breaking
+    //   codegen (loses OutputStream parameter, wrong Accept header). The @Content here (no
+    //   schema) makes OAS3 truthful AND gives the converter the correct media type.
+    //
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "successful operation",
+                                        content = @Content(mediaType = APPLICATION_OCTET_STREAM)),
                            @ApiResponse(responseCode = "400", description = "Invalid account id supplied"),
                            @ApiResponse(responseCode = "404", description = "Account not found")})
     public StreamingOutput exportDataForAccount(@PathParam("accountId") final UUID accountId,

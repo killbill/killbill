@@ -49,9 +49,12 @@ import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.commons.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 /**
  * Format invoice fields
@@ -73,10 +76,19 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     private final ResourceBundle defaultBundle;
 
+    private final TenantContext tenantContext;
+
     public DefaultInvoiceFormatter(final String defaultLocale,
                                    final String catalogBundlePath, final Invoice invoice, final Locale locale,
                                    final CurrencyConversionApi currencyConversionApi, final ResourceBundle bundle,
                                    final ResourceBundle defaultBundle) {
+        this(defaultLocale, catalogBundlePath, invoice, locale, currencyConversionApi, bundle, defaultBundle, null);
+    }
+
+    public DefaultInvoiceFormatter(final String defaultLocale,
+                                   final String catalogBundlePath, final Invoice invoice, final Locale locale,
+                                   final CurrencyConversionApi currencyConversionApi, final ResourceBundle bundle,
+                                   final ResourceBundle defaultBundle, final TenantContext tenantContext) {
         this.defaultLocale = defaultLocale;
         this.catalogBundlePath = catalogBundlePath;
         this.invoice = invoice;
@@ -85,6 +97,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         this.currencyConversionApi = currencyConversionApi;
         this.bundle = bundle;
         this.defaultBundle = defaultBundle;
+        this.tenantContext = tenantContext;
     }
 
     @Override
@@ -129,6 +142,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
         return invoiceItems;
 
+    }
+
+    @Nullable
+    protected TenantContext getTenantContext() {
+        return this.tenantContext;
     }
 
     @Override
