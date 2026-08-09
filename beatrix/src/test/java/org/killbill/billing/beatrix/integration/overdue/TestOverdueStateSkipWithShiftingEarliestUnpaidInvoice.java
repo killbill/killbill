@@ -46,55 +46,51 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Reproduces the "overdue state skip" defect reported by a client.
+ * The overdue reevaluation schedule is not re-anchored when the earliest unpaid invoice date changes,
+ * so a configured state can be passed over entirely.
  *
- * <p>When an account carries several unpaid invoices and the OLDEST ones are paid while a NEWER one
- * remains unpaid, the date of the earliest unpaid invoice shifts forward. The overdue check already
- * scheduled against the OLD earliest-unpaid date is not recomputed against the new one.
+ * <h3>The model these tests assume</h3>
  *
- * <p>Three code paths combine:
+ * <p>The overdue system does not poll and recompute. It schedules the NEXT check for the moment the
+ * NEXT state is expected to become due, and the documentation asks the operator to choose
+ * {@code initialReevaluationInterval} and each {@code autoReevaluationInterval} so that every check
+ * lands exactly on the following threshold. The configuration used here does exactly that:
  *
- * <ol>
- *   <li>{@code OverdueListener.handlePaymentInfoEvent()} DOES react to the payment and DOES try to
- *       reschedule, but {@code OverdueCheckPoster.cleanupFutureNotificationsFormTransaction()} keeps
- *       whichever notification is EARLIEST - so the stale-but-earlier date wins over the
- *       fresh-but-later correct one, and the self-healing path is defeated.</li>
- *   <li>When the stale check fires and matches nothing, {@code OverdueStateApplicator.apply()}
- *       reschedules as {@code effectiveDate.plus(reevaluationInterval)} - "now + interval" - rather
- *       than against the date the next threshold actually becomes true. The next check therefore
- *       lands past the WARNING threshold.</li>
- *   <li>{@code DefaultOverdueStateSet.calculateOverdueState()} iterates states in XML order (most
- *       severe first) and returns the first match, so once BOTH WARNING and BLOCKED are satisfied it
- *       returns BLOCKED and never evaluates WARNING.</li>
- * </ol>
+ * <pre>
+ *   initialReevaluationInterval 5  -> day 5  == WARNING     (5)
+ *   WARNING  autoReevaluationInterval 2 -> day 7  == BLOCKED      (7)
+ *   BLOCKED  autoReevaluationInterval 4 -> day 11 == CANCELLATION (11)
+ * </pre>
  *
- * <p>Net effect: CLEAR -&gt; BLOCKED, with no grace period and no WARNING notification.
+ * <p>That alignment is computed from the earliest unpaid invoice date at the time the first check is
+ * scheduled. Nothing recomputes it if that date later moves. When older invoices are paid and a newer
+ * one is left unpaid, the anchor shifts forward, every scheduled check is left misaligned, and
+ * {@code OverdueStateApplicator.apply()} compounds it by scheduling the next check relative to the
+ * date the current check ran rather than to the new anchor.
  *
- * <h3>Why this test is structured the way it is</h3>
+ * <h3>What is and is not claimed here</h3>
  *
- * <p>The test walks the ENTIRE timeline and asserts only at the end, so one run demonstrates both
- * symptoms rather than aborting on the first:
+ * <p>The defect is the missing re-anchoring. Severity-first matching in
+ * {@code DefaultOverdueStateSet.calculateOverdueState()} is NOT treated as a defect: the docs state
+ * that XML state order is significant and that the first state belongs at the bottom, and
+ * {@code getFirstState()} returning the last element corroborates that. It is the mechanism by which
+ * the missing re-anchoring becomes visible, not an independent fault - see
+ * {@link #testDelayedCheckAppliesMostSevereMatchingState()}, which asserts that behaviour as correct.
+ *
+ * <h3>Structure</h3>
  *
  * <ul>
- *   <li><b>Symptom A (timing)</b> - nothing is evaluated on the date WARNING becomes due.</li>
- *   <li><b>Symptom B (skip)</b> - the account reaches BLOCKED having never passed through WARNING.</li>
+ *   <li>{@link #testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward()} - the defect. FAILS on
+ *       current master.</li>
+ *   <li>{@link #testControlProgressiveDegradationWithoutPartialPayment()} - same config, anchor never
+ *       moves, correct progression. PASSES.</li>
+ *   <li>{@link #testDelayedCheckAppliesMostSevereMatchingState()} - characterization of the
+ *       evaluate-at-run-time behaviour. PASSES.</li>
  * </ul>
  *
- * <p>Symptom B is the defect the client actually reported; an earlier version of this test asserted
- * on Symptom A first and therefore never reached the step where B occurs.
- *
- * <p>Fixing the reschedule arithmetic alone is expected to resolve BOTH symptoms: if the check fires
- * on time at D+7, exactly 5 days have elapsed, so WARNING matches and BLOCKED (&gt;= 7) does not, and
- * the severity-first iteration never gets the chance to misbehave. This test therefore stays green
- * after that fix and remains a meaningful regression test for the skip itself.
- *
- * <p>The clock steps after the pivot deliberately do NOT assert on exact bus events, because the
- * event profile of those steps changes once the defect is fixed (WARNING starts firing at D+7).
- * Pinning events there would make this test fail on the FIXED code for the wrong reason. The
- * assertions are on observable overdue state instead, which is what the defect is about.
- *
- * <p>{@link #testControlProgressiveDegradationWithoutPartialPayment()} is the control: identical
- * config, no partial payment, correct CLEAR -&gt; WARNING -&gt; BLOCKED progression.
+ * <p>NOTE: {@code GuicyKillbillTestSuite} sets a {@code hasFailed} flag on the first failure in a
+ * class, after which the remaining methods are reported as skipped. Run methods individually when
+ * investigating.
  */
 public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestOverdueBase {
 
@@ -102,13 +98,10 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
     private static final String BLOCKED = "BLOCKED";
     private static final String CLEAR = OverdueWrapper.CLEAR_STATE_NAME;
 
-    // Overdue configuration reproduced verbatim from the client report.
-    //
-    // This config is load-bearing, not incidental. The defect depends on the relationship between
-    // initialReevaluationInterval (5) and the two lowest thresholds (WARNING 5, BLOCKED 7): a 5-day
-    // reschedule from the fire date overshoots the 2-day window in which WARNING is the only match.
-    // With a smaller initialReevaluationInterval the check would land inside that window and no skip
-    // would occur - which is why "lower the interval" is a usable workaround but not a fix.
+    // Configuration reproduced verbatim from the client report. It is aligned to the thresholds
+    // exactly as the documentation prescribes (see the class javadoc), which is what rules out
+    // misconfiguration as an explanation: no choice of interval values prevents the failure, because
+    // the alignment is invalidated by the anchor moving rather than by the intervals being wrong.
     @Override
     public String getOverdueConfig() {
         return "<overdueConfig>" +
@@ -156,10 +149,10 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Repro
+    // The defect
     // ---------------------------------------------------------------------------------------------
 
-    @Test(groups = "slow", description = "WARNING is skipped when the earliest unpaid invoice date shifts forward after a partial payment")
+    @Test(groups = "slow", description = "Reevaluation schedule is not re-anchored when the earliest unpaid invoice date shifts, and WARNING is passed over")
     public void testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward() throws Exception {
 
         final List<String> timeline = new ArrayList<String>();
@@ -176,98 +169,95 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         // D+0 (2012-05-31) - out of trial, first real invoice, payment fails.
-        // Anchor: earliest unpaid = 05-31, and overdue schedules its first check for
-        // 05-31 + initialReevaluationInterval(5) = 06-05.
+        // Anchor is 05-31, and the schedule aligned to it is: 06-05 WARNING, 06-07 BLOCKED, 06-11 CANCELLATION.
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
-        record(timeline, statesObserved, "D+0  2012-05-31  recurring invoice unpaid (earliest = 05-31)");
+        record(timeline, statesObserved, "D+0  2012-05-31  recurring invoice unpaid (anchor = 05-31)");
         checkODState(CLEAR);
 
-        // D+0 - second unpaid invoice, same day. Earliest unpaid still 05-31.
+        // D+0 - second unpaid invoice, same day. Anchor unchanged.
         addExternalChargeThatFailsPayment("Charge A", new BigDecimal("500.00"));
-        record(timeline, statesObserved, "D+0  2012-05-31  external charge 500 unpaid (earliest = 05-31)");
+        record(timeline, statesObserved, "D+0  2012-05-31  external charge 500 unpaid (anchor = 05-31)");
 
-        // D+2 (2012-06-02) - third unpaid invoice. Earliest unpaid still 05-31.
+        // D+2 (2012-06-02) - third unpaid invoice. Anchor still 05-31, since 05-31 invoices are unpaid.
         addDaysAndCheckForCompletion(2);
         addExternalChargeThatFailsPayment("Charge B", new BigDecimal("700.00"));
-        record(timeline, statesObserved, "D+2  2012-06-02  external charge 700 unpaid (earliest = 05-31)");
+        record(timeline, statesObserved, "D+2  2012-06-02  external charge 700 unpaid (anchor = 05-31)");
 
         // D+2 - THE PIVOT. Pay the two OLDEST invoices, leaving the 700 invoice (dated 06-02) unpaid.
-        // Earliest unpaid shifts 05-31 -> 06-02, so the correct WARNING date becomes 06-02 + 5 = 06-07.
-        // The already-scheduled 06-05 check is not recomputed: the payment event's attempt to
-        // reschedule to 06-07 loses to the earlier stale 06-05 entry in OverdueCheckPoster.
+        // The anchor moves 05-31 -> 06-02, so the correct schedule becomes 06-07 / 06-09 / 06-13.
+        // The check already queued for 06-05 is not re-anchored to 06-07.
         paymentPlugin.makeAllInvoicesFailWithError(false);
         payTwoOldestUnpaidInvoices();
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        record(timeline, statesObserved, "D+2  2012-06-02  paid 2 oldest -> earliest SHIFTS to 06-02");
+        record(timeline, statesObserved, "D+2  2012-06-02  paid 2 oldest -> anchor MOVES to 06-02");
         checkODState(CLEAR);
 
-        // D+3 (2012-06-03) - one more unpaid invoice. Earliest unpaid remains 06-02.
+        // D+3 (2012-06-03) - one more unpaid invoice. Anchor remains 06-02.
         addDaysAndCheckForCompletion(1);
         addExternalChargeThatFailsPayment("Charge C", new BigDecimal("200.00"));
-        record(timeline, statesObserved, "D+3  2012-06-03  external charge 200 unpaid (earliest = 06-02)");
+        record(timeline, statesObserved, "D+3  2012-06-03  external charge 200 unpaid (anchor = 06-02)");
 
-        // D+5 (2012-06-05) - the stale check fires. 06-05 - 06-02 = 3 days, nothing matches, which is
-        // correct. The defect is what happens next: reschedule is 06-05 + 5 = 06-10, not 06-02 + 5 = 06-07.
+        // D+5 (2012-06-05) - the misaligned check fires. 3 days since the anchor, nothing matches, which
+        // is correct. The defect is what it schedules next: 06-05 + 5 = 06-10, computed from the date the
+        // check ran rather than from the anchor, which would have given 06-02 + 5 = 06-07.
         //
-        // Landing exactly here and seeing CLEAR is itself meaningful - it confirms the earliest unpaid
-        // date really did shift. Had it still been 05-31, then 06-05 - 05-31 = 5 would have matched WARNING.
+        // Landing exactly here and observing CLEAR also confirms the anchor really did move: had it still
+        // been 05-31, 06-05 - 05-31 = 5 would have matched WARNING.
         advanceAndSettle(2);
-        final String stateAtStaleCheck = record(timeline, statesObserved, "D+5  2012-06-05  stale check fires, no match, reschedules to 06-10");
+        final String stateAtStaleCheck = record(timeline, statesObserved, "D+5  2012-06-05  misaligned check fires, no match, schedules 06-10");
 
-        // D+7 (2012-06-07) - WARNING is due: 06-02 + 5. On unpatched code nothing is scheduled for this
-        // date, so the account is still CLEAR. Recorded, NOT asserted - we need to keep going.
-        //
-        // Landing exactly on this date is what the client's own report could not do: they moved the
-        // clock Aug 11 -> Aug 16 and never observed the WARNING due date, so their evidence could not
-        // distinguish "rescheduled past it" from "scheduled correctly but fired late".
+        // D+7 (2012-06-07) - WARNING is due against the current anchor. Nothing is scheduled for this
+        // date, so the account is still CLEAR. Recorded, not asserted - the run must continue.
         advanceAndSettle(2);
-        final String stateAtWarningDue = record(timeline, statesObserved, "D+7  2012-06-07  WARNING DUE (earliest 06-02 + 5)");
+        final String stateAtWarningDue = record(timeline, statesObserved, "D+7  2012-06-07  WARNING DUE (anchor 06-02 + 5)");
 
-        // D+10 (2012-06-10) - the rescheduled check fires. 06-10 - 06-02 = 8 days, satisfying BOTH
-        // WARNING (>= 5) and BLOCKED (>= 7). calculateOverdueState() returns BLOCKED on the first match.
+        // D+10 (2012-06-10) - the check finally fires, 8 days after the anchor, past both WARNING and
+        // BLOCKED. The most severe satisfied state is applied and WARNING is never entered.
         advanceAndSettle(3);
-        final String stateAtRescheduledCheck = record(timeline, statesObserved, "D+10 2012-06-10  rescheduled check fires (8 days elapsed)");
+        final String stateAtRescheduledCheck = record(timeline, statesObserved, "D+10 2012-06-10  check fires (8 days after anchor)");
 
         // -----------------------------------------------------------------------------------------
-        // Assertions - collected so a single run reports both symptoms
+        // Assertions collected so a single run reports the whole picture
         // -----------------------------------------------------------------------------------------
         final StringBuilder problems = new StringBuilder();
 
-        // Symptom A - the reschedule arithmetic skipped over the WARNING due date entirely.
+        // The scheduling defect: no check exists on the date WARNING became due against the new anchor.
         if (!WARNING.equals(stateAtWarningDue)) {
-            problems.append("\n[A] TIMING: account should be in WARNING on 2012-06-07 (earliest unpaid 2012-06-02 + 5 days) but was '")
+            problems.append("\n[A] SCHEDULE NOT RE-ANCHORED: on 2012-06-07 the account should be in WARNING - the earliest ")
+                    .append("unpaid invoice is 2012-06-02 and WARNING is configured at 5 days - but it was '")
                     .append(stateAtWarningDue)
-                    .append("'. The check at 2012-06-05 found no match and rescheduled to fireDate + initialReevaluationInterval ")
-                    .append("(2012-06-05 + 5 = 2012-06-10) instead of to 2012-06-07, so nothing evaluates the account on the date ")
-                    .append("WARNING becomes true.");
+                    .append("'. The check at 2012-06-05 matched nothing and scheduled its successor as fireDate + ")
+                    .append("initialReevaluationInterval (2012-06-05 + 5 = 2012-06-10) rather than re-anchoring on the ")
+                    .append("earliest unpaid invoice date (2012-06-02 + 5 = 2012-06-07). No check exists on the date the ")
+                    .append("configured threshold is reached.");
         }
 
-        // Symptom B - the reported defect: BLOCKED reached without ever passing through WARNING.
+        // The user-visible consequence.
         if (BLOCKED.equals(stateAtRescheduledCheck) && !statesObserved.contains(WARNING)) {
-            problems.append("\n[B] STATE SKIP: account reached BLOCKED on 2012-06-10 having never entered WARNING. ")
-                    .append("At that point 8 days had elapsed since the earliest unpaid invoice, satisfying both WARNING (>=5) ")
-                    .append("and BLOCKED (>=7); DefaultOverdueStateSet.calculateOverdueState() iterates most-severe-first and ")
-                    .append("returned BLOCKED without evaluating WARNING. Progressive degradation was violated and the customer ")
-                    .append("was suspended with no grace period and no WARNING notification.");
+            problems.append("\n[B] CONSEQUENCE: the account went from CLEAR to BLOCKED on 2012-06-10 without ever entering ")
+                    .append("WARNING. By then 8 days had elapsed since the earliest unpaid invoice, so both WARNING (>=5) and ")
+                    .append("BLOCKED (>=7) were satisfied and the most severe was applied - correct in itself, but only ")
+                    .append("reachable because the check did not run on 2012-06-07. No WARNING notification was emitted and ")
+                    .append("no blocking_states row was written for it, so the customer was suspended with no grace period.");
         }
 
-        // Sanity: if neither symptom fired, the account must actually have progressed correctly.
-        // Otherwise the scenario silently stopped reproducing anything and the test proves nothing.
+        // Guard: if neither fired and the account is not BLOCKED, the scenario stopped reproducing and
+        // this test proves nothing - fail loudly rather than pass silently.
         if (problems.length() == 0 && !BLOCKED.equals(stateAtRescheduledCheck)) {
-            problems.append("\n[!] SCENARIO DID NOT REPRODUCE: expected the account to be BLOCKED by 2012-06-10 (8 days since ")
+            problems.append("\n[!] SCENARIO DID NOT REPRODUCE: expected the account to be BLOCKED by 2012-06-10 (8 days after ")
                     .append("the earliest unpaid invoice) but it was '").append(stateAtRescheduledCheck)
-                    .append("'. State at the stale check was '").append(stateAtStaleCheck)
-                    .append("'. Check that the partial payment actually shifted the earliest unpaid invoice date.");
+                    .append("'. State at the misaligned check was '").append(stateAtStaleCheck)
+                    .append("'. Check that the partial payment actually moved the earliest unpaid invoice date.");
         }
 
         assertTrue(problems.length() == 0, problems.toString() + renderTimeline(timeline, statesObserved));
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Control - same config, no partial payment, correct progression
+    // Control - anchor never moves, schedule stays aligned
     // ---------------------------------------------------------------------------------------------
 
-    @Test(groups = "slow", description = "Control: without a partial payment the progression CLEAR -> WARNING -> BLOCKED is correct")
+    @Test(groups = "slow", description = "Control: with a fixed earliest unpaid invoice date the progression CLEAR -> WARNING -> BLOCKED is correct")
     public void testControlProgressiveDegradationWithoutPartialPayment() throws Exception {
 
         final List<String> timeline = new ArrayList<String>();
@@ -282,10 +272,10 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
                 NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
-        // D+0 (2012-05-31) - single unpaid invoice, never partially paid, so the earliest unpaid date
-        // stays 05-31 throughout and every scheduled check remains valid.
+        // D+0 (2012-05-31) - a single unpaid invoice, never partially paid, so the anchor never moves and
+        // every scheduled check stays aligned with its threshold.
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
-        record(timeline, statesObserved, "D+0  2012-05-31  recurring invoice unpaid");
+        record(timeline, statesObserved, "D+0  2012-05-31  recurring invoice unpaid (anchor = 05-31)");
         checkODState(CLEAR);
 
         // D+5 (2012-06-05) - WARNING: 05-31 + 5.
@@ -294,7 +284,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
         assertEquals(currentODState(), WARNING,
                      "Control scenario should reach WARNING on 2012-06-05." + renderTimeline(timeline, statesObserved));
 
-        // D+7 (2012-06-07) - BLOCKED: 05-31 + 7, reached via WARNING's autoReevaluationInterval of 2.
+        // D+7 (2012-06-07) - BLOCKED: 05-31 + 7, via WARNING's autoReevaluationInterval of 2.
         addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.TAG);
         record(timeline, statesObserved, "D+7  2012-06-07  BLOCKED due");
         assertEquals(currentODState(), BLOCKED,
@@ -302,36 +292,32 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Isolation - does the state skip occur WITHOUT the reschedule defect?
+    // Characterization - NOT a defect, documents the assumption the defect above depends on
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * Isolates the severity-first matching defect from the reschedule defect.
+     * Documents that overdue conditions are evaluated at the time a check RUNS, not at the time it was
+     * scheduled for, so a check that runs past several thresholds applies the most severe satisfied
+     * state and passes over the intermediate ones.
      *
-     * <p>There is no partial payment here and the earliest unpaid invoice date never moves, so the
-     * FIRST scheduled check (D+0 + initialReevaluationInterval = D+5) is never stale and no reschedule
-     * ever takes place. The only thing that differs from the control is that the clock jumps past that
-     * check in a single step, so it fires late.
+     * <p>This is asserted as CORRECT behaviour, not as a fault. The documentation states that XML state
+     * order is significant and expects reevaluation intervals to be aligned so that checks land on their
+     * thresholds; {@code DefaultOverdueStateSet.getFirstState()} returning the last element corroborates
+     * the ordering convention. There is no documented guarantee that every state is entered when a check
+     * arrives late.
      *
-     * <p>This is possible because {@code OverdueWrapper.getNextOverdueState()} evaluates against
-     * {@code context.toLocalDate(context.getCreatedDate())} - i.e. the moment the check actually runs -
-     * not the date the notification was scheduled for. A check delayed for ANY reason therefore
-     * evaluates against the later date, where several thresholds may be satisfied at once.
+     * <p>It earns its place in this class for two reasons. It pins the behaviour that makes the
+     * re-anchoring defect harmful rather than merely late - without it, a delayed check would still enter
+     * WARNING and the consequence would be cosmetic. And it will start failing if anyone later changes
+     * {@code calculateOverdueState()} to enforce sequential transitions, which is a decision that should
+     * be made deliberately rather than as a side effect of fixing the scheduling.
      *
-     * <p>In production the equivalent causes are a backed-up notification queue, a node down over a
-     * weekend, or a tenant paused and resumed - none of which involve the reschedule arithmetic.
-     *
-     * <p>Interpreting the result:
-     * <ul>
-     *   <li><b>Fails (CLEAR -&gt; BLOCKED)</b> - the severity-first match is an independent defect,
-     *       reachable without the reschedule bug. It warrants its own issue and its own fix, and the
-     *       question of whether a delayed check should ever jump states becomes a product decision.</li>
-     *   <li><b>Passes</b> - the skip is only reachable via the reschedule path, so fixing the
-     *       reschedule arithmetic is the whole fix and sequential enforcement is unnecessary.</li>
-     * </ul>
+     * <p>The mechanism: {@code InternalCallContextFactory} defaults the context created date to
+     * {@code clock.getUTCNow()}, and {@code OverdueWrapper.getNextOverdueState()} evaluates against
+     * {@code context.toLocalDate(context.getCreatedDate())}.
      */
-    @Test(groups = "slow", description = "Isolation: does a check delayed by something OTHER than the reschedule bug also skip WARNING?")
-    public void testStateSkipFromDelayedCheckWithoutRescheduleDefect() throws Exception {
+    @Test(groups = "slow", description = "Characterization: a check running past several thresholds applies the most severe satisfied state")
+    public void testDelayedCheckAppliesMostSevereMatchingState() throws Exception {
 
         final List<String> timeline = new ArrayList<String>();
         final Set<String> statesObserved = new LinkedHashSet<String>();
@@ -345,26 +331,23 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
                 NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
-        // D+0 (2012-05-31) - one unpaid invoice. Earliest unpaid = 05-31 and stays there for the whole
-        // test. First (and only) check is scheduled for 05-31 + 5 = 06-05, and is never rescheduled.
+        // D+0 (2012-05-31) - one unpaid invoice. Anchor is fixed at 05-31 for the whole test and the only
+        // check is scheduled for 06-05. No partial payment, so nothing here involves re-anchoring.
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
-        record(timeline, statesObserved, "D+0  2012-05-31  single unpaid invoice (earliest = 05-31)");
+        record(timeline, statesObserved, "D+0  2012-05-31  single unpaid invoice (anchor = 05-31)");
         checkODState(CLEAR);
 
-        // Jump straight to D+8 (2012-06-08) in ONE step, past the 06-05 check. That check now runs with
-        // 8 days elapsed - the same elapsed time as the client's reported Aug 16 evaluation - satisfying
-        // both WARNING (>= 5) and BLOCKED (>= 7), and still short of CANCELLATION (>= 11).
+        // Jump to D+8 (2012-06-08) in one step, past the 06-05 check. It then runs with 8 days elapsed,
+        // satisfying WARNING (>= 5) and BLOCKED (>= 7) but not CANCELLATION (>= 11).
         advanceAndSettle(8);
-        final String stateAfterDelayedCheck = record(timeline, statesObserved, "D+8  2012-06-08  delayed first check fires (8 days elapsed)");
+        final String stateAfterDelayedCheck = record(timeline, statesObserved, "D+8  2012-06-08  delayed check runs (8 days after anchor)");
 
-        assertTrue(!BLOCKED.equals(stateAfterDelayedCheck) || statesObserved.contains(WARNING),
-                   "\n[C] INDEPENDENT STATE SKIP: a check delayed by clock movement alone - no partial payment, no "
-                   + "stale notification, no reschedule - still took the account straight to BLOCKED without passing "
-                   + "through WARNING. At 8 days elapsed both WARNING (>=5) and BLOCKED (>=7) were satisfied and "
-                   + "DefaultOverdueStateSet.calculateOverdueState() returned the most severe match. This means the "
-                   + "severity-first matching defect is reachable independently of the reschedule arithmetic, and "
-                   + "fixing the reschedule alone would leave it latent."
-                   + renderTimeline(timeline, statesObserved));
+        assertEquals(stateAfterDelayedCheck, BLOCKED,
+                     "A check running 8 days after the earliest unpaid invoice is expected to apply BLOCKED, the most "
+                     + "severe satisfied state. If this now reports WARNING, sequential state transitions have been "
+                     + "introduced in DefaultOverdueStateSet.calculateOverdueState() - a deliberate semantic change that "
+                     + "should be reviewed on its own merits, not adopted as a side effect of a scheduling fix."
+                     + renderTimeline(timeline, statesObserved));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -372,13 +355,13 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * Move the clock and wait for the notification queues to drain, WITHOUT asserting which bus
-     * events arrived.
+     * Move the clock and wait for the notification queues to drain, without asserting which bus events
+     * arrived.
      *
-     * <p>Deliberate: the event profile of the post-pivot steps changes once the defect is fixed -
-     * WARNING starts firing at D+7, emitting a BLOCK event that does not occur on unpatched code. A
-     * test that pinned exact events there would fail on the FIXED code for the wrong reason. The bus
-     * handler is reset afterwards so those unasserted events do not trip a later assertListenerStatus().
+     * <p>Deliberate: the event profile of the post-pivot steps changes once the scheduling defect is
+     * fixed - WARNING starts firing at D+7, emitting a BLOCK event that does not occur on current
+     * master. Pinning exact events there would make this test fail on FIXED code for the wrong reason.
+     * {@code TestApiListener} flags unexpected events, so the handler is reset afterwards.
      */
     private void advanceAndSettle(final int days) {
         clock.addDays(days);
@@ -409,7 +392,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
         assertTrue(unpaid.size() >= 3,
                    "Expected at least 3 unpaid invoices before the partial payment, found " + unpaid.size());
 
-        // Pay the two oldest only - the newest must stay unpaid so the earliest-unpaid date shifts.
+        // Pay the two oldest only - the newest must stay unpaid so the anchor moves forward.
         createExternalPaymentAndCheckForCompletion(account, unpaid.get(0), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         createExternalPaymentAndCheckForCompletion(account, unpaid.get(1), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
     }
