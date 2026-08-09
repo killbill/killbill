@@ -361,7 +361,13 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
      * <p>Deliberate: the event profile of the post-pivot steps changes once the scheduling defect is
      * fixed - WARNING starts firing at D+7, emitting a BLOCK event that does not occur on current
      * master. Pinning exact events there would make this test fail on FIXED code for the wrong reason.
-     * {@code TestApiListener} flags unexpected events, so the handler is reset afterwards.
+     *
+     * <p>{@code areAllNotificationsProcessed()} going true is NOT sufficient on its own. A state
+     * transition drains from the notification queue first and only then posts BLOCK / TAG on the bus, so
+     * a bare {@code busHandler.reset()} at that moment clears the flag before those events arrive and
+     * they are recorded as unexpected immediately afterwards - which then trips the
+     * {@code assertListenerStatus()} that {@code GuicyKillbillTestSuite.run()} performs after the test
+     * method returns. {@code waitAndIgnoreEvents()} sleeps first and resets last, absorbing them.
      */
     private void advanceAndSettle(final int days) {
         clock.addDays(days);
@@ -371,7 +377,8 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
                 return areAllNotificationsProcessed(internalCallContext.getTenantRecordId());
             }
         });
-        busHandler.reset();
+        // Absorb the bus events that follow queue drain (BLOCK, TAG on a state transition), then reset.
+        busHandler.waitAndIgnoreEvents(3000);
     }
 
     private void addExternalChargeThatFailsPayment(final String description, final BigDecimal amount) throws Exception {
