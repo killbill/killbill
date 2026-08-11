@@ -1258,7 +1258,7 @@ public class TestInvoice extends TestJaxrsBase {
         final ZonedDateTime initialDate = ZonedDateTime.of(2026, 7, 1, 0, 0, 0, 0, ZoneId.systemDefault());
         clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
         callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE, ExtBusEventType.TENANT_CONFIG_CHANGE);
-        invoiceApi.uploadInvoiceTemplate(getResourceBodyString("org/killbill/billing/server/templates/HtmlInvoiceTemplate-brandInfo-with-logo-and-style.mustache"), true, true, requestOptions);
+        invoiceApi.uploadInvoiceTemplate(getResourceBodyString("org/killbill/billing/server/templates/HtmlInvoiceTemplate-brandInfo-with-logo-and-style.mustache"), requestOptions);
         tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.COMPANY_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/companyInfo.json"), requestOptions);
         tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.INVOICE_TEMPLATE_BRAND_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/invoiceTemplateBrandInfo.json"), requestOptions);
         tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.LOGO_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/logoInfo.json"), requestOptions);
