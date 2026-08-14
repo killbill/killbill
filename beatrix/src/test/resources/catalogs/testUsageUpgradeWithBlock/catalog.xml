@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2020-2026 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<!--
+    Four plans for the Volt product:
+      volt-usage-low      (ULow):  pure usage IN_ARREAR,  $1.00/unit
+      volt-usage-high     (UHigh): pure usage IN_ARREAR,  $3.00/unit
+      volt-recurring-low  (URLow): $20/month IN_ADVANCE + $1.00/unit IN_ARREAR
+      volt-recurring-high (URHigh):$20/month IN_ADVANCE + $3.00/unit IN_ARREAR
+-->
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+    <effectiveDate>2020-01-01T00:00:00+00:00</effectiveDate>
+    <catalogName>VoltMetered</catalogName>
+
+    <!-- Default billing mode is IN_ADVANCE (for the recurring plans).
+         The pure-usage plans override this at the plan level with IN_ARREAR. -->
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+
+    <units>
+        <unit name="unit"/>
+    </units>
+
+    <products>
+        <product name="Volt">
+            <category>BASE</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <!-- All plan changes are IMMEDIATE so that mid-period upgrades work cleanly. -->
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+        </priceList>
+    </rules>
+
+    <plans>
+
+        <plan name="volt-usage-low">
+            <product>Volt</product>
+            <!-- Override catalog-level IN_ADVANCE so this plan is billed IN_ARREAR -->
+            <recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="volt-usage-low-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>unit</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>1.00</value>
+                                            </price>
+                                        </prices>
+                                        <max>-1</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+        <plan name="volt-usage-high">
+            <product>Volt</product>
+            <recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="volt-usage-high-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>unit</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>3.00</value>
+                                            </price>
+                                        </prices>
+                                        <max>-1</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+        <plan name="volt-recurring-low">
+            <product>Volt</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>20.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage name="volt-recurring-low-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>unit</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>1.00</value>
+                                            </price>
+                                        </prices>
+                                        <max>-1</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+        <plan name="volt-recurring-high">
+            <product>Volt</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>20.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage name="volt-recurring-high-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>unit</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>3.00</value>
+                                            </price>
+                                        </prices>
+                                        <max>-1</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+    </plans>
+
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>volt-usage-low</plan>
+                <plan>volt-usage-high</plan>
+                <plan>volt-recurring-low</plan>
+                <plan>volt-recurring-high</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+
+</catalog>
