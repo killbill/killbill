@@ -208,8 +208,7 @@ public class InvoiceDispatcher {
         try {
             accountId = subscriptionApi.getAccountIdFromSubscriptionId(transition.getSubscriptionId(), context);
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed handling SubscriptionBase change.",
-                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));
+            log.warn("Failed to generate invoice, could not resolve accountId for subscriptionId='{}'", transition.getSubscriptionId(), e);
             return;
         }
 
@@ -244,8 +243,7 @@ public class InvoiceDispatcher {
 
             setFutureNotifications(account, notificationsBuilder.build(), context);
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed handling SubscriptionBase change.",
-                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));
+            log.warn("Failed to generate invoice, could not resolve accountId for subscriptionId='{}'", transition.getSubscriptionId(), e);
         } catch (final AccountApiException e) {
             log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
         } catch (final CatalogApiException e) {
@@ -443,19 +441,19 @@ public class InvoiceDispatcher {
             printInvoiceTiming(invoiceTimings);
             return result;
         } catch (final CatalogApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final AccountApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
             return Collections.emptyList();
         } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
@@ -465,7 +463,7 @@ public class InvoiceDispatcher {
                 log.info("Invoice generation aborted by plugin for accountId='{}', targetDate='{}'", accountId, inputTargetDate);
                 return Collections.emptyList();
             }
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             // Only case where we park even if this is from an API call and isParkAccountsOnAllExceptions is not explicitly set.
             if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode() && !isDryRun) {
                 parkAccount(accountId, context);
@@ -479,7 +477,7 @@ public class InvoiceDispatcher {
             }
             throw e;
         } catch (RuntimeException e) { // The case of LockFailedException was handled prior we enter this method.
-            log.warn("Failed to generate invoice for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
+            log.warn("Failed to generate invoice for accountId='{}'", accountId, e);
             if (!isDryRun && !isApiCall && invoiceConfig.isParkAccountsOnAllExceptions(context)) {
                 parkAccount(accountId, context);
             }
