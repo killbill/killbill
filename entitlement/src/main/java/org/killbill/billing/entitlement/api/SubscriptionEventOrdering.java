@@ -95,11 +95,16 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
                 return List.of(SubscriptionEventType.STOP_BILLING);
             case PHASE:
                 return List.of(SubscriptionEventType.PHASE);
+            case BCD_CHANGE:
+                return List.of(SubscriptionEventType.BCD_UPDATE);
+            case QUANTITY_CHANGE:
+                return List.of(SubscriptionEventType.QUANTITY_UPDATE);
             /*
              * Those can be ignored:
              */
             // Marker event
             case UNCANCEL:
+            case UNDO_CHANGE:
                 // Junction billing events-- that info is part of blocking states, we will get outside of subscription base
             case START_BILLING_DISABLED:
             case END_BILLING_DISABLED:
