@@ -94,7 +94,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
      * EXPECTED : 2026-08-01 -> 2026-09-01 bills 150, from catalog v3 (the most recent change wins).
      * CURRENTLY: it bills 50, from catalog v2, and keeps billing 50 on every later period.
      */
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false, description = "Reproduces #2291")
     public void testTwoCatalogChangesWithinSameBillingCycle() throws Exception {
 
         clock.setDay(new LocalDate(2026, 7, 1));

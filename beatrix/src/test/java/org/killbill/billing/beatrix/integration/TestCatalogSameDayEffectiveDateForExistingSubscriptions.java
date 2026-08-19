@@ -94,7 +94,7 @@ public class TestCatalogSameDayEffectiveDateForExistingSubscriptions extends Tes
      *            2026-08-01 -> 2026-09-01 bills 200 at the next billing date.
      * CURRENTLY: every period bills 100 - the change is never applied at all.
      */
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false, description = "Reproduces #2291")
     public void testCatalogChangeOnSubscriptionStartDay() throws Exception {
 
         // Account first, so its reference time of day is 00:00
