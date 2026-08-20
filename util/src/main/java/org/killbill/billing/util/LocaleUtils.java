@@ -40,6 +40,20 @@ public class LocaleUtils {
 
     }
 
+    public static String localeStringWithOnlyLanguage(final Locale locale, @Nullable String prefix) {
+        final StringBuilder tmp = new StringBuilder();
+        if (prefix != null) {
+            tmp.append(prefix);
+            if (!prefix.endsWith("_")) {
+                tmp.append("_");
+            }
+        }
+        tmp.append(locale.getLanguage())
+           .append("_");
+        return tmp.toString();
+
+    }
+
     // From commons-lang
     public static Locale toLocale(final String str) {
         if (str == null) {
