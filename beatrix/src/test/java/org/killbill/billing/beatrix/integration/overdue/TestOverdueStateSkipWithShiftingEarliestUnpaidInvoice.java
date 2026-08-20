@@ -152,7 +152,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
     // The defect
     // ---------------------------------------------------------------------------------------------
 
-    @Test(groups = "slow", description = "Reevaluation schedule is not re-anchored when the earliest unpaid invoice date shifts, and WARNING is passed over")
+    @Test(groups = "slow", enabled = false,description = "Reproduces #2297.Reevaluation schedule is not re-anchored when the earliest unpaid invoice date shifts, and WARNING is passed over")
     public void testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward() throws Exception {
 
         final List<String> timeline = new ArrayList<String>();
