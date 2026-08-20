@@ -1241,10 +1241,6 @@ public class TestInvoice extends TestJaxrsBase {
         callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final String template = getResourceBodyString("org/killbill/billing/server/templates/HtmlInvoiceTemplate-default.mustache");
         invoiceApi.uploadInvoiceTemplate(template, requestOptions);
-        //There is an error with the following due to the issue reported in https://github.com/killbill/killbill/issues/1581
-        //        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
-        //        final String translations = getResourceBodyString("org/killbill/billing/server/templates/InvoiceTranslations_fr_FR.properties");
-        //        invoiceApi.uploadInvoiceTranslation("fr_FR", translations, requestOptions);
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
@@ -1271,5 +1267,34 @@ public class TestInvoice extends TestJaxrsBase {
         Assert.assertFalse(htmlInvoice.contains("logo.png"));
         Assert.assertTrue(htmlInvoice.contains("CloudSprout"));
     }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2304")
+    public void testHTMLInvoiceGenerationLanguageOnlyTranslation() throws Exception {
+        final ZonedDateTime initialDate = ZonedDateTime.of(2026, 7, 1, 0, 0, 0, 0, ZoneId.systemDefault());
+        clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE, ExtBusEventType.TENANT_CONFIG_CHANGE);
+        invoiceApi.uploadInvoiceTemplate(getResourceBodyString("org/killbill/billing/server/templates/HtmlInvoiceTemplate-brandInfo-with-logo-and-style.mustache"), requestOptions);
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        //  There is an error with the following due to the issue reported in https://github.com/killbill/killbill/issues/1581, hence the tenantApi.insertUserKeyValue is used to upload the translation
+        // invoiceApi.uploadInvoiceTranslation("en_GB", translations, requestOptions);
+        tenantApi.insertUserKeyValue("INVOICE_TRANSLATION_fr_", getResourceBodyString("org/killbill/billing/server/templates/InvoiceTranslations_fr.properties"), requestOptions);
+
+        tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.COMPANY_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/companyInfo.json"), requestOptions);
+        tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.INVOICE_TEMPLATE_BRAND_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/invoiceTemplateBrandInfo.json"), requestOptions);
+        tenantApi.insertUserKeyValue(InvoiceBrandingTenantKey.LOGO_INFO.name(), getResourceBodyString("org/killbill/billing/server/templates/logoInfo.json"), requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice("Shotgun", true, true, "fr_FR");
+
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
+        final Invoice invoiceJson = invoices.get(0);
+        final String htmlInvoice = invoiceApi.getInvoiceAsHTML(invoiceJson.getInvoiceId(), requestOptions);
+        Assert.assertFalse(htmlInvoice.contains("logo.png"));
+        Assert.assertTrue(htmlInvoice.contains("CloudSprout"));
+        Assert.assertTrue(htmlInvoice.contains("Facture"));
+    }
+
+
     
 }
