@@ -29,6 +29,7 @@ import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase.NextBillingCycleDayLocal;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
@@ -281,6 +282,140 @@ public class TestDefaultSubscriptionBase extends SubscriptionTestSuiteNoDB {
 
         DateTime result = subscriptionBase.getEffectiveDateForPolicy(billingPolicy, alignment, context);
         Assert.assertEquals(result, clock.getUTCNow());
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1909")
+    public void testFixedTermBillingEventsWithoutExpiredEventOnDisk() throws Exception {
+        final DateTime startDate = new DateTime(2023, 5, 1, 0, 0, DateTimeZone.UTC);
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(startDate), subscriptionBaseApiService, clock);
+
+        final UUID subscriptionId = UUID.randomUUID();
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEventPlan("pistol-monthly-fixedterm-no-trial")
+                                                                .setEventPlanPhase("pistol-monthly-fixedterm-no-trial-fixedterm")
+                                                                .setEventPriceList("fixedTerm")
+                                                                .setFromDisk(true)
+                                                                .setUuid(UUID.randomUUID())
+                                                                .setSubscriptionId(subscriptionId)
+                                                                .setCreatedDate(startDate)
+                                                                .setUpdatedDate(startDate)
+                                                                .setEffectiveDate(startDate)
+                                                                .setTotalOrdering(1)
+                                                                .setActive(true)));
+        subscriptionBase.rebuildTransitions(inputEvents, catalog);
+
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
+
+        Assert.assertEquals(result.size(), 2);
+        Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
+        Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(startDate), 0);
+        Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.EXPIRED);
+        Assert.assertEquals(result.get(1).getEffectiveDate().compareTo(startDate.plusMonths(12)), 0);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1909")
+    public void testFixedTermBillingEventsAfterPhaseWithoutExpiredEventOnDisk() throws Exception {
+        final DateTime startDate = new DateTime(2023, 5, 1, 0, 0, DateTimeZone.UTC);
+        final DateTime fixedTermPhaseDate = startDate.plusDays(30);
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(startDate), subscriptionBaseApiService, clock);
+
+        final UUID subscriptionId = UUID.randomUUID();
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEventPlan("pistol-monthly-fixedterm")
+                                                                .setEventPlanPhase("pistol-monthly-fixedterm-trial")
+                                                                .setEventPriceList("fixedTerm")
+                                                                .setFromDisk(true)
+                                                                .setUuid(UUID.randomUUID())
+                                                                .setSubscriptionId(subscriptionId)
+                                                                .setCreatedDate(startDate)
+                                                                .setUpdatedDate(startDate)
+                                                                .setEffectiveDate(startDate)
+                                                                .setTotalOrdering(1)
+                                                                .setActive(true)));
+        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("pistol-monthly-fixedterm-fixedterm")
+                                                                  .setUuid(UUID.randomUUID())
+                                                                  .setSubscriptionId(subscriptionId)
+                                                                  .setCreatedDate(startDate)
+                                                                  .setUpdatedDate(startDate)
+                                                                  .setEffectiveDate(fixedTermPhaseDate)
+                                                                  .setTotalOrdering(2)
+                                                                  .setActive(true)));
+        subscriptionBase.rebuildTransitions(inputEvents, catalog);
+
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
+
+        Assert.assertEquals(result.size(), 3);
+        Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
+        Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.PHASE);
+        Assert.assertEquals(result.get(1).getEffectiveDate().compareTo(fixedTermPhaseDate), 0);
+        Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.EXPIRED);
+        Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(fixedTermPhaseDate.plusMonths(12)), 0);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1909")
+    public void testEvergreenBillingEventsHaveNoExpiredEvent() throws Exception {
+        final DateTime startDate = new DateTime(2023, 5, 1, 0, 0, DateTimeZone.UTC);
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(startDate), subscriptionBaseApiService, clock);
+
+        final UUID subscriptionId = UUID.randomUUID();
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEventPlan("shotgun-monthly")
+                                                                .setEventPlanPhase("shotgun-monthly-evergreen")
+                                                                .setEventPriceList("DEFAULT")
+                                                                .setFromDisk(true)
+                                                                .setUuid(UUID.randomUUID())
+                                                                .setSubscriptionId(subscriptionId)
+                                                                .setCreatedDate(startDate)
+                                                                .setUpdatedDate(startDate)
+                                                                .setEffectiveDate(startDate)
+                                                                .setTotalOrdering(1)
+                                                                .setActive(true)));
+        subscriptionBase.rebuildTransitions(inputEvents, catalog);
+
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
+
+        Assert.assertEquals(result.size(), 1);
+        Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1909")
+    public void testNonFinalFixedTermPhaseHasNoExpiredEvent() throws Exception {
+        final DateTime startDate = new DateTime(2023, 5, 1, 0, 0, DateTimeZone.UTC);
+        final DateTime fixedTermPhaseDate = startDate.plusDays(30);
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(startDate), subscriptionBaseApiService, clock);
+
+        final UUID subscriptionId = UUID.randomUUID();
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEventPlan("pistol-monthly-fixedterm-and-evergreen")
+                                                                .setEventPlanPhase("pistol-monthly-fixedterm-and-evergreen-trial")
+                                                                .setEventPriceList("fixedTerm")
+                                                                .setFromDisk(true)
+                                                                .setUuid(UUID.randomUUID())
+                                                                .setSubscriptionId(subscriptionId)
+                                                                .setCreatedDate(startDate)
+                                                                .setUpdatedDate(startDate)
+                                                                .setEffectiveDate(startDate)
+                                                                .setTotalOrdering(1)
+                                                                .setActive(true)));
+        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("pistol-monthly-fixedterm-and-evergreen-fixedterm")
+                                                                  .setUuid(UUID.randomUUID())
+                                                                  .setSubscriptionId(subscriptionId)
+                                                                  .setCreatedDate(startDate)
+                                                                  .setUpdatedDate(startDate)
+                                                                  .setEffectiveDate(fixedTermPhaseDate)
+                                                                  .setTotalOrdering(2)
+                                                                  .setActive(true)));
+        subscriptionBase.rebuildTransitions(inputEvents, catalog);
+
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), subscriptionCatalogApi.getPriceOverrideSvcStatus(), internalCallContext);
+
+        Assert.assertEquals(result.size(), 2);
+        Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
+        Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.PHASE);
     }
 
 }
