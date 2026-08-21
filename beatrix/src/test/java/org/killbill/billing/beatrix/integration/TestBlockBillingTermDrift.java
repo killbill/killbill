@@ -103,10 +103,11 @@ public class TestBlockBillingTermDrift extends TestIntegrationBase {
      *   2024-09-24  blockBilling OFF  -> term 3, ends 2025-09-21
      *   2024-10-21  invoice run
      *
-     * EXPECTED : the invoice run succeeds.
-     * CURRENTLY: it throws ILLEGAL INVOICING STATE and the account is parked.
+     * EXPECTED : the invoice run succeeds and the account is not parked.
+     * TODAY    : it throws ILLEGAL INVOICING STATE and the account is parked, so this test FAILS
+     *            against the current code base. It should go green once the behaviour is fixed.
      */
-    @Test(groups = "slow", description = "Repeated blockBilling leaves overlapping terms and parks the account")
+    @Test(groups = "slow", description = "Repeated blockBilling must not leave overlapping terms that block invoicing")
     public void testRepeatedBlockBillingParksAccount() throws Exception {
 
         clock.setDay(new LocalDate(2024, 6, 9));
@@ -166,26 +167,19 @@ public class TestBlockBillingTermDrift extends TestIntegrationBase {
 
         reportLadder(account);
 
-        // Three terms, each ending later than the last. This is the defect.
-        assertTermEndDates(account,
-                           new LocalDate(2025, 6, 21),
-                           new LocalDate(2025, 7, 21),
-                           new LocalDate(2025, 9, 21));
-
-        // Parking the account writes the __PARK__ tag, which raises a TAG event.
-        busHandler.pushExpectedEvents(NextEvent.TAG);
+        // EXPECTED: the invoice run succeeds and the account is not parked.
+        // TODAY:    it throws ILLEGAL INVOICING STATE / "Double billing detected" and parks the
+        //           account, so this test fails until the underlying behaviour is fixed.
         try {
             invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2024, 10, 21),
                                                     Collections.emptyList(), callContext);
-            Assert.fail("Expected invoice generation to fail with ILLEGAL INVOICING STATE.\n" + DRIFT_EXPLANATION);
         } catch (final InvoiceApiException e) {
-            Assert.assertTrue(e.getMessage().contains("ILLEGAL INVOICING STATE"),
-                              "Expected ILLEGAL INVOICING STATE but got: " + e.getMessage());
+            Assert.fail("Invoice generation failed after two blockBilling cycles: " + e.getMessage()
+                        + "\n" + DRIFT_EXPLANATION);
         }
-        assertListenerStatus();
 
-        Assert.assertTrue(isParked(account),
-                          "Expected the account to be parked after the failed invoice run.\n" + DRIFT_EXPLANATION);
+        Assert.assertFalse(isParked(account),
+                           "Account was parked by the invoice run.\n" + DRIFT_EXPLANATION);
     }
 
     // ------------------------------------------------------------------------------------------
@@ -243,22 +237,6 @@ public class TestBlockBillingTermDrift extends TestIntegrationBase {
         }
         sb.append("+-------------+-------------+-------------+------------+\n");
         log.info(sb.toString());
-    }
-
-    private void assertTermEndDates(final Account account, final LocalDate... expected) throws Exception {
-
-        final List<LocalDate> actual = new ArrayList<LocalDate>();
-        for (final InvoiceItem item : billingItems(account)) {
-            if (item.getInvoiceItemType() == InvoiceItemType.RECURRING && !actual.contains(item.getEndDate())) {
-                actual.add(item.getEndDate());
-            }
-        }
-
-        for (final LocalDate date : expected) {
-            Assert.assertTrue(actual.contains(date),
-                              String.format("Expected a term ending %s but the terms end on %s.%n%s",
-                                            date, actual, DRIFT_EXPLANATION));
-        }
     }
 
     private boolean isParked(final Account account) throws Exception {
