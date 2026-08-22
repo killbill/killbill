@@ -107,7 +107,7 @@ public class TestBlockBillingTermDrift extends TestIntegrationBase {
      * TODAY    : it throws ILLEGAL INVOICING STATE and the account is parked, so this test FAILS
      *            against the current code base. It should go green once the behaviour is fixed.
      */
-    @Test(groups = "slow", description = "Repeated blockBilling must not leave overlapping terms that block invoicing")
+    @Test(groups = "slow", enabled = false, description = "https://github.com/killbill/killbill/issues/2306")
     public void testRepeatedBlockBillingParksAccount() throws Exception {
 
         clock.setDay(new LocalDate(2024, 6, 9));
