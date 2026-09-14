@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{text.invoiceTitle}}</title>
+  <style>
+     /*!
+      * Base layout adapted from sparksuite/invoice.css
+      */
+ 
+     /* ===========================
+        CSS VARIABLES (editable)
+        =========================== */
+     :root {
+       --text-color: {{brand.textColor}};
+       --table-heading-bg-color: {{brand.tableHeadingBgColor}};
+       --table-heading-text-color: {{brand.tableHeadingTextColor}};
+       --container-border-color: #dddddd;
+       --table-border-color: {{brand.tableBorderColor}};
+       --logo-max-width: 220px;
+     }
+ 
+     body {
+       margin: 0;
+       padding: 24px 8px;
+       background: #f5f7fa;
+     }
+ 
+     /* ===========================
+        INVOICE BASE STYLES
+        =========================== */
+     .invoice-box {
+       max-width: 640px;
+       margin: auto;
+       padding: 30px;
+       background: #ffffff;
+       border: 1px solid var(--container-border-color);
+       box-shadow: none;
+       font-size: 15px;
+       line-height: 24px;
+       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+       color: var(--text-color);
+     }
+ 
+     .invoice-box table {
+       width: 100%;
+       line-height: inherit;
+       text-align: left;
+       border-collapse: collapse;
+       border-spacing: 0;
+     }
+ 
+     .invoice-box table td {
+       padding: 6px 8px;
+       vertical-align: top;
+     }
+ 
+     .invoice-box table tr td:nth-child(3) {
+       text-align: right;
+     }
+ 
+     .invoice-box table tr.top table td.title {
+       padding-right: 20px;
+     }
+ 
+     .invoice-box table tr.top table td.title img {
+       display: block;
+       max-width: var(--logo-max-width);
+       height: auto;
+     }
+ 
+     .invoice-box table tr.top table td:last-child {
+       font-size: 14px;
+       line-height: 20px;
+       text-align: right;
+       padding-top: 2px;
+     }
+ 
+     .invoice-box table tr.heading td {
+       background: var(--table-heading-bg-color);
+       color: var(--table-heading-text-color);
+       border-top: 1px solid var(--table-border-color);
+       border-bottom: 1px solid var(--table-border-color);
+       font-weight: 700;
+       padding: 10px 12px;
+     }
+     .invoice-box table tr.heading td:first-child {
+       border-left: 1px solid var(--table-border-color);
+     }
+     .invoice-box table tr.heading td:last-child {
+       border-right: 1px solid var(--table-border-color);
+     }
+ 
+     .invoice-box table tr.item td {
+       border-bottom: 1px solid var(--table-border-color);
+       padding: 10px 12px;
+       margin: 0;
+     }
+     .invoice-box table tr.item td:first-child {
+       border-left: 1px solid var(--table-border-color);
+     }
+     .invoice-box table tr.item td:last-child {
+       border-right: 1px solid var(--table-border-color);
+     }
+ 
+     .invoice-box table tr.item.last td {
+       border-bottom: 1px solid var(--table-border-color);
+     }
+ 
+     .invoice-box table tr.total td:nth-child(3) {
+       padding-top: 6px;
+       margin: 0;
+     }
+ 
+     #notes,
+     #tnc {
+       font-size: 12px;
+       line-height: 18px;
+       color: #666666;
+       margin-top: 0;
+       margin-bottom: 0;
+     }
+     #notes {
+       font-weight: 700;
+       padding-top: 14px;
+     }
+ 
+     #tnc {
+       padding-top: 6px;
+     }
+ 
+     @media only screen and (max-width: 600px) {
+       .invoice-box table tr.top table td {
+         width: 100%;
+         display: block;
+         text-align: center;
+       }
+       .invoice-box table tr.information table td {
+         width: 100%;
+         display: block;
+         text-align: center;
+       }
+     }
+   </style>
+</head>
+<body>
+<div class="invoice-box">
+    <!-- {{#text.properties}}customKey{{/text.properties}} -->
+    <table cellpadding="0" cellspacing="0">
+        <tr class="top">
+            <td colspan="3">
+                <table>
+                    <tr>
+                        <td class="title">
+                            <img src="{{{logo.logo}}}" style="width:100%; max-width:300px;">
+                        </td>
+                        <td></td>
+                        <td>
+                            {{text.invoiceTitle}} INV#{{invoice.invoiceNumber}}<br>
+                            {{text.invoiceDate}}{{invoice.formattedInvoiceDate}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr class="information">
+            <td colspan="3">
+                <table>
+                    <tr>
+                        <td>
+                            {{company.companyName}}<br>
+                            {{company.companyAddress}}<br>
+                            {{company.companyCityProvincePostalCode}}<br>
+                            {{company.companyCountry}}
+                        </td>
+                        <td></td>
+                        <td>
+                            {{#account.name}}{{account.name}}<br>{{/account.name}}
+                            {{#account.companyName}}{{account.companyName}}<br>{{/account.companyName}}
+                            {{#account.address1}}{{account.address1}}<br>{{/account.address1}}
+                            {{#account.city}}{{account.city}}{{#account.stateOrProvince}}, {{account.stateOrProvince}}{{/account.stateOrProvince}} {{account.postalCode}}<br>{{/account.city}}
+                            {{account.country}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr class="heading">
+            <td>{{text.invoiceItemServicePeriod}}</td>
+            <td>{{text.invoiceItemDescription}}</td>
+            <td>{{text.invoiceItemAmount}}</td>
+        </tr>
+        {{#invoice.invoiceItems}}
+            <tr class="item last">
+                <td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>
+                <td>{{prettyPlanName}}</td>
+                <td>{{formattedAmount}}</td>
+            </tr>
+        {{/invoice.invoiceItems}}
+        <tr class="total">
+            <td></td>
+            <td></td>
+            <td>{{text.invoiceAmount}}{{invoice.formattedChargedAmount}}</td>
+        </tr>
+        <tr class="total">
+            <td></td>
+            <td></td>
+            <td>{{text.invoiceAmountPaid}}{{invoice.formattedPaidAmount}}</td>
+        </tr>
+        <tr class="total">
+            <td></td>
+            <td></td>
+            <td>{{text.invoiceBalance}}{{invoice.formattedBalance}}</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
