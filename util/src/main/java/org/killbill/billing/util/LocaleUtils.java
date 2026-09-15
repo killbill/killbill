@@ -25,7 +25,17 @@ public class LocaleUtils {
     private LocaleUtils() {
     }
 
-    public static String localeString(final Locale locale, @Nullable String prefix) {
+    public static String localeString(final Locale locale, @Nullable final String prefix) {
+        return localeString(locale.getLanguage(), locale.getCountry(), prefix);
+    }
+
+    public static String localeString(final String language, @Nullable final String prefix) {
+        return localeString(language, "", prefix);
+    }
+
+    private static String localeString(final String language,
+                                       final String country,
+                                       @Nullable final String prefix) {
         final StringBuilder tmp = new StringBuilder();
         if (prefix != null) {
             tmp.append(prefix);
@@ -33,11 +43,13 @@ public class LocaleUtils {
                 tmp.append("_");
             }
         }
-        tmp.append(locale.getLanguage())
-           .append("_")
-           .append(locale.getCountry());
-        return tmp.toString();
 
+        tmp.append(language);
+        if(!country.isEmpty()) {
+            tmp.append("_")
+               .append(country);
+        }
+        return tmp.toString();
     }
 
     // From commons-lang
