@@ -29,7 +29,7 @@ import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
-import org.killbill.billing.util.LocaleUtils;
+import org.killbill.commons.utils.locale.LocaleUtils;
 
 /**
  * This is the private API which is used to extract per tenant objects (catalog, overdue, invoice templates, ..)

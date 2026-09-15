@@ -96,7 +96,6 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
-import org.killbill.billing.util.LocaleUtils;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -113,6 +112,7 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
+import org.killbill.commons.utils.locale.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
