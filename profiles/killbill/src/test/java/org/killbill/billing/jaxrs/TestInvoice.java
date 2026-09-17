@@ -1242,12 +1242,18 @@ public class TestInvoice extends TestJaxrsBase {
         callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final String template = getResourceBodyString("org/killbill/billing/server/templates/HtmlInvoiceTemplate-legacy.mustache");
         invoiceApi.uploadInvoiceTemplate(template, requestOptions);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        //  There is an error with the following due to the issue reported in https://github.com/killbill/killbill/issues/1581, hence the tenantApi.insertUserKeyValue is used to upload the translation
+        // invoiceApi.uploadInvoiceTranslation("en_GB", translations, requestOptions);
+        tenantApi.insertUserKeyValue("INVOICE_TRANSLATION_fr", getResourceBodyString("org/killbill/billing/server/templates/InvoiceTranslations_legacy_fr.properties"), requestOptions);
+
        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
         final Invoice invoiceJson = invoices.get(0);
         final String htmlInvoice = invoiceApi.getInvoiceAsHTML(invoiceJson.getInvoiceId(), requestOptions);
-        Assert.assertTrue(htmlInvoice.contains("logo.png"));
+        Assert.assertTrue(htmlInvoice.contains("logo.png")); //logo is URL and not base64 encoded
+        Assert.assertTrue(htmlInvoice.contains("Killbill, Inc.")); //company name from legacy translation file
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2283")
