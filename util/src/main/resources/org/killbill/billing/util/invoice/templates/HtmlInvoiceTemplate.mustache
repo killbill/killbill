@@ -193,7 +193,7 @@
         {{#invoice.invoiceItems}}
             <tr class="item last">
                 <td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>
-                <td>{{prettyPlanName}}</td>
+                <td>{{#description}}{{description}}{{/description}}</td>
                 <td>{{formattedAmount}}</td>
             </tr>
         {{/invoice.invoiceItems}}
