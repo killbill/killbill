@@ -34,7 +34,7 @@ import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.Resourc
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
-import org.killbill.billing.util.LocaleUtils;
+import org.killbill.commons.utils.locale.LocaleUtils;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.skife.config.AugmentedConfigurationObjectFactory;

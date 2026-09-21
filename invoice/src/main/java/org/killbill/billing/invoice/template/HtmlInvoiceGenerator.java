@@ -35,17 +35,20 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
+import org.killbill.billing.invoice.branding.BrandingLoader;
 import org.killbill.billing.invoice.plugin.api.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.template.translator.DefaultInvoiceTranslator;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.tenant.api.TenantInternalApi;
-import org.killbill.billing.util.LocaleUtils;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.killbill.commons.utils.Strings;
 import org.killbill.commons.utils.io.IOUtils;
+import org.killbill.commons.utils.locale.LocaleUtils;
 import org.killbill.xmlloader.UriAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +65,7 @@ public class HtmlInvoiceGenerator {
     private final TemplateEngine templateEngine;
     private final TenantInternalApi tenantApi;
     private final ResourceBundleFactory bundleFactory;
+    private final BrandingLoader brandingLoader;
 
     @Inject
     public HtmlInvoiceGenerator(final InvoiceFormatterFactory builtInInvoiceFormatterFactory,
@@ -70,7 +74,8 @@ public class HtmlInvoiceGenerator {
                                 final TranslatorConfig config,
                                 final CurrencyConversionApi currencyConversionApi,
                                 final ResourceBundleFactory bundleFactory,
-                                final TenantInternalApi tenantInternalApi) {
+                                final TenantInternalApi tenantInternalApi,
+                                final TenantUserApi tenantUserApi) {
         this.builtInInvoiceFormatterFactory = builtInInvoiceFormatterFactory;
         this.invoiceFormatterFactoryPluginRegistry = invoiceFormatterFactoryPluginRegistry;
         this.config = config;
@@ -78,6 +83,7 @@ public class HtmlInvoiceGenerator {
         this.templateEngine = templateEngine;
         this.bundleFactory = bundleFactory;
         this.tenantApi = tenantInternalApi;
+        this.brandingLoader = new BrandingLoader(tenantUserApi);
     }
 
     public HtmlInvoice generateInvoice(final Account account, @Nullable final Invoice invoice, final boolean manualPay, final InternalTenantContext context, final TenantContext tenantContext) throws IOException {
@@ -119,6 +125,10 @@ public class HtmlInvoiceGenerator {
         final ResourceBundle defaultBundle = bundleFactory.createBundle(LocaleUtils.toLocale(config.getDefaultLocale()), config.getCatalogBundlePath(), ResourceBundleType.CATALOG_TRANSLATION, context);
         final InvoiceFormatter formattedInvoice = invoiceFormatterFactory.createInvoiceFormatter(config.getDefaultLocale(), config.getCatalogBundlePath(), invoice, locale, currencyConversionApi, bundle, defaultBundle, tenantContext);
         data.put("invoice", formattedInvoice);
+
+        data.put("company", brandingLoader.getCompanyInfo(TenantKey.INVOICE_TEMPLATE_COMPANY_INFO, TenantKey.COMPANY_INFO, tenantContext));
+        data.put("logo", brandingLoader.getLogoInfo(TenantKey.INVOICE_TEMPLATE_LOGO_INFO, TenantKey.LOGO_INFO, tenantContext));
+        data.put("brand", brandingLoader.getBrandInfo(TenantKey.INVOICE_TEMPLATE_BRAND_INFO, TenantKey.BRAND_INFO, tenantContext));
 
         invoiceData.setSubject(invoiceTranslator.getInvoiceEmailSubject());
         final String templateText = getTemplateText(locale, manualPay, context);
