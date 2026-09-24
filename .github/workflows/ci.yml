@@ -9,7 +9,10 @@ on:
 
 jobs:
   ci:
-    uses: killbill/gh-actions-shared/.github/workflows/ci.yml@java21
+    uses: killbill/gh-actions-shared/.github/workflows/ci.yml@main
+    secrets:
+      CLOUDSMITH_CENTRAL_PASSWORD: ${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}
+      CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD: ${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}
   e2e:
     runs-on: ubuntu-latest
     services:
@@ -44,12 +47,50 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: ${{ matrix.java-distribution }}
           #cache: 'maven'
-      - name: Configure Sonatype mirror
+      - name: Configure Cloudsmith credentials
         uses: s4u/maven-settings-action@v4.0.0
         with:
-          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "central", "url": "https://repo.maven.apache.org/maven2"}]'
-          sonatypeSnapshots: true
+          # e2e job doesn't need "cloudsmith" (deploy-only server id).
           githubServer: false
+          servers: |
+            [
+              {"id": "central", "username": "-", "password": "${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}"},
+              {"id": "killbill-maven-repository", "username": "-", "password": "${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}"}
+            ]
+          repositories: |
+            [
+              {
+                "id": "central",
+                "name": "Proxied Maven Central OSS repository at Cloudsmith",
+                "url": "https://dl.cloudsmith.io/basic/killbill/oss/maven/",
+                "releases": { "enabled": "true", "updatePolicy": "always" },
+                "snapshots": { "enabled": "true", "updatePolicy": "always" }
+              },
+              {
+                "id": "killbill-maven-repository",
+                "name": "Proxy for most Kill Bill artifacts at Cloudsmith",
+                "url": "https://dl.cloudsmith.io/basic/killbill/killbill-maven-repository/maven/",
+                "releases": { "enabled": "true", "updatePolicy": "always" },
+                "snapshots": { "enabled": "true", "updatePolicy": "always" }
+              }
+            ]
+          pluginRepositories: |
+            [
+              {
+                "id": "central",
+                "name": "Proxied Maven Central OSS repository at Cloudsmith",
+                "url": "https://dl.cloudsmith.io/basic/killbill/oss/maven/",
+                "releases": { "enabled": "true", "updatePolicy": "always" },
+                "snapshots": { "enabled": "true", "updatePolicy": "always" }
+              },
+              {
+                "id": "killbill-maven-repository",
+                "name": "Proxy for most Kill Bill artifacts at Cloudsmith",
+                "url": "https://dl.cloudsmith.io/basic/killbill/killbill-maven-repository/maven/",
+                "releases": { "enabled": "true", "updatePolicy": "always" },
+                "snapshots": { "enabled": "true", "updatePolicy": "always" }
+              }
+            ]
       - name: Set up Maven
         run: mvn --errors --batch-mode --show-version wrapper:wrapper "-Dmaven=${{ matrix.maven_version }}"
       - name: Build Kill Bill
