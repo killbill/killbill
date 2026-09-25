@@ -56,6 +56,7 @@ public interface InvoiceInternalApi {
      * @param amount                    amount to refund
      * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @param invoiceItemIdsWithDescriptions invoice item ids and associated descriptions for the adjustments
      * @param transactionExternalKey    refund transaction externalKey
      * @param status                    the (invoice) payment status
      * @param context                   the call callcontext
@@ -63,6 +64,7 @@ public interface InvoiceInternalApi {
      * @throws InvoiceApiException
      */
     InvoicePayment recordRefund(UUID paymentId, UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+                                final Map<UUID, String> invoiceItemIdsWithDescriptions,
                                 String transactionExternalKey, InvoicePaymentStatus status, InternalCallContext context) throws InvoiceApiException;
 
     InvoicePayment recordChargeback(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
