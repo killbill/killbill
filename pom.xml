@@ -25,7 +25,7 @@
         <version>0.147.31-82c2719-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
-    <version>0.25.5-SNAPSHOT</version>
+    <version>0.25.6-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
@@ -63,6 +63,7 @@
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
+        <repository.cloudsmith.repo>killbill</repository.cloudsmith.repo>
     </properties>
     <dependencyManagement>
         <dependencies>

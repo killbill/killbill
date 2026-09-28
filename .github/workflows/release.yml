@@ -12,81 +12,18 @@ on:
         required: false
         default: ''
 
-env:
-  MAVEN_FLAGS: "-B --no-transfer-progress"
-  MAVEN_OPTS: "-Xmx2G -XX:+ExitOnOutOfMemoryError -Dmaven.wagon.rto=60000 -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3"
-
 jobs:
   release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        if: github.event.inputs.perform_version == ''
-        uses: actions/checkout@v6
-      - name: Checkout full repository
-        # Required when performing an existing release.
-        if: github.event.inputs.perform_version != ''
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: '0'
-      - name: Setup git user
-        env:
-          BUILD_USER: ${{ secrets.BUILD_USER }}
-          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
-        run: |
-          git config --global user.email "contact@killbill.io"
-          git config --global user.name "Kill Bill core team"
-          git config --global url."https://${BUILD_USER}:${BUILD_TOKEN}@github.com/".insteadOf "git@github.com:"
-      - name: Configure Java
-        uses: actions/setup-java@v5
-        with:
-          java-version: 21
-          distribution: temurin
-      - name: Download Java dependencies
-        # We do as much as we can, but it may not be enough (https://issues.apache.org/jira/browse/MDEP-82)
-        run: |
-          mvn ${MAVEN_FLAGS} clean install dependency:resolve dependency:resolve-plugins -DskipTests=true -Dgpg.skip=true -Psonatype-oss-release
-      - name: Update killbill-oss-parent
-        if: github.event.inputs.parent_version != ''
-        run: |
-          echo "Updating killbill-oss-parent pom.xml to ${{ github.event.inputs.parent_version }}:"
-          mvn ${MAVEN_FLAGS} versions:update-parent -DgenerateBackupPoms=false -DparentVersion="[${{ github.event.inputs.parent_version }}]"
-          echo "killbill-oss-parent pom.xml changes:"
-          git --no-pager diff
-          echo "Downloading new dependencies:"
-          mvn ${MAVEN_FLAGS} -U clean install -DskipTests=true
-
-          git add pom.xml
-          # Will be pushed as part of the release process, only if the release is successful
-          git commit -m "pom.xml: update killbill-oss-parent to ${{ github.event.inputs.parent_version }}"
-      - name: Configure settings.xml for release
-        uses: actions/setup-java@v5
-        with:
-          java-version: 21
-          distribution: temurin
-          server-id: central
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
-      - name: Release artifacts
-        if: github.event.inputs.perform_version == ''
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
-        run: |
-          mvn ${MAVEN_FLAGS} release:clean release:prepare release:perform
-      - name: Perform release
-        if: github.event.inputs.perform_version != ''
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
-        # See https://issues.apache.org/jira/browse/SCM-729 for why the release.properties file is required.
-        run: |
-          echo "scm.url=scm\:git\:git@github.com\:${GITHUB_REPOSITORY}.git" > release.properties
-          echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
-          mvn ${MAVEN_FLAGS} release:perform
+    uses: killbill/gh-actions-shared/.github/workflows/release.yml@main
+    with:
+      parent_version: ${{ github.event.inputs.parent_version }}
+      perform_version: ${{ github.event.inputs.perform_version }}
+    secrets:
+      BUILD_USER: ${{ secrets.BUILD_USER }}
+      BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+      CLOUDSMITH_CENTRAL_PASSWORD: ${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}
+      CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD: ${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}
+      CLOUDSMITH_DISTRIBUTION_MAN_USERNAME: ${{ secrets.CLOUDSMITH_DISTRIBUTION_MAN_USERNAME }}
+      CLOUDSMITH_DISTRIBUTION_MAN_PASSWORD: ${{ secrets.CLOUDSMITH_DISTRIBUTION_MAN_PASSWORD }}
+      GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
