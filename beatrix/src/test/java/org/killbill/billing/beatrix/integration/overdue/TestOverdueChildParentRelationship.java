@@ -129,33 +129,33 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         //invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.PARENT_SUMMARY, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
-        // 2012-06-09 => DAY 8 : Retry P0
+        // 2012-06-09 => DAY 8 since payment attempt (6/1) : Retry P0
         addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, account.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccount.getId());
 
-        // 2012-06-11 => Day 10 - Retry P0 - Move to OD1 state
-        addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.BLOCK);
+        // 2012-06-10 => Day 10 since earliest unpaid invoice(5/31) - Retry P0 - Move to OD1 state
+        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.BLOCK);
         checkODState("OD1", account.getId());
         checkODState("OD1", childAccount.getId());
 
-        // 2012-06-17 => DAY 16 - Retry P1
-        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // 2012-06-17 => DAY 8 since last payment (6/9) - Retry P1
+        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         checkODState("OD1", account.getId());
         checkODState("OD1", childAccount.getId());
 
-        // 2012-06-19 => Day 18 - Retry P0 - Move to OD2 state
-        addDaysAndCheckForCompletion(2, NextEvent.TAG, NextEvent.BLOCK, NextEvent.TAG, NextEvent.BLOCK);
+        // 2012-06-18 => Day 18 since earliest unpaid invoice(5/31) - Retry P0 - Move to OD2 state
+        addDaysAndCheckForCompletion(1, NextEvent.TAG, NextEvent.BLOCK, NextEvent.TAG, NextEvent.BLOCK);
         checkODState("OD2", account.getId());
         checkODState("OD2", childAccount.getId());
 
-        // 2012-06-25 => DAY 24 - Retry P2
-        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // 2012-06-25 => DAY 8 since last payment (6/17) - Retry P2
+        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         checkODState("OD2", account.getId());
         checkODState("OD2", childAccount.getId());
 
-        // 2012-06-27 => Day 26 - Retry P2 - Move to OD3 state
-        addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.BLOCK);
+        // 2012-06-26 => Day 26 since earliest unpaid invoice(5/31) - Retry P2 - Move to OD3 state
+        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.BLOCK);
         checkODState("OD3", account.getId());
         checkODState("OD3", childAccount.getId());
 
@@ -171,8 +171,8 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
 
         // check invoice generated after clear child account
         invoiceChecker.checkInvoice(childAccount.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 19), new LocalDate(2012, 6, 27), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-66.65")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 27), new LocalDate(2012, 6, 27), InvoiceItemType.CBA_ADJ, new BigDecimal("66.65")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 18), new LocalDate(2012, 6, 26), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-66.65")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 26), new LocalDate(2012, 6, 26), InvoiceItemType.CBA_ADJ, new BigDecimal("66.65")));
 
         // Verify the account balance is now 0
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
@@ -201,23 +201,23 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         // 2012-05-2 => DAY 1 : Parent Invoice commit status
         addDaysAndCheckForCompletion(1, NextEvent.INVOICE);
 
-        // 2012-05-2 => DAY 2
+        // 2012-05-3 => DAY 2 create subscription for child2
         addDaysAndCheckForCompletion(1);
         final DefaultEntitlement baseEntitlement2 = createBaseEntitlementAndCheckForCompletion(childAccount2.getId(), "externalKey2", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         invoiceChecker.checkInvoice(childAccount2.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 6, 2), InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement2.getId(), new LocalDate(2012, 6, 2), callContext);
 
-        // 2012-05-3 => DAY 3 : Parent Invoice commit status  (Sub.2)
+        // 2012-05-4 => DAY 3 : Parent Invoice commit status  (Sub.2)
         addDaysAndCheckForCompletion(1, NextEvent.INVOICE);
 
-        // 2012-05-31 => DAY 30 have to get out of trial {I0, P0}
+        // 2012-05-31 => DAY 30 have to get out of trial {I0, P0} Child1's earliest unpaid invoice date is 05-31.
         addDaysAndCheckForCompletion(27, NextEvent.PHASE, NextEvent.INVOICE);
 
-        // 2012-06-01 => Parent Invoice payment attempt
+        // 2012-06-01 => Parent Invoice payment attempt (Sub.1)
         addDaysAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
 
-        // 2012-06-02 => DAY 30 have to get out of trial {I0, P0}  (Sub.2)
+        // 2012-06-02 => DAY 30 have to get out of trial {I0, P0}  (Sub.2). Child2's earliest unpaid invoice date is 06-02.
         addDaysAndCheckForCompletion(1, NextEvent.PHASE, NextEvent.INVOICE);
 
         // 2012-06-03 => Parent Invoice payment attempt  (Sub.2)
@@ -226,7 +226,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         invoiceChecker.checkInvoice(childAccount1.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
-        // 2012-06-09 => DAY 8 : Retry P0
+        // 2012-06-09 => DAY 8 : Retry P0 for s1
         addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, account.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccount1.getId());
@@ -234,14 +234,16 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccount3.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccountNoPaymentDelegated.getId());
 
-        // 2012-06-11 => Day 10 - Retry P0 - Move to OD1 state
-        addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK,
-                                     NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // 2012-06-10 => Day 10 since earliest unpaid invoice - Move to OD1 state
+        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK);
         checkODState("OD1", account.getId());
         checkODState("OD1", childAccount1.getId());
         checkODState("OD1", childAccount2.getId());
         checkODState("OD1", childAccount3.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccountNoPaymentDelegated.getId());
+
+        //2012-06-11 => Payment Retry for s2
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
 
         // 2012-06-17 => DAY 16 : Retry P0
         addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
@@ -251,18 +253,27 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         checkODState("OD1", childAccount3.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccountNoPaymentDelegated.getId());
 
-        // 2012-06-19 => Day 18 - Retry P0 - Move to OD2 state
-        addDaysAndCheckForCompletion(2, NextEvent.TAG, NextEvent.BLOCK, NextEvent.TAG, NextEvent.BLOCK, NextEvent.TAG,
-                                     NextEvent.BLOCK, NextEvent.TAG, NextEvent.BLOCK,
-                                     NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // 2012-06-18 => Day 18 since earliest unpaid invoice - Move to OD2 state
+        addDaysAndCheckForCompletion(1, NextEvent.TAG, NextEvent.BLOCK, NextEvent.TAG, NextEvent.BLOCK, NextEvent.TAG,
+                                     NextEvent.BLOCK, NextEvent.TAG, NextEvent.BLOCK);
         checkODState("OD2", account.getId());
         checkODState("OD2", childAccount1.getId());
         checkODState("OD2", childAccount2.getId());
         checkODState("OD2", childAccount3.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccountNoPaymentDelegated.getId());
 
-        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(0, 8, childAccount1, childAccount2, childAccount3);
+        //2012-06-19 => Payment Retry for s2
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
 
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(2, 6, childAccount1, childAccount2, childAccount3);
+
+        invoiceChecker.checkInvoice(childAccount1.getId(), 3, callContext,
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 18), new LocalDate(2012, 6, 19), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-8.33")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 19), new LocalDate(2012, 6, 19), InvoiceItemType.CBA_ADJ, new BigDecimal("8.33")));
+
+        invoiceChecker.checkInvoice(childAccount2.getId(), 3, callContext,
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 18), new LocalDate(2012, 6, 19), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-8.33")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 19), new LocalDate(2012, 6, 19), InvoiceItemType.CBA_ADJ, new BigDecimal("8.33")));
     }
 
     private void allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(final int expectedInvoicesCount, final int expectedNullInvoicesCount, final Account... childAccounts) {
