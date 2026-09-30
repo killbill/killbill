@@ -29,7 +29,7 @@ import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
-import org.killbill.billing.util.LocaleUtils;
+import org.killbill.commons.utils.locale.LocaleUtils;
 
 /**
  * This is the private API which is used to extract per tenant objects (catalog, overdue, invoice templates, ..)
@@ -91,14 +91,24 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
 
     @Override
     public String getInvoiceTranslation(final Locale locale, final InternalTenantContext tenantContext) {
-        final List<String> values = tenantDao.getTenantValueForKey(LocaleUtils.localeString(locale, TenantKey.INVOICE_TRANSLATION_.toString()), tenantContext);
-        return getUniqueValue(values, "invoice translation", tenantContext);
+        List<String> values = tenantDao.getTenantValueForKey(LocaleUtils.localeString(locale, TenantKey.INVOICE_TRANSLATION_.toString()), tenantContext);
+        String value = getUniqueValue(values, "invoice translation", tenantContext);
+        if (value == null) {
+            values = tenantDao.getTenantValueForKey(LocaleUtils.localeString(locale.getLanguage(), TenantKey.INVOICE_TRANSLATION_.toString()), tenantContext);
+            value = getUniqueValue(values, "invoice translation", tenantContext);
+        }
+        return value;
     }
 
     @Override
     public String getCatalogTranslation(final Locale locale, final InternalTenantContext tenantContext) {
-        final List<String> values = tenantDao.getTenantValueForKey(LocaleUtils.localeString(locale, TenantKey.CATALOG_TRANSLATION_.toString()), tenantContext);
-        return getUniqueValue(values, "catalog translation", tenantContext);
+        List<String> values = tenantDao.getTenantValueForKey(LocaleUtils.localeString(locale, TenantKey.CATALOG_TRANSLATION_.toString()), tenantContext);
+        String value = getUniqueValue(values, "catalog translation", tenantContext);
+        if(value == null) {
+            values = tenantDao.getTenantValueForKey(LocaleUtils.localeString((locale.getLanguage()), TenantKey.CATALOG_TRANSLATION_.toString()), tenantContext);
+            value = getUniqueValue(values, "catalog translation", tenantContext);
+        }
+        return value;
     }
 
     @Override
