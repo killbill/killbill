@@ -24,11 +24,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.catalog.MockPlan;
+import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.MockPlan;
-import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
