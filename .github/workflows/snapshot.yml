@@ -5,7 +5,7 @@ on:
 
 jobs:
   snapshot:
-    uses: killbill/gh-actions-shared/.github/workflows/snapshot.yml@main
+    uses: killbill/gh-actions-shared/.github/workflows/snapshot.yml@maint-for-0-24-x
     secrets:
       MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
       MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
