@@ -57,6 +57,21 @@ public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
         Assert.assertEquals(output.getPriceLists().getDefaultPricelist().getName(), new PriceListDefault().getName());
     }
 
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/2124")
+    public void testMappingWithEmptyPluginCatalog() {
+        // A catalog plugin may return a version with no entries at all (e.g. all plans retired):
+        // mapping it should not throw
+        final StandalonePluginCatalog pluginCatalog = Mockito.mock(StandalonePluginCatalog.class);
+        Mockito.when(pluginCatalog.getEffectiveDate()).thenReturn(DateTime.now());
+
+        final StandaloneCatalogMapper mapper = new StandaloneCatalogMapper("test-catalog");
+        final StandaloneCatalog output = mapper.toStandaloneCatalog(pluginCatalog);
+
+        Assert.assertEquals(output.getPriceLists().getDefaultPricelist().getName(), new PriceListDefault().getName());
+        Assert.assertFalse(output.getProducts().iterator().hasNext());
+        Assert.assertFalse(output.getPlans().iterator().hasNext());
+    }
+
     @Test(groups = "fast")
     public void testMappingFromExistingCatalog() throws Exception {
         final StandaloneCatalog inputCatalog = getCatalog("SpyCarAdvanced.xml");

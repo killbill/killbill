@@ -275,7 +275,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                  "created_date",
                                                  "updated_by",
                                                  "updated_date"),
-                                          Map.of());
+                                          Map.of("created_date", DateTime.class,
+                                                 "updated_date", DateTime.class));
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
             final String likeSearchKey = String.format("%%%s%%", searchKey);
@@ -617,7 +618,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                  "created_date",
                                                  "updated_by",
                                                  "updated_date"),
-                                          Map.of());
+                                          Map.of("created_date", DateTime.class,
+                                                 "updated_date", DateTime.class));
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
             final String likeSearchKey = String.format("%%%s%%", searchKey);
