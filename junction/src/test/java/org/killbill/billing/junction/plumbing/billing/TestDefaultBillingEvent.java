@@ -16,6 +16,7 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
+import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -24,9 +25,14 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.MockPlan;
+import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBillingEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -36,6 +42,38 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
     private static final UUID ID_ZERO = new UUID(0L, 0L);
     private static final UUID ID_ONE = new UUID(0L, 1L);
     private static final UUID ID_TWO = new UUID(0L, 2L);
+
+    @Test(groups = "fast")
+    public void testCatalogChangesAlignedToSameBillingDateAreNotDropped() throws Exception {
+        final DateTime billingDate = new DateTime("2026-08-01T00:00:01.000Z");
+        final MockPlan plan = new MockPlan();
+        final MockPlanPhase olderPhase = createMockMonthlyPlanPhase(BigDecimal.valueOf(50), null, PhaseType.EVERGREEN);
+        final MockPlanPhase newerPhase = createMockMonthlyPlanPhase(BigDecimal.valueOf(150), null, PhaseType.EVERGREEN);
+
+        final BillingEvent older = new DefaultBillingEvent(
+                new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, plan, olderPhase,
+                                                    billingDate, 1L, 1, 1, new DateTime("2026-07-15T00:00:00.000Z")),
+                subscription(ID_ZERO), 1, null, Currency.USD);
+        final BillingEvent newer = new DefaultBillingEvent(
+                new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, plan, newerPhase,
+                                                    billingDate, 1L, 1, 1, new DateTime("2026-07-18T00:00:00.000Z")),
+                subscription(ID_ZERO), 1, null, Currency.USD);
+
+        final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
+        events.add(newer);
+        events.add(older);
+
+        Assert.assertTrue(older.compareTo(newer) < 0);
+        Assert.assertTrue(newer.compareTo(older) > 0);
+        Assert.assertEquals(events.size(), 2);
+        Assert.assertEquals(events.last().getRecurringPrice(), BigDecimal.valueOf(150));
+
+        final SortedSet<BillingEvent> reverseInsertion = new TreeSet<BillingEvent>();
+        reverseInsertion.add(older);
+        reverseInsertion.add(newer);
+        Assert.assertEquals(reverseInsertion.size(), 2);
+        Assert.assertEquals(reverseInsertion.last().getRecurringPrice(), BigDecimal.valueOf(150));
+    }
 
     @Test(groups = "fast")
     public void testEntitlementEventsHappeningAtTheSameTimeAsOverdueEvents() throws Exception {
