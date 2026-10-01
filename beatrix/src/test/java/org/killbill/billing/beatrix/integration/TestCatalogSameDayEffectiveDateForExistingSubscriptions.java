@@ -47,17 +47,15 @@ import static org.testng.Assert.assertNotNull;
  * second way a catalog change can be lost when
  * org.killbill.subscription.align.effectiveDateForExistingSubscriptions=true.
  *
- * When a change's effectiveDateForExistingSubscriptions falls on a day whose day-of-month equals the
- * subscription's BCD - the subscription's own start day being the common case - the alignment resolves
- * it to THAT SAME day rather than to the next billing date. The aligned LocalDate is then converted
- * back to a DateTime using the account's reference time of day, which precedes the subscription's
- * CREATE transition, so the candidate is rejected by
+ * Before the fix, when a change's effectiveDateForExistingSubscriptions fell on a day whose
+ * day-of-month equaled the subscription's BCD, alignment resolved it to that same day. Converting
+ * that LocalDate using the account's reference time could place it before the catalog change and
+ * the subscription's CREATE transition, so the candidate was rejected by
  *
  *     if (nextEffectiveDate != null && !nextEffectiveDate.isBefore(cur.getEffectiveTransitionTime()))
  *
- * in DefaultSubscriptionBase.getSubscriptionBillingEvents. Nothing regenerates it afterwards -
- * candidates are only built at CREATE/CHANGE/PHASE transitions - so the price change is lost forever
- * rather than deferred to the next billing date.
+ * in DefaultSubscriptionBase.getSubscriptionBillingEvents. The fix defers an aligned candidate
+ * that predates the catalog change to the next billing period.
  *
  * Catalog used here:
  *   v1  2026-06-01T00:00Z  gas-monthly  100  (no effectiveDateForExistingSubscriptions)
@@ -68,11 +66,9 @@ public class TestCatalogSameDayEffectiveDateForExistingSubscriptions extends Tes
     private static final String DROP_EXPLANATION =
             "The catalog change is effective 2026-07-01T11:00Z, an hour AFTER the subscription started, so it should "
             + "apply at the subscription's next billing date (2026-08-01). Instead, because the change's day-of-month "
-            + "(1) equals the subscription's BCD (1), BillCycleDayCalculator aligns it to 2026-07-01 - the same day the "
-            + "subscription started - and TimeAwareContext.toUTCDateTime resolves that LocalDate at the account's "
-            + "reference time of day (00:00), i.e. BEFORE the CREATE transition at 10:00. The guard in "
-            + "getSubscriptionBillingEvents then discards the candidate, and nothing ever regenerates it, so the "
-            + "subscription keeps billing the old price indefinitely.";
+            + "(1) equals the subscription's BCD (1), the original BillCycleDayCalculator alignment chose 2026-07-01. "
+            + "TimeAwareContext.toUTCDateTime resolved that LocalDate at the account's reference time (00:00), "
+            + "before CREATE at 10:00. The original guard discarded the candidate, so the old price persisted.";
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -83,7 +79,7 @@ public class TestCatalogSameDayEffectiveDateForExistingSubscriptions extends Tes
     }
 
     /**
-     * A catalog change effective on the same day the subscription started is dropped entirely.
+     * A catalog change effective on the subscription's start day applies at the next billing date.
      *
      * The account is created at 2026-07-01T00:00Z and the subscription at 2026-07-01T10:00Z, so the
      * account reference time (00:00) is strictly earlier than the CREATE transition (10:00). The
@@ -92,9 +88,9 @@ public class TestCatalogSameDayEffectiveDateForExistingSubscriptions extends Tes
      *
      * EXPECTED : 2026-07-01 -> 2026-08-01 bills 100 (the in-flight period is never disturbed), then
      *            2026-08-01 -> 2026-09-01 bills 200 at the next billing date.
-     * CURRENTLY: every period bills 100 - the change is never applied at all.
+     * WITHOUT FIX: every period bills 100 because the change is dropped.
      */
-    @Test(groups = "slow", enabled = false, description = "Reproduces #2291")
+    @Test(groups = "slow", description = "Regression for #2291 same-day catalog change")
     public void testCatalogChangeOnSubscriptionStartDay() throws Exception {
 
         // Account first, so its reference time of day is 00:00
@@ -127,7 +123,7 @@ public class TestCatalogSameDayEffectiveDateForExistingSubscriptions extends Tes
         results.add(recordRecurring(account, 2, new LocalDate(2026, 8, 1), new LocalDate(2026, 9, 1),
                                     new BigDecimal("200.00"), catalog, 1));
 
-        // The candidate is rebuilt and discarded again on every invoice run, so the loss is permanent
+        // Check the following period too: before the fix, the missing price stayed lost.
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); // 2026-09-01
         assertListenerStatus();
