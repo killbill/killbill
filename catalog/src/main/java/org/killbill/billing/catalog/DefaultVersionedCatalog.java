@@ -162,7 +162,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                     final StaticCatalog next = versions.get(j);
                     final Plan targetPlan = ((StandaloneCatalog) next).getPlansMap().findByName(plan.getName());
                     if (targetPlan != null) {
-                        validatePlanShape(plan, targetPlan, errors);
+                        validatePlanShape(plan, c.getEffectiveDate(), targetPlan, next.getEffectiveDate(), errors);
                     }
                     // We don't break if null , targetPlan could be re-defined on a subsequent version
                     // TODO enforce that we can't skip versions?
@@ -171,10 +171,10 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         }
     }
 
-    private void validatePlanShape(final Plan plan, final Plan targetPlan, final ValidationErrors errors) {
+    private void validatePlanShape(final Plan plan, final Date effectiveDate, final Plan targetPlan, final Date targetEffectiveDate, final ValidationErrors errors) {
         if (plan.getAllPhases().length != targetPlan.getAllPhases().length) {
             errors.add(new ValidationError(String.format("Number of phases for plan '%s' differs between version '%s' and '%s'",
-                                                         plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
+                                                         plan.getName(), effectiveDate, targetEffectiveDate),
                                            DefaultVersionedCatalog.class, ""));
             // In this case we don't bother checking each phase -- the code below assumes the # are equal
             return;
@@ -185,7 +185,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             final PlanPhase target = targetPlan.getAllPhases()[i];
             if (!cur.getName().equals(target.getName())) {
                errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
-                                                             cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
+                                                             cur.getName(), plan.getName(), effectiveDate, targetEffectiveDate),
                                                DefaultVersionedCatalog.class, ""));
             }
         }
