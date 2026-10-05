@@ -108,7 +108,8 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
             LocalDate thresholdDate = null;
             try {
                 thresholdDate = condition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().addToLocalDate(earliestUnpaidInvoiceDate);
-            } catch (final CatalogApiException e) {
+            } catch (final CatalogApiException ignored) {
+
             }
 
             if (thresholdDate != null && thresholdDate.isAfter(today) && (next == null || thresholdDate.isBefore(next))) {
