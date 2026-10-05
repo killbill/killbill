@@ -80,8 +80,7 @@ import static org.testng.Assert.assertTrue;
  * <h3>Structure</h3>
  *
  * <ul>
- *   <li>{@link #testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward()} - the defect. FAILS on
- *       current master.</li>
+ *   <li>{@link #testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward()} - Demonstrates #2277.</li>
  *   <li>{@link #testControlProgressiveDegradationWithoutPartialPayment()} - same config, anchor never
  *       moves, correct progression. PASSES.</li>
  *   <li>{@link #testDelayedCheckAppliesMostSevereMatchingState()} - characterization of the
