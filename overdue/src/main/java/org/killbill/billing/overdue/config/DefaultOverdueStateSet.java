@@ -23,7 +23,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueCondition;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
@@ -92,5 +94,29 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
     @Override
     public OverdueState getFirstState() {
         return getStates()[size() - 1];
+    }
+
+    @Override
+    public LocalDate getNextTimeBasedThreshold(final LocalDate earliestUnpaidInvoiceDate, final LocalDate today) {
+        LocalDate next = null;
+        for (final DefaultOverdueState overdueState : getStates()) {
+            final OverdueCondition condition = overdueState.getOverdueCondition();
+            if (condition == null || condition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds() == null) {
+                continue;
+            }
+
+            LocalDate thresholdDate = null;
+            try {
+                thresholdDate = condition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().addToLocalDate(earliestUnpaidInvoiceDate);
+            } catch (final CatalogApiException ignored) {
+
+            }
+
+            if (thresholdDate != null && thresholdDate.isAfter(today) && (next == null || thresholdDate.isBefore(next))) {
+                next = thresholdDate;
+            }
+        }
+
+        return next;
     }
 }
