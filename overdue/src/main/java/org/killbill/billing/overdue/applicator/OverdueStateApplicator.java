@@ -122,7 +122,7 @@ public class OverdueStateApplicator {
                 log.debug("OverdueStateApplicator <notificationQ>: missing InitialReevaluationInterval from config, NOT inserting notification for account {}", account.getId());
             } else {
                 final DateTime nextCheck = computeNextCheckDate(effectiveDate, reevaluationInterval, overdueStateSet, billingState, context);
-                log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), effectiveDate.plus(reevaluationInterval));
+                log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), nextCheck);
                 createFutureNotification(account, nextCheck, context);
             }
         } else if (nextOverdueState.isClearState()) {
