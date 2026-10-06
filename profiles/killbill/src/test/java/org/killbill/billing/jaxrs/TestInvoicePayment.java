@@ -43,6 +43,7 @@ import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentTransaction;
 import org.killbill.billing.client.model.gen.Subscription;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -224,6 +225,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can create a partial refund with invoice item adjustment")
     public void testPartialRefundWithInvoiceItemAdjustment() throws Exception {
         final InvoicePayment paymentJson = setupScenarioWithPayment(true);
+        final String adjustmentDescription = "Customer requested partial refund";
 
         // Get the individual items for the invoice
         final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
@@ -240,6 +242,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoiceItem adjustment = new InvoiceItem();
         adjustment.setInvoiceItemId(itemToAdjust.getInvoiceItemId());
         adjustment.setAmount(refundAmount);
+        adjustment.setDescription(adjustmentDescription);
         refund.setAdjustments(List.of(adjustment));
 
         invoicePaymentApi.createRefundWithAdjustments(paymentJson.getPaymentId(), refund, paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -248,6 +251,14 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         // Verify the invoice balance
         verifyInvoice(paymentJson, expectedInvoiceBalance);
+
+        final Invoice invoiceAfterRefund = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
+        final InvoiceItem adjustmentAfterRefund = invoiceAfterRefund.getItems()
+                                                                   .stream()
+                                                                   .filter(item -> item.getItemType() == InvoiceItemType.ITEM_ADJ)
+                                                                   .findFirst()
+                                                                   .orElseThrow();
+        Assert.assertEquals(adjustmentAfterRefund.getDescription(), adjustmentDescription);
     }
 
     @Test(groups = "slow", description = "Cannot create invoice item adjustments for more than the refund amount")
