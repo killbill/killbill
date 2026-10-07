@@ -763,6 +763,12 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
         final LocalDate resultingLocalDate = BillCycleDayCalculator.alignToNextBillCycleDate(prevTransitionDate, curTransitionDate, bcd, billingPeriod, context);
         final DateTime candidateResult = context.toUTCDateTime(resultingLocalDate);
+        if (candidateResult.isBefore(curTransitionDate)) {
+            // Aligning to the same local day can move a catalog change earlier than its
+            // effective instant. Defer it to the following billing period instead.
+            final LocalDate nextCycleDate = BillCycleDayCalculator.alignProposedBillCycleDate(resultingLocalDate.plus(billingPeriod.getPeriod()), bcd, billingPeriod);
+            return context.toUTCDateTime(nextCycleDate);
+        }
         return candidateResult;
     }
 
