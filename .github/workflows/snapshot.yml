@@ -2,10 +2,18 @@ name: snapshot
 
 on:
   workflow_dispatch:
+    inputs:
+      purge-cache:
+        description: Purge the existing Maven dependency cache (for this branch/ref) before restoring it
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   snapshot:
     uses: killbill/gh-actions-shared/.github/workflows/snapshot.yml@main
+    with:
+      purge-cache: ${{ inputs.purge-cache || false }}
     secrets:
       CLOUDSMITH_CENTRAL_PASSWORD: ${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}
       CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD: ${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}

@@ -6,15 +6,26 @@ on:
       - master
   pull_request:
   workflow_dispatch:
+    inputs:
+      purge-cache:
+        description: Purge the existing Maven dependency cache (for this branch/ref) before restoring it
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   ci:
     uses: killbill/gh-actions-shared/.github/workflows/ci.yml@main
+    with:
+      purge-cache: ${{ inputs.purge-cache || false }}
     secrets:
       CLOUDSMITH_CENTRAL_PASSWORD: ${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}
       CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD: ${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}
   e2e:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     services:
       mysql:
         image: mysql:8.0
@@ -46,7 +57,21 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           distribution: ${{ matrix.java-distribution }}
-          #cache: 'maven'
+      - name: Purge Maven dependency cache
+        if: inputs.purge-cache
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh cache list --key maven- --ref "${{ github.ref }}" --limit 100 --json id --jq '.[].id' \
+            | xargs -r -n1 gh cache delete
+      - name: Cache Maven repository
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml', '**/.mvn/extensions.xml', '**/.mvn/wrapper/maven-wrapper.properties') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
       - name: Configure Cloudsmith credentials
         uses: s4u/maven-settings-action@v4.0.0
         with:
