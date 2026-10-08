@@ -24,7 +24,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.CatalogValidation;
@@ -66,6 +68,29 @@ public class TestDefaultCatalogUserApi extends CatalogTestSuiteNoDB {
         final CatalogValidation validation = catalogUserApi.validateCatalog(getXMLCatalog("CatalogWithValidationErrors.xml"), callContext);
         Assert.assertNotNull(validation);
         Assert.assertEquals(validation.getValidationErrors().size(), 17);
+    }
+
+    @Test(groups = "fast")
+    public void testValidateCatalogWithPhaseMismatchAcrossVersions() throws Exception {
+        final DefaultVersionedCatalog existingCatalog = new DefaultVersionedCatalog();
+        existingCatalog.add(getCatalog("PhaseMismatch-v1.xml"));
+
+        final CatalogService catalogService = Mockito.mock(CatalogService.class);
+        Mockito.when(catalogService.getFullCatalog(Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.<InternalTenantContext>any())).thenReturn(existingCatalog);
+
+        final CatalogUserApi catalogUserApiWithExistingCatalog = new DefaultCatalogUserApi(catalogService,
+                                                                                           Mockito.mock(TenantUserApi.class),
+                                                                                           catalogCache,
+                                                                                           clock,
+                                                                                           internalCallContextFactory);
+
+        final CatalogValidation validation = catalogUserApiWithExistingCatalog.validateCatalog(getXMLCatalog("PhaseMismatch-v2.xml"), callContext);
+        Assert.assertNotNull(validation);
+        Assert.assertEquals(validation.getValidationErrors().size(), 1);
+        Assert.assertTrue(validation.getValidationErrors().get(0).getErrorDescription().contains("standard-monthly-evergreen"),
+                          validation.getValidationErrors().get(0).getErrorDescription());
+        Assert.assertFalse(validation.getValidationErrors().get(0).getErrorDescription().contains("null"),
+                           validation.getValidationErrors().get(0).getErrorDescription());
     }
 
     private String getXMLCatalog(final String name) throws URISyntaxException, IOException {
