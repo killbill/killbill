@@ -79,8 +79,8 @@ jobs:
           githubServer: false
           servers: |
             [
-              {"id": "central", "username": "-", "password": "${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}"},
-              {"id": "killbill-maven-repository", "username": "-", "password": "${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}"}
+              {"id": "central", "username": "${{ secrets.CLOUDSMITH_USERNAME }}", "password": "${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}"},
+              {"id": "killbill-maven-repository", "username": "${{ secrets.CLOUDSMITH_USERNAME }}", "password": "${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}"}
             ]
           repositories: |
             [
