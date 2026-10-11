@@ -29,6 +29,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -205,7 +206,10 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                           Map.of("billing_cycle_day_local", Integer.class,
                                                  "first_name_length", Integer.class,
                                                  "is_payment_delegated_to_parent", Boolean.class,
-                                                 "migrated", Boolean.class));
+                                                 "migrated", Boolean.class,
+                                                 "reference_time", DateTime.class,
+                                                 "created_date", DateTime.class,
+                                                 "updated_date", DateTime.class));
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
 
