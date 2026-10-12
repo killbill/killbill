@@ -23,6 +23,13 @@ jobs:
       CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD: ${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}
   e2e:
     runs-on: ubuntu-latest
+    env:
+      # Workaround until https://github.com/s4u/maven-settings-action/issues/464 is fixed:
+      # this action cannot emit Maven's native <repositoryOrigins> server field, so
+      # credentials configured for ids like "central"/"killbill-maven-repository" (reused
+      # to point at Cloudsmith) are silently dropped under Maven 3.10+'s stricter,
+      # origin-based credential scoping. Fall back to legacy id-only credential matching.
+      MAVEN_ARGS: -ntp -Dmaven.repository.credentialScope=id
     permissions:
       contents: read
       actions: write
@@ -46,7 +53,9 @@ jobs:
             database: 'mysql'
             java-version: '21'
             java-distribution: 'temurin'
-            maven_version: '3.8.4'
+            # Pinned version needed. Otherwise, we will get surprised because GitHub Actions
+            # updates the runner's pre-installed Maven version periodically.
+            maven_version: '3.10.0'
     steps:
       - name: Checkout killbill
         uses: actions/checkout@v6
@@ -79,8 +88,8 @@ jobs:
           githubServer: false
           servers: |
             [
-              {"id": "central", "username": "${{ secrets.CLOUDSMITH_USERNAME }}", "password": "${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}"},
-              {"id": "killbill-maven-repository", "username": "${{ secrets.CLOUDSMITH_USERNAME }}", "password": "${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}"}
+              {"id": "central", "username": "token", "password": "${{ secrets.CLOUDSMITH_CENTRAL_PASSWORD }}"},
+              {"id": "killbill-maven-repository", "username": "token", "password": "${{ secrets.CLOUDSMITH_KILLBILL_MAVEN_REPO_PASSWORD }}"}
             ]
           repositories: |
             [
