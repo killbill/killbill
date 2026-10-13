@@ -49,12 +49,10 @@ import static org.testng.Assert.assertNotNull;
  *
  * With the alignment enabled, every catalog change whose effectiveDateForExistingSubscriptions
  * falls at or before the subscription's next billing boundary is moved onto that boundary. When
- * more than one lands on the same instant, the resulting billing events are indistinguishable:
- * same subscription, same effective date, and the same totalOrdering, which synthetic catalog
- * change events inherit from the subscription transition they were derived from. They therefore
- * compare equal in DefaultBillingEvent.compareTo, and DefaultBillingEventSet - a TreeSet - keeps
- * only the first one inserted. Insertion order is catalog effective date ascending, so the
- * survivor is the one from the OLDEST catalog version and the more recent price is silently lost.
+ * more than one lands on the same instant, the events have the same subscription, effective date,
+ * and totalOrdering. Before the catalog-effective-date tie-breaker, they compared equal in
+ * DefaultBillingEvent.compareTo, and DefaultBillingEventSet - a TreeSet - kept only the first.
+ * Insertion order is catalog effective date ascending, so the older price survived.
  *
  * Catalog used here:
  *   v1  2026-07-01  electricity-monthly  100  (no effectiveDateForExistingSubscriptions)
@@ -71,7 +69,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
             "Both catalog v2 (2026-07-15, price 50) and v3 (2026-07-18, price 150) fall inside the subscription's "
             + "billing cycle 2026-07-01 -> 2026-08-01, so both are aligned onto 2026-08-01. The two resulting CHANGE "
             + "billing events are then indistinguishable - same subscription, same effective date, and the same "
-            + "totalOrdering inherited from the CREATE transition - so DefaultBillingEvent.compareTo returns 0 and "
+            + "totalOrdering inherited from the CREATE transition - so the original comparator returned 0 and "
             + "DefaultBillingEventSet (a TreeSet) silently drops the second add(). Insertion order is catalog "
             + "effective date ascending, so the survivor is v2 (50) and the more recent v3 (150) is lost.";
 
@@ -84,7 +82,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
     }
 
     /**
-     * Two catalog changes inside the same billing cycle: only the older one is applied.
+     * Two catalog changes inside the same billing cycle: the latest one must be applied.
      *
      * Timeline:
      *   2026-07-01  subscription created on catalog v1 (100), BCD 1, first cycle runs to 2026-08-01
@@ -92,9 +90,9 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
      *   2026-07-18  catalog v3 makes the price 150, effectiveDateForExistingSubscriptions 2026-07-18
      *
      * EXPECTED : 2026-08-01 -> 2026-09-01 bills 150, from catalog v3 (the most recent change wins).
-     * CURRENTLY: it bills 50, from catalog v2, and keeps billing 50 on every later period.
+     * WITHOUT FIX: it bills 50, from catalog v2, and keeps billing 50 on every later period.
      */
-    @Test(groups = "slow", enabled = false, description = "Reproduces #2291")
+    @Test(groups = "slow", description = "Regression for #2291 catalog collision")
     public void testTwoCatalogChangesWithinSameBillingCycle() throws Exception {
 
         clock.setDay(new LocalDate(2026, 7, 1));
@@ -124,8 +122,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsAlignedToBCD ex
         results.add(recordRecurring(account, 2, new LocalDate(2026, 8, 1), new LocalDate(2026, 9, 1),
                                     new BigDecimal("150.00"), catalog, 2));
 
-        // The candidate list is rebuilt identically on every invoice run, so the loss is permanent
-        // rather than limited to the first boundary after the changes.
+        // Check the following period too: before the fix, the missing price stayed lost.
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1); // 2026-09-01
         assertListenerStatus();
