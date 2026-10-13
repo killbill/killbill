@@ -100,6 +100,8 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 @Tag(name = "InvoicePayment", description = "Operations on invoice payments")
 public class InvoicePaymentResource extends JaxRsResourceBase {
 
+    private static final String REFUND_ADJUSTMENT_DESCRIPTIONS = "IPCD_REFUND_IDS_DESCRIPTIONS";
+
     private static final String ID_PARAM_NAME = "paymentId";
 
     private final InvoicePaymentApi invoicePaymentApi;
@@ -193,24 +195,28 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContextNoAccountId);
         final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
-        final Iterable<PluginProperty> pluginProperties;
         final String transactionExternalKey = json.getTransactionExternalKey() != null ? json.getTransactionExternalKey() : UUIDs.randomUUID().toString();
         final String paymentExternalKey = json.getPaymentExternalKey() != null ? json.getPaymentExternalKey() : UUIDs.randomUUID().toString();
 
         final boolean isAdjusted = json.isAdjusted() != null && json.isAdjusted();
         final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
+        final Map<UUID, String> adjustmentDescriptions = new HashMap<UUID, String>();
         if (isAdjusted) {
             if (json.getAdjustments() != null && !json.getAdjustments().isEmpty()) {
                 for (final InvoiceItemJson item : json.getAdjustments()) {
                     adjustments.put(item.getInvoiceItemId(), item.getAmount());
+                    if (item.getDescription() != null) {
+                        adjustmentDescriptions.put(item.getInvoiceItemId(), item.getDescription());
+                    } else {
+                        adjustmentDescriptions.remove(item.getInvoiceItemId());
+                    }
                 }
-                pluginProperties = extractPluginProperties(pluginPropertiesString);
-            } else {
-                pluginProperties = extractPluginProperties(pluginPropertiesString);
             }
-        } else {
-            pluginProperties = extractPluginProperties(pluginPropertiesString);
         }
+        final Iterable<PluginProperty> pluginProperties = adjustmentDescriptions.isEmpty() ?
+                                                          extractPluginProperties(pluginPropertiesString) :
+                                                          extractPluginProperties(pluginPropertiesString,
+                                                                                  new PluginProperty(REFUND_ADJUSTMENT_DESCRIPTIONS, adjustmentDescriptions, false));
 
         final UUID paymentIdToRedirectTo;
         if (externalPayment) {
