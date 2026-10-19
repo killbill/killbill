@@ -249,7 +249,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
                     .append("'. Check that the partial payment actually moved the earliest unpaid invoice date.");
         }
 
-        assertTrue(problems.length() == 0, problems.toString() + renderTimeline(timeline, statesObserved));
+        assertEquals(problems.length(), 0, problems + renderTimeline(timeline, statesObserved));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -405,7 +405,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
 
     private String currentODState() {
         final BlockingState state = blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT,
-                                                                          OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
+                                                                           OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
         return state != null ? state.getStateName() : CLEAR;
     }
 
