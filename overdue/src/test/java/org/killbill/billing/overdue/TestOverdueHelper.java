@@ -53,7 +53,7 @@ public class TestOverdueHelper {
             "<overdueConfig>" +
             "   <accountOverdueStates>" +
             "       <initialReevaluationInterval>" +
-            "           <unit>DAYS</unit><number>100</number>" +
+            "           <unit>DAYS</unit><number>30</number>" +
             "       </initialReevaluationInterval>" +
             "       <state name=\"OD3\">" +
             "           <condition>" +
@@ -75,7 +75,7 @@ public class TestOverdueHelper {
             "           <blockChanges>true</blockChanges>" +
             "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
             "           <autoReevaluationInterval>" +
-            "               <unit>DAYS</unit><number>5</number>" +
+            "               <unit>DAYS</unit><number>10</number>" +
             "           </autoReevaluationInterval>" +
             "       </state>" +
             "       <state name=\"OD1\">" +
@@ -89,7 +89,7 @@ public class TestOverdueHelper {
             "           <blockChanges>true</blockChanges>" +
             "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
             "           <autoReevaluationInterval>" +
-            "               <unit>DAYS</unit><number>100</number>" + // this number is intentionally too high
+            "               <unit>DAYS</unit><number>10</number>" + // this number is intentionally too high
             "           </autoReevaluationInterval>" +
             "       </state>" +
             "   </accountOverdueStates>" +

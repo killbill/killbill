@@ -7,6 +7,6 @@ on:
 
 jobs:
   sync:
-    uses: killbill/gh-actions-shared/.github/workflows/sync.yml@main
+    uses: killbill/gh-actions-shared/.github/workflows/sync.yml@maint-for-0-24-x
     secrets:
       CREATE_PULL_REQUEST_SSH_KEY: ${{ secrets.CREATE_PULL_REQUEST_SSH_KEY }}

@@ -25,10 +25,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -36,6 +39,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
@@ -117,8 +121,9 @@ public class OverdueStateApplicator {
             if (reevaluationInterval == null) {
                 log.debug("OverdueStateApplicator <notificationQ>: missing InitialReevaluationInterval from config, NOT inserting notification for account {}", account.getId());
             } else {
-                log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), effectiveDate.plus(reevaluationInterval));
-                createFutureNotification(account, effectiveDate.plus(reevaluationInterval), context);
+                final DateTime nextCheck = computeNextCheckDate(effectiveDate, reevaluationInterval, overdueStateSet, billingState, context);
+                log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), nextCheck);
+                createFutureNotification(account, nextCheck, context);
             }
         } else if (nextOverdueState.isClearState()) {
             clearFutureNotification(account, context);
@@ -180,6 +185,28 @@ public class OverdueStateApplicator {
         } else if (isUnblockBillingTransition(previousOverdueState, nextOverdueState)) {
             remove_AUTO_INVOICE_OFF_on_clear(account.getId(), context);
         }
+    }
+
+    private DateTime computeNextCheckDate(final DateTime effectiveDate,
+                                          final Period reevaluationInterval,
+                                          final OverdueStateSet overdueStateSet,
+                                          @Nullable final BillingState billingState,
+                                          final InternalTenantContext context) {
+        final DateTime byInterval = effectiveDate.plus(reevaluationInterval);
+        if (billingState == null || billingState.getDateOfEarliestUnpaidInvoice() == null) {
+            return byInterval;
+        }
+
+        final LocalDate today = context.toLocalDate(effectiveDate);
+        final LocalDate nextThreshold = overdueStateSet.getNextTimeBasedThreshold(billingState.getDateOfEarliestUnpaidInvoice(), today);
+        if (nextThreshold == null) {
+            return byInterval;
+        }
+
+        final int daysUntilThreshold = Days.daysBetween(today, nextThreshold).getDays();
+        final DateTime byThreshold = effectiveDate.plusDays(daysUntilThreshold);
+
+        return byThreshold.isBefore(byInterval) ? byThreshold : byInterval;
     }
 
     public void clear(final DateTime effectiveDate, final ImmutableAccountData account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
