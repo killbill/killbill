@@ -80,8 +80,7 @@ import static org.testng.Assert.assertTrue;
  * <h3>Structure</h3>
  *
  * <ul>
- *   <li>{@link #testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward()} - the defect. FAILS on
- *       current master.</li>
+ *   <li>{@link #testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward()} - Demonstrates #2277.</li>
  *   <li>{@link #testControlProgressiveDegradationWithoutPartialPayment()} - same config, anchor never
  *       moves, correct progression. PASSES.</li>
  *   <li>{@link #testDelayedCheckAppliesMostSevereMatchingState()} - characterization of the
@@ -152,7 +151,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
     // The defect
     // ---------------------------------------------------------------------------------------------
 
-    @Test(groups = "slow", enabled = false,description = "Reproduces #2297.Reevaluation schedule is not re-anchored when the earliest unpaid invoice date shifts, and WARNING is passed over")
+    @Test(groups = "slow", description = "Reproduces #2297.Reevaluation schedule is not re-anchored when the earliest unpaid invoice date shifts, and WARNING is passed over")
     public void testWarningSkippedWhenEarliestUnpaidInvoiceShiftsForward() throws Exception {
 
         final List<String> timeline = new ArrayList<String>();
@@ -250,7 +249,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
                     .append("'. Check that the partial payment actually moved the earliest unpaid invoice date.");
         }
 
-        assertTrue(problems.length() == 0, problems.toString() + renderTimeline(timeline, statesObserved));
+        assertEquals(problems.length(), 0, problems + renderTimeline(timeline, statesObserved));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -406,7 +405,7 @@ public class TestOverdueStateSkipWithShiftingEarliestUnpaidInvoice extends TestO
 
     private String currentODState() {
         final BlockingState state = blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT,
-                                                                          OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
+                                                                           OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
         return state != null ? state.getStateName() : CLEAR;
     }
 

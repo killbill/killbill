@@ -42,4 +42,8 @@ public interface OverdueStateSet {
     public OverdueState getFirstState();
 
     public Period getInitialReevaluationInterval();
+
+    // Earliest date strictly after 'today' on which a time-based state condition becomes true,
+    // or null if there is none
+    LocalDate getNextTimeBasedThreshold(LocalDate earliestUnpaidInvoiceDate, LocalDate today);
 }
