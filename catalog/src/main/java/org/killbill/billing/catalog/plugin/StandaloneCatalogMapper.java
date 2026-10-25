@@ -115,19 +115,25 @@ public class StandaloneCatalogMapper {
         result.setSupportedCurrencies(toArray(pluginCatalog.getCurrencies()));
         result.setUnits(toDefaultUnits(pluginCatalog.getUnits()));
         result.setPlanRules(toDefaultPlanRules(pluginCatalog.getPlanRules()));
-        for (final Product cur : pluginCatalog.getProducts()) {
-            final Product target = result.getCatalogEntityCollectionProduct().findByName(cur.getName());
-            if (target != null) {
-                ((DefaultProduct) target).setAvailable(toFilteredDefaultProduct(cur.getAvailable()));
-                ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(cur.getIncluded()));
+        if (pluginCatalog.getProducts() != null) {
+            for (final Product cur : pluginCatalog.getProducts()) {
+                final Product target = result.getCatalogEntityCollectionProduct().findByName(cur.getName());
+                if (target != null) {
+                    ((DefaultProduct) target).setAvailable(toFilteredDefaultProduct(cur.getAvailable()));
+                    ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(cur.getIncluded()));
+                }
             }
         }
         result.initialize(result);
         return result;
     }
 
-    private DefaultPlanRules toDefaultPlanRules(final PlanRules input) {
+    private DefaultPlanRules toDefaultPlanRules(@Nullable final PlanRules input) {
         final DefaultPlanRules result = new DefaultPlanRules();
+        if (input == null) {
+            // An empty catalog version may come without any rules - see #2124
+            return result;
+        }
         result.setBillingAlignmentCase(toDefaultCaseBillingAlignments(input.getCaseBillingAlignment()));
         result.setCancelCase(toDefaultCaseCancelPolicys(input.getCaseCancelPolicy()));
         result.setChangeAlignmentCase(toDefaultCaseChangePlanAlignments(input.getCaseChangePlanAlignment()));
@@ -227,11 +233,13 @@ public class StandaloneCatalogMapper {
         result.setToProductCategory(input.getToProductCategory());
     }
 
-    private Iterable<Product> toDefaultProducts(final Iterable<Product> input) {
+    private Iterable<Product> toDefaultProducts(@Nullable final Iterable<Product> input) {
         if (tmpDefaultProducts == null) {
             final Map<String, Product> map = new HashMap<>();
-            for (final Product product : input) {
-                map.put(product.getName(), toDefaultProduct(product));
+            if (input != null) {
+                for (final Product product : input) {
+                    map.put(product.getName(), toDefaultProduct(product));
+                }
             }
             tmpDefaultProducts = map;
         }
@@ -256,11 +264,13 @@ public class StandaloneCatalogMapper {
         return filteredAndOrdered;
     }
 
-    private Iterable<Plan> toDefaultPlans(final StaticCatalog staticCatalog, final Iterable<Plan> input) {
+    private Iterable<Plan> toDefaultPlans(final StaticCatalog staticCatalog, @Nullable final Iterable<Plan> input) {
         if (tmpDefaultPlans == null) {
             final Map<String, Plan> map = new HashMap<>();
-            for (final Plan plan : input) {
-                map.put(plan.getName(), toDefaultPlan(staticCatalog, plan));
+            if (input != null) {
+                for (final Plan plan : input) {
+                    map.put(plan.getName(), toDefaultPlan(staticCatalog, plan));
+                }
             }
             tmpDefaultPlans = map;
         }
@@ -531,9 +541,11 @@ public class StandaloneCatalogMapper {
         return toArray(tmp);
     }
 
-    private <C> C[] toArray(final Iterable<C> input) {
-        if (!input.iterator().hasNext()) {
-            throw new IllegalStateException("Nothing to convert into array");
+    private <C> C[] toArray(@Nullable final Iterable<C> input) {
+        if (input == null || !input.iterator().hasNext()) {
+            // Null (rather than empty) arrays are filled in with defaults by
+            // CatalogSafetyInitializer when the resulting catalog is initialized - see #2124
+            return null;
         }
         final C[] foo = (C[]) java.lang.reflect.Array
                 .newInstance(input.iterator().next().getClass(), 1);
