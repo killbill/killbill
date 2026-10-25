@@ -94,6 +94,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
     private static final String PROP_IPCD_RETRIES = "IPCD_RETRIES";
     private static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
+    private static final String PROP_IPCD_REFUND_IDS_WITH_DESCRIPTION_KEY = "IPCD_REFUND_IDS_DESCRIPTIONS";
     private static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
     private static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
 
@@ -201,9 +202,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
                 case REFUND:
                     final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
+                    final Map<UUID, String> idWithDescription = extractIdsWithDescriptionFromProperties(pluginProperties);
                     final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                     final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
-                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), status, internalContext);
+                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, idWithDescription, paymentControlContext.getTransactionExternalKey(), status, internalContext);
                     break;
 
                 case CHARGEBACK:
@@ -233,6 +235,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
                 case CREDIT:
                     final Map<UUID, BigDecimal> idWithAmountMap = extractIdsWithAmountFromProperties(pluginProperties);
+                    final Map<UUID, String> idWithDescriptionMap = extractIdsWithDescriptionFromProperties(pluginProperties);
                     final PluginProperty properties = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                     final boolean isInvoiceAdjusted = properties != null && properties.getValue() != null ? Boolean.valueOf(properties.getValue().toString()) : false;
 
@@ -244,6 +247,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                             paymentControlContext.getAmount(),
                                             isInvoiceAdjusted,
                                             idWithAmountMap,
+                                            idWithDescriptionMap,
                                             paymentControlContext.getTransactionExternalKey(),
                                             status,
                                             internalContext);
@@ -518,6 +522,34 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             res.put(uuid, val);
         }
         return res;
+    }
+
+    Map<UUID, String> extractIdsWithDescriptionFromProperties(final Iterable<PluginProperty> properties) {
+        final PluginProperty prop = getPluginProperty(properties, PROP_IPCD_REFUND_IDS_WITH_DESCRIPTION_KEY);
+        if (prop == null) {
+            return Collections.emptyMap();
+        }
+
+        final Map<UUID, String> descriptions = new HashMap<>();
+        final Map<?, ?> values = (Map<?, ?>) prop.getValue();
+        for (final Entry<?, ?> entry : values.entrySet()) {
+            final Object key = entry.getKey();
+            final UUID invoiceItemId;
+            if (key instanceof String) {
+                invoiceItemId = UUID.fromString((String) key);
+            } else if (key instanceof UUID) {
+                invoiceItemId = (UUID) key;
+            } else {
+                throw new IllegalStateException(String.format("Failed to deserialize plugin property map for adjustment descriptions: Invalid format for UUID, type=%s", key.getClass().getName()));
+            }
+
+            final Object value = entry.getValue();
+            if (!(value instanceof String)) {
+                throw new IllegalStateException(String.format("Failed to deserialize plugin property map for adjustment descriptions: Invalid format for description, type=%s", value == null ? "null" : value.getClass().getName()));
+            }
+            descriptions.put(invoiceItemId, (String) value);
+        }
+        return descriptions;
     }
 
     private PluginProperty getPluginProperty(final Iterable<PluginProperty> properties, final String propertyName) {

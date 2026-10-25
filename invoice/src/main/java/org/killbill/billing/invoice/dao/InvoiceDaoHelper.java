@@ -210,11 +210,13 @@ public class InvoiceDaoHelper {
      * @param effectiveDate     adjustment effective date, in the account timezone
      * @param positiveAdjAmount the amount to adjust. Pass null to adjust the full amount of the original item
      * @param currency          the currency of the amount. Pass null to default to the original currency used
+     * @param description       the description for the adjustment item
      * @return the adjustment item
      */
     public InvoiceItemModelDao createAdjustmentItem(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID invoiceItemId,
                                                     final BigDecimal positiveAdjAmount, final Currency currency,
-                                                    final LocalDate effectiveDate, final InternalCallContext context) throws InvoiceApiException {
+                                                    final LocalDate effectiveDate, @Nullable final String description,
+                                                    final InternalCallContext context) throws InvoiceApiException {
         // First, retrieve the invoice item in question
         final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         final InvoiceItemModelDao invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
@@ -235,7 +237,7 @@ public class InvoiceDaoHelper {
         // Finally, create the adjustment
         // Note! The amount is negated here!
         return new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.ITEM_ADJ, invoiceItemToBeAdjusted.getInvoiceId(), invoiceItemToBeAdjusted.getAccountId(),
-                                       null, null, null, invoiceItemToBeAdjusted.getProductName(), invoiceItemToBeAdjusted.getPlanName(), invoiceItemToBeAdjusted.getPhaseName(), invoiceItemToBeAdjusted.getUsageName(),
+                                       null, null, description, invoiceItemToBeAdjusted.getProductName(), invoiceItemToBeAdjusted.getPlanName(), invoiceItemToBeAdjusted.getPhaseName(), invoiceItemToBeAdjusted.getUsageName(),
                                         invoiceItemToBeAdjusted.getCatalogEffectiveDate(), effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
     }
 

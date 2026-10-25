@@ -20,10 +20,14 @@ package org.killbill.billing.payment.invoice;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -99,5 +103,18 @@ public class TestInvoicePaymentControlPluginApiUnit extends PaymentTestSuiteNoDB
 
         result = api.getNumberAttemptsInState(Collections.emptyList(), TransactionStatus.SUCCESS);
         Assert.assertEquals(result, 0);
+    }
+
+    @Test(groups = "fast")
+    public void testExtractAdjustmentDescriptionsWithStringKeys() {
+        final InvoicePaymentControlPluginApi api = createInvoicePaymentControlApi();
+        final UUID invoiceItemId = UUID.randomUUID();
+        final String description = "Customer requested partial refund";
+        final PluginProperty property = new PluginProperty("IPCD_REFUND_IDS_DESCRIPTIONS",
+                                                           Map.of(invoiceItemId.toString(), description),
+                                                           false);
+
+        Assert.assertEquals(api.extractIdsWithDescriptionFromProperties(List.of(property)),
+                            Map.of(invoiceItemId, description));
     }
 }
