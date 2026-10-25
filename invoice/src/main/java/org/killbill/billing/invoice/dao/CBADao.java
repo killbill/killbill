@@ -24,9 +24,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.joda.time.LocalDate;
 
 import javax.annotation.Nullable;
 import jakarta.inject.Inject;
@@ -245,8 +248,23 @@ public class CBADao {
                                              final InternalCallContext context) {
         return new InvoiceItemModelDao(new CreditBalanceAdjInvoiceItem(invoice.getId(),
                                                                        invoice.getAccountId(),
-                                                                       context.getCreatedDate().toLocalDate(),
+                                                                       getCBAItemDate(invoice, context),
                                                                        amount.negate(),
                                                                        invoice.getCurrency()));
+    }
+
+    // The credit balance adjustment should be dated consistently with the invoice's own items
+    // (e.g. the requestedDate of a credit that was just inserted on this invoice), not the time
+    // this transaction happens to run at -- otherwise a credit created with a past or future
+    // effectiveDate ends up with its CREDIT_ADJ item correctly dated but its CBA_ADJ side effect
+    // dated "today". Falls back to the call time only for the degenerate case of an invoice with
+    // no items yet.
+    private LocalDate getCBAItemDate(final InvoiceModelDao invoice, final InternalCallContext context) {
+        return invoice.getInvoiceItems()
+                      .stream()
+                      .map(InvoiceItemModelDao::getStartDate)
+                      .filter(Objects::nonNull)
+                      .max(Comparator.naturalOrder())
+                      .orElseGet(() -> context.getCreatedDate().toLocalDate());
     }
 }
