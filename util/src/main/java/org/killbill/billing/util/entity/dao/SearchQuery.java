@@ -28,6 +28,10 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.format.ISODateTimeFormat;
+
 public class SearchQuery {
 
     public static final String SEARCH_QUERY_MARKER = "_q=1&";
@@ -71,10 +75,42 @@ public class SearchQuery {
                 valueTyped = Boolean.valueOf(value);
             } else if (valueType == Integer.class || valueType == Long.class || valueType == Double.class) {
                 valueTyped = Objects.requireNonNullElse(convertToNumber(value), value);
+            } else if (valueType == LocalDate.class) {
+                // Bind a typed value: PostgreSQL does not implicitly cast varchar in date comparisons - see #2127
+                valueTyped = Objects.requireNonNullElse(convertToSqlDate(value), value);
+            } else if (valueType == DateTime.class) {
+                valueTyped = Objects.requireNonNullElse(convertToSqlTimestamp(value), value);
             } else {
                 valueTyped = value;
             }
             addSearchClause(column, operator == null ? SqlOperator.EQ : SqlOperator.valueOf(operator.toUpperCase(Locale.ROOT)), valueTyped);
+        }
+    }
+
+    private static java.sql.Date convertToSqlDate(@Nullable final String str) {
+        if (str == null) {
+            return null;
+        }
+
+        try {
+            return java.sql.Date.valueOf(LocalDate.parse(str).toString());
+        } catch (final IllegalArgumentException e) {
+            // String cannot be parsed as a date, bind it as-is
+            return null;
+        }
+    }
+
+    private static java.sql.Timestamp convertToSqlTimestamp(@Nullable final String str) {
+        if (str == null) {
+            return null;
+        }
+
+        try {
+            // Zone-less strings are interpreted as UTC, which is how datetimes are stored
+            return new java.sql.Timestamp(ISODateTimeFormat.dateTimeParser().withZoneUTC().parseDateTime(str).getMillis());
+        } catch (final IllegalArgumentException e) {
+            // String cannot be parsed as a datetime, bind it as-is
+            return null;
         }
     }
 
