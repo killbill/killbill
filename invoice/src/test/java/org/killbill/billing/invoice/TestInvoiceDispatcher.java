@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -54,8 +55,12 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
+import org.killbill.billing.util.config.TimeSpanConverter;
+import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.dao.SystemTags;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -336,6 +341,45 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         }
     }
 
+    @Test(groups = "slow")
+    public void testLockFailureTriggersQueueRetryWithFullSchedule() throws AccountApiException, LockFailedException {
+        final UUID accountId = account.getId();
+
+        final GlobalLocker failingLocker = Mockito.mock(GlobalLocker.class);
+        Mockito.doThrow(new LockFailedException())
+               .when(failingLocker).lockWithNumberOfTries(Mockito.anyString(), Mockito.anyString(), Mockito.anyInt());
+
+        final InvoiceDispatcher lockFailingDispatcher = new InvoiceDispatcher(
+                generator, accountApi, billingApi, subscriptionApi, invoiceDao,
+                internalCallContextFactory, invoicePluginDispatcher, failingLocker, bus,
+                notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
+
+        // Non-API call (notification queue / bus event): lock failure must propagate as
+        // QueueRetryException carrying the full configured retry schedule so all retry
+        // slots are honoured, not just the first one.
+        try {
+            lockFailingDispatcher.processAccount(false, accountId, null, null, false, true, Collections.emptyList(), context);
+            Assert.fail("Expected QueueRetryException");
+        } catch (final QueueRetryException e) {
+            final List<Period> expectedSchedule = TimeSpanConverter.toListPeriod(invoiceConfig.getRescheduleIntervalOnLock(context));
+            Assert.assertFalse(expectedSchedule.isEmpty(), "Default retry schedule must not be empty");
+            Assert.assertEquals(e.getRetrySchedule(), expectedSchedule,
+                                "Retry schedule must match the full configured rescheduleIntervalOnLock");
+        } catch (final InvoiceApiException e) {
+            Assert.fail("Expected QueueRetryException, not InvoiceApiException: " + e.getMessage());
+        }
+
+        // API call: lock failure must surface as InvoiceApiException (not silently retried)
+        try {
+            lockFailingDispatcher.processAccount(true, accountId, null, null, false, false, Collections.emptyList(), context);
+            Assert.fail("Expected InvoiceApiException for API-call lock failure");
+        } catch (final InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+        } catch (final QueueRetryException e) {
+            Assert.fail("Expected InvoiceApiException for API-call lock failure, not QueueRetryException");
+        }
+    }
+
     private Invoice processAccountFromNotificationOrBusEventAndAssertResult(final UUID accountId,
                                                                             @Nullable final LocalDate targetDate,
                                                                             @Nullable final DryRunArguments dryRunArguments,
@@ -345,5 +389,5 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoices.size(), 1);
         return invoices.get(0);
     }
-    
+
 }
