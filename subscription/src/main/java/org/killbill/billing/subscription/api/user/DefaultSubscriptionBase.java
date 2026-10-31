@@ -634,10 +634,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
             boolean canceledOrExpired = false;
             SubscriptionBaseTransitionData lastPlanTransition = null;
+            SubscriptionBaseTransitionData lastPhaseTransition = null;
             while (it.hasNext()) {
                 // Do not insert any transitions that happen after a CANCEL or EXPIRED event
-                if (canceledOrExpired) {
-                    break;
+                if (canceledOrExpired) {                    break;
                 }
 
                 final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
@@ -662,10 +662,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         lastPlanTransition = cur;
                     }
 
+                    if (isCreateOrTransfer || isChangeEvent || isPhaseEvent) {
+                        lastPhaseTransition = cur;
+                    }
+
                     // Look for any catalog change transition whose date is less the cur event
                     SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-                    while (prevCandidateForCatalogChangeEvents != null &&
-                           prevCandidateForCatalogChangeEvents.getEffectiveDate().compareTo(cur.getEffectiveTransitionTime()) < 0) {
+                    while (prevCandidateForCatalogChangeEvents != null &&                           prevCandidateForCatalogChangeEvents.getEffectiveDate().compareTo(cur.getEffectiveTransitionTime()) < 0) {
                         result.add(prevCandidateForCatalogChangeEvents);
                         prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
                     }
@@ -725,10 +728,20 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
                 }
             }
+
+            final SubscriptionBillingEvent missingFixedTermExpiredEvent = canceledOrExpired ? null : buildMissingFixedTermExpiredEvent(lastPhaseTransition, lastActiveCatalog);
+            if (missingFixedTermExpiredEvent != null) {
+                candidatesCatalogChangeEvents.removeIf(candidate -> !candidate.getEffectiveDate().isBefore(missingFixedTermExpiredEvent.getEffectiveDate()));
+            }
+
             SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             while (prevCandidateForCatalogChangeEvents != null) {
                 result.add(prevCandidateForCatalogChangeEvents);
                 prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+            }
+
+            if (missingFixedTermExpiredEvent != null) {
+                result.add(missingFixedTermExpiredEvent);
             }
 
             return result;
@@ -737,9 +750,30 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
+    private SubscriptionBillingEvent buildMissingFixedTermExpiredEvent(@Nullable final SubscriptionBaseTransitionData lastPhaseTransition,
+                                                                      @Nullable final StaticCatalog lastActiveCatalog) throws CatalogApiException {
+        if (lastPhaseTransition == null || lastActiveCatalog == null) {
+            return null;
+        }
+
+        final Plan lastPlan = lastPhaseTransition.getNextPlan();
+        final PlanPhase lastPhase = lastPhaseTransition.getNextPhase();
+        if (lastPlan == null ||
+            lastPhase == null ||
+            lastPhase.getPhaseType() != PhaseType.FIXEDTERM ||
+            lastPlan.getFinalPhase() == null ||
+            !lastPhase.getName().equals(lastPlan.getFinalPhase().getName())) {
+            return null;
+        }
+
+        final DateTime expiryDate = lastPhase.getDuration().addToDateTime(lastPhaseTransition.getEffectiveTransitionTime());
+        return new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.EXPIRED, null, null, expiryDate,
+                                                   lastPhaseTransition.getTotalOrdering(), lastPhaseTransition.getNextBillingCycleDayLocal(),
+                                                   lastPhaseTransition.getNextQuantity(), CatalogDateHelper.toUTCDateTime(lastActiveCatalog.getEffectiveDate()));
+    }
+
     // Align to next BCD based on recurring section for the phase
     private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime prevTransitionDate, final DateTime curTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
-
         if (!apiService.isEffectiveDateForExistingSubscriptionsAlignedToBCD(context)) {
             return curTransitionDate;
         }
