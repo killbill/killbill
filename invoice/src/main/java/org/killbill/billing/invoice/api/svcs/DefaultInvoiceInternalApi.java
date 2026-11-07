@@ -127,12 +127,12 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public InvoicePayment recordRefund(final UUID paymentId, final UUID paymentAttemptId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey, final InvoicePaymentStatus status, final InternalCallContext context) throws InvoiceApiException {
+    public InvoicePayment recordRefund(final UUID paymentId, final UUID paymentAttemptId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final Map<UUID, String> invoiceItemIdsWithDescriptions, final String transactionExternalKey, final InvoicePaymentStatus status, final InternalCallContext context) throws InvoiceApiException {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL, paymentId, amount);
         }
 
-        final InvoicePaymentModelDao refund = dao.createRefund(paymentId, paymentAttemptId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, transactionExternalKey, status, context);
+        final InvoicePaymentModelDao refund = dao.createRefund(paymentId, paymentAttemptId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, invoiceItemIdsWithDescriptions, transactionExternalKey, status, context);
         // See https://github.com/killbill/killbill/issues/265
         final CallContext callContext = internalCallContextFactory.createCallContext(context);
         final DefaultInvoice invoice = getInvoiceByIdInternal(refund.getInvoiceId(), context);

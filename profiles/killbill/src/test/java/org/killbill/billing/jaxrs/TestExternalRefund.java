@@ -196,6 +196,7 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "#255 - Scenario 2a - Can refund an automatic payment though an external refund over item adjustments")
     public void testAutomaticPaymentAndExternalRefundWithAdjustments() throws Exception {
+        final String adjustmentDescription = "Customer requested external refund";
         final ZonedDateTime initialDate = ZonedDateTime.of(2012, 4, 25, 0, 3, 42, 0, ZoneId.systemDefault());
         clock.setDeltaFromReality(initialDate.toInstant().toEpochMilli() - clock.getUTCNow().getMillis());
 
@@ -208,6 +209,7 @@ public class TestExternalRefund extends TestJaxrsBase {
 
         final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, true, null, AuditLevel.NONE, requestOptions);
         final List<InvoiceItem> itemsToBeAdjusted = invoices.get(1).getItems();
+        itemsToBeAdjusted.get(0).setDescription(adjustmentDescription);
 
         // external refund
         final InvoicePaymentTransaction invoicePaymentTransactionRequest = new InvoicePaymentTransaction();
@@ -222,6 +224,15 @@ public class TestExternalRefund extends TestJaxrsBase {
         assertInvoicePaymentsExternalRefund(accountJson.getAccountId(), invoicePaymentExternalRefund);
         assertRefundInvoiceAdjustments(accountJson.getAccountId());
         assertRefundAccountBalance(accountJson.getAccountId(), BigDecimal.ZERO, BigDecimal.ZERO);
+
+        final Invoices invoicesAfterRefund = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, true, null, AuditLevel.NONE, requestOptions);
+        final InvoiceItem adjustmentAfterRefund = invoicesAfterRefund.get(1)
+                                                                     .getItems()
+                                                                     .stream()
+                                                                     .filter(item -> item.getItemType() == InvoiceItemType.ITEM_ADJ)
+                                                                     .findFirst()
+                                                                     .orElseThrow();
+        assertEquals(adjustmentAfterRefund.getDescription(), adjustmentDescription);
 
     }
 

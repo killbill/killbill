@@ -424,7 +424,8 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final UUID paymentAttemptId, final BigDecimal amount, final boolean isInvoiceAdjusted,
-                                               final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey,
+                                               final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final Map<UUID, String> invoiceItemIdsWithDescriptions,
+                                               final String transactionExternalKey,
                                                final InvoicePaymentStatus status, final InternalCallContext context)
             throws InvoiceApiException {
         return null;

@@ -27,6 +27,8 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
@@ -87,6 +89,32 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         verifyRefund(invoice, new BigDecimal("40"), new BigDecimal("38"), BigDecimal.ZERO, true, adjustments);
     }
 
+    @Test(groups = "slow")
+    public void testRefundWithInvoiceItemAdjustmentDescription() throws Exception {
+        final Invoice invoice = createAndPersistInvoice(invoiceUtil, invoiceDao, clock, THIRTY, CURRENCY, internalCallContext);
+        final InvoicePayment payment = createAndPersistPayment(invoiceInternalApi, clock, invoice.getId(), THIRTY, CURRENCY, internalCallContext);
+        final UUID invoiceItemId = invoice.getInvoiceItems().get(0).getId();
+        final BigDecimal refundAmount = BigDecimal.TEN;
+        final String adjustmentDescription = "Customer requested partial refund";
+
+        invoiceInternalApi.recordRefund(payment.getPaymentId(),
+                                        UUID.randomUUID(),
+                                        refundAmount,
+                                        true,
+                                        Map.of(invoiceItemId, refundAmount),
+                                        Map.of(invoiceItemId, adjustmentDescription),
+                                        UUID.randomUUID().toString(),
+                                        InvoicePaymentStatus.SUCCESS,
+                                        internalCallContext);
+
+        final Invoice updatedInvoice = invoiceInternalApi.getInvoiceById(invoice.getId(), internalCallContext);
+        final InvoiceItem adjustment = updatedInvoice.getInvoiceItems().stream()
+                                                     .filter(item -> item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ)
+                                                     .findFirst()
+                                                     .orElseThrow();
+        Assert.assertEquals(adjustment.getDescription(), adjustmentDescription);
+    }
+
     private void verifyRefund(final BigDecimal invoiceAmount, final BigDecimal refundAmount, final BigDecimal finalInvoiceAmount,
                               final boolean adjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) throws InvoiceApiException {
         final Invoice invoice = createAndPersistInvoice(invoiceUtil, invoiceDao, clock, invoiceAmount, CURRENCY, internalCallContext);
@@ -102,7 +130,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         Assert.assertEquals(initialInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
 
         // Create a full refund with no adjustment
-        final InvoicePayment refund = invoiceInternalApi.recordRefund(payment.getPaymentId(), UUID.randomUUID(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
+        final InvoicePayment refund = invoiceInternalApi.recordRefund(payment.getPaymentId(), UUID.randomUUID(), refundAmount, adjusted, invoiceItemIdsWithAmounts, Collections.emptyMap(),
                                                                       UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, internalCallContext);
         Assert.assertEquals(refund.getAmount().compareTo(refundAmount.negate()), 0);
         Assert.assertEquals(refund.getCurrency(), CURRENCY);

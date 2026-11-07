@@ -805,7 +805,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     @Override
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final UUID paymentAttemptId,
                                                final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
-                                               final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final String transactionExternalKey,
+                                               final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts,
+                                               final Map<UUID, String> invoiceItemIdsWithDescriptions, final String transactionExternalKey,
                                                final InvoicePaymentStatus status, final InternalCallContext context) throws InvoiceApiException {
 
         if (isInvoiceAdjusted && invoiceItemIdsWithNullAmounts.isEmpty()) {
@@ -897,6 +898,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         final BigDecimal adjAmount = entry.getValue();
                         final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), entry.getKey(), adjAmount,
                                                                                                invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
+                                                                                               invoiceItemIdsWithDescriptions.get(entry.getKey()),
                                                                                                context);
 
                         createInvoiceItemFromTransaction(transInvoiceItemDao, item, context);
