@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -552,6 +553,38 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal accountCBA2 = invoiceUserApi.getAccountCBA(accountId, callContext);
         Assert.assertEquals(accountBalance2.compareTo(new BigDecimal("-150")), 0);
         Assert.assertEquals(accountCBA2.compareTo(new BigDecimal("150")), 0);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/2202")
+    public void testGeneratedCBAItemUsesCreditEffectiveDateNotCallTime() throws Exception {
+
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+
+        // Invoice created in DRAFT state so we can add a credit item on top of it
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, "description", clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("100.00"), accountCurrency, null);
+        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge), false, null, callContext);
+        assertEquals(items.size(), 1);
+        final Invoice invoice = invoiceUserApi.getInvoice(items.get(0).getInvoiceId(), callContext);
+
+        // Credit dated well in the past, distinct from "today" (when this transaction actually runs)
+        final LocalDate creditEffectiveDate = clock.getUTCToday().minusDays(10);
+        final InvoiceItem creditItemInput = new CreditAdjInvoiceItem(invoice.getId(), accountId, creditEffectiveDate, "something", new BigDecimal("200.00"), accountCurrency, null);
+        invoiceUserApi.insertCredits(accountId, creditEffectiveDate, List.of(creditItemInput), true, null, callContext);
+
+        // Committing the invoice triggers CBA generation: balance goes negative (100 charge - 200 credit),
+        // so a positive CBA_ADJ item is auto-generated to track the resulting credit balance
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+
+        final Invoice committedInvoice = invoiceUserApi.getInvoice(items.get(0).getInvoiceId(), callContext);
+        final InvoiceItem cbaItem = committedInvoice.getInvoiceItems().stream()
+                .filter(invoiceItem -> InvoiceItemType.CBA_ADJ == invoiceItem.getInvoiceItemType() &&
+                                       invoiceItem.getAmount().compareTo(BigDecimal.ZERO) > 0)
+                .findFirst()
+                .orElse(null);
+        Assert.assertNotNull(cbaItem);
+        Assert.assertEquals(cbaItem.getStartDate(), creditEffectiveDate,
+                            "CBA_ADJ item should be dated consistently with the credit's effective date, not the current call time");
     }
 
     @Test(groups = "slow")
