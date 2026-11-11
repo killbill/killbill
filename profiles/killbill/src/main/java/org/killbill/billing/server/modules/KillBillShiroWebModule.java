@@ -56,6 +56,7 @@ import org.killbill.billing.util.glue.RealmsFromShiroIniProvider;
 import org.killbill.billing.util.glue.RedisShiroManagerProvider;
 import org.killbill.billing.util.glue.SessionDAOProvider;
 import org.killbill.billing.util.security.shiro.realm.KillBillAuth0Realm;
+import org.killbill.billing.util.security.shiro.realm.KillBillCognitoRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -123,6 +124,9 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         }
         if (KillBillShiroModule.isAuth0Enabled()) {
             bindRealm().to(KillBillAuth0Realm.class).asEagerSingleton();
+        }
+        if (KillBillShiroModule.isCognitoEnabled()) {
+            bindRealm().to(KillBillCognitoRealm.class).asEagerSingleton();
         }
 
         if (KillBillShiroModule.isRBACEnabled()) {

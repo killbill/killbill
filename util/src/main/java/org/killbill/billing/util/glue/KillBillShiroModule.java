@@ -38,6 +38,7 @@ import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.realm.KillBillAuth0Realm;
+import org.killbill.billing.util.security.shiro.realm.KillBillCognitoRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -55,6 +56,7 @@ public class KillBillShiroModule extends ShiroModule {
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
     public static final String KILLBILL_OKTA_PROPERTY = "killbill.server.okta";
     public static final String KILLBILL_AUTH0_PROPERTY = "killbill.server.auth0";
+    public static final String KILLBILL_COGNITO_PROPERTY = "killbill.server.cognito";
     public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
 
     public static boolean isLDAPEnabled() {
@@ -67,6 +69,10 @@ public class KillBillShiroModule extends ShiroModule {
 
     public static boolean isAuth0Enabled() {
         return Boolean.parseBoolean(System.getProperty(KILLBILL_AUTH0_PROPERTY, "false"));
+    }
+
+    public static boolean isCognitoEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KILLBILL_COGNITO_PROPERTY, "false"));
     }
 
     public static boolean isRBACEnabled() {
@@ -114,6 +120,8 @@ public class KillBillShiroModule extends ShiroModule {
 
         configureAuth0Realm();
 
+        configureCognitoRealm();
+
         expose(new TypeLiteral<Set<Realm>>() {});
     }
 
@@ -136,6 +144,12 @@ public class KillBillShiroModule extends ShiroModule {
     protected void configureAuth0Realm() {
         if (isAuth0Enabled()) {
             bindRealm().to(KillBillAuth0Realm.class).asEagerSingleton();
+        }
+    }
+
+    protected void configureCognitoRealm() {
+        if (isCognitoEnabled()) {
+            bindRealm().to(KillBillCognitoRealm.class).asEagerSingleton();
         }
     }
 
