@@ -75,7 +75,15 @@ function usage() {
 function start() {
     mkdir -p $LOG_DIR
 
-    local start_cmd="mvn -Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true -Dorg.killbill.server.properties=file://$PROPERTIES -Dlogback.configurationFile=$LOG -Dcheck.skip-dependency=true -Dcheck.skip-dependency-scope=true -Dcheck.skip-dependency-versions=true -Dcheck.skip-duplicate-finder=true -Dcheck.skip-enforcer=true -Dcheck.skip-rat=true -Dcheck.skip-spotbugs=true jetty:run"
+    # Prefer the Maven wrapper when present (e.g. generated in CI) so that the server runs with the same Maven
+    # version that built the project. Mixing versions makes Maven 3.9.x re-verify every artifact in a local
+    # repository populated by Maven 3.10.x against the remote repositories, which is very slow.
+    local mvn_cmd="mvn"
+    if [ -x "$TOP/mvnw" ]; then
+        mvn_cmd="$TOP/mvnw"
+    fi
+
+    local start_cmd="$mvn_cmd -Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true -Dorg.killbill.server.properties=file://$PROPERTIES -Dlogback.configurationFile=$LOG -Dcheck.skip-dependency=true -Dcheck.skip-dependency-scope=true -Dcheck.skip-dependency-versions=true -Dcheck.skip-duplicate-finder=true -Dcheck.skip-enforcer=true -Dcheck.skip-rat=true -Dcheck.skip-spotbugs=true jetty:run"
 
     local debug_opts_eclipse=
     if [ ! -z $DEBUG ]; then
