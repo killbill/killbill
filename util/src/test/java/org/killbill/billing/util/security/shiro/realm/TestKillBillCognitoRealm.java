@@ -26,6 +26,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -33,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -42,6 +45,9 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.HostAuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.ModularRealmAuthorizer;
+import org.apache.shiro.realm.AuthorizingRealm;
+import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
@@ -201,6 +207,32 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testOtherRealmsGrantNothingToCognitoSubjects() {
+        final Properties props = new Properties();
+        props.setProperty("org.killbill.security.auth0.url", "http://127.0.0.1:1");
+        props.setProperty("org.killbill.security.okta.url", "http://127.0.0.1:1");
+        props.setProperty("org.killbill.security.ldap.url", "ldap://127.0.0.1:1");
+        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(new SimplePropertyConfigSource(props)).build(SecurityConfig.class);
+        // Any lookup by these realms would fail (nothing listens on port 1)
+        final List<AuthorizingRealm> otherRealms = List.of(new KillBillAuth0Realm(securityConfig, clock),
+                                                           new KillBillOktaRealm(securityConfig),
+                                                           new KillBillJndiLdapRealm(securityConfig));
+
+        final PrincipalCollection principals = realm.getAuthenticationInfo(bearer(validToken().compact())).getPrincipals();
+        for (final AuthorizingRealm other : otherRealms) {
+            other.setAuthorizationCachingEnabled(false);
+            Assert.assertFalse(other.isPermitted(principals, "account:create"), other.getClass().getSimpleName());
+        }
+
+        // All realms together, as configured in Kill Bill: the token role is granted, nothing else
+        final List<Realm> allRealms = new ArrayList<>(otherRealms);
+        allRealms.add(realm);
+        final ModularRealmAuthorizer authorizer = new ModularRealmAuthorizer(allRealms);
+        Assert.assertTrue(authorizer.isPermitted(principals, "account:create"));
+        Assert.assertFalse(authorizer.isPermitted(principals, "payment:refund"));
+    }
+
+    @Test(groups = "fast")
     public void testJwksRefreshIsRateLimited() {
         realm.getAuthenticationInfo(bearer(validToken().compact()));
         Assert.assertEquals(jwksFetches.get(), 1);
@@ -284,7 +316,8 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
             } catch (final InterruptedException ignored) {
             }
         });
-        server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+        final ExecutorService executor = Executors.newCachedThreadPool();
+        server.setExecutor(executor);
         server.start();
         try {
             final String base = "http://127.0.0.1:" + server.getAddress().getPort();
@@ -306,6 +339,8 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
             Assert.assertTrue(System.currentTimeMillis() - start < 5000, "The read timeout must bound the body download");
         } finally {
             server.stop(0);
+            // Also interrupts the stalled handler
+            executor.shutdownNow();
         }
     }
 

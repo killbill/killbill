@@ -64,7 +64,7 @@ public class KillBillJdbcRealm extends JdbcRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(final PrincipalCollection principals) {
         // Subjects authenticated by the Cognito realm get the permissions of their token role only, even if a local
         // user with the same name exists
-        if (principals != null && principals.oneByType(KillBillCognitoRealm.CognitoRole.class) != null) {
+        if (KillBillCognitoRealm.isCognitoSubject(principals)) {
             return null;
         }
         return super.doGetAuthorizationInfo(principals);

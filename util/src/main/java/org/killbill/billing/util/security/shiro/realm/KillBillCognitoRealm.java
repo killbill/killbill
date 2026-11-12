@@ -171,6 +171,14 @@ public class KillBillCognitoRealm extends AuthorizingRealm {
                              .build();
     }
 
+    /**
+     * Whether the subject was authenticated by this realm. The other realms must grant nothing to such subjects: their
+     * principal is not a user of theirs, even if a user with the same name exists.
+     */
+    public static boolean isCognitoSubject(final PrincipalCollection principals) {
+        return principals != null && principals.oneByType(CognitoRole.class) != null;
+    }
+
     @Override
     public boolean supports(final AuthenticationToken token) {
         // BearerToken lives in killbill-server and is not visible here: accept any host token but Basic credentials
