@@ -214,8 +214,13 @@ public interface SecurityConfig extends KillbillConfig {
 
     @Config("org.killbill.security.cognito.jwksMinRefreshInterval")
     @Default("60s")
-    @Description("Minimum delay between two JWKS downloads when an unknown key id is seen")
+    @Description("Minimum delay between two JWKS download attempts (unknown key id, expired cache or failed download)")
     public TimeSpan getShiroCognitoJwksMinRefreshInterval();
+
+    @Config("org.killbill.security.cognito.jwksMaxAge")
+    @Default("1h")
+    @Description("Maximum age of the cached JWKS: older keys are downloaded again, so a key removed from the user pool stops being trusted")
+    public TimeSpan getShiroCognitoJwksMaxAge();
 
     @Config("org.killbill.security.cognito.allowedClockSkew")
     @Default("60s")

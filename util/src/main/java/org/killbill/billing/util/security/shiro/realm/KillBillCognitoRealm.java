@@ -16,7 +16,6 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
-import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.URI;
@@ -42,6 +41,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -90,8 +94,8 @@ import io.jsonwebtoken.security.SignatureException;
  *     <li>Only Bearer tokens are handled: Basic credentials are left to the other realms.</li>
  *     <li>The token must be a Cognito ID token ({@code token_use=id}) signed by the pool's keys, with the configured
  *     issuer, an accepted audience (app client id) and an expiration.</li>
- *     <li>The principal is {@code cognito:<claim>} so it can never match a Kill Bill username: authorization is the
- *     union of all realms, and the JDBC realm would otherwise grant that user's roles too.</li>
+ *     <li>The principal is {@code cognito:<claim>}. Authorization is the union of all realms, so the JDBC realm grants
+ *     nothing to the subjects of this realm, and local usernames starting with {@code cognito:} are reserved.</li>
  *     <li>The role is carried in the principal collection (doGetAuthorizationInfo does not see the token). A token
  *     without a role is rejected: most read APIs only require authentication, so authenticating a token without a role
  *     would still give read access.</li>
@@ -114,11 +118,16 @@ public class KillBillCognitoRealm extends AuthorizingRealm {
     private final String issuer;
     private final Set<String> audiences;
     private final long jwksMinRefreshIntervalMillis;
+    private final long jwksMaxAgeMillis;
+    private final long readTimeoutMillis;
+    private final org.killbill.clock.Clock clock;
 
-    // Guarded by this
-    private Map<String, PublicKey> keys = Collections.emptyMap();
-    private long lastJwksFetchMillis = 0;
-    private boolean jwksFetched = false;
+    // Signing keys are read without locking; only one thread downloads them at a time
+    private final ReentrantLock jwksRefreshLock = new ReentrantLock();
+    private volatile Map<String, PublicKey> keys = Collections.emptyMap();
+    private volatile long keysFetchedMillis = 0;
+    // Guarded by jwksRefreshLock
+    private long nextJwksAttemptMillis = 0;
 
     @Inject
     public KillBillCognitoRealm(final SecurityConfig securityConfig,
@@ -126,6 +135,7 @@ public class KillBillCognitoRealm extends AuthorizingRealm {
                                 @Named(KillBillPlatformModuleBase.SHIRO_DATA_SOURCE_ID) final DataSource dataSource) {
         this.securityConfig = securityConfig;
         this.dataSource = dataSource;
+        this.clock = clock;
 
         this.issuer = stripTrailingSlash(securityConfig.getShiroCognitoIssuer());
         if (Strings.isNullOrEmpty(issuer)) {
@@ -136,6 +146,8 @@ public class KillBillCognitoRealm extends AuthorizingRealm {
             throw new IllegalStateException("org.killbill.security.cognito.audiences must be set when the Cognito realm is enabled");
         }
         this.jwksMinRefreshIntervalMillis = securityConfig.getShiroCognitoJwksMinRefreshInterval().getMillis();
+        this.jwksMaxAgeMillis = securityConfig.getShiroCognitoJwksMaxAge().getMillis();
+        this.readTimeoutMillis = securityConfig.getShiroCognitoReadTimeout().getMillis();
 
         this.httpClient = HttpClient.newBuilder()
                                     .connectTimeout(Duration.ofMillis(securityConfig.getShiroCognitoConnectTimeout().getMillis()))
@@ -254,20 +266,17 @@ public class KillBillCognitoRealm extends AuthorizingRealm {
         return permissions;
     }
 
-    private synchronized Key getSigningKey(final String keyId) {
+    private Key getSigningKey(final String keyId) {
         if (keyId == null) {
             throw new SignatureException("Key ID is required");
         }
+        final long now = clock.getUTCNow().getMillis();
         PublicKey key = keys.get(keyId);
-        if (key == null) {
-            // Unknown kid (first call or key rotation): refetch, but not more than once per interval
-            final long now = System.currentTimeMillis();
-            if (!jwksFetched || now - lastJwksFetchMillis >= jwksMinRefreshIntervalMillis) {
-                lastJwksFetchMillis = now;
-                keys = fetchJwks();
-                jwksFetched = true;
-                key = keys.get(keyId);
-            }
+        // Unknown kid (first call or key rotation), or keys too old (a key removed from the pool must stop being trusted)
+        if (key == null || now - keysFetchedMillis >= jwksMaxAgeMillis) {
+            // A request without a key waits for a download in progress (bounded by the read timeout), one with a key does not
+            refreshJwks(now, key == null);
+            key = keys.get(keyId);
         }
         if (key == null) {
             throw new SignatureException("Unknown signing key ID");
@@ -275,28 +284,62 @@ public class KillBillCognitoRealm extends AuthorizingRealm {
         return key;
     }
 
+    /**
+     * Downloads the signing keys, at most once per jwksMinRefreshInterval (failed attempts included). If the download
+     * fails, the current keys are kept until the next attempt.
+     */
+    private void refreshJwks(final long now, final boolean waitForDownloadInProgress) {
+        if (waitForDownloadInProgress) {
+            jwksRefreshLock.lock();
+        } else if (!jwksRefreshLock.tryLock()) {
+            return;
+        }
+        try {
+            if (now < nextJwksAttemptMillis) {
+                return;
+            }
+            nextJwksAttemptMillis = now + jwksMinRefreshIntervalMillis;
+            try {
+                keys = fetchJwks();
+                keysFetchedMillis = now;
+            } catch (final SignatureException e) {
+                log.warn("Unable to refresh the Cognito signing keys, keeping the {} current key(s): {}", keys.size(), e.getMessage());
+            }
+        } finally {
+            jwksRefreshLock.unlock();
+        }
+    }
+
     @VisibleForTesting
     protected Map<String, PublicKey> fetchJwks() {
         final HttpRequest request = HttpRequest.newBuilder()
                                                .uri(URI.create(issuer + "/.well-known/jwks.json"))
                                                .header("User-Agent", USER_AGENT)
-                                               .timeout(Duration.ofMillis(securityConfig.getShiroCognitoReadTimeout().getMillis()))
+                                               .timeout(Duration.ofMillis(readTimeoutMillis))
                                                .build();
+        // The body is read in full (so the connection is always released), and the read timeout bounds the whole
+        // exchange: the request timeout alone stops at the response headers
+        final CompletableFuture<HttpResponse<byte[]>> future = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray());
         final Map<String, List<Map<String, Object>>> jwks;
         try {
-            final HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            final HttpResponse<byte[]> response = future.get(readTimeoutMillis, TimeUnit.MILLISECONDS);
             if (response.statusCode() != 200) {
                 throw new SignatureException("Unable to download the Cognito signing keys: HTTP " + response.statusCode());
             }
             jwks = mapper.readValue(response.body(), new TypeReference<Map<String, List<Map<String, Object>>>>() {});
         } catch (final SignatureException e) {
             throw e;
+        } catch (final TimeoutException e) {
+            future.cancel(true);
+            throw new SignatureException("Timed out downloading the Cognito signing keys", e);
         } catch (final InterruptedException e) {
+            future.cancel(true);
             Thread.currentThread().interrupt();
             throw new SignatureException("Interrupted while downloading the Cognito signing keys", e);
+        } catch (final ExecutionException e) {
+            throw new SignatureException("Unable to download the Cognito signing keys: " + e.getCause(), e.getCause());
         } catch (final Exception e) {
-            log.warn("Unable to download the Cognito signing keys", e);
-            throw new SignatureException("Unable to download the Cognito signing keys", e);
+            throw new SignatureException("Unable to download the Cognito signing keys: " + e, e);
         }
         return parseJwks(jwks);
     }

@@ -21,6 +21,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import javax.sql.DataSource;
 
+import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.killbill.billing.platform.glue.KillBillPlatformModuleBase;
@@ -57,6 +58,16 @@ public class KillBillJdbcRealm extends JdbcRealm {
 
         configureSecurity();
         configureDataSource();
+    }
+
+    @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(final PrincipalCollection principals) {
+        // Subjects authenticated by the Cognito realm get the permissions of their token role only, even if a local
+        // user with the same name exists
+        if (principals != null && principals.oneByType(KillBillCognitoRealm.CognitoRole.class) != null) {
+            return null;
+        }
+        return super.doGetAuthorizationInfo(principals);
     }
 
     @Override

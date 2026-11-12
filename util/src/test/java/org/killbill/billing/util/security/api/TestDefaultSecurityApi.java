@@ -23,6 +23,9 @@ import java.util.Set;
 
 import org.killbill.billing.security.Permission;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
+import org.killbill.billing.util.security.shiro.dao.UserDao;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -45,5 +48,25 @@ public class TestDefaultSecurityApi extends UtilTestSuiteNoDB {
         final Set<String> stephanesPermissions = securityApi.getCurrentUserPermissions(callContext);
         Assert.assertEquals(stephanesPermissions.size(), 1);
         Assert.assertTrue(stephanesPermissions.containsAll(List.of(Permission.PAYMENT_CAN_REFUND.toString())));
+    }
+
+    @Test(groups = "fast")
+    public void testCognitoUsernamesAreReserved() throws Exception {
+        final UserDao userDao = Mockito.mock(UserDao.class);
+        final DefaultSecurityApi api = new DefaultSecurityApi(userDao, Set.of());
+
+        for (final String username : List.of("cognito:member@example.com", "COGNITO:member@example.com", "Cognito:")) {
+            try {
+                api.addUserRoles(username, "password", List.of("root"), callContext);
+                Assert.fail("Username " + username + " should be reserved");
+            } catch (final IllegalArgumentException expected) {
+            }
+        }
+        Mockito.verify(userDao, Mockito.never()).insertUser(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any());
+
+        // Other names are unaffected
+        api.addUserRoles("member@example.com", "password", List.of("root"), callContext);
+        api.addUserRoles("foo:cognito:bar", "password", List.of("root"), callContext);
+        Mockito.verify(userDao, Mockito.times(2)).insertUser(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any());
     }
 }

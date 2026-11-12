@@ -54,6 +54,7 @@ import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
+import org.killbill.billing.util.security.shiro.realm.KillBillCognitoRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,6 +206,10 @@ public class DefaultSecurityApi implements SecurityApi {
 
     @Override
     public void addUserRoles(final String username, final String password, final List<String> roles, final CallContext callContext) throws SecurityApiException {
+        // Names of users authenticated by the Cognito realm: a local user with such a name would be mistaken for them
+        if (username != null && username.regionMatches(true, 0, KillBillCognitoRealm.PRINCIPAL_PREFIX, 0, KillBillCognitoRealm.PRINCIPAL_PREFIX.length())) {
+            throw new IllegalArgumentException("Usernames starting with " + KillBillCognitoRealm.PRINCIPAL_PREFIX + " are reserved");
+        }
         userDao.insertUser(username, password, roles, callContext.getUserName());
     }
 

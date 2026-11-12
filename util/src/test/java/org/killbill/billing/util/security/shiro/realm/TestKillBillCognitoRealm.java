@@ -16,10 +16,16 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,6 +34,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+import javax.sql.DataSource;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -37,16 +46,21 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.skife.config.AugmentedConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.sun.net.httpserver.HttpServer;
+
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 
 public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
 
@@ -58,6 +72,7 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
     private KeyPair keyPair;
     private KeyPair otherKeyPair;
     private AtomicInteger jwksFetches;
+    private volatile Supplier<Map<String, PublicKey>> jwks;
     private KillBillCognitoRealm realm;
 
     @BeforeMethod(groups = "fast")
@@ -68,18 +83,20 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
         keyPair = Keys.keyPairFor(SignatureAlgorithm.RS256);
         otherKeyPair = Keys.keyPairFor(SignatureAlgorithm.RS256);
         jwksFetches = new AtomicInteger();
+        jwks = () -> Map.of(KID, keyPair.getPublic());
 
         final Properties props = new Properties();
         props.setProperty("org.killbill.security.cognito.issuer", ISSUER);
         props.setProperty("org.killbill.security.cognito.audiences", AUD_PASSWORD + ", " + AUD_SSO);
         props.setProperty("org.killbill.security.cognito.jwksMinRefreshInterval", "1h");
+        props.setProperty("org.killbill.security.cognito.jwksMaxAge", "6h");
         final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(new SimplePropertyConfigSource(props)).build(SecurityConfig.class);
 
         realm = new KillBillCognitoRealm(securityConfig, clock, null) {
             @Override
             protected Map<String, PublicKey> fetchJwks() {
                 jwksFetches.incrementAndGet();
-                return Map.of(KID, keyPair.getPublic());
+                return jwks.get();
             }
 
             @Override
@@ -156,6 +173,34 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testLocalUserWithTheSameNameGrantsNothing() throws Exception {
+        // users / user_roles / roles_permissions as if a local user cognito:member@example.com existed with role root = *
+        final ResultSet resultSet = Mockito.mock(ResultSet.class);
+        Mockito.when(resultSet.next()).thenReturn(true, false, true, false, true, false, true, false);
+        Mockito.when(resultSet.getString(ArgumentMatchers.anyInt())).thenReturn("*");
+        final PreparedStatement statement = Mockito.mock(PreparedStatement.class);
+        Mockito.when(statement.executeQuery()).thenReturn(resultSet);
+        final Connection connection = Mockito.mock(Connection.class);
+        Mockito.when(connection.prepareStatement(ArgumentMatchers.anyString())).thenReturn(statement);
+        final DataSource dataSource = Mockito.mock(DataSource.class);
+        Mockito.when(dataSource.getConnection()).thenReturn(connection);
+
+        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(new SimplePropertyConfigSource(new Properties())).build(SecurityConfig.class);
+        final KillBillJdbcRealm jdbcRealm = new KillBillJdbcRealm(dataSource, securityConfig);
+        jdbcRealm.setAuthorizationCachingEnabled(false);
+
+        // The local user gets its roles
+        Assert.assertTrue(jdbcRealm.isPermitted(new SimplePrincipalCollection("cognito:member@example.com", jdbcRealm.getName()), "payment:refund"));
+
+        // The Cognito user with the same name only gets its token role
+        final PrincipalCollection principals = realm.getAuthenticationInfo(bearer(validToken().compact())).getPrincipals();
+        Assert.assertEquals(principals.getPrimaryPrincipal(), "cognito:member@example.com");
+        Assert.assertFalse(jdbcRealm.isPermitted(principals, "payment:refund"));
+        Assert.assertFalse(realm.isPermitted(principals, "payment:refund"));
+        Assert.assertTrue(realm.isPermitted(principals, "account:create"));
+    }
+
+    @Test(groups = "fast")
     public void testJwksRefreshIsRateLimited() {
         realm.getAuthenticationInfo(bearer(validToken().compact()));
         Assert.assertEquals(jwksFetches.get(), 1);
@@ -166,6 +211,121 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
         assertRejected(validToken().setHeaderParam("kid", "kid-unknown-1").compact());
         assertRejected(validToken().setHeaderParam("kid", "kid-unknown-2").compact());
         Assert.assertEquals(jwksFetches.get(), 1);
+    }
+
+    @Test(groups = "fast")
+    public void testCachedKeysExpire() {
+        realm.getAuthenticationInfo(bearer(validToken().compact()));
+        Assert.assertEquals(jwksFetches.get(), 1);
+
+        // Within the max age, a known kid does not trigger a download
+        clock.addDeltaFromReality(5 * 3600 * 1000L);
+        realm.getAuthenticationInfo(bearer(validToken().compact()));
+        Assert.assertEquals(jwksFetches.get(), 1);
+
+        // Past the max age, the keys are downloaded again: a key removed from the pool is no longer trusted
+        jwks = Map::of;
+        clock.addDeltaFromReality(2 * 3600 * 1000L);
+        assertRejected(validToken().compact());
+        Assert.assertEquals(jwksFetches.get(), 2);
+    }
+
+    @Test(groups = "fast")
+    public void testExpiredKeysKeptWhenTheDownloadFails() {
+        realm.getAuthenticationInfo(bearer(validToken().compact()));
+        Assert.assertEquals(jwksFetches.get(), 1);
+
+        jwks = () -> {
+            throw new SignatureException("JWKS unavailable");
+        };
+        clock.addDeltaFromReality(7 * 3600 * 1000L);
+        // The download fails: the current keys are kept
+        realm.getAuthenticationInfo(bearer(validToken().compact()));
+        Assert.assertEquals(jwksFetches.get(), 2);
+        // And the next attempt waits for the refresh interval
+        realm.getAuthenticationInfo(bearer(validToken().compact()));
+        Assert.assertEquals(jwksFetches.get(), 2);
+
+        jwks = Map::of;
+        clock.addDeltaFromReality(3600 * 1000L);
+        assertRejected(validToken().compact());
+        Assert.assertEquals(jwksFetches.get(), 3);
+    }
+
+    @Test(groups = "fast")
+    public void testFailedFirstDownloadIsRateLimited() {
+        jwks = () -> {
+            throw new SignatureException("JWKS unavailable");
+        };
+        assertRejected(validToken().compact());
+        assertRejected(validToken().compact());
+        assertRejected(validToken().compact());
+        Assert.assertEquals(jwksFetches.get(), 1);
+
+        jwks = () -> Map.of(KID, keyPair.getPublic());
+        clock.addDeltaFromReality(3600 * 1000L);
+        realm.getAuthenticationInfo(bearer(validToken().compact()));
+        Assert.assertEquals(jwksFetches.get(), 2);
+    }
+
+    @Test(groups = "fast")
+    public void testJwksDownload() throws Exception {
+        final RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        final String body = "{\"keys\":[{\"kid\":\"" + KID + "\",\"kty\":\"RSA\",\"n\":\"" + base64Url(publicKey.getModulus()) +
+                            "\",\"e\":\"" + base64Url(publicKey.getPublicExponent()) + "\"}]}";
+        final HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/ok/.well-known/jwks.json", exchange -> respond(exchange, 200, body.getBytes(), body.length()));
+        server.createContext("/error/.well-known/jwks.json", exchange -> respond(exchange, 500, "oops".getBytes(), 4));
+        // Headers, then a body that never completes
+        server.createContext("/stalled/.well-known/jwks.json", exchange -> {
+            respond(exchange, 200, "{\"keys\":".getBytes(), body.length());
+            try {
+                Thread.sleep(10000);
+            } catch (final InterruptedException ignored) {
+            }
+        });
+        server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+        server.start();
+        try {
+            final String base = "http://127.0.0.1:" + server.getAddress().getPort();
+            Assert.assertEquals(((RSAPublicKey) downloadingRealm(base + "/ok").fetchJwks().get(KID)).getModulus(), publicKey.getModulus());
+
+            try {
+                downloadingRealm(base + "/error").fetchJwks();
+                Assert.fail("HTTP 500 should fail");
+            } catch (final SignatureException expected) {
+                Assert.assertTrue(expected.getMessage().contains("HTTP 500"), expected.getMessage());
+            }
+
+            final long start = System.currentTimeMillis();
+            try {
+                downloadingRealm(base + "/stalled").fetchJwks();
+                Assert.fail("A stalled body should time out");
+            } catch (final SignatureException expected) {
+            }
+            Assert.assertTrue(System.currentTimeMillis() - start < 5000, "The read timeout must bound the body download");
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    private KillBillCognitoRealm downloadingRealm(final String issuer) {
+        final Properties props = new Properties();
+        props.setProperty("org.killbill.security.cognito.issuer", issuer);
+        props.setProperty("org.killbill.security.cognito.audiences", AUD_PASSWORD);
+        props.setProperty("org.killbill.security.cognito.readTimeout", "500ms");
+        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(new SimplePropertyConfigSource(props)).build(SecurityConfig.class);
+        return new KillBillCognitoRealm(securityConfig, clock, null);
+    }
+
+    private static void respond(final com.sun.net.httpserver.HttpExchange exchange, final int status, final byte[] bytes, final long length) throws IOException {
+        exchange.sendResponseHeaders(status, length);
+        final OutputStream out = exchange.getResponseBody();
+        out.write(bytes);
+        out.flush();
+        if (bytes.length == length) {
+            out.close();
+        }
     }
 
     @Test(groups = "fast")
