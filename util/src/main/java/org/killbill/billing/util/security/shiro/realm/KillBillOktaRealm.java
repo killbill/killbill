@@ -92,6 +92,10 @@ public class KillBillOktaRealm extends AuthorizingRealm {
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(final PrincipalCollection principals) {
+        // Subjects authenticated by the Cognito realm get the permissions of their token role only
+        if (KillBillCognitoRealm.isCognitoSubject(principals)) {
+            return null;
+        }
         final String username = (String) getAvailablePrincipal(principals);
         final String userId = findOktaUserId(username);
         final Set<String> userGroups = findOktaGroupsForUser(userId);

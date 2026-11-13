@@ -54,6 +54,7 @@ import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
+import org.killbill.billing.util.security.shiro.realm.KillBillCognitoRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,6 +206,10 @@ public class DefaultSecurityApi implements SecurityApi {
 
     @Override
     public void addUserRoles(final String username, final String password, final List<String> roles, final CallContext callContext) throws SecurityApiException {
+        // Names of users authenticated by the Cognito realm: a local user with such a name would be mistaken for them
+        if (username != null && username.regionMatches(true, 0, KillBillCognitoRealm.PRINCIPAL_PREFIX, 0, KillBillCognitoRealm.PRINCIPAL_PREFIX.length())) {
+            throw new IllegalArgumentException("Usernames starting with " + KillBillCognitoRealm.PRINCIPAL_PREFIX + " are reserved");
+        }
         userDao.insertUser(username, password, roles, callContext.getUserName());
     }
 
@@ -237,12 +242,16 @@ public class DefaultSecurityApi implements SecurityApi {
     public void addRoleDefinition(final String role, final List<String> permissions, final CallContext callContext) throws SecurityApiException {
         final List<String> sanitizedPermissions = sanitizePermissions(permissions);
         userDao.addRoleDefinition(role, sanitizedPermissions, callContext.getUserName());
+        // A subject with this role may have been cached without permissions (e.g. a Cognito token naming a role not defined yet)
+        invalidateAuthorizationCaches();
     }
 
     @Override
     public void updateRoleDefinition(final String role, final List<String> permissions, final CallContext callContext) throws SecurityApiException {
         final List<String> sanitizedPermissions = sanitizePermissions(permissions);
         userDao.updateRoleDefinition(role, sanitizedPermissions, callContext.getUserName());
+        // Removed permissions must stop working for every subject holding this role
+        invalidateAuthorizationCaches();
     }
 
     @Override
@@ -301,6 +310,23 @@ public class DefaultSecurityApi implements SecurityApi {
             }
         }
         return expandedPermissions;
+    }
+
+    /**
+     * Clears the authorization cache of the realms that read role definitions (roles_permissions): cache entries are keyed
+     * by subject, not by role, so the subjects holding a changed role cannot be found. Other realms are left alone: they
+     * get permissions from their provider (Auth0 caches the permissions of its tokens there, and could not get them back).
+     * Only affects this node with a local (Ehcache) cache.
+     */
+    private void invalidateAuthorizationCaches() {
+        for (final Realm realm : realms) {
+            if (realm instanceof KillBillJdbcRealm || realm instanceof KillBillCognitoRealm) {
+                final org.apache.shiro.cache.Cache<Object, AuthorizationInfo> cache = ((AuthorizingRealm) realm).getAuthorizationCache();
+                if (cache != null) {
+                    cache.clear();
+                }
+            }
+        }
     }
 
     private void invalidateJDBCAuthorizationCache(final String username) {

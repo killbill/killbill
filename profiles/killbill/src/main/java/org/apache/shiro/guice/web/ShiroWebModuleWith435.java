@@ -26,6 +26,7 @@ import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
 import org.apache.shiro.guice.ShiroModule;
 import org.apache.shiro.config.ConfigurationException;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.apache.shiro.env.Environment;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
@@ -134,7 +135,19 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
     }
 
     private void setupFilterChainConfigs() {
-        final HashMap<Key<? extends PathMatchingFilter>, Map<String, String>> configs = new HashMap<>();
+        for (final Entry<Key<? extends PathMatchingFilter>, Map<String, String>> entry : buildFilterChainConfigs(filterChains).entrySet()) {
+            bindPathMatchingFilter(entry.getKey(), entry.getValue());
+        }
+    }
+
+    /**
+     * Path configuration of each PathMatchingFilter: chain pattern -> config value. Unwraps FilterConfigKey entries in place.
+     * A filter can be part of several chains (e.g. the Bearer filter on /1.0/kb/** and /plugins/**): it must keep one
+     * entry per chain, otherwise it silently lets requests through on the chains it lost.
+     */
+    @VisibleForTesting
+    static Map<Key<? extends PathMatchingFilter>, Map<String, String>> buildFilterChainConfigs(final Map<String, Key<? extends Filter>[]> filterChains) {
+        final Map<Key<? extends PathMatchingFilter>, Map<String, String>> configs = new HashMap<>();
 
         for (final Map.Entry<String, Key<? extends Filter>[]> filterChain : filterChains.entrySet()) {
             for (int i = 0; i < filterChain.getValue().length; i++) {
@@ -146,15 +159,13 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
                     if (!PathMatchingFilter.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
                         throw new ConfigurationException("Config information requires a PathMatchingFilter - can't apply to " + key.getTypeLiteral().getRawType());
                     }
-                    configs.put(castToPathMatching(key), Map.of(filterChain.getKey(), configKey.getConfigValue()));
+                    configs.computeIfAbsent(castToPathMatching(key), k -> new LinkedHashMap<>()).put(filterChain.getKey(), configKey.getConfigValue());
                 } else if (PathMatchingFilter.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
-                    configs.put(castToPathMatching(key), Map.of(filterChain.getKey(), ""));
+                    configs.computeIfAbsent(castToPathMatching(key), k -> new LinkedHashMap<>()).put(filterChain.getKey(), "");
                 }
             }
         }
-        for (final Entry<Key<? extends PathMatchingFilter>, Map<String, String>> entry : configs.entrySet()) {
-            bindPathMatchingFilter(entry.getKey(), entry.getValue());
-        }
+        return configs;
     }
 
     private <T extends PathMatchingFilter> void bindPathMatchingFilter(final Key<T> filterKey, final Map<String, String> configs) {
@@ -162,7 +173,7 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
     }
 
     @SuppressWarnings({"unchecked"})
-    private Key<? extends PathMatchingFilter> castToPathMatching(final Key<? extends Filter> key) {
+    private static Key<? extends PathMatchingFilter> castToPathMatching(final Key<? extends Filter> key) {
         return (Key<? extends PathMatchingFilter>) key;
     }
 

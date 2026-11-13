@@ -114,6 +114,12 @@
         <Method name="&lt;init&gt;" params="org.killbill.billing.util.config.definition.SecurityConfig, org.killbill.clock.Clock" />
         <Bug pattern="CT_CONSTRUCTOR_THROW" />
     </Match>
+    <!-- justification: Cognito realm construction validates the issuer/audiences and builds the JWT parser eagerly so a misconfigured realm fails during bootstrap rather than on the first login attempt -->
+    <Match>
+        <Class name="org.killbill.billing.util.security.shiro.realm.KillBillCognitoRealm" />
+        <Method name="&lt;init&gt;" params="org.killbill.billing.util.config.definition.SecurityConfig, org.killbill.clock.Clock, javax.sql.DataSource" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
     <!-- justification: LDAP realm construction intentionally validates LDAP and SSL configuration up front because delayed failures would break authentication later in less predictable ways -->
     <Match>
         <Class name="org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm" />
