@@ -46,12 +46,15 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.HostAuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.ModularRealmAuthorizer;
+import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.killbill.billing.util.security.api.DefaultSecurityApi;
+import org.killbill.billing.util.security.shiro.dao.UserDao;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.skife.config.AugmentedConfigurationObjectFactory;
@@ -80,6 +83,7 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
     private AtomicInteger jwksFetches;
     private volatile Supplier<Map<String, PublicKey>> jwks;
     private KillBillCognitoRealm realm;
+    private SecurityConfig securityConfig;
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
@@ -96,7 +100,7 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
         props.setProperty("org.killbill.security.cognito.audiences", AUD_PASSWORD + ", " + AUD_SSO);
         props.setProperty("org.killbill.security.cognito.jwksMinRefreshInterval", "1h");
         props.setProperty("org.killbill.security.cognito.jwksMaxAge", "6h");
-        final SecurityConfig securityConfig = new AugmentedConfigurationObjectFactory(new SimplePropertyConfigSource(props)).build(SecurityConfig.class);
+        securityConfig = new AugmentedConfigurationObjectFactory(new SimplePropertyConfigSource(props)).build(SecurityConfig.class);
 
         realm = new KillBillCognitoRealm(securityConfig, clock, null) {
             @Override
@@ -230,6 +234,42 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
         final ModularRealmAuthorizer authorizer = new ModularRealmAuthorizer(allRealms);
         Assert.assertTrue(authorizer.isPermitted(principals, "account:create"));
         Assert.assertFalse(authorizer.isPermitted(principals, "payment:refund"));
+    }
+
+    @Test(groups = "fast")
+    public void testRoleChangesApplyDespiteTheAuthorizationCache() throws Exception {
+        final Map<String, Set<String>> roles = new HashMap<>(Map.of("billing", Set.of("account:create", "account:update")));
+        final KillBillCognitoRealm cachingRealm = new KillBillCognitoRealm(securityConfig, clock, null) {
+            @Override
+            protected Map<String, PublicKey> fetchJwks() {
+                return Map.of(KID, keyPair.getPublic());
+            }
+
+            @Override
+            protected Set<String> findPermissions(final String role) {
+                return roles.getOrDefault(role, Set.of());
+            }
+        };
+        cachingRealm.setCacheManager(new MemoryConstrainedCacheManager());
+        Assert.assertTrue(cachingRealm.isAuthorizationCachingEnabled());
+        final UserDao userDao = Mockito.mock(UserDao.class);
+        final DefaultSecurityApi securityApi = new DefaultSecurityApi(userDao, Set.of(cachingRealm));
+
+        final PrincipalCollection principals = cachingRealm.getAuthenticationInfo(bearer(validToken().compact())).getPrincipals();
+        Assert.assertTrue(cachingRealm.isPermitted(principals, "account:update"));
+
+        // Permission removed from the role: refused at once, although the same subject is cached
+        roles.put("billing", Set.of("account:create"));
+        securityApi.updateRoleDefinition("billing", List.of("account:create"), callContext);
+        Assert.assertFalse(cachingRealm.isPermitted(principals, "account:update"));
+        Assert.assertTrue(cachingRealm.isPermitted(principals, "account:create"));
+
+        // Role defined after a token naming it was seen
+        final PrincipalCollection newRolePrincipals = cachingRealm.getAuthenticationInfo(bearer(validToken().claim("custom:role", "late").compact())).getPrincipals();
+        Assert.assertFalse(cachingRealm.isPermitted(newRolePrincipals, "invoice:credit"));
+        roles.put("late", Set.of("invoice:credit"));
+        securityApi.addRoleDefinition("late", List.of("invoice:credit"), callContext);
+        Assert.assertTrue(cachingRealm.isPermitted(newRolePrincipals, "invoice:credit"));
     }
 
     @Test(groups = "fast")

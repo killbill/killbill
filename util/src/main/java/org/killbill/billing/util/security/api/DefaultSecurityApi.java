@@ -242,12 +242,16 @@ public class DefaultSecurityApi implements SecurityApi {
     public void addRoleDefinition(final String role, final List<String> permissions, final CallContext callContext) throws SecurityApiException {
         final List<String> sanitizedPermissions = sanitizePermissions(permissions);
         userDao.addRoleDefinition(role, sanitizedPermissions, callContext.getUserName());
+        // A subject with this role may have been cached without permissions (e.g. a Cognito token naming a role not defined yet)
+        invalidateAuthorizationCaches();
     }
 
     @Override
     public void updateRoleDefinition(final String role, final List<String> permissions, final CallContext callContext) throws SecurityApiException {
         final List<String> sanitizedPermissions = sanitizePermissions(permissions);
         userDao.updateRoleDefinition(role, sanitizedPermissions, callContext.getUserName());
+        // Removed permissions must stop working for every subject holding this role
+        invalidateAuthorizationCaches();
     }
 
     @Override
@@ -306,6 +310,21 @@ public class DefaultSecurityApi implements SecurityApi {
             }
         }
         return expandedPermissions;
+    }
+
+    /**
+     * Clears the authorization cache of every realm: cache entries are keyed by subject, not by role, so the subjects
+     * holding a changed role cannot be found. Only affects this node with a local (Ehcache) cache.
+     */
+    private void invalidateAuthorizationCaches() {
+        for (final Realm realm : realms) {
+            if (realm instanceof AuthorizingRealm) {
+                final org.apache.shiro.cache.Cache<Object, AuthorizationInfo> cache = ((AuthorizingRealm) realm).getAuthorizationCache();
+                if (cache != null) {
+                    cache.clear();
+                }
+            }
+        }
     }
 
     private void invalidateJDBCAuthorizationCache(final String username) {
