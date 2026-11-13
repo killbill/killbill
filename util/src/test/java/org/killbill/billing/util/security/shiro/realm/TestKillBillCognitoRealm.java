@@ -46,6 +46,7 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.HostAuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.ModularRealmAuthorizer;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
@@ -270,6 +271,40 @@ public class TestKillBillCognitoRealm extends UtilTestSuiteNoDB {
         roles.put("late", Set.of("invoice:credit"));
         securityApi.addRoleDefinition("late", List.of("invoice:credit"), callContext);
         Assert.assertTrue(cachingRealm.isPermitted(newRolePrincipals, "invoice:credit"));
+    }
+
+    @Test(groups = "fast")
+    public void testRoleChangesKeepAuth0TokenPermissions() throws Exception {
+        // Auth0 caches the permissions of a token when authenticating it, and cannot get them back later
+        final KillBillAuth0Realm auth0Realm = new KillBillAuth0Realm(securityConfig, clock);
+        auth0Realm.setCacheManager(new MemoryConstrainedCacheManager());
+        final SimplePrincipalCollection auth0Principals = new SimplePrincipalCollection("auth0-user@example.com", auth0Realm.getName());
+        final SimpleAuthorizationInfo tokenPermissions = new SimpleAuthorizationInfo();
+        tokenPermissions.setStringPermissions(Set.of("invoice:credit"));
+        auth0Realm.getAuthorizationCache().put(auth0Principals, tokenPermissions);
+
+        final KillBillCognitoRealm cachingRealm = new KillBillCognitoRealm(securityConfig, clock, null) {
+            @Override
+            protected Map<String, PublicKey> fetchJwks() {
+                return Map.of(KID, keyPair.getPublic());
+            }
+
+            @Override
+            protected Set<String> findPermissions(final String role) {
+                return Set.of("account:create");
+            }
+        };
+        cachingRealm.setCacheManager(new MemoryConstrainedCacheManager());
+        final PrincipalCollection cognitoPrincipals = cachingRealm.getAuthenticationInfo(bearer(validToken().compact())).getPrincipals();
+        Assert.assertTrue(cachingRealm.isPermitted(cognitoPrincipals, "account:create"));
+        Assert.assertEquals(cachingRealm.getAuthorizationCache().size(), 1);
+
+        final DefaultSecurityApi securityApi = new DefaultSecurityApi(Mockito.mock(UserDao.class), Set.of(auth0Realm, cachingRealm));
+        securityApi.updateRoleDefinition("billing", List.of("account:create"), callContext);
+
+        // The Cognito cache is cleared, the Auth0 token permissions are kept
+        Assert.assertEquals(cachingRealm.getAuthorizationCache().size(), 0);
+        Assert.assertTrue(auth0Realm.isPermitted(auth0Principals, "invoice:credit"));
     }
 
     @Test(groups = "fast")

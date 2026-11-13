@@ -313,12 +313,14 @@ public class DefaultSecurityApi implements SecurityApi {
     }
 
     /**
-     * Clears the authorization cache of every realm: cache entries are keyed by subject, not by role, so the subjects
-     * holding a changed role cannot be found. Only affects this node with a local (Ehcache) cache.
+     * Clears the authorization cache of the realms that read role definitions (roles_permissions): cache entries are keyed
+     * by subject, not by role, so the subjects holding a changed role cannot be found. Other realms are left alone: they
+     * get permissions from their provider (Auth0 caches the permissions of its tokens there, and could not get them back).
+     * Only affects this node with a local (Ehcache) cache.
      */
     private void invalidateAuthorizationCaches() {
         for (final Realm realm : realms) {
-            if (realm instanceof AuthorizingRealm) {
+            if (realm instanceof KillBillJdbcRealm || realm instanceof KillBillCognitoRealm) {
                 final org.apache.shiro.cache.Cache<Object, AuthorizationInfo> cache = ((AuthorizingRealm) realm).getAuthorizationCache();
                 if (cache != null) {
                     cache.clear();
