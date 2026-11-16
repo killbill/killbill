@@ -814,6 +814,48 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertEquals(i, expected.size());
     }
 
+    @Test(groups = "slow", description = "Verify BCD_UPDATE events are exposed via Subscription.getSubscriptionEvents()")
+    public void testBCDUpdateAppearsInSubscriptionEvents() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), initialDate, initialDate, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        assertEquals(entitlement.getBillCycleDayLocal(), (Integer) 7);
+
+        // Update BCD to 15, effective immediately
+        testListener.pushExpectedEvents(NextEvent.BCD_CHANGE);
+        entitlement.updateBCD(15, initialDate, callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, false, callContext).getBillCycleDayLocal(), (Integer) 15);
+
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        final List<SubscriptionEvent> events = subscription.getSubscriptionEvents();
+
+        // Expected: START_ENTITLEMENT, START_BILLING, BCD_UPDATE, PHASE
+        final List<SubscriptionEventType> eventTypes = events.stream()
+                                                             .map(SubscriptionEvent::getSubscriptionEventType)
+                                                             .collect(java.util.stream.Collectors.toList());
+        assertTrue(eventTypes.contains(SubscriptionEventType.BCD_UPDATE),
+                   "Expected BCD_UPDATE in subscription events but got: " + eventTypes);
+
+        final SubscriptionEvent bcdEvent = events.stream()
+                                                 .filter(e -> e.getSubscriptionEventType() == SubscriptionEventType.BCD_UPDATE)
+                                                 .findFirst()
+                                                 .orElseThrow();
+        assertEquals(internalCallContext.toLocalDate(bcdEvent.getEffectiveDate()), initialDate);
+
+        assertListenerStatus();
+    }
+
     private void checkSubscriptionEventAuditLog(final List<SubscriptionEvent> transitions, final int idx, final SubscriptionEventType expectedType) {
         assertEquals(transitions.get(idx).getSubscriptionEventType(), expectedType);
         final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(transitions.get(idx).getId(), transitions.get(idx).getSubscriptionEventType().getObjectType(), AuditLevel.FULL, callContext);
