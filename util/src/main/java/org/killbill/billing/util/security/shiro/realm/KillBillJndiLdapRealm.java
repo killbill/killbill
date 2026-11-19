@@ -151,6 +151,10 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
 
     @Override
     protected AuthorizationInfo queryForAuthorizationInfo(final PrincipalCollection principals, final LdapContextFactory ldapContextFactory) throws NamingException {
+        // Subjects authenticated by the Cognito realm get the permissions of their token role only
+        if (KillBillCognitoRealm.isCognitoSubject(principals)) {
+            return null;
+        }
         final Set<String> userGroups = findLDAPGroupsForUser(principals, ldapContextFactory);
 
         final SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo(userGroups);

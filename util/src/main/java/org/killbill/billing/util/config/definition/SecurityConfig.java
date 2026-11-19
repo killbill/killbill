@@ -179,4 +179,51 @@ public interface SecurityConfig extends KillbillConfig {
     @Default("60s")
     @Description("Auth0 JWT allowed clock skew")
     public TimeSpan getShiroAuth0AllowedClockSkew();
+
+    // Cognito realm
+
+    @Config("org.killbill.security.cognito.issuer")
+    @DefaultNull
+    @Description("Cognito user pool issuer, e.g. https://cognito-idp.<region>.amazonaws.com/<poolId>; the signing keys are read from <issuer>/.well-known/jwks.json")
+    public String getShiroCognitoIssuer();
+
+    @Config("org.killbill.security.cognito.audiences")
+    @DefaultNull
+    @Description("Comma-separated list of accepted Cognito app client ids (ID token aud claim)")
+    public String getShiroCognitoAudiences();
+
+    @Config("org.killbill.security.cognito.principalClaim")
+    @Default("email")
+    @Description("ID token claim used as the principal name (always prefixed with cognito:)")
+    public String getShiroCognitoPrincipalClaim();
+
+    @Config("org.killbill.security.cognito.roleClaim")
+    @Default("custom:role")
+    @Description("ID token claim holding the user role (e.g. a custom user attribute); the role permissions are read from roles_permissions")
+    public String getShiroCognitoRoleClaim();
+
+    @Config("org.killbill.security.cognito.connectTimeout")
+    @Default("5s")
+    @Description("Cognito JWKS client connect timeout")
+    public TimeSpan getShiroCognitoConnectTimeout();
+
+    @Config("org.killbill.security.cognito.readTimeout")
+    @Default("10s")
+    @Description("Cognito JWKS client read timeout")
+    public TimeSpan getShiroCognitoReadTimeout();
+
+    @Config("org.killbill.security.cognito.jwksMinRefreshInterval")
+    @Default("60s")
+    @Description("Minimum delay between two JWKS download attempts (unknown key id, expired cache or failed download)")
+    public TimeSpan getShiroCognitoJwksMinRefreshInterval();
+
+    @Config("org.killbill.security.cognito.jwksMaxAge")
+    @Default("1h")
+    @Description("Maximum age of the cached JWKS: older keys are downloaded again, so a key removed from the user pool stops being trusted")
+    public TimeSpan getShiroCognitoJwksMaxAge();
+
+    @Config("org.killbill.security.cognito.allowedClockSkew")
+    @Default("60s")
+    @Description("Cognito JWT allowed clock skew")
+    public TimeSpan getShiroCognitoAllowedClockSkew();
 }

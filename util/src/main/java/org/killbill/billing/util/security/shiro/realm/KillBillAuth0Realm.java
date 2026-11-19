@@ -161,6 +161,10 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(final PrincipalCollection principals) {
+        // Subjects authenticated by the Cognito realm get the permissions of their token role only
+        if (KillBillCognitoRealm.isCognitoSubject(principals)) {
+            return null;
+        }
         final String username = (String) getAvailablePrincipal(principals);
 
         final SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo(null);
@@ -329,7 +333,7 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
         final HttpResponse<InputStream> auth0RawResponse = doGetRequest(path, token);
         try {
             final List<Map<String, Object>> auth0Response = mapper.readValue(auth0RawResponse.body(), new TypeReference<List<Map<String, Object>>>() {});
-            if (auth0Response == null) {
+            if (auth0Response == null || auth0Response.isEmpty()) {
                 log.warn("Unable to find user {} in Auth0", username);
                 return null;
             } else if (auth0Response.size() > 1) {
