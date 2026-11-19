@@ -1074,6 +1074,38 @@ public class TestInvoice extends TestJaxrsBase {
             page = page.getNext();
         }
         Assert.assertNull(page);
+
+        //with pagination, without invoice components: invoices are shallow
+        page = accountApi.getInvoicesForAccountPaginated(account.getAccountId(), 0L, 2L, AuditLevel.NONE, requestOptions);
+        Assert.assertEquals(page.size(), 2);
+        for (final Invoice shallowInvoice : page) {
+            Assert.assertTrue(shallowInvoice.getItems().isEmpty());
+        }
+
+        //with pagination and invoice components: amount, balance and items are populated, and the option is preserved when following the next page
+        final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("includeInvoiceComponents", List.of("true"));
+        final org.killbill.billing.client.RequestOptions withComponentsOptions = requestOptions.extend().withQueryParams(queryParams).build();
+        page = accountApi.getInvoicesForAccountPaginated(account.getAccountId(), 0L, 2L, AuditLevel.NONE, withComponentsOptions);
+        int nbInvoicesChecked = 0;
+        while (page != null) {
+            Assert.assertFalse(page.isEmpty());
+            for (final Invoice paginatedInvoice : page) {
+                final Invoice expected = invoices.stream()
+                                                 .filter(i -> i.getInvoiceId().equals(paginatedInvoice.getInvoiceId()))
+                                                 .findFirst()
+                                                 .orElseThrow();
+                final Invoice withComponents = invoiceApi.getInvoice(paginatedInvoice.getInvoiceId(), true, AuditLevel.NONE, requestOptions);
+                Assert.assertFalse(paginatedInvoice.getItems().isEmpty());
+                Assert.assertEquals(paginatedInvoice.getItems().size(), withComponents.getItems().size());
+                Assert.assertEquals(paginatedInvoice.getAmount().compareTo(withComponents.getAmount()), 0);
+                Assert.assertEquals(paginatedInvoice.getBalance().compareTo(withComponents.getBalance()), 0);
+                Assert.assertEquals(paginatedInvoice.getInvoiceNumber(), expected.getInvoiceNumber());
+                nbInvoicesChecked++;
+            }
+            page = page.getNext();
+        }
+        Assert.assertEquals(nbInvoicesChecked, 5);
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1340")

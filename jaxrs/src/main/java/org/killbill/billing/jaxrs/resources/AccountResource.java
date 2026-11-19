@@ -750,6 +750,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getInvoicesForAccountPaginated(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                           @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                          @QueryParam(QUERY_INCLUDE_INVOICE_COMPONENTS) @DefaultValue("false") final boolean includeInvoiceComponents,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                           @jakarta.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
@@ -761,6 +762,9 @@ public class AccountResource extends JaxRsResourceBase {
         if (auditMode != null && auditMode.getLevel() != null) {
             queryParams.put(QUERY_AUDIT, auditMode.getLevel().toString());
         }
+        if (includeInvoiceComponents) {
+            queryParams.put(QUERY_INCLUDE_INVOICE_COMPONENTS, Boolean.TRUE.toString());
+        }
 
         final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
                                                     "getInvoicesForAccountPaginated",
@@ -771,10 +775,21 @@ public class AccountResource extends JaxRsResourceBase {
         return buildStreamingPaginationResponse(invoices,
                                                 invoice -> {
                                                     final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
-                                                    return new InvoiceJson(invoice, null, accountAuditLogs);
+                                                    // Invoices in a page are shallow (no items), hence amount, balance, etc. would be 0.
+                                                    // When requested, load the components for the invoices of this page only, so the cost depends on the page size.
+                                                    return new InvoiceJson(includeInvoiceComponents ? getInvoiceWithComponents(invoice, tenantContext) : invoice, null, accountAuditLogs);
                                                 },
                                                 nextPageUri
                                                );
+    }
+
+    private Invoice getInvoiceWithComponents(final Invoice shallowInvoice, final TenantContext tenantContext) {
+        try {
+            return invoiceApi.getInvoice(shallowInvoice.getId(), tenantContext);
+        } catch (final InvoiceApiException e) {
+            // Streaming response: we cannot return a proper error at this point. Don't return the shallow invoice (amounts would be wrong)
+            throw new IllegalStateException(String.format("Unable to load components for invoiceId='%s'", shallowInvoice.getId()), e);
+        }
     }
 
     /*
