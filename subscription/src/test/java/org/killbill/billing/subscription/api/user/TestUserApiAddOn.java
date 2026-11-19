@@ -395,6 +395,55 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
     }
 
+    @Test(groups = "slow", description = "An add-on created after a base change to a plan that does not offer it (and back) is not cancelled by that change")
+    public void testCreateAddonAfterBPChangeWithAddonNonAvailable() throws SubscriptionBaseApiException {
+        // CREATE BP ON A PLAN OFFERING THE ADDON
+        DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        // MOVE CLOCK AFTER TRIAL
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addDays(31);
+        assertListenerStatus();
+
+        // CHANGE IMMEDIATELY TO A BP WITH NON AVAILABLE ADDON
+        testListener.pushExpectedEvent(NextEvent.CHANGE);
+        baseSubscription.changePlan(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME)), callContext);
+        assertListenerStatus();
+
+        // CHANGE BACK TO THE BP OFFERING THE ADDON
+        clock.addDays(1);
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
+        testListener.pushExpectedEvent(NextEvent.CHANGE);
+        baseSubscription.changePlan(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME)), callContext);
+        assertListenerStatus();
+
+        // CREATE AO
+        clock.addDays(1);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        // REFETCH AO SUBSCRIPTION: THE EARLIER CHANGE TO THE BP WITHOUT THE ADDON DOES NOT CANCEL IT (NO CANCEL BEFORE CREATE)
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
+        assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
+        assertFalse(aoSubscription.isFutureCancelled());
+        assertNull(aoSubscription.getFutureEndDate());
+        final List<SubscriptionBaseTransition> transitions = aoSubscription.getAllTransitions(false);
+        assertEquals(transitions.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        for (final SubscriptionBaseTransition transition : transitions) {
+            assertFalse(transition.getEffectiveTransitionTime().isBefore(aoSubscription.getStartDate()));
+        }
+
+        // A LATER CHANGE TO THE BP WITH NON AVAILABLE ADDON STILL CANCELS IT
+        clock.addDays(1);
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
+        testListener.pushExpectedEvent(NextEvent.CHANGE);
+        testListener.pushExpectedEvent(NextEvent.CANCEL);
+        baseSubscription.changePlan(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME)), callContext);
+        assertListenerStatus();
+
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
+        assertEquals(aoSubscription.getState(), EntitlementState.CANCELLED);
+    }
+
     @Test(groups = "slow")
     public void testAddonCreateWithBundleAlign() throws CatalogApiException, SubscriptionBaseApiException {
         final String aoProduct = "Telescopic-Scope";

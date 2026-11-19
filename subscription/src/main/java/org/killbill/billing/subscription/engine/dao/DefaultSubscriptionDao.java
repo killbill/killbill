@@ -882,6 +882,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                     SubscriptionBaseEvent baseTriggerEventForAddOnCancellation = baseCancellationEvent;
                     for (final ApiEventChange baseChangeEvent : baseChangeEvents) {
+                        // A base change effective before the add-on started is history: the add-on was created on a base plan offering it.
+                        // Taking it into account would add a cancellation event before the add-on CREATE event.
+                        if (baseChangeEvent.getEffectiveDate().isBefore(reloaded.getStartDate())) {
+                            continue;
+                        }
                         final Plan basePlan = catalog.findPlan(baseChangeEvent.getEventPlan(), baseChangeEvent.getEffectiveDate(), cur.getAlignStartDate());
                         final Product baseProduct = basePlan.getProduct();
 
