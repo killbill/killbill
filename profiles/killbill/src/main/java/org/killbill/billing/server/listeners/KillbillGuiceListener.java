@@ -65,10 +65,9 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
-    // Matches both /swagger.json|yaml (backward-compatible Swagger 2.0 spec served by
-    // SwaggerResource) and /openapi.json|yaml (native OAS3 spec served by swagger-core's
-    // OpenApiResource). Both must be routed through Jersey.
-    private static final String SWAGGER_PATH = "(openapi|swagger).*";
+    // Matches /swagger.json|yaml (backward-compatible Swagger 2.0 spec served by
+    // SwaggerResource) routed through Jersey.
+    private static final String SWAGGER_PATH = "swagger.*";
 
     private KillbillEventHandler killbilleventHandler;
 
@@ -78,9 +77,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // things like static resources, favicon, etc. are 404'ed)
         final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("/" + SWAGGER_PATH + "|((/" + SWAGGER_PATH + "|" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*)")
                                                                              .addJerseyResourcePackage("org.killbill.billing.jaxrs.mappers")
-                                                                             .addJerseyResourcePackage("org.killbill.billing.jaxrs.resources")
-                                                                             // Swagger 2 (OpenAPI 3) integration
-                                                                             .addJerseyResourcePackage("io.swagger.v3.jaxrs2.integration.resources");
+                                                                             .addJerseyResourcePackage("org.killbill.billing.jaxrs.resources");
 
         // Jackson integration
         builder.addJerseyResourceClass(JacksonJsonProvider.class.getName());
@@ -197,7 +194,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
         try {
             final OpenApiContext ctx = new JaxrsOpenApiContextBuilder<>().openApiConfiguration(swaggerConfig).buildContext(true);
-            // Pre-warm: run the scan now so the first HTTP request to /openapi.json returns immediately
+            // Pre-warm: run the scan now so the first HTTP request to /swagger.json returns immediately
             // Read more: https://github.com/killbill/killbill/issues/2284
             ctx.read();
         } catch (final OpenApiConfigurationException e) {
