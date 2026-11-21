@@ -81,11 +81,7 @@ import jakarta.ws.rs.core.Response;
  * maintain codegen output compatibility.
  *
  * <h2>Note about api.html</h2>
- * The Swagger UI browser (api.html) loads {@code /openapi.json} — NOT this endpoint.
- * Swagger UI natively understands OpenAPI 3.0 and renders it correctly. Pointing it at
- * {@code /swagger.json} would add a useless conversion hop (OAS3 → SW2 → Swagger UI
- * internally converts back to OAS3 for rendering). This endpoint exists exclusively
- * for backward-compatible code generation.
+ * The Swagger UI browser (api.html) loads {@code /swagger.json}.
  *
  * @see KillBillApiDefinition for OpenAPI 3.0 spec customization (the source of truth)
  */
@@ -230,7 +226,7 @@ public class SwaggerResource {
     }
 
     private String generateSwagger2(final boolean yaml) throws Exception {
-        // Reuse the same OpenAPI context that the /openapi.json endpoint uses.
+        // Reuse the same OpenAPI context that was pre-built during startup.
         // This ensures KillBillApiDefinition's beforeScan/afterScan customizations
         // (security schemes, writeOnly property removal, orphaned schema cleanup)
         // are already applied to the model we're converting.
