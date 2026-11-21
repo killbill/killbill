@@ -653,7 +653,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                 inputItem.getDescription(),
                                                                 Objects.requireNonNullElse(inputItem.getStartDate(), effectiveDate),
                                                                 inputItem.getAmount(),
-                                                                accountCurrency);
+                                                                accountCurrency,
+                                                                // Keep the item the tax applies to (e.g. per-line tax rates for e-invoicing)
+                                                                inputItem.getLinkedItemId());
                             break;
                         default:
                             throw new IllegalStateException(String.format("Unsupported to add item of type '%s'", itemType));
