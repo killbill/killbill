@@ -302,7 +302,10 @@ public class DefaultBillingEvent implements BillingEvent {
                         return 1;
                     }
                 } else {
-                    return getTotalOrdering().compareTo(e1.getTotalOrdering());
+                    final int ordering = getTotalOrdering().compareTo(e1.getTotalOrdering());
+                    // Distinct catalog changes can align to the same billing date and inherit
+                    // the same subscription ordering. Keep both so the newer price can win.
+                    return ordering != 0 ? ordering : getCatalogEffectiveDate().compareTo(e1.getCatalogEffectiveDate());
                 }
             }
         }
