@@ -189,6 +189,12 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                                                DefaultVersionedCatalog.class, ""));
             }
         }
+
+        if (!plan.getProduct().getName().equals(targetPlan.getProduct().getName())) {
+            errors.add(new ValidationError(String.format("Product for plan '%s' differs between version '%s' and '%s'",
+                                                         plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
+                                           DefaultVersionedCatalog.class, ""));
+        }
     }
     
 
