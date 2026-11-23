@@ -295,14 +295,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                     && !planPhases[i].getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
                     errors.add(new ValidationError(String.format(
                             "EVERGREEN Phase '%s' for plan '%s' in version '%s' must have duration as UNLIMITED'",
-                            planPhases[i].getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
+                            planPhases[i].getName(), plan.getName(), newCatalogVersion.getEffectiveDate()),
                                                    DefaultVersionedCatalog.class, ""));
                 } else if (!planPhases[i].getPhaseType().name().equals(PhaseType.EVERGREEN.name())
                            && planPhases[i].getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
                     errors.add(new ValidationError(String.format(
                             "'%s' Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
                             planPhases[i].getPhaseType().name(), planPhases[i].getName(), plan.getName(),
-                            plan.getCatalog().getEffectiveDate()), DefaultVersionedCatalog.class, ""));
+                            newCatalogVersion.getEffectiveDate()), DefaultVersionedCatalog.class, ""));
                 }
             }
         }
