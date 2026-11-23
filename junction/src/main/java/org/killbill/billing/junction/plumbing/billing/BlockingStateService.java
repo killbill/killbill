@@ -28,10 +28,21 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.killbill.billing.entitlement.api.BlockingState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BlockingStateService {
 
+    private static final Logger log = LoggerFactory.getLogger(BlockingStateService.class);
+
     final Map<UUID, BlockingState> perObjectTypeFirstBlockingState = new HashMap<UUID, BlockingState>();
+
+    // Unblocks seen while no block is open for the same object, keyed by blocked id.
+    // States arrive sorted by effective date, so an unblock can only precede its block
+    // when both share the same effective date (ordered by creation date); remembering
+    // it makes the outcome independent of insertion order. See
+    // https://github.com/killbill/killbill/issues/2328
+    final Map<UUID, BlockingState> perObjectTypePendingUnblock = new HashMap<UUID, BlockingState>();
 
     private final List<DisabledDuration> result;
 
@@ -52,10 +63,31 @@ public class BlockingStateService {
 
         final BlockingState firstBlockingState = perObjectTypeFirstBlockingState.get(currentBlockingState.getBlockedId());
         if (currentBlockingState.isBlockBilling() && firstBlockingState == null) {
-            perObjectTypeFirstBlockingState.put(currentBlockingState.getBlockedId(), currentBlockingState);
+            final BlockingState pendingUnblock = perObjectTypePendingUnblock.remove(currentBlockingState.getBlockedId());
+            if (pendingUnblock != null && !pendingUnblock.getEffectiveDate().isBefore(currentBlockingState.getEffectiveDate())) {
+                // The unblock was seen first: pair it with this block instead of leaving
+                // the block open forever. For the same effective date the pair cancels
+                // (addDisabledDuration drops sub-day durations), matching the outcome
+                // when the block is seen first.
+                addDisabledDuration(currentBlockingState, pendingUnblock.getEffectiveDate());
+            } else {
+                if (pendingUnblock != null) {
+                    log.debug("Ignoring stale unblock for blockedId {}: unblock at {} predates block at {}",
+                              currentBlockingState.getBlockedId(), pendingUnblock.getEffectiveDate(), currentBlockingState.getEffectiveDate());
+                }
+                perObjectTypeFirstBlockingState.put(currentBlockingState.getBlockedId(), currentBlockingState);
+            }
         } else if (!currentBlockingState.isBlockBilling() && firstBlockingState != null) {
             addDisabledDuration(firstBlockingState, currentBlockingState.getEffectiveDate());
             perObjectTypeFirstBlockingState.put(currentBlockingState.getBlockedId(), null);
+        } else if (!currentBlockingState.isBlockBilling()) {
+            // Unblock with no open block: remember it so a block with the same effective
+            // date arriving later pairs with it instead of being left open with no end.
+            // A second unblock for the same object keeps the earliest one.
+            if (perObjectTypePendingUnblock.putIfAbsent(currentBlockingState.getBlockedId(), currentBlockingState) == null) {
+                log.debug("Remembering unmatched unblock for blockedId {} effective {}",
+                          currentBlockingState.getBlockedId(), currentBlockingState.getEffectiveDate());
+            }
         }
     }
 
