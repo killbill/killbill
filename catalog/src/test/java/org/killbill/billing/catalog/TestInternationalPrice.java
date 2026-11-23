@@ -87,4 +87,21 @@ public class TestInternationalPrice extends CatalogTestSuiteNoDB {
         errors.log(log);
         Assert.assertEquals(errors.size(), 3);
     }
+
+    @Test(groups = "fast")
+    public void testDuplicateCurrencyPrices() {
+        final StandaloneCatalog c = new MockCatalog();
+        c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
+
+        final DefaultInternationalPrice p1 = new MockInternationalPrice();
+        p1.setPrices(new DefaultPrice[]{
+                new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(30)),
+                new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(40)),
+                new DefaultPrice().setCurrency(Currency.EUR).setValue(new BigDecimal(25)),
+        });
+
+        final ValidationErrors errors = p1.validate(c, new ValidationErrors());
+        errors.log(log);
+        Assert.assertEquals(errors.size(), 1);
+    }
 }
