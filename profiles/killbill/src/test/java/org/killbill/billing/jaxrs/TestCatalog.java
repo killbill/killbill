@@ -337,4 +337,20 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(errors.size(), 1); //still 1, indicates that the catalog to be validated is validated only once
         Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
     }
+
+    @Test(groups = "slow", description = "Available base plans include plans retired in the latest version")
+    public void testAvailableBasePlansIncludesRetiredPlans() throws Exception {
+        uploadTenantCatalog("org/killbill/billing/server/RetirePlanV1.xml", false);
+        uploadTenantCatalog("org/killbill/billing/server/RetirePlanV2.xml", false);
+
+        final List<PlanDetail> basePlans = catalogApi.getAvailableBasePlans(null, requestOptions);
+        final Set<String> foundBasePlans = new HashSet<String>();
+        for (final PlanDetail planDetail : basePlans) {
+            foundBasePlans.add(planDetail.getPlan());
+        }
+        final Set<String> expectedBasePlans = new HashSet<String>();
+        expectedBasePlans.add("standard-weekly");
+        expectedBasePlans.add("standard-monthly");
+        Assert.assertEquals(foundBasePlans, expectedBasePlans);
+    }
 }
