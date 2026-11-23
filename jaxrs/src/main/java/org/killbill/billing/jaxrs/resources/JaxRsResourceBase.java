@@ -238,7 +238,23 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected Response deleteTags(final UUID id,
                                   final List<UUID> tagList,
                                   final CallContext context) throws TagApiException {
-        tagUserApi.removeTags(id, getObjectType(), tagList, context);
+        // Retrieve all the tags for the object
+        final List<Tag> tags = tagUserApi.getTagsForObject(id, getObjectType(), false, context);
+
+        // Filter the proposed list to only keep the ones that exist and indeed match our object
+        final List<UUID> toRemove = tags.stream()
+                .filter(input -> {
+                    if (tagList == null || tagList.isEmpty()) {
+                        return true;
+                    }
+                    return tagList.contains(input.getTagDefinitionId());
+                })
+                .map(Tag::getTagDefinitionId)
+                .collect(Collectors.toUnmodifiableList());
+
+        if (!toRemove.isEmpty()) {
+            tagUserApi.removeTags(id, getObjectType(), toRemove, context);
+        }
         return Response.status(Status.NO_CONTENT).build();
     }
 
