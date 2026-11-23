@@ -30,7 +30,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -364,14 +366,26 @@ public class CatalogResource extends JaxRsResourceBase {
                                             context.createTenantContextWithAccountId(accountId, request) :
                                             context.createTenantContextNoAccountId(request);
 
-        final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
-        if(catalog == null || catalog.getAvailableBasePlanListings() == null) {
+        // Plans retired in the latest version are still available: collect the listings
+        // from every version, newest first, keeping the newest listing per plan and price list.
+        final VersionedCatalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
+        if (catalog == null || catalog.getVersions() == null) {
             return Response.status(Status.OK).entity(Collections.emptyList()).build();
         }
-        final List<Listing> listings = catalog.getAvailableBasePlanListings();
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
-        for (final Listing listing : listings) {
-            details.add(new PlanDetailJson(listing));
+        final Set<String> seenListings = new HashSet<String>();
+        final List<StaticCatalog> versions = catalog.getVersions();
+        for (int i = versions.size() - 1; i >= 0; i--) {
+            final List<Listing> listings = versions.get(i).getAvailableBasePlanListings();
+            if (listings == null) {
+                continue;
+            }
+            for (final Listing listing : listings) {
+                final String key = listing.getPlan().getName() + "|" + listing.getPriceList().getName();
+                if (seenListings.add(key)) {
+                    details.add(new PlanDetailJson(listing));
+                }
+            }
         }
         return Response.status(Status.OK).entity(details).build();
     }
