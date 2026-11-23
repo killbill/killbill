@@ -24,6 +24,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -110,8 +112,12 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         if (supportedCurrencies == null) {
             return errors;
         }
+        final Set<Currency> seenCurrencies = new HashSet<Currency>();
         for (final Price p : prices) {
             final Currency currency = p.getCurrency();
+            if (!seenCurrencies.add(currency)) {
+                errors.add("Duplicate price for currency: " + currency, this.getClass(), "");
+            }
             if (!currencyIsSupported(currency, supportedCurrencies)) {
                 errors.add("Unsupported currency: " + currency, this.getClass(), "");
             }
