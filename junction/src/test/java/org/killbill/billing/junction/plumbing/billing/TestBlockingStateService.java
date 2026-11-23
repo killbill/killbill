@@ -209,6 +209,67 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
     }
 
 
+    //             UB
+    //             |
+    //             AA
+    //
+    //  Expected:  None
+    //
+    @Test(groups = "fast")
+    public void testUnblockingBlockingSameDates() throws Exception {
+
+        final List<BlockingState> input = new ArrayList<BlockingState>();
+
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        final DateTime testInit = new DateTime(2017, 04, 29, 14, 15, 53, tz);
+        clock.setTime(testInit);
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit));
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit));
+
+        final BlockingStateService test = new BlockingStateService();
+        for (final BlockingState cur : input) {
+            test.addBlockingState(cur);
+        }
+        final List<DisabledDuration> result = test.build();
+
+        final List<DisabledDuration> expected = Collections.emptyList();
+
+        verify(result, expected);
+    }
+
+
+    //             U       B
+    //             |-------|
+    //             A       A
+    //
+    //  Expected:          B--------
+    //
+    //  The unblock predates the block, so it must not cancel it: the pending
+    //  unblock is stale and the block stays open.
+    //
+    @Test(groups = "fast")
+    public void testUnblockBeforeLaterBlock() throws Exception {
+
+        final List<BlockingState> input = new ArrayList<BlockingState>();
+
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        final DateTime testInit = new DateTime(2017, 04, 29, 14, 15, 53, tz);
+        clock.setTime(testInit);
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit));
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
+
+        final BlockingStateService test = new BlockingStateService();
+        for (final BlockingState cur : input) {
+            test.addBlockingState(cur);
+        }
+        final List<DisabledDuration> result = test.build();
+
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit.plusDays(1), null));
+
+        verify(result, expected);
+    }
+
+
     //             B U
     //             |-|
     //             A A
