@@ -281,6 +281,25 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(resultTaxInvoiceItems.get(0).getBundleId(), bundleId);
     }
 
+    @Test(groups = "slow")
+    public void testAddTaxItemsLinkedToAnItem() throws Exception {
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+        final UUID invoiceId = invoiceUtil.generateRegularInvoice(account, null, callContext);
+        final InvoiceItem taxedItem = invoiceUserApi.getInvoice(invoiceId, callContext).getInvoiceItems().get(0);
+
+        // No invoice id: the tax goes on a new invoice (the first one is committed)
+        final InvoiceItem taxItem = new TaxInvoiceItem(null, null, accountId, null, "VAT 21%", clock.getUTCToday(), BigDecimal.ONE, accountCurrency, taxedItem.getId());
+        final List<InvoiceItem> resultTaxInvoiceItems = invoiceUserApi.insertTaxItems(accountId, clock.getUTCToday(), List.of(taxItem), true, Collections.emptyList(), callContext);
+        Assert.assertEquals(resultTaxInvoiceItems.size(), 1);
+        Assert.assertEquals(resultTaxInvoiceItems.get(0).getLinkedItemId(), taxedItem.getId());
+
+        final InvoiceItem persisted = invoiceUserApi.getInvoice(resultTaxInvoiceItems.get(0).getInvoiceId(), callContext).getInvoiceItems().stream()
+                                                    .filter(item -> item.getId().equals(resultTaxInvoiceItems.get(0).getId()))
+                                                    .findFirst().orElseThrow();
+        Assert.assertEquals(persisted.getLinkedItemId(), taxedItem.getId());
+    }
+
     private void testAdjustPartialInvoiceItem(final boolean recurring) throws Exception {
         final Account account = invoiceUtil.createAccount(callContext);
         final UUID accountId = account.getId();
